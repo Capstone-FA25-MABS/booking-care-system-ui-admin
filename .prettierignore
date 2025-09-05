@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+.git
+.husky
+*.min.css
+*.min.js
+package-lock.json
+src/assets/

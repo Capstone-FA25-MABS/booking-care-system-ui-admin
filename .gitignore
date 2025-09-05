@@ -23,7 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+*.tsbuildinfo
+
 .eslintignore
-.prettierignore
 .env
 .env.*

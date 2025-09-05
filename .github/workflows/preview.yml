@@ -1,0 +1,85 @@
+name: Preview Deployment
+
+on:
+    push:
+        branches: [develop]
+    pull_request:
+        branches: [develop]
+
+jobs:
+    # Quality checks for PRs
+    pr-checks:
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        
+        steps:
+            - name: ⬇️ Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🔧 Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 18
+                  cache: 'npm'
+
+            - name: 📦 Install dependencies
+              run: npm ci
+
+            - name: 🔍 Run linting
+              run: npm run lint
+
+            - name: 📝 Check formatting
+              run: npm run format:check
+
+            - name: 🧪 Run type checking
+              run: npx tsc --noEmit
+
+            - name: ✅ Run tests
+              run: npm test --if-present
+
+            - name: 🏗️ Test build
+              run: npm run build
+
+    preview:
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/develop'
+
+        steps:
+            - name: ⬇️ Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🔧 Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: 'npm'
+
+            - name: 📦 Install dependencies
+              run: npm ci
+
+            - name: 🔍 Run linting
+              run: npm run lint
+
+            - name: 📝 Check formatting
+              run: npm run format:check
+
+            - name: 🧪 Run type checking
+              run: npx tsc --noEmit
+
+            - name: 🏗️ Build for preview
+              run: npm run build
+              env:
+                  NODE_ENV: development
+
+            - name: 📊 Upload preview artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: preview-build-${{ github.sha }}
+                  path: dist/
+                  retention-days: 7
+
+            - name: 🔍 Preview deployment ready
+              run: |
+                  echo "🔍 Preview build completed!"
+                  echo "📁 Preview files ready for deployment"
+                  echo "🌐 This could be deployed to a staging environment"
