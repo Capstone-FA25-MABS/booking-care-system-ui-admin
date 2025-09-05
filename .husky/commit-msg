@@ -1,0 +1,12 @@
+#!/bin/sh
+# Validates commit message format
+# Commit message should not be empty and should be meaningful
+
+commit_regex='^.{10,}$'
+
+if ! grep -qE "$commit_regex" "$1"; then
+    echo "Invalid commit message!"
+    echo "Commit message should be at least 10 characters long and meaningful."
+    echo "Your commit message: $(cat $1)"
+    exit 1
+fi

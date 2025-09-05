@@ -1,0 +1,187 @@
+// Auth common styles
+// Common input styles (maps to .inputGroup)
+.auth-input-group {
+    position: relative;
+
+    .left-icon {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        color: #465d7c;
+        gap: 3px;
+        pointer-events: none;
+        font-size: 16px;
+    }
+
+    // Password toggle styles (maps to .togglePassword)
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #465d7c;
+    }
+
+    input {
+        display: flex;
+        align-items: center;
+        height: 45px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb; /* gray-200 */
+        background: #ffffff;
+        padding-left: 16px;
+
+        &:focus {
+            outline: none;
+            box-shadow: none;
+            border: 1px solid #4a90e2; // hoặc màu bạn muốn
+        }
+    }
+
+    &.has-left-icon {
+        input {
+            padding-left: 40px;
+        }
+    }
+}
+
+// Method toggle styles (maps to .methodToggle)
+.method-toggle {
+    display: inline-flex;
+    gap: 8px;
+    background: #f3f4f6; /* gray-100 */
+    padding: 5px;
+    border-radius: 12px;
+
+    .toggle-btn {
+        display: flex;
+        align-items: center;
+        border: none;
+        background: transparent;
+        color: #475569;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .toggle-btn-active {
+        background: #ffffff;
+        color: #0e82fd;
+        box-shadow:
+            0 1px 2px rgba(16, 24, 40, 0.04),
+            0 1px 3px rgba(16, 24, 40, 0.1);
+    }
+}
+
+// (maps to .inputWrapPhone) - increase specificity to override .has-left-icon
+.auth-input-group.input-wrap-phone {
+    input {
+        padding-left: 75px; // space for flag + +84
+    }
+}
+
+// (maps to .inputWrapEmail) - increase specificity to override .has-left-icon
+.auth-input-group.input-wrap-email {
+    input {
+        padding-left: 44px; // space for mail icon
+    }
+}
+
+// (maps to .borderSuccess)
+.border-success {
+    border: 1px solid #198754 !important; /* Green color for matching passwords */
+
+    &:focus {
+        border: 1px solid #198754 !important;
+    }
+}
+
+// (maps to .submitBtn)
+.submit-btn {
+    &:disabled {
+        background: #d1d5db !important; /* gray-300 */
+        color: #6b7280 !important; /* gray-500 */
+        border: none;
+    }
+}
+
+// Inline between styles (maps to .inlineBetween)
+.inline-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .forgot-password {
+        color: #3d3d3d;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #0e82fd;
+        -webkit-transition: 0.7s;
+        -ms-transition: 0.7s;
+        transition: 0.7s;
+
+        &:hover {
+            color: rgb(1.7777777778, 104.8888888889, 214.2222222222);
+            -webkit-transition: 0.7s;
+            -ms-transition: 0.7s;
+            transition: 0.7s;
+        }
+    }
+}
+
+// Password Strength Bar (maps to .strengthBar)
+.strength-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #e5e7eb; /* gray-200 */
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+// (maps to .strengthFill)
+.strength-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+// Password Requirements (maps to .requirementsList)
+.requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background-color: #f8fafc; /* slate-50 */
+    border-radius: 8px;
+    border: 1px solid #e2e8f0; /* slate-200 */
+}
+
+// (maps to .requirementItem)
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+// (maps to .requirementIcon)
+.requirement-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+// (maps to .requirementText)
+.requirement-text {
+    color: #475569; /* slate-600 */
+    font-weight: 500;
+}
