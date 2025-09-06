@@ -1,4 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { API_CONFIG } from './api.config';
 
 // Extend Axios config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -7,22 +8,10 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     };
 }
 
-type ApiConfig = {
-    BASE_URL: string;
-    TIMEOUT: number;
-};
-
-export const API: ApiConfig = {
-    BASE_URL: import.meta.env.VITE_API_URL
-        ? `${import.meta.env.VITE_API_URL}/api/v1`
-        : 'http://localhost:8080/api/v1',
-    TIMEOUT: 30000, // Increased timeout for better reliability
-};
-
 // Create axios instance
 const instance = axios.create({
-    baseURL: API.BASE_URL,
-    timeout: API.TIMEOUT,
+    baseURL: `${API_CONFIG.baseUrl}/${API_CONFIG.defaultVersion}`,
+    timeout: API_CONFIG.timeout,
     headers: {
         'Content-Type': 'application/json',
     },
