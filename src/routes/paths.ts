@@ -7,9 +7,11 @@ export const PATHS = {
     LOGIN: '/login',
     REGISTER: '/register',
 
-    // Dashboard paths
-    DASHBOARD: {
-        ROOT: '/dashboard',
+    // Admin paths
+    ADMIN: {
+        ROOT: '/admin',
+        DASHBOARD: 'dashboard',
+        USERS: 'users',
         SETTINGS: 'settings',
     },
 

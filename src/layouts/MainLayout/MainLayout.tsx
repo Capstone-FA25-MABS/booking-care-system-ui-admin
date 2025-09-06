@@ -1,22 +1,47 @@
-// src/layouts/MainLayout.tsx
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
+import clsx from 'clsx';
 
-import MainFooter from '../components/MainFooter';
 import MainHeader from '../components/MainHeader';
+import Sidenav from '../components/Sidenav';
 import styles from './MainLayout.module.scss';
 
 interface MainLayoutProps {
-    children: ReactNode;
-    hasFooter?: boolean;
+    children?: ReactNode;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, hasFooter = true }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+    const sidebarRef = useRef<HTMLDivElement>(null);
+    const sidebarOverlayRef = useRef<HTMLDivElement>(null);
+    const mainWrapperRef = useRef<HTMLDivElement>(null);
+
+    const toggleSidebarExpand = (expand: boolean) => {
+        sidebarRef.current?.classList.toggle('expand-menu', expand);
+    };
+
+    const openSidebar = () => {
+        mainWrapperRef.current?.classList.add('slide-nav');
+        sidebarOverlayRef.current?.classList.add('opened');
+    };
+
+    const closeSidebar = () => {
+        mainWrapperRef.current?.classList.remove('slide-nav');
+        sidebarOverlayRef.current?.classList.remove('opened');
+    };
+
     return (
-        <div className={styles.mainLayout}>
-            <MainHeader />
-            <main className={styles.contentContainer}>{children || <Outlet />}</main>
-            {hasFooter && <MainFooter />}
+        <div className={clsx(styles.mainLayoutContainer, 'mini-sidebar')} ref={sidebarRef}>
+            <div className="main-wrapper" ref={mainWrapperRef}>
+                <MainHeader handleClickMenuButton={openSidebar} />
+                <div
+                    onMouseEnter={() => toggleSidebarExpand(true)}
+                    onMouseLeave={() => toggleSidebarExpand(false)}
+                >
+                    <Sidenav handleClickCloseSidebar={closeSidebar} />
+                </div>
+                <main className={styles.contentContainer}>{children ?? <Outlet />}</main>
+            </div>
+            <div className="sidebar-overlay" ref={sidebarOverlayRef}></div>
         </div>
     );
 };
