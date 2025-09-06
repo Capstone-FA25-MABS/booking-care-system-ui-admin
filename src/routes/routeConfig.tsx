@@ -1,5 +1,7 @@
 import { RouteObject } from 'react-router-dom';
 import { PATHS } from './paths';
+import Dashboard from '@/pages/admins/Dashboard';
+import NotFoundError from '@/pages/errors/NotFoundError';
 
 const routes: RouteObject[] = [
     {
@@ -7,15 +9,15 @@ const routes: RouteObject[] = [
         element: <h1>Home</h1>,
     },
     {
-        path: PATHS.DASHBOARD.ROOT,
+        path: PATHS.ADMIN.ROOT,
         children: [
-            { path: PATHS.DASHBOARD.ROOT, element: <h1>Dashboard</h1> },
-            { path: PATHS.DASHBOARD.SETTINGS, element: <h1>Setting</h1> },
+            { path: PATHS.ADMIN.DASHBOARD, element: <Dashboard /> },
+            { path: PATHS.ADMIN.SETTINGS, element: <h1>Setting</h1> },
         ],
     },
     {
         path: PATHS.NOT_FOUND,
-        element: <h1>404 - Page Not Found</h1>,
+        element: <NotFoundError />,
     },
 ];
 
