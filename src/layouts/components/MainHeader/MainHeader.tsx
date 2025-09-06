@@ -61,10 +61,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                         </button>
                     </div>
 
-                    <a
-                        href="javascript:void(0);"
-                        className="btn btn-liner-gradient me-3 d-lg-flex d-none"
-                    >
+                    <a href="#" className="btn btn-liner-gradient me-3 d-lg-flex d-none">
                         AI Assistance<i className="ti ti-chart-bubble-filled ms-1"></i>
                     </a>
 
@@ -159,7 +156,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                     </span>
                                                     <div className="notification-action d-flex align-items-center float-end gap-2">
                                                         <a
-                                                            href="javascript:void(0);"
+                                                            href="#"
                                                             className="notification-read rounded-circle bg-danger"
                                                             data-bs-toggle="tooltip"
                                                             title=""
@@ -213,7 +210,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                     </span>
                                                     <div className="notification-action d-flex align-items-center float-end gap-2">
                                                         <a
-                                                            href="javascript:void(0);"
+                                                            href="#"
                                                             className="notification-read rounded-circle bg-danger"
                                                             data-bs-toggle="tooltip"
                                                             title=""
@@ -264,7 +261,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                     </span>
                                                     <div className="notification-action d-flex align-items-center float-end gap-2">
                                                         <a
-                                                            href="javascript:void(0);"
+                                                            href="#"
                                                             className="notification-read rounded-circle bg-danger"
                                                             data-bs-toggle="tooltip"
                                                             title=""
@@ -312,7 +309,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                     </span>
                                                     <div className="notification-action d-flex align-items-center float-end gap-2">
                                                         <a
-                                                            href="javascript:void(0);"
+                                                            href="#"
                                                             className="notification-read rounded-circle bg-danger"
                                                             data-bs-toggle="tooltip"
                                                             title=""
@@ -348,7 +345,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                     {/* User Dropdown */}
                     <div className="dropdown profile-dropdown d-flex align-items-center justify-content-center">
                         <a
-                            href="javascript:void(0);"
+                            href="#"
                             className="topbar-link dropdown-toggle drop-arrow-none position-relative"
                             data-bs-toggle="dropdown"
                             data-bs-offset="0,22"
