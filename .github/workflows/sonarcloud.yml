@@ -26,6 +26,9 @@ jobs:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: 'npm'
 
+            - name: 📦 Install dependencies
+              run: npm ci
+
             - name: 📊 SonarCloud Scan
               uses: SonarSource/sonarcloud-github-action@master
               env:
@@ -33,7 +36,7 @@ jobs:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
             - name: 🎯 SonarCloud Quality Gate Check
-              uses: Capstone-FA25/booking-care-system-ui-admin@develop
+              uses: SonarSource/sonarqube-quality-gate-action@master
               timeout-minutes: 5
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
