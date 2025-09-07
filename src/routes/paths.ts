@@ -15,6 +15,22 @@ export const PATHS = {
         SETTINGS: 'settings',
     },
 
+    // Clinic paths
+    CLINIC: {
+        ROOT: '/clinic',
+        DASHBOARD: 'dashboard',
+        DOCTORS: {
+            ROOT: 'doctors',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
+        APPOINTMENTS: {
+            ROOT: 'appointments',
+            NEW: 'new',
+            CALENDAR: 'calendar',
+        },
+    },
+
     // Not Found path
     NOT_FOUND: '*',
 } as const;

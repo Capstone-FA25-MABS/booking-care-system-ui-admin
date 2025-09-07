@@ -2,6 +2,15 @@ interface MainHeaderProps {
     handleClickMenuButton: () => void;
 }
 
+import logo from '@/assets/img/logo.svg';
+import logoSmall from '@/assets/img/logo-small.svg';
+import logoWhite from '@/assets/img/logo-white.svg';
+import doctor01 from '@/assets/img/doctors/doctor-01.jpg';
+import doctor02 from '@/assets/img/doctors/doctor-02.jpg';
+import doctor06 from '@/assets/img/doctors/doctor-06.jpg';
+import doctor07 from '@/assets/img/doctors/doctor-07.jpg';
+import user01 from '@/assets/img/users/user-01.jpg';
+
 const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
     return (
         <header className="navbar-header">
@@ -10,16 +19,16 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                     <a href="index.html" className="logo">
                         <span className="logo-light">
                             <span className="logo-lg">
-                                <img src="/src/assets/img/logo.svg" alt="logo" />
+                                <img src={logo} alt="logo" />
                             </span>
                             <span className="logo-sm">
-                                <img src="/src/assets/img/logo-small.svg" alt="small logo" />
+                                <img src={logoSmall} alt="small logo" />
                             </span>
                         </span>
 
                         <span className="logo-dark">
                             <span className="logo-lg">
-                                <img src="/src/assets/img/logo-white.svg" alt="dark logo" />
+                                <img src={logoWhite} alt="dark logo" />
                             </span>
                         </span>
                     </a>
@@ -133,7 +142,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                         <div className="d-flex">
                                             <div className="me-2 position-relative flex-shrink-0">
                                                 <img
-                                                    src="/src/assets/img/doctors/doctor-01.jpg"
+                                                    src={doctor01}
                                                     className="avatar-md rounded-circle"
                                                     alt=""
                                                 />
@@ -183,7 +192,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                         <div className="d-flex">
                                             <div className="me-2 position-relative flex-shrink-0">
                                                 <img
-                                                    src="/src/assets/img/doctors/doctor-06.jpg"
+                                                    src={doctor06}
                                                     className="avatar-md rounded-circle"
                                                     alt=""
                                                 />
@@ -237,7 +246,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                         <div className="d-flex">
                                             <div className="me-2 position-relative flex-shrink-0">
                                                 <img
-                                                    src="/src/assets/img/doctors/doctor-02.jpg"
+                                                    src={doctor02}
                                                     className="avatar-md rounded-circle"
                                                     alt=""
                                                 />
@@ -288,7 +297,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                         <div className="d-flex">
                                             <div className="me-2 position-relative flex-shrink-0">
                                                 <img
-                                                    src="/src/assets/img/doctors/doctor-07.jpg"
+                                                    src={doctor07}
                                                     className="avatar-md rounded-circle"
                                                     alt=""
                                                 />
@@ -353,7 +362,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             aria-expanded="false"
                         >
                             <img
-                                src="/src/assets/img/users/user-01.jpg"
+                                src={user01}
                                 width="32"
                                 className="rounded-circle d-flex"
                                 alt="user-image"
@@ -365,7 +374,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                         <div className="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
                             <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                                 <img
-                                    src="/src/assets/img/users/user-01.jpg"
+                                    src={user01}
                                     className="rounded-circle"
                                     width="42"
                                     height="42"

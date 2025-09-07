@@ -1,20 +1,23 @@
 import { buildPath, PATHS } from '@/routes/paths';
 import { Link } from 'react-router-dom';
 
+import logo from '@/assets/img/logo.svg';
+import errorNotFoundImg from '@/assets/img/error-404.svg';
+
 const NotFoundError: React.FC = () => {
-    const role = 'admin';
+    const role = 'clinic'; // This should be dynamically determined based on the logged-in user
     let path = '/';
 
     switch (role) {
-        case 'admin':
-            path = buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.DASHBOARD);
-            break;
+        // case 'admin':
+        //     path = buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.DASHBOARD);
+        //     break;
         // case 'doctor':
         //     path = buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.DASHBOARD);
         //     break;
-        // case 'staff':
-        //     path = buildPath(PATHS.STAFF.ROOT, PATHS.STAFF.DASHBOARD);
-        //     break;
+        case 'clinic':
+            path = buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DASHBOARD);
+            break;
         default:
             path = PATHS.HOME;
             break;
@@ -27,18 +30,10 @@ const NotFoundError: React.FC = () => {
                         <div className="col-lg-6">
                             <div className="d-flex flex-column align-items-center justify-content-center">
                                 <div className=" mx-auto mb-5 text-center">
-                                    <img
-                                        src="/src/assets/img/logo.svg"
-                                        className="img-fluid"
-                                        alt="Logo"
-                                    />
+                                    <img src={logo} className="img-fluid" alt="Logo" />
                                 </div>
                                 <div className="error-images mb-4">
-                                    <img
-                                        src="/src/assets/img/error-404.svg"
-                                        alt="image"
-                                        className="img-fluid"
-                                    />
+                                    <img src={errorNotFoundImg} alt="image" className="img-fluid" />
                                 </div>
                                 <div className="text-center">
                                     <h4 className="mb-2 fw-bold">Oops, something went wrong</h4>

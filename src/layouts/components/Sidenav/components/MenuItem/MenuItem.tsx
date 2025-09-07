@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import styles from './MenuItem.module.scss';
 import clsx from 'clsx';
+import { NavLink } from 'react-router-dom';
 
 interface MenuItemProps {
     label: string;
@@ -16,7 +17,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ label, iconClassName, link, subItem
 
     return (
         <li className="submenu">
-            <Link
+            <NavLink
                 to={link || '#'}
                 onClick={() => setOpen(!open)}
                 className={open ? 'active subdrop' : ''}
@@ -24,7 +25,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ label, iconClassName, link, subItem
                 <i className={iconClassName}></i>
                 <span>{label}</span>
                 {subItems.length > 0 && <span className="menu-arrow"></span>}
-            </Link>
+            </NavLink>
             <ul className={clsx(styles.subMenuList, open ? styles.open : '')}>
                 {subItems.map((item, index) => (
                     <li key={index}>

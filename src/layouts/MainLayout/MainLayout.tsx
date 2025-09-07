@@ -7,10 +7,19 @@ import Sidenav from '../components/Sidenav';
 import styles from './MainLayout.module.scss';
 
 interface MainLayoutProps {
+    listGroupMenuItem: Array<{
+        title: string;
+        items: Array<{
+            label: string;
+            link?: string;
+            icon: string;
+            subItems?: Array<{ label: string; link: string }>;
+        }>;
+    }>;
     children?: ReactNode;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) => {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const sidebarOverlayRef = useRef<HTMLDivElement>(null);
     const mainWrapperRef = useRef<HTMLDivElement>(null);
@@ -37,7 +46,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     onMouseEnter={() => toggleSidebarExpand(true)}
                     onMouseLeave={() => toggleSidebarExpand(false)}
                 >
-                    <Sidenav handleClickCloseSidebar={closeSidebar} />
+                    <Sidenav
+                        handleClickCloseSidebar={closeSidebar}
+                        listGroupMenuItem={listGroupMenuItem}
+                    />
                 </div>
                 <main className={styles.contentContainer}>{children ?? <Outlet />}</main>
             </div>

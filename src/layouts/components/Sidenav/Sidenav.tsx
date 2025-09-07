@@ -1,12 +1,31 @@
 import SimpleBar from 'simplebar-react';
 import GroupMenuItem from './components/GroupMenuItem';
-import { listGroupMenuItem } from './sidenav.data';
+// import { listGroupMenuItem } from './sidenav.data';
+
+import logo from '@/assets/img/logo.svg';
+import logoSmall from '@/assets/img/logo-small.svg';
+import logoWhite from '@/assets/img/logo-white.svg';
+import trustcare from '@/assets/img/icons/trustcare.svg';
+import clinic01 from '@/assets/img/icons/clinic-01.svg';
+import clinic02 from '@/assets/img/icons/clinic-02.svg';
+import clinic03 from '@/assets/img/icons/clinic-03.svg';
+import clinic04 from '@/assets/img/icons/clinic-04.svg';
+import sidebarIcon from '@/assets/img/icons/sidebar-icon.svg';
 
 interface SidenavProps {
+    listGroupMenuItem: Array<{
+        title: string;
+        items: Array<{
+            label: string;
+            link?: string;
+            icon: string;
+            subItems?: Array<{ label: string; link: string }>;
+        }>;
+    }>;
     handleClickCloseSidebar: () => void;
 }
 
-const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
+const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSidebar }) => {
     return (
         <div className="sidebar" id="sidebar">
             {/* Start Logo */}
@@ -14,17 +33,17 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                 <div>
                     {/* Logo Normal */}
                     <a href="index.html" className="logo logo-normal">
-                        <img src="/src/assets/img/logo.svg" alt="Logo" />
+                        <img src={logo} alt="Logo" />
                     </a>
 
                     {/* Logo Small */}
                     <a href="index.html" className="logo-small">
-                        <img src="/src/assets/img/logo-small.svg" alt="Logo" />
+                        <img src={logoSmall} alt="Logo" />
                     </a>
 
                     {/* Logo Dark */}
                     <a href="index.html" className="dark-logo">
-                        <img src="/src/assets/img/logo-white.svg" alt="Logo" />
+                        <img src={logoWhite} alt="Logo" />
                     </a>
                 </div>
 
@@ -51,7 +70,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                             <div className="d-flex justify-content-between align-items-center">
                                 <div className="d-flex align-items-center">
                                     <span className="avatar rounded-circle flex-shrink-0 p-2">
-                                        <img src="/src/assets/img/icons/trustcare.svg" alt="img" />
+                                        <img src={trustcare} alt="img" />
                                     </span>
                                     <div className="ms-2">
                                         <h6 className="fs-14 fw-semibold mb-0">Trustcare Clinic</h6>
@@ -66,7 +85,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                                 <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
                                     <span className="d-flex align-items-center">
                                         <span className="me-2">
-                                            <img src="/src/assets/img/icons/clinic-01.svg" alt="" />
+                                            <img src={clinic01} alt="" />
                                         </span>
                                         <span className="fw-semibold text-dark">
                                             CureWell Medical Hub
@@ -80,7 +99,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                                 <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
                                     <span className="d-flex align-items-center">
                                         <span className="me-2">
-                                            <img src="/src/assets/img/icons/clinic-02.svg" alt="" />
+                                            <img src={clinic02} alt="" />
                                         </span>
                                         <span className="fw-semibold text-dark">
                                             Trustcare Clinic
@@ -94,7 +113,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                                 <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
                                     <span className="d-flex align-items-center">
                                         <span className="me-2">
-                                            <img src="/src/assets/img/icons/clinic-03.svg" alt="" />
+                                            <img src={clinic03} alt="" />
                                         </span>
                                         <span className="fw-semibold text-dark">
                                             NovaCare Medical
@@ -108,7 +127,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                                 <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
                                     <span className="d-flex align-items-center">
                                         <span className="me-2">
-                                            <img src="/src/assets/img/icons/clinic-04.svg" alt="" />
+                                            <img src={clinic04} alt="" />
                                         </span>
                                         <span className="fw-semibold text-dark">
                                             Greeny Medical Clinic
@@ -131,7 +150,7 @@ const Sidenav: React.FC<SidenavProps> = ({ handleClickCloseSidebar }) => {
                 <div className="sidebar-footer border-top mt-3">
                     <div className="trial-item mt-0 p-3 text-center">
                         <div className="trial-item-icon rounded-4 mb-3 p-2 text-center shadow-sm d-inline-flex">
-                            <img src="/src/assets/img/icons/sidebar-icon.svg" alt="img" />
+                            <img src={sidebarIcon} alt="img" />
                         </div>
                         <div>
                             <h6 className="fs-14 fw-semibold mb-1">Upgrade To Pro</h6>
