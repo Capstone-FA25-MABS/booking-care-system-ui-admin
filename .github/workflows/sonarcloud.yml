@@ -29,7 +29,13 @@ jobs:
             - name: 📦 Install dependencies
               run: npm ci
 
-            - name: 📊 SonarCloud Scan
+            - name: � Run linting
+              run: npm run lint
+
+            # - name: ✅ Run tests with coverage
+            #   run: npm run test:coverage
+
+            - name: �📊 SonarCloud Scan
               uses: SonarSource/sonarcloud-github-action@master
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
