@@ -6,6 +6,9 @@ on:
     pull_request:
         branches: [develop]
 
+env:
+    NODE_VERSION: 20.19.3
+
 jobs:
     # Quality checks for PRs
     pr-checks:
@@ -19,7 +22,7 @@ jobs:
             - name: 🔧 Set up Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 18
+                  node-version: ${{ env.NODE_VERSION }}
                   cache: 'npm'
 
             - name: 📦 Install dependencies
@@ -51,7 +54,7 @@ jobs:
             - name: 🔧 Set up Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: ${{ env.NODE_VERSION }}
                   cache: 'npm'
 
             - name: 📦 Install dependencies
