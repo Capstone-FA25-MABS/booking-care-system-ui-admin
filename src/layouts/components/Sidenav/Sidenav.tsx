@@ -1,6 +1,5 @@
 import SimpleBar from 'simplebar-react';
 import GroupMenuItem from './components/GroupMenuItem';
-// import { listGroupMenuItem } from './sidenav.data';
 
 import logo from '@/assets/img/logo.svg';
 import logoSmall from '@/assets/img/logo-small.svg';

@@ -33,7 +33,11 @@ const NotFoundError: React.FC = () => {
                                     <img src={logo} className="img-fluid" alt="Logo" />
                                 </div>
                                 <div className="error-images mb-4">
-                                    <img src={errorNotFoundImg} alt="image" className="img-fluid" />
+                                    <img
+                                        src={errorNotFoundImg}
+                                        alt="Page not found"
+                                        className="img-fluid"
+                                    />
                                 </div>
                                 <div className="text-center">
                                     <h4 className="mb-2 fw-bold">Oops, something went wrong</h4>
