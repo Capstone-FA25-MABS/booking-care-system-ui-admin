@@ -28,3 +28,10 @@ dist-ssr
 .eslintignore
 .env
 .env.*
+
+# Test coverage
+coverage/
+.nyc_output
+
+# SonarCloud
+.scannerwork/
