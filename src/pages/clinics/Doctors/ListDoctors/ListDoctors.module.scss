@@ -1,0 +1,51 @@
+.modalContent {
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+.modalHeader {
+    border-bottom: none;
+    padding: 20px 20px 0 20px;
+}
+.modalTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+.clearAll {
+    color: #ef4444;
+    margin-left: auto;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+}
+.modalBody {
+    padding: 20px;
+}
+.label {
+    font-size: 14px;
+    font-weight: 500;
+}
+.resetLink {
+    color: #2e37a4;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+}
+.inputDate {
+    min-height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    border-color: #e5e7eb;
+}
+.modalFooter {
+    border-top: none;
+    padding: 0 20px 20px 20px;
+}
+.btn {
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
