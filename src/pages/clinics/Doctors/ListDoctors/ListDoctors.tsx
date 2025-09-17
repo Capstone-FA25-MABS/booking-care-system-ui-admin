@@ -647,6 +647,7 @@ const ListDoctors: React.FC = () => {
                                             open={Boolean(calendarAnchor)}
                                             onClose={() => setCalendarAnchor(null)}
                                             usePopper={true}
+                                            isTodaySelected={true}
                                             styles={{ width: 320 }}
                                         />
                                     </div>

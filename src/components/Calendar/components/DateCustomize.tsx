@@ -69,12 +69,13 @@ const DateCustomize: React.FC<DateCalendarProps> = ({
                 background: '#e9ecef',
             },
             '&.Mui-selected': {
-                background: '#007bff !important',
-                color: '#ffffff',
+                background: isTodaySelected ? '#2e37a4' : 'transparent',
+                color: isTodaySelected ? '#ffffff' : '#333',
             },
             '&.MuiPickersDay-today': {
-                background: isTodaySelected ? '#e6f0fa' : 'transparent',
-                color: isTodaySelected ? '#ffffff' : '#333',
+                border: '1px solid #2e37a4',
+                background: 'transparent !important',
+                color: 'inherit !important',
             },
             '&.Mui-disabled': {
                 color: '#ccc',
