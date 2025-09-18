@@ -1,11 +1,21 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from './api.config';
+import { updateToken } from '@/store/slices/authSlice';
+// ⚠️ Store injection pattern to avoid circular dependency
+let reduxStore: any = null;
+
+// ✅ Function to inject store from outside
+export const injectStore = (store: any) => {
+    reduxStore = store;
+};
 
 // Extend Axios config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     metadata?: {
         startTime: Date;
     };
+    // mark retry
+    _retry?: boolean;
 }
 
 // Create axios instance
@@ -15,42 +25,36 @@ const instance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true,
 });
 
 // Request interceptor to add auth token
 instance.interceptors.request.use(
     (config: ExtendedAxiosRequestConfig) => {
-        // Try to get token from localStorage (fallback for non-Redux usage)
-        let token = localStorage.getItem('token');
-
-        // Try to get token from Redux persist
-        if (!token) {
-            try {
-                const persistedAuth = localStorage.getItem('persist:root');
-                if (persistedAuth) {
-                    const parsedAuth = JSON.parse(persistedAuth);
-                    const authData = JSON.parse(parsedAuth.auth);
-                    token = authData.token;
-                }
-            } catch (error) {
-                console.warn('Failed to get token from persisted state', error);
-            }
-        }
-
-        if (token) {
-            config.headers = config.headers || {};
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        // Add request timestamp for debugging
+        // Backend does not require Authorization header; rely on HttpOnly cookies
+        // Keep metadata timestamp for logging
         config.metadata = { startTime: new Date() };
-
         return config;
     },
     (error) => {
         return Promise.reject(error);
     }
 );
+
+// ===== Refresh token queue handling =====
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value?: any) => void; reject: (err: any) => void }> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (token) {
+            prom.resolve();
+        } else {
+            prom.reject(error);
+        }
+    });
+    failedQueue = [];
+};
 
 // Response interceptor for handling responses and errors
 instance.interceptors.response.use(
@@ -67,40 +71,99 @@ instance.interceptors.response.use(
         // Return the data directly for easier usage
         return response.data;
     },
-    function (error: AxiosError) {
+    async function (error: AxiosError) {
         const err = error?.response?.data as any;
+        const originalRequest = error.config as ExtendedAxiosRequestConfig;
 
-        // Log the error for debugging
+        // Network error
+        if (!error.response) {
+            console.error('API Error:', {
+                url: error.config?.url,
+                method: error.config?.method,
+                network: true,
+            });
+            return Promise.reject({
+                message: 'Không thể kết nối đến máy chủ!',
+                isNetworkError: true,
+            });
+        }
+
+        // 🛑 Do not attempt refresh for login endpoint
+        const url = (originalRequest.url || '').toString();
+        const isLogin = url.includes('/auth/login');
+        const isRefresh = url.includes('/auth/refresh-token');
+
+        // General 403 handling for protected resources
+        if (error.response?.status === 403) {
+            if (typeof window !== 'undefined') {
+                window.location.href = '/error-403';
+            }
+            return Promise.reject({
+                message: err?.message || 'Access forbidden',
+                status: 403,
+                data: err,
+            });
+        }
+
+        // ✅ Attempt refresh on 401 (except for login/refresh endpoints)
+        if (error.response?.status === 401 && !isLogin && !isRefresh) {
+            if (isRefreshing) {
+                // Queue the request until refresh completes
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then(() => instance(originalRequest))
+                    .catch((queueErr) => Promise.reject(queueErr));
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                // Backend reads refresh token from HttpOnly cookie
+                const refreshResponse: any = await instance.post('/auth/refresh-token');
+
+                // Try to grab new access token (if backend returns it in body)
+                const newToken = refreshResponse?.data?.token || refreshResponse?.token;
+                if (newToken) {
+                    localStorage.setItem('token', newToken);
+
+                    // ✅ Update Redux state using injected store
+                    if (reduxStore) {
+                        reduxStore.dispatch(updateToken(newToken));
+                    }
+                }
+
+                processQueue(null, newToken || '1');
+                isRefreshing = false;
+
+                return instance(originalRequest);
+            } catch (refreshError) {
+                processQueue(refreshError as any, null);
+                isRefreshing = false;
+
+                // Clear and redirect on refresh failure
+                try {
+                    localStorage.removeItem('persist:booking-care-root');
+                    localStorage.removeItem('token');
+                } catch {
+                    // Ignore localStorage errors in case it's not available
+                }
+
+                if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+                return Promise.reject(refreshError);
+            }
+        }
+
+        // Log the error for debugging (fallback)
         console.error('API Error:', {
             url: error.config?.url,
             method: error.config?.method,
             status: error.response?.status,
             data: err,
         });
-
-        // Handle different error scenarios
-        if (error.response?.status === 401) {
-            // Unauthorized - clear auth data and redirect
-            localStorage.removeItem('persist:root');
-            localStorage.removeItem('token');
-
-            // Dispatch logout action if Redux store is available
-            if (typeof window !== 'undefined' && (window as any).__REDUX_STORE__) {
-                const store = (window as any).__REDUX_STORE__;
-                store.dispatch({ type: 'auth/logout' });
-            }
-
-            // Redirect to login page
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-        } else if (error.response?.status === 403) {
-            // Forbidden - user doesn't have permission
-            console.warn('Access forbidden:', err?.message || 'Insufficient permissions');
-        } else if (error.response && error.response.status >= 500) {
-            // Server error
-            console.error('Server error:', err?.message || 'Internal server error');
-        }
 
         // Return structured error object
         return Promise.reject({
