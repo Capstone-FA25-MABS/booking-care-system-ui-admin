@@ -1,52 +1,65 @@
 // src/hooks/useAuth.ts
-import { useState, useEffect, useCallback } from 'react';
-import { User, UserLogin, UserRegister } from '../types/user.type';
-import { userService } from '../services/user.service';
+import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/store';
+import {
+    loginAsync,
+    logoutAsync,
+    clearError,
+    googleLoginAsync,
+    facebookLoginAsync,
+} from '@/store/slices/authSlice';
+import { LoginRequest, GoogleLoginRequest, FacebookLoginRequest } from '@/types/auth.types';
 
 export const useAuth = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch<AppDispatch>();
+    const { token, isAuthenticated, isLoading, error } = useSelector(
+        (state: RootState) => state.auth
+    );
 
-    useEffect(() => {
-        if (token) {
-            userService
-                .getUserProfile(token)
-                .then(setUser)
-                .catch(() => logout())
-                .finally(() => setLoading(false));
-        } else {
-            setLoading(false);
+    const login = useCallback(
+        async (credentials: LoginRequest) => {
+            await dispatch(loginAsync(credentials)).unwrap();
+        },
+        [dispatch]
+    );
+
+    const logout = useCallback(async () => {
+        try {
+            await dispatch(logoutAsync()).unwrap();
+        } catch (error) {
+            // Even if logout fails, we clear local state
+            console.error('Logout error:', error);
         }
-    }, [token]);
+    }, [dispatch]);
 
-    const login = async (credentials: UserLogin) => {
-        const res = await userService.login(credentials);
-        setToken(res.token);
-        setUser(res.user);
-        localStorage.setItem('token', res.token);
-    };
+    const googleLogin = useCallback(
+        async (request: GoogleLoginRequest) => {
+            await dispatch(googleLoginAsync(request)).unwrap();
+        },
+        [dispatch]
+    );
 
-    const register = async (data: UserRegister) => {
-        const res = await userService.register(data);
-        setToken(res.token);
-        setUser(res.user);
-        localStorage.setItem('token', res.token);
-    };
+    const facebookLogin = useCallback(
+        async (request: FacebookLoginRequest) => {
+            await dispatch(facebookLoginAsync(request)).unwrap();
+        },
+        [dispatch]
+    );
 
-    const logout = useCallback(() => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-    }, []);
+    const clearAuthError = useCallback(() => {
+        dispatch(clearError());
+    }, [dispatch]);
 
     return {
-        user,
         token,
-        loading,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        isLoading,
+        error,
         login,
-        register,
         logout,
+        googleLogin,
+        facebookLogin,
+        clearError: clearAuthError,
     };
 };
