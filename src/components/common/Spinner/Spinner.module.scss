@@ -1,0 +1,125 @@
+// Medical/Healthcare themed spinner colors
+$primary-medical: #007bff; // Medical blue - trust, professionalism
+$secondary-medical: #28a745; // Medical green - health, healing
+$accent-medical: #17a2b8; // Light blue - calming, care
+$emergency-medical: #dc3545; // Medical red - urgency, attention
+
+// Modern dot spinner for Healthcare System
+.loader {
+    color: $primary-medical;
+    font-size: 45px;
+    text-indent: -9999em;
+    overflow: hidden;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    position: relative;
+    display: inline-block;
+    transform: translateZ(0);
+    animation:
+        mltShdSpin 1.7s infinite ease,
+        round 1.7s infinite ease;
+}
+
+// Size variants
+.small {
+    font-size: 24px;
+}
+
+.medium {
+    font-size: 32px;
+}
+
+.large {
+    font-size: 48px;
+}
+
+// Medical themed color variants
+.loader.primary {
+    color: $primary-medical;
+}
+
+.loader.emergency {
+    color: $emergency-medical;
+}
+
+.loader.success {
+    color: $secondary-medical;
+}
+
+.loader.info {
+    color: $accent-medical;
+}
+
+// Centered positioning
+.centered {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+// Modern dot spinner animations
+@keyframes mltShdSpin {
+    0% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            0 -0.83em 0 -0.42em,
+            0 -0.83em 0 -0.44em,
+            0 -0.83em 0 -0.46em,
+            0 -0.83em 0 -0.477em;
+    }
+    5%,
+    95% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            0 -0.83em 0 -0.42em,
+            0 -0.83em 0 -0.44em,
+            0 -0.83em 0 -0.46em,
+            0 -0.83em 0 -0.477em;
+    }
+    10%,
+    59% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            -0.087em -0.825em 0 -0.42em,
+            -0.173em -0.812em 0 -0.44em,
+            -0.256em -0.789em 0 -0.46em,
+            -0.297em -0.775em 0 -0.477em;
+    }
+    20% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            -0.338em -0.758em 0 -0.42em,
+            -0.555em -0.617em 0 -0.44em,
+            -0.671em -0.488em 0 -0.46em,
+            -0.749em -0.34em 0 -0.477em;
+    }
+    38% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            -0.377em -0.74em 0 -0.42em,
+            -0.645em -0.522em 0 -0.44em,
+            -0.775em -0.297em 0 -0.46em,
+            -0.82em -0.09em 0 -0.477em;
+    }
+    100% {
+        box-shadow:
+            0 -0.83em 0 -0.4em,
+            0 -0.83em 0 -0.42em,
+            0 -0.83em 0 -0.44em,
+            0 -0.83em 0 -0.46em,
+            0 -0.83em 0 -0.477em;
+    }
+}
+
+@keyframes round {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
