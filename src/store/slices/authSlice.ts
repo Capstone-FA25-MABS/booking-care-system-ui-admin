@@ -10,6 +10,23 @@ import {
 } from '@/types/auth.types';
 import { getRolesFromJwt } from '@/utils/jwt';
 
+// Helper function to validate token and roles
+const validateTokenAndRoles = (response: any, rejectWithValue: any) => {
+    const token = response.data?.token;
+    if (token) {
+        const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
+        const allowed = ['ADMIN', 'DOCTOR', 'CLINIC'];
+        const hasAllowed = roles.some((r) => allowed.includes(r));
+        if (!hasAllowed) {
+            return rejectWithValue(
+                'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
+            );
+        }
+        AuthService.setToken(token);
+    }
+    return null; // No error
+};
+
 // Initial state
 const initialState: AuthState = {
     token: AuthService.getToken(),
@@ -25,18 +42,10 @@ export const loginAsync = createAsyncThunk(
         try {
             const response = await AuthService.login(credentials);
 
-            const token = response.data?.token;
-            if (token) {
-                const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-                const allowed = ['ADMIN', 'DOCTOR', 'CLINIC'];
-                const hasAllowed = roles.some((r) => allowed.includes(r));
-                if (!hasAllowed) {
-                    return rejectWithValue(
-                        'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
-                    );
-                }
-                AuthService.setToken(token);
-            }
+            // Validate token and roles using helper function
+            const validationError = validateTokenAndRoles(response, rejectWithValue);
+            if (validationError) return validationError;
+
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Login failed');
@@ -86,18 +95,10 @@ export const googleLoginAsync = createAsyncThunk(
         try {
             const response = await AuthService.googleLogin(request);
 
-            const token = response.data?.token;
-            if (token) {
-                const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-                const allowed = ['ADMIN', 'DOCTOR', 'CLINIC'];
-                const hasAllowed = roles.some((r) => allowed.includes(r));
-                if (!hasAllowed) {
-                    return rejectWithValue(
-                        'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
-                    );
-                }
-                AuthService.setToken(token);
-            }
+            // Validate token and roles using helper function
+            const validationError = validateTokenAndRoles(response, rejectWithValue);
+            if (validationError) return validationError;
+
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Google login failed');
@@ -111,18 +112,10 @@ export const facebookLoginAsync = createAsyncThunk(
         try {
             const response = await AuthService.facebookLogin(request);
 
-            const token = response.data?.token;
-            if (token) {
-                const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-                const allowed = ['ADMIN', 'DOCTOR', 'CLINIC'];
-                const hasAllowed = roles.some((r) => allowed.includes(r));
-                if (!hasAllowed) {
-                    return rejectWithValue(
-                        'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
-                    );
-                }
-                AuthService.setToken(token);
-            }
+            // Validate token and roles using helper function
+            const validationError = validateTokenAndRoles(response, rejectWithValue);
+            if (validationError) return validationError;
+
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Facebook login failed');

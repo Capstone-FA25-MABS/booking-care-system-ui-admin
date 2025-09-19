@@ -56,125 +56,118 @@ const processQueue = (error: any, token: string | null = null) => {
     failedQueue = [];
 };
 
-// Response interceptor for handling responses and errors
-instance.interceptors.response.use(
-    function (response: AxiosResponse) {
-        // Calculate response time for performance monitoring
-        const endTime = new Date();
-        const config = response.config as ExtendedAxiosRequestConfig;
-        const startTime = config.metadata?.startTime;
-        if (startTime) {
-            const responseTime = endTime.getTime() - startTime.getTime();
-            console.log(`API Response Time: ${responseTime}ms for ${response.config.url}`);
-        }
+// Helper functions to reduce cognitive complexity
+const handleNetworkError = (error: AxiosError) => {
+    console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        network: true,
+    });
+    return Promise.reject(new Error('Không thể kết nối đến máy chủ!'));
+};
 
-        // Return the data directly for easier usage
-        return response.data;
-    },
-    async function (error: AxiosError) {
-        const err = error?.response?.data as any;
-        const originalRequest = error.config as ExtendedAxiosRequestConfig;
-
-        // Network error
-        if (!error.response) {
-            console.error('API Error:', {
-                url: error.config?.url,
-                method: error.config?.method,
-                network: true,
-            });
-            return Promise.reject({
-                message: 'Không thể kết nối đến máy chủ!',
-                isNetworkError: true,
-            });
-        }
-
-        // 🛑 Do not attempt refresh for login endpoint
-        const url = (originalRequest.url || '').toString();
-        const isLogin = url.includes('/auth/login');
-        const isRefresh = url.includes('/auth/refresh-token');
-
-        // General 403 handling for protected resources
-        if (error.response?.status === 403) {
-            if (typeof window !== 'undefined') {
-                window.location.href = '/error-403';
-            }
-            return Promise.reject({
-                message: err?.message || 'Access forbidden',
-                status: 403,
-                data: err,
-            });
-        }
-
-        // ✅ Attempt refresh on 401 (except for login/refresh endpoints)
-        if (error.response?.status === 401 && !isLogin && !isRefresh) {
-            if (isRefreshing) {
-                // Queue the request until refresh completes
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                })
-                    .then(() => instance(originalRequest))
-                    .catch((queueErr) => Promise.reject(queueErr));
-            }
-
-            originalRequest._retry = true;
-            isRefreshing = true;
-
-            try {
-                // Backend reads refresh token from HttpOnly cookie
-                const refreshResponse: any = await instance.post('/auth/refresh-token');
-
-                // Try to grab new access token (if backend returns it in body)
-                const newToken = refreshResponse?.data?.token || refreshResponse?.token;
-                if (newToken) {
-                    localStorage.setItem('token', newToken);
-
-                    // ✅ Update Redux state using injected store
-                    if (reduxStore) {
-                        reduxStore.dispatch(updateToken(newToken));
-                    }
-                }
-
-                processQueue(null, newToken || '1');
-                isRefreshing = false;
-
-                return instance(originalRequest);
-            } catch (refreshError) {
-                processQueue(refreshError as any, null);
-                isRefreshing = false;
-
-                // Clear and redirect on refresh failure
-                try {
-                    localStorage.removeItem('persist:booking-care-root');
-                    localStorage.removeItem('token');
-                } catch {
-                    // Ignore localStorage errors in case it's not available
-                }
-
-                if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-                    window.location.href = '/login';
-                }
-                return Promise.reject(refreshError);
-            }
-        }
-
-        // Log the error for debugging (fallback)
-        console.error('API Error:', {
-            url: error.config?.url,
-            method: error.config?.method,
-            status: error.response?.status,
-            data: err,
-        });
-
-        // Return structured error object
-        return Promise.reject({
-            message: err?.message || error.message || 'An error occurred',
-            status: error.response?.status,
-            code: err?.code,
-            data: err,
-            isNetworkError: !error.response,
-        });
+const handleForbiddenError = (err: any) => {
+    if (typeof window !== 'undefined') {
+        window.location.href = '/error-403';
     }
-);
+    return Promise.reject(new Error(err?.message || 'Access forbidden'));
+};
+
+const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
+    return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+    })
+        .then(() => instance(originalRequest))
+        .catch((queueErr) => Promise.reject(queueErr));
+};
+
+const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) => {
+    try {
+        const refreshResponse: any = await instance.post('/auth/refresh-token');
+        const newToken = refreshResponse?.data?.token || refreshResponse?.token;
+
+        if (newToken) {
+            localStorage.setItem('token', newToken);
+            if (reduxStore) {
+                reduxStore.dispatch(updateToken(newToken));
+            }
+        }
+
+        processQueue(null, newToken || '1');
+        isRefreshing = false;
+        return instance(originalRequest);
+    } catch (refreshError) {
+        processQueue(refreshError as any, null);
+        isRefreshing = false;
+
+        try {
+            localStorage.removeItem('persist:booking-care-root');
+            localStorage.removeItem('token');
+        } catch {
+            // Ignore localStorage errors
+        }
+
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+    }
+};
+
+const handleResponseError = async (error: AxiosError) => {
+    const err = error?.response?.data as any;
+    const originalRequest = error.config as ExtendedAxiosRequestConfig;
+
+    // Network error
+    if (!error.response) {
+        return handleNetworkError(error);
+    }
+
+    const url = (originalRequest.url || '').toString();
+    const isLogin = url.includes('/auth/login');
+    const isRefresh = url.includes('/auth/refresh-token');
+
+    // Handle 403 errors
+    if (error.response?.status === 403) {
+        return handleForbiddenError(err);
+    }
+
+    // Handle 401 errors with token refresh
+    if (error.response?.status === 401 && !isLogin && !isRefresh) {
+        if (isRefreshing) {
+            return queueFailedRequest(originalRequest);
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+        return handleTokenRefresh(originalRequest);
+    }
+
+    // Log and reject other errors
+    console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: err,
+    });
+
+    return Promise.reject(new Error(err?.message || error.message || 'An error occurred'));
+};
+
+// Response interceptor for handling responses and errors
+instance.interceptors.response.use(function (response: AxiosResponse) {
+    // Calculate response time for performance monitoring
+    const endTime = new Date();
+    const config = response.config as ExtendedAxiosRequestConfig;
+    const startTime = config.metadata?.startTime;
+    if (startTime) {
+        const responseTime = endTime.getTime() - startTime.getTime();
+        console.log(`API Response Time: ${responseTime}ms for ${response.config.url}`);
+    }
+
+    // Return the data directly for easier usage
+    return response.data;
+}, handleResponseError);
 
 // Add a method to update the base URL if needed
 export const updateBaseURL = (newBaseURL: string) => {

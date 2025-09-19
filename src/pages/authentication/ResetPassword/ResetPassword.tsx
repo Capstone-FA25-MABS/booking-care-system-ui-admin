@@ -6,6 +6,7 @@ import { AuthService } from '@/services/auth.service';
 import { AppDispatch, RootState } from '@/store';
 import { resetPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { useAuth } from '@/hooks/useAuth';
+import { VALIDATION_MESSAGES } from '@/constants/validation';
 
 const ResetPassword: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -87,22 +88,21 @@ const ResetPassword: React.FC = () => {
 
         // Validate new password
         if (!formData.newPassword) {
-            errors.newPassword = 'Mật khẩu mới là bắt buộc';
+            errors.newPassword = VALIDATION_MESSAGES.PASSWORD_NEW_REQUIRED;
         } else if (!AuthService.validatePassword(formData.newPassword)) {
-            errors.newPassword =
-                'Mật khẩu phải có ít nhất 8 ký tự bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
+            errors.newPassword = VALIDATION_MESSAGES.PASSWORD_STRENGTH_REQUIREMENT;
         }
 
         // Validate confirm password
         if (!formData.confirmNewPassword) {
-            errors.confirmNewPassword = 'Vui lòng xác nhận mật khẩu mới';
+            errors.confirmNewPassword = VALIDATION_MESSAGES.PASSWORD_CONFIRM_REQUIRED;
         } else if (formData.newPassword !== formData.confirmNewPassword) {
-            errors.confirmNewPassword = 'Mật khẩu không khớp';
+            errors.confirmNewPassword = VALIDATION_MESSAGES.PASSWORD_MISMATCH;
         }
 
         // Validate token
         if (!formData.resetToken) {
-            errors.token = 'Token đặt lại mật khẩu bị thiếu';
+            errors.token = VALIDATION_MESSAGES.RESET_TOKEN_MISSING;
         }
 
         setValidationErrors(errors);
@@ -218,13 +218,16 @@ const ResetPassword: React.FC = () => {
 
                         {/* New Password Field */}
                         <div className="mb-3">
-                            <label className="form-label">Mật khẩu</label>
+                            <label htmlFor="newPassword" className="form-label">
+                                Mật khẩu
+                            </label>
                             <div className="position-relative">
                                 <div className="pass-group input-group position-relative border rounded">
                                     <span className="input-group-text bg-white border-0">
                                         <i className="ti ti-lock text-dark fs-14"></i>
                                     </span>
                                     <input
+                                        id="newPassword"
                                         type={showPasswords.newPassword ? 'text' : 'password'}
                                         name="newPassword"
                                         value={formData.newPassword}
@@ -232,20 +235,38 @@ const ResetPassword: React.FC = () => {
                                         className={`form-control ps-0 border-0 ${validationErrors.newPassword ? 'is-invalid' : ''}`}
                                         placeholder="Nhập mật khẩu mới"
                                         disabled={isLoading}
+                                        aria-describedby={
+                                            validationErrors.newPassword
+                                                ? 'newPassword-error'
+                                                : undefined
+                                        }
                                     />
-                                    <span
+                                    <button
+                                        type="button"
                                         className="input-group-text bg-white border-0"
                                         style={{ cursor: 'pointer' }}
                                         onClick={() => togglePasswordVisibility('newPassword')}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                togglePasswordVisibility('newPassword');
+                                            }
+                                        }}
+                                        aria-label={
+                                            showPasswords.newPassword
+                                                ? 'Ẩn mật khẩu'
+                                                : 'Hiển thị mật khẩu'
+                                        }
+                                        tabIndex={0}
                                     >
                                         <i
                                             className={`ti ${showPasswords.newPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
                                         ></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                             {validationErrors.newPassword && (
-                                <div className="invalid-feedback d-block">
+                                <div id="newPassword-error" className="invalid-feedback d-block">
                                     {validationErrors.newPassword}
                                 </div>
                             )}
@@ -253,13 +274,16 @@ const ResetPassword: React.FC = () => {
 
                         {/* Confirm Password Field */}
                         <div className="mb-3">
-                            <label className="form-label">Xác nhận mật khẩu</label>
+                            <label htmlFor="confirmNewPassword" className="form-label">
+                                Xác nhận mật khẩu
+                            </label>
                             <div className="position-relative">
                                 <div className="pass-group input-group position-relative border rounded">
                                     <span className="input-group-text bg-white border-0">
                                         <i className="ti ti-lock text-dark fs-14"></i>
                                     </span>
                                     <input
+                                        id="confirmNewPassword"
                                         type={
                                             showPasswords.confirmNewPassword ? 'text' : 'password'
                                         }
@@ -269,22 +293,43 @@ const ResetPassword: React.FC = () => {
                                         className={`form-control ps-0 border-0 ${validationErrors.confirmNewPassword ? 'is-invalid' : ''}`}
                                         placeholder="Xác nhận mật khẩu mới"
                                         disabled={isLoading}
+                                        aria-describedby={
+                                            validationErrors.confirmNewPassword
+                                                ? 'confirmNewPassword-error'
+                                                : undefined
+                                        }
                                     />
-                                    <span
+                                    <button
+                                        type="button"
                                         className="input-group-text bg-white border-0"
                                         style={{ cursor: 'pointer' }}
                                         onClick={() =>
                                             togglePasswordVisibility('confirmNewPassword')
                                         }
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                togglePasswordVisibility('confirmNewPassword');
+                                            }
+                                        }}
+                                        aria-label={
+                                            showPasswords.confirmNewPassword
+                                                ? 'Ẩn mật khẩu xác nhận'
+                                                : 'Hiển thị mật khẩu xác nhận'
+                                        }
+                                        tabIndex={0}
                                     >
                                         <i
                                             className={`ti ${showPasswords.confirmNewPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
                                         ></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                             {validationErrors.confirmNewPassword && (
-                                <div className="invalid-feedback d-block">
+                                <div
+                                    id="confirmNewPassword-error"
+                                    className="invalid-feedback d-block"
+                                >
                                     {validationErrors.confirmNewPassword}
                                 </div>
                             )}

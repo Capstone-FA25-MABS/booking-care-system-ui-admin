@@ -15,9 +15,9 @@ export const useGoogleAuth = (
     const [isLoading, setIsLoading] = useState(false);
     const { googleLogin } = useAuth();
 
-    // Always call useGoogleLogin hook - React hooks must be called in the same order
-    const googleLoginFn = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
+    // Handle async Google login without returning Promise from callback
+    const handleGoogleSuccess = (tokenResponse: any) => {
+        void (async () => {
             try {
                 setIsLoading(true);
 
@@ -33,7 +33,12 @@ export const useGoogleAuth = (
             } finally {
                 setIsLoading(false);
             }
-        },
+        })();
+    };
+
+    // Always call useGoogleLogin hook - React hooks must be called in the same order
+    const googleLoginFn = useGoogleLogin({
+        onSuccess: handleGoogleSuccess,
         onError: (error) => {
             console.error('Google OAuth error:', error);
             toast.error('Đăng nhập Google thất bại. Vui lòng thử lại.');

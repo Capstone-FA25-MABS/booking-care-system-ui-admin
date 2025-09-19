@@ -1,4 +1,4 @@
-import axiosInstance from '@/configs/axios.config';
+import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import {
     LoginRequest,
     ForgotPasswordRequest,
@@ -7,18 +7,17 @@ import {
     FacebookLoginRequest,
     AuthResponse,
 } from '@/types/auth.types';
-import { ApiResponse } from '@/configs/axios.config';
 // Base API endpoint for auth
 const AUTH_ENDPOINTS = {
     BASE: '/auth',
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
     GOOGLE_LOGIN: '/auth/google-login',
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
 } as const;
+
+import { API_ENDPOINTS, PASSWORD_VALIDATION_DETAILS } from '@/constants/validation';
 
 /**
  * Auth Service
@@ -37,11 +36,7 @@ export class AuthService {
                 message: response.message,
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Health check failed',
-                data: null,
-            };
+            throw new Error(error.message || 'Health check failed');
         }
     }
 
@@ -58,11 +53,7 @@ export class AuthService {
                 message: response.message || 'Login successful',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Login failed',
-                data: null,
-            };
+            throw new Error(error.message || 'Login failed');
         }
     }
 
@@ -92,7 +83,7 @@ export class AuthService {
      */
     static async forgotPassword(request: ForgotPasswordRequest): Promise<ApiResponse> {
         try {
-            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, request);
+            const response: any = await axiosInstance.post(API_ENDPOINTS.FORGOT_PASSWORD, request);
 
             return {
                 success: response.success ?? true,
@@ -100,11 +91,7 @@ export class AuthService {
                 message: response.message || 'If the account exists, instructions have been sent',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Password reset request failed',
-                data: null,
-            };
+            throw new Error(error.message || 'Password reset request failed');
         }
     }
 
@@ -113,7 +100,7 @@ export class AuthService {
      */
     static async resetPassword(request: ResetPasswordRequest): Promise<ApiResponse> {
         try {
-            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.RESET_PASSWORD, request);
+            const response: any = await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, request);
 
             return {
                 success: response.success ?? true,
@@ -121,11 +108,7 @@ export class AuthService {
                 message: response.message || 'Password reset successfully',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Password reset failed',
-                data: null,
-            };
+            throw new Error(error.message || 'Password reset failed');
         }
     }
 
@@ -149,13 +132,18 @@ export class AuthService {
      * Validate password strength (simple boolean check)
      */
     static validatePassword(password: string): boolean {
-        const hasMinLength = password.length >= 8;
-        const hasLowercase = /(?=.*[a-z])/.test(password);
-        const hasUppercase = /(?=.*[A-Z])/.test(password);
-        const hasDigit = /(?=.*\d)/.test(password);
-        const hasSpecialChar = /(?=.*[@$!%*?&])/.test(password);
+        // Check minimum length
+        if (password.length < 8) {
+            return false;
+        }
 
-        return hasMinLength && hasLowercase && hasUppercase && hasDigit && hasSpecialChar;
+        // Use more efficient regex patterns without lookaheads to prevent ReDoS
+        const hasLowercase = /[a-z]/.test(password);
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasDigit = /\d/.test(password);
+        const hasSpecialChar = /[@$!%*?&]/.test(password);
+
+        return hasLowercase && hasUppercase && hasDigit && hasSpecialChar;
     }
 
     /**
@@ -168,23 +156,24 @@ export class AuthService {
         const errors: string[] = [];
 
         if (password.length < 8) {
-            errors.push('Password must be at least 8 characters long');
+            errors.push(PASSWORD_VALIDATION_DETAILS.MIN_LENGTH);
         }
 
-        if (!/(?=.*[a-z])/.test(password)) {
-            errors.push('Password must contain at least one lowercase letter');
+        // Use efficient regex patterns without lookaheads to prevent ReDoS
+        if (!/[a-z]/.test(password)) {
+            errors.push(PASSWORD_VALIDATION_DETAILS.LOWERCASE_REQUIRED);
         }
 
-        if (!/(?=.*[A-Z])/.test(password)) {
-            errors.push('Password must contain at least one uppercase letter');
+        if (!/[A-Z]/.test(password)) {
+            errors.push(PASSWORD_VALIDATION_DETAILS.UPPERCASE_REQUIRED);
         }
 
-        if (!/(?=.*\d)/.test(password)) {
-            errors.push('Password must contain at least one digit');
+        if (!/\d/.test(password)) {
+            errors.push(PASSWORD_VALIDATION_DETAILS.DIGIT_REQUIRED);
         }
 
-        if (!/(?=.*[@$!%*?&])/.test(password)) {
-            errors.push('Password must contain at least one special character');
+        if (!/[@$!%*?&]/.test(password)) {
+            errors.push(PASSWORD_VALIDATION_DETAILS.SPECIAL_CHAR_REQUIRED);
         }
 
         return {
@@ -241,11 +230,7 @@ export class AuthService {
                 message: response.message || 'Google login successful',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Google login failed',
-                data: error.data,
-            };
+            throw new Error(error.message || 'Google login failed');
         }
     }
 
@@ -261,11 +246,7 @@ export class AuthService {
                 message: response.message || 'Facebook login successful',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Facebook login failed',
-                data: error.data,
-            };
+            throw new Error(error.message || 'Facebook login failed');
         }
     }
 }

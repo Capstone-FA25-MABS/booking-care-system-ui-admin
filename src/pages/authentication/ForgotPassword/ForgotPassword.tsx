@@ -6,6 +6,7 @@ import { forgotPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { ForgotPasswordFormData } from '@/types/auth.types';
 import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
+import EmailInput from '@/components/forms/EmailInput';
 
 const ForgotPassword: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -78,103 +79,80 @@ const ForgotPassword: React.FC = () => {
 
     if (isSubmitted) {
         return (
-            <>
-                <div className="d-flex justify-content-center align-items-center">
-                    <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill w-100">
-                        <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
-                            <div className="card-body">
-                                <div className="mb-3 text-center">
-                                    <span>
-                                        <i className="ti ti-circle-check-filled fs-48 text-success"></i>
-                                    </span>
-                                </div>
-                                <div className="text-center mb-3">
-                                    <h5 className="mb-1 fs-20 fw-bold">Email đã được gửi!</h5>
-                                    <p className="mb-0">
-                                        Kiểm tra email của bạn và làm theo hướng dẫn để đặt lại mật
-                                        khẩu.
-                                    </p>
-                                </div>
-                                <div className="mt-3">
-                                    <Link to="/login" className="btn bg-primary text-white w-100">
-                                        Quay lại đăng nhập
-                                    </Link>
-                                </div>
+            <div className="d-flex justify-content-center align-items-center">
+                <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill w-100">
+                    <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
+                        <div className="card-body">
+                            <div className="mb-3 text-center">
+                                <span>
+                                    <i className="ti ti-circle-check-filled fs-48 text-success"></i>
+                                </span>
+                            </div>
+                            <div className="text-center mb-3">
+                                <h5 className="mb-1 fs-20 fw-bold">Email đã được gửi!</h5>
+                                <p className="mb-0">
+                                    Kiểm tra email của bạn và làm theo hướng dẫn để đặt lại mật
+                                    khẩu.
+                                </p>
+                            </div>
+                            <div className="mt-3">
+                                <Link to="/login" className="btn bg-primary text-white w-100">
+                                    Quay lại đăng nhập
+                                </Link>
                             </div>
                         </div>
                     </div>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
-        <>
-            <form
-                onSubmit={handleSubmit}
-                className="d-flex justify-content-center align-items-center"
-            >
-                <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill w-100">
-                    <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
-                        <div className="card-body">
-                            <div className="text-center mb-3">
-                                <h5 className="mb-1 fs-20 fw-bold">Quên mật khẩu</h5>
-                                <p className="mb-0">
-                                    Đừng lo, chúng tôi sẽ gửi cho bạn hướng dẫn đặt lại mật khẩu
-                                </p>
-                            </div>
+        <form onSubmit={handleSubmit} className="d-flex justify-content-center align-items-center">
+            <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill w-100">
+                <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
+                    <div className="card-body">
+                        <div className="text-center mb-3">
+                            <h5 className="mb-1 fs-20 fw-bold">Quên mật khẩu</h5>
+                            <p className="mb-0">
+                                Đừng lo, chúng tôi sẽ gửi cho bạn hướng dẫn đặt lại mật khẩu
+                            </p>
+                        </div>
 
-                            <div className="mb-3">
-                                <label className="form-label">Địa chỉ Email</label>
-                                <div className="input-group">
-                                    <span className="input-group-text border-end-0 bg-white">
-                                        <i className="ti ti-mail fs-14 text-dark" />
-                                    </span>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        className={`form-control border-start-0 ps-0 ${validationErrors.email ? 'is-invalid' : ''}`}
-                                        placeholder="Nhập địa chỉ Email"
-                                    />
-                                </div>
-                                {validationErrors.email && (
-                                    <div className="invalid-feedback d-block">
-                                        {validationErrors.email}
-                                    </div>
-                                )}
-                            </div>
+                        <EmailInput
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            error={validationErrors.email}
+                        />
 
-                            {(localError || authError) && (
-                                <div className="alert alert-danger text-center" role="alert">
-                                    {localError || authError}
-                                </div>
-                            )}
+                        {(localError || authError) && (
+                            <div className="alert alert-danger text-center" role="alert">
+                                {localError || authError}
+                            </div>
+                        )}
 
-                            <div className="mb-3">
-                                <button
-                                    type="submit"
-                                    className="btn bg-primary text-white w-100"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? 'Đang gửi...' : 'Đặt lại mật khẩu'}
-                                </button>
-                            </div>
-                            <div className="text-center">
-                                <h6 className="fw-normal fs-14 text-dark mb-0">
-                                    Quay lại
-                                    <Link to="/login" className="hover-a">
-                                        {' '}
-                                        đăng nhập
-                                    </Link>
-                                </h6>
-                            </div>
+                        <div className="mb-3">
+                            <button
+                                type="submit"
+                                className="btn bg-primary text-white w-100"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Đang gửi...' : 'Đặt lại mật khẩu'}
+                            </button>
+                        </div>
+                        <div className="text-center">
+                            <h6 className="fw-normal fs-14 text-dark mb-0">
+                                Quay lại
+                                <Link to="/login" className="hover-a">
+                                    {' '}
+                                    đăng nhập
+                                </Link>
+                            </h6>
                         </div>
                     </div>
                 </div>
-            </form>
-        </>
+            </div>
+        </form>
     );
 };
 
