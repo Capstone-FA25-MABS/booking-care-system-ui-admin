@@ -116,8 +116,9 @@ export class AuthService {
      * Validate email format
      */
     static validateEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        //const emailRegex = ;
+        //return emailRegex.test(email);
+        return email ? true : false;
     }
 
     /**
