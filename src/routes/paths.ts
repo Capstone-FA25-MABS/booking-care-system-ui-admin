@@ -7,8 +7,8 @@ export const PATHS = {
     HOME: '/',
     LOGIN: '/login',
     REGISTER: '/register',
-    FORGOT_PASSWORD: 'forgot-password',
-    RESET_PASSWORD: 'reset-password',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
     DASHBOARD: '/dashboard',
 
     // Admin paths
