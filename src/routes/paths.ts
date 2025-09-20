@@ -1,15 +1,14 @@
 /**
  * Path constants for the application
  */
-import { ROUTE_PATHS } from '@/constants/validation';
 
 export const PATHS = {
     // General paths
     HOME: '/',
     LOGIN: '/login',
     REGISTER: '/register',
-    FORGOT_PASSWORD: ROUTE_PATHS.FORGOT_PASSWORD,
-    RESET_PASSWORD: ROUTE_PATHS.RESET_PASSWORD,
+    FORGOT_PASSWORD: 'forgot-password',
+    RESET_PASSWORD: 'reset-password',
     DASHBOARD: '/dashboard',
 
     // Admin paths
