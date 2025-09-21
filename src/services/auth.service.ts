@@ -7,6 +7,7 @@ import {
     FacebookLoginRequest,
     AuthResponse,
 } from '@/types/auth.types';
+import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
 // Base API endpoint for auth
 const AUTH_ENDPOINTS = {
     BASE: '/auth',
@@ -112,16 +113,14 @@ export class AuthService {
      * Validate email format
      */
     static validateEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        return EMAIL_REGEX.test(email);
     }
 
     /**
      * Validate phone number format (Vietnamese format)
      */
     static validatePhoneNumber(phone: string): boolean {
-        const phoneRegex = /^0\d{9}$/;
-        return phoneRegex.test(phone);
+        return PHONE_REGEX_VN.test(phone);
     }
 
     /**
@@ -129,15 +128,15 @@ export class AuthService {
      */
     static validatePassword(password: string): boolean {
         // Check minimum length
-        if (password.length < 8) {
+        if (password.length < PASSWORD_MIN_LENGTH) {
             return false;
         }
 
         // Use more efficient regex patterns without lookaheads to prevent ReDoS
-        const hasLowercase = /[a-z]/.test(password);
-        const hasUppercase = /[A-Z]/.test(password);
-        const hasDigit = /\d/.test(password);
-        const hasSpecialChar = /[@$!%*?&]/.test(password);
+        const hasLowercase = PASSWORD_REGEX.LOWERCASE.test(password);
+        const hasUppercase = PASSWORD_REGEX.UPPERCASE.test(password);
+        const hasDigit = PASSWORD_REGEX.DIGIT.test(password);
+        const hasSpecialChar = PASSWORD_REGEX.SPECIAL_CHAR.test(password);
 
         return hasLowercase && hasUppercase && hasDigit && hasSpecialChar;
     }
@@ -151,23 +150,23 @@ export class AuthService {
     } {
         const errors: string[] = [];
 
-        if (password.length < 8) {
-            errors.push('Password must be at least 8 characters long');
+        if (password.length < PASSWORD_MIN_LENGTH) {
+            errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
         }
 
-        if (!/(?=.*[a-z])/.test(password)) {
+        if (!PASSWORD_REGEX.LOOKAHEAD_LOWERCASE.test(password)) {
             errors.push('Password must contain at least one lowercase letter');
         }
 
-        if (!/(?=.*[A-Z])/.test(password)) {
+        if (!PASSWORD_REGEX.LOOKAHEAD_UPPERCASE.test(password)) {
             errors.push('Password must contain at least one uppercase letter');
         }
 
-        if (!/(?=.*\d)/.test(password)) {
+        if (!PASSWORD_REGEX.LOOKAHEAD_DIGIT.test(password)) {
             errors.push('Password must contain at least one digit');
         }
 
-        if (!/(?=.*[@$!%*?&])/.test(password)) {
+        if (!PASSWORD_REGEX.LOOKAHEAD_SPECIAL.test(password)) {
             errors.push('Password must contain at least one special character');
         }
 
