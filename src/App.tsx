@@ -1,15 +1,32 @@
-import AppRoutes from './routes/AppRoutes';
+import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/AppRoutes';
 import ReduxProvider from './store/ReduxProvider';
+import GoogleOAuthWrapper from './providers/GoogleOAuthProvider';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-function App() {
+const App: React.FC = () => {
     return (
         <ReduxProvider>
-            <BrowserRouter>
-                <AppRoutes />
-            </BrowserRouter>
+            <GoogleOAuthWrapper>
+                <ToastContainer
+                    position="top-right"
+                    autoClose={2000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="colored"
+                />
+                <BrowserRouter>
+                    <AppRoutes />
+                </BrowserRouter>
+            </GoogleOAuthWrapper>
         </ReduxProvider>
     );
-}
+};
 
 export default App;

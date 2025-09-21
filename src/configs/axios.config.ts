@@ -6,6 +6,8 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     metadata?: {
         startTime: Date;
     };
+    // mark retry
+    _retry?: boolean;
 }
 
 // Create axios instance
@@ -15,36 +17,15 @@ const instance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true,
 });
 
 // Request interceptor to add auth token
 instance.interceptors.request.use(
     (config: ExtendedAxiosRequestConfig) => {
-        // Try to get token from localStorage (fallback for non-Redux usage)
-        let token = localStorage.getItem('token');
-
-        // Try to get token from Redux persist
-        if (!token) {
-            try {
-                const persistedAuth = localStorage.getItem('persist:root');
-                if (persistedAuth) {
-                    const parsedAuth = JSON.parse(persistedAuth);
-                    const authData = JSON.parse(parsedAuth.auth);
-                    token = authData.token;
-                }
-            } catch (error) {
-                console.warn('Failed to get token from persisted state', error);
-            }
-        }
-
-        if (token) {
-            config.headers = config.headers || {};
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        // Add request timestamp for debugging
+        // Backend does not require Authorization header; rely on HttpOnly cookies
+        // Keep metadata timestamp for logging
         config.metadata = { startTime: new Date() };
-
         return config;
     },
     (error) => {
@@ -52,81 +33,129 @@ instance.interceptors.request.use(
     }
 );
 
-// Response interceptor for handling responses and errors
-instance.interceptors.response.use(
-    function (response: AxiosResponse) {
-        // Calculate response time for performance monitoring
-        const endTime = new Date();
-        const config = response.config as ExtendedAxiosRequestConfig;
-        const startTime = config.metadata?.startTime;
-        if (startTime) {
-            const responseTime = endTime.getTime() - startTime.getTime();
-            console.log(`API Response Time: ${responseTime}ms for ${response.config.url}`);
+// ===== Refresh token queue handling =====
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value?: any) => void; reject: (err: any) => void }> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (token) {
+            prom.resolve();
+        } else {
+            prom.reject(error);
         }
+    });
+    failedQueue = [];
+};
 
-        // Return the data directly for easier usage
-        return response.data;
-    },
-    function (error: AxiosError) {
-        const err = error?.response?.data as any;
+// Helper functions to reduce cognitive complexity
+const handleNetworkError = (error: AxiosError) => {
+    console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        network: true,
+    });
+    return Promise.reject(new Error('Không thể kết nối đến máy chủ!'));
+};
 
-        // Log the error for debugging
-        console.error('API Error:', {
-            url: error.config?.url,
-            method: error.config?.method,
-            status: error.response?.status,
-            data: err,
-        });
-
-        // Handle different error scenarios
-        if (error.response?.status === 401) {
-            // Unauthorized - clear auth data and redirect
-            localStorage.removeItem('persist:root');
-            localStorage.removeItem('token');
-
-            // Dispatch logout action if Redux store is available
-            if (typeof window !== 'undefined' && (window as any).__REDUX_STORE__) {
-                const store = (window as any).__REDUX_STORE__;
-                store.dispatch({ type: 'auth/logout' });
-            }
-
-            // Redirect to login page
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-        } else if (error.response?.status === 403) {
-            // Forbidden - user doesn't have permission
-            console.warn('Access forbidden:', err?.message || 'Insufficient permissions');
-        } else if (error.response && error.response.status >= 500) {
-            // Server error
-            console.error('Server error:', err?.message || 'Internal server error');
-        }
-
-        // Return structured error object
-        return Promise.reject({
-            message: err?.message || error.message || 'An error occurred',
-            status: error.response?.status,
-            code: err?.code,
-            data: err,
-            isNetworkError: !error.response,
-        });
+const handleForbiddenError = (err: any) => {
+    if (typeof window !== 'undefined') {
+        window.location.href = '/error-403';
     }
-);
+    return Promise.reject(new Error(err?.message || 'Access forbidden'));
+};
+
+const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
+    return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+    })
+        .then(() => instance(originalRequest))
+        .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
+};
+
+const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) => {
+    try {
+        const refreshResponse: any = await instance.post('/auth/refresh-token');
+        const newToken = refreshResponse?.data?.token || refreshResponse?.token;
+
+        processQueue(null, newToken || '1');
+        isRefreshing = false;
+        return instance(originalRequest);
+    } catch (refreshError) {
+        processQueue(refreshError as any, null);
+        isRefreshing = false;
+
+        try {
+            localStorage.removeItem('persist:booking-care-root');
+        } catch {
+            // Ignore localStorage errors
+        }
+
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
+        return Promise.reject(new Error(String(refreshError)));
+    }
+};
+
+const handleResponseError = async (error: AxiosError) => {
+    const err = error?.response?.data as any;
+    const originalRequest = error.config as ExtendedAxiosRequestConfig;
+
+    // Network error
+    if (!error.response) {
+        return handleNetworkError(error);
+    }
+
+    const url = (originalRequest.url || '').toString();
+    const isLogin = url.includes('/auth/login');
+    const isRefresh = url.includes('/auth/refresh-token');
+
+    // Handle 403 errors
+    if (error.response?.status === 403) {
+        return handleForbiddenError(err);
+    }
+
+    // Handle 401 errors with token refresh
+    if (error.response?.status === 401 && !isLogin && !isRefresh) {
+        if (isRefreshing) {
+            return queueFailedRequest(originalRequest);
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+        return handleTokenRefresh(originalRequest);
+    }
+
+    // Log and reject other errors
+    console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: err,
+    });
+
+    return Promise.reject(new Error(err?.message || error.message || 'An error occurred'));
+};
+
+// Response interceptor for handling responses and errors
+instance.interceptors.response.use(function (response: AxiosResponse) {
+    // Calculate response time for performance monitoring
+    const endTime = new Date();
+    const config = response.config as ExtendedAxiosRequestConfig;
+    const startTime = config.metadata?.startTime;
+    if (startTime) {
+        const responseTime = endTime.getTime() - startTime.getTime();
+        console.log(`API Response Time: ${responseTime}ms for ${response.config.url}`);
+    }
+
+    // Return the data directly for easier usage
+    return response.data;
+}, handleResponseError);
 
 // Add a method to update the base URL if needed
 export const updateBaseURL = (newBaseURL: string) => {
     instance.defaults.baseURL = newBaseURL;
-};
-
-// Add a method to set auth token
-export const setAuthToken = (token: string | null) => {
-    if (token) {
-        instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        localStorage.setItem('token', token);
-    } else {
-        delete instance.defaults.headers.common['Authorization'];
-        localStorage.removeItem('token');
-    }
 };
 
 // Add types for common API responses

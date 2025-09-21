@@ -1,0 +1,165 @@
+/* External Authentication Buttons Styles */
+
+// External Auth Colors
+$facebook-primary: #1877f2;
+$facebook-hover: #0866d3;
+$facebook-hover-bg: #f0f8ff;
+
+$google-primary: #dc3545;
+$google-hover: #bb2d3b;
+$google-hover-bg: #fff5f5;
+
+// Text Colors
+$text-primary: #333;
+$text-muted: #6c757d;
+$text-disabled: #6c757d;
+
+// Border Colors
+$border-light: #dee2e6;
+$border-lighter: #e9ecef;
+
+// Background Colors
+$background-white: white;
+$background-disabled: #f8f9fa;
+
+// Shadow Effects
+$shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// Animation Timing
+$transition-speed: 0.2s;
+$transition-easing: ease-in-out;
+
+// ============================================================================
+// EXTERNAL AUTH CONTAINER
+// ============================================================================
+
+.externalAuthContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+
+    // ------------------------------------------------------------------------
+    // BASE BUTTON STYLES
+    // ------------------------------------------------------------------------
+    .authButton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 48px;
+        padding: 0.5rem 1rem;
+        border: 2px solid;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all $transition-speed $transition-easing;
+        box-shadow: $shadow-light;
+        background-color: $background-white;
+        cursor: pointer;
+        text-decoration: none;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: $shadow-hover;
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: $shadow-light;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            background-color: $background-disabled;
+            opacity: 0.7;
+        }
+
+        // Button content styles
+        .buttonIcon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+        }
+
+        .buttonText {
+            color: $text-primary;
+            font-weight: 500;
+        }
+
+        // Loading state styles
+        &.loadingState {
+            background-color: $background-disabled !important;
+            cursor: not-allowed;
+
+            .spinner {
+                width: 16px;
+                height: 16px;
+                margin-right: 0.5rem;
+            }
+
+            .loadingText {
+                color: $text-disabled;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // PLATFORM SPECIFIC STYLES
+    // ------------------------------------------------------------------------
+
+    // Facebook Button
+    .facebookButton {
+        border-color: $facebook-primary;
+        color: $facebook-primary;
+
+        &:hover:not(:disabled) {
+            background-color: $facebook-hover-bg;
+            border-color: $facebook-hover;
+        }
+    }
+
+    // Google Button
+    .googleButton {
+        border-color: $google-primary;
+        color: $google-primary;
+
+        &:hover:not(:disabled) {
+            background-color: $google-hover-bg;
+            border-color: $google-hover;
+        }
+    }
+}
+
+// ============================================================================
+// OR DIVIDER COMPONENT
+// ============================================================================
+
+.orDivider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: $border-lighter;
+        z-index: 0;
+    }
+
+    .orText {
+        background-color: $background-white;
+        padding: 0 1.5rem;
+        color: $text-muted;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+    }
+}

@@ -6,14 +6,28 @@ import NotFoundError from '@/pages/errors/NotFoundError';
 import ListDoctors from '@/pages/clinics/Doctors/ListDoctors';
 import ListAppointments from '@/pages/clinics/Appointments/ListAppointments';
 import MainLayout from '@/layouts/MainLayout';
+import AuthLayout from '@/layouts/AuthLayout';
 import AddDoctor from '@/pages/clinics/Doctors/AddDoctor/AddDoctor';
 import NewAppointment from '@/pages/clinics/Appointments/NewAppointment';
+import Login from '@/pages/authentication/Login';
+import ForgotPassword from '@/pages/authentication/ForgotPassword';
+import ResetPassword from '@/pages/authentication/ResetPassword';
 import { listGroupMenuItemAdmin, listGroupMenuItemClinic } from './sidenav.routes';
 
 const routes: RouteObject[] = [
     {
         path: PATHS.HOME,
-        element: <h1>Home</h1>,
+        element: <Navigate to={PATHS.LOGIN} replace />,
+    },
+    // Authentication routes
+    {
+        path: '/',
+        element: <AuthLayout />,
+        children: [
+            { path: PATHS.LOGIN, element: <Login /> },
+            { path: PATHS.FORGOT_PASSWORD, element: <ForgotPassword /> },
+            { path: PATHS.RESET_PASSWORD, element: <ResetPassword /> },
+        ],
     },
     {
         path: PATHS.ADMIN.ROOT,
