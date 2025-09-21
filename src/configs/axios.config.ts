@@ -158,17 +158,6 @@ export const updateBaseURL = (newBaseURL: string) => {
     instance.defaults.baseURL = newBaseURL;
 };
 
-// Add a method to set auth token
-export const setAuthToken = (token: string | null) => {
-    if (token) {
-        instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        localStorage.setItem('token', token);
-    } else {
-        delete instance.defaults.headers.common['Authorization'];
-        localStorage.removeItem('token');
-    }
-};
-
 // Add types for common API responses
 export interface ApiResponse<T = any> {
     success: boolean;
