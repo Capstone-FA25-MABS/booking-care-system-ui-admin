@@ -58,7 +58,12 @@ const Input: React.FC<InputProps> = ({
                     )}
 
                     <input
-                        type={showPasswordToggle ? (showPassword ? 'text' : 'password') : type}
+                        type={(() => {
+                            if (showPasswordToggle) {
+                                return showPassword ? 'text' : 'password';
+                            }
+                            return type;
+                        })()}
                         name={name}
                         value={value}
                         onChange={onChange}
@@ -69,24 +74,17 @@ const Input: React.FC<InputProps> = ({
                     />
 
                     {showPasswordToggle && (
-                        <span
+                        <button
+                            type="button"
                             className="input-group-text bg-white border-0"
                             onClick={handleTogglePassword}
                             style={{ cursor: 'pointer' }}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    handleTogglePassword();
-                                }
-                            }}
                             aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                         >
                             <i
                                 className={`ti ${showPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
                             />
-                        </span>
+                        </button>
                     )}
                 </div>
             </div>

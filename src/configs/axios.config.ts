@@ -70,7 +70,7 @@ const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
         failedQueue.push({ resolve, reject });
     })
         .then(() => instance(originalRequest))
-        .catch((queueErr) => Promise.reject(queueErr));
+        .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
 };
 
 const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) => {
@@ -95,7 +95,7 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
             window.location.href = '/login';
         }
-        return Promise.reject(refreshError);
+        return Promise.reject(new Error(String(refreshError)));
     }
 };
 

@@ -46,7 +46,7 @@ export const loginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult && validationResult.roles) {
+            if (validationResult?.roles) {
                 return { roles: validationResult.roles };
             }
             if (validationResult === null) {
@@ -104,7 +104,7 @@ export const googleLoginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult && validationResult.roles) {
+            if (validationResult?.roles) {
                 return { roles: validationResult.roles };
             }
             if (validationResult === null) {
@@ -126,7 +126,7 @@ export const facebookLoginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult && validationResult.roles) {
+            if (validationResult?.roles) {
                 return { roles: validationResult.roles };
             }
             if (validationResult === null) {
