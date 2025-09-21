@@ -142,41 +142,6 @@ export class AuthService {
     }
 
     /**
-     * Validate password strength with detailed errors
-     */
-    static validatePasswordDetailed(password: string): {
-        isValid: boolean;
-        errors: string[];
-    } {
-        const errors: string[] = [];
-
-        if (password.length < PASSWORD_MIN_LENGTH) {
-            errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
-        }
-
-        if (!PASSWORD_REGEX.HAS_LOWERCASE.test(password)) {
-            errors.push('Password must contain at least one lowercase letter');
-        }
-
-        if (!PASSWORD_REGEX.HAS_UPPERCASE.test(password)) {
-            errors.push('Password must contain at least one uppercase letter');
-        }
-
-        if (!PASSWORD_REGEX.HAS_DIGIT.test(password)) {
-            errors.push('Password must contain at least one digit');
-        }
-
-        if (!PASSWORD_REGEX.HAS_SPECIAL.test(password)) {
-            errors.push('Password must contain at least one special character');
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors,
-        };
-    }
-
-    /**
      * Check if user is authenticated based on roles
      */
     static isAuthenticated(): boolean {
