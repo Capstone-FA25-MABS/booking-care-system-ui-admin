@@ -1,5 +1,9 @@
-// Email validation regex
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Email validation regex components (ReDoS-safe)
+export const EMAIL_REGEX = {
+    LOCAL_PART: /^[a-zA-Z0-9._%+-]+$/,
+    DOMAIN_PART: /^[a-zA-Z0-9.-]+$/,
+    TLD_PART: /^[a-zA-Z]{2,}$/,
+} as const;
 
 // Phone validation regex (Vietnamese format)
 export const PHONE_REGEX_VN = /^0\d{9}$/;

@@ -110,10 +110,26 @@ export class AuthService {
     }
 
     /**
-     * Validate email format
+     * Validate email format (ReDoS-safe implementation)
      */
     static validateEmail(email: string): boolean {
-        return EMAIL_REGEX.test(email);
+        if (!email || typeof email !== 'string') {
+            return false;
+        }
+
+        const parts = email.split('@');
+        if (parts.length !== 2) return false;
+
+        const [local, domainFull] = parts;
+        if (!EMAIL_REGEX.LOCAL_PART.test(local)) return false;
+
+        const domainParts = domainFull.split('.');
+        if (domainParts.length < 2) return false;
+
+        const tld = domainParts.pop()!;
+        if (!EMAIL_REGEX.TLD_PART.test(tld)) return false;
+
+        return EMAIL_REGEX.DOMAIN_PART.test(domainParts.join('.'));
     }
 
     /**
