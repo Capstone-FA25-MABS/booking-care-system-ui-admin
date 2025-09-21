@@ -1,13 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from './api.config';
-import { updateToken } from '@/store/slices/authSlice';
-// ⚠️ Store injection pattern to avoid circular dependency
-let reduxStore: any = null;
-
-// ✅ Function to inject store from outside
-export const injectStore = (store: any) => {
-    reduxStore = store;
-};
 
 // Extend Axios config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -85,13 +77,6 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
     try {
         const refreshResponse: any = await instance.post('/auth/refresh-token');
         const newToken = refreshResponse?.data?.token || refreshResponse?.token;
-
-        if (newToken) {
-            localStorage.setItem('token', newToken);
-            if (reduxStore) {
-                reduxStore.dispatch(updateToken(newToken));
-            }
-        }
 
         processQueue(null, newToken || '1');
         isRefreshing = false;

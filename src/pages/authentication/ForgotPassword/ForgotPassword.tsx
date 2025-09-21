@@ -6,7 +6,7 @@ import { forgotPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { ForgotPasswordFormData } from '@/types/auth.types';
 import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
-import EmailInput from '@/components/forms/EmailInput';
+import Input from '@/components/Input';
 
 const ForgotPassword: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -119,10 +119,16 @@ const ForgotPassword: React.FC = () => {
                             </p>
                         </div>
 
-                        <EmailInput
+                        <Input
+                            label="Địa chỉ Email"
+                            type="email"
+                            name="email"
                             value={formData.email}
                             onChange={handleInputChange}
+                            placeholder="Nhập địa chỉ Email"
+                            icon="mail"
                             error={validationErrors.email}
+                            required={false}
                         />
 
                         {(localError || authError) && (

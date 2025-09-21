@@ -6,7 +6,7 @@ import { AuthService } from '@/services/auth.service';
 import { AppDispatch, RootState } from '@/store';
 import { resetPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { useAuth } from '@/hooks/useAuth';
-import { VALIDATION_MESSAGES } from '@/constants/validation';
+import Input from '@/components/Input';
 
 const ResetPassword: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -88,21 +88,22 @@ const ResetPassword: React.FC = () => {
 
         // Validate new password
         if (!formData.newPassword) {
-            errors.newPassword = VALIDATION_MESSAGES.PASSWORD_NEW_REQUIRED;
+            errors.newPassword = 'Mật khẩu mới là bắt buộc';
         } else if (!AuthService.validatePassword(formData.newPassword)) {
-            errors.newPassword = VALIDATION_MESSAGES.PASSWORD_STRENGTH_REQUIREMENT;
+            errors.newPassword =
+                'Mật khẩu phải có ít nhất 8 ký tự bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
         }
 
         // Validate confirm password
         if (!formData.confirmNewPassword) {
-            errors.confirmNewPassword = VALIDATION_MESSAGES.PASSWORD_CONFIRM_REQUIRED;
+            errors.confirmNewPassword = 'Vui lòng xác nhận mật khẩu mới';
         } else if (formData.newPassword !== formData.confirmNewPassword) {
-            errors.confirmNewPassword = VALIDATION_MESSAGES.PASSWORD_MISMATCH;
+            errors.confirmNewPassword = 'Mật khẩu không khớp';
         }
 
         // Validate token
         if (!formData.resetToken) {
-            errors.token = VALIDATION_MESSAGES.RESET_TOKEN_MISSING;
+            errors.token = 'Token đặt lại mật khẩu bị thiếu';
         }
 
         setValidationErrors(errors);
@@ -217,123 +218,38 @@ const ResetPassword: React.FC = () => {
                         </div>
 
                         {/* New Password Field */}
-                        <div className="mb-3">
-                            <label htmlFor="newPassword" className="form-label">
-                                Mật khẩu
-                            </label>
-                            <div className="position-relative">
-                                <div className="pass-group input-group position-relative border rounded">
-                                    <span className="input-group-text bg-white border-0">
-                                        <i className="ti ti-lock text-dark fs-14"></i>
-                                    </span>
-                                    <input
-                                        id="newPassword"
-                                        type={showPasswords.newPassword ? 'text' : 'password'}
-                                        name="newPassword"
-                                        value={formData.newPassword}
-                                        onChange={handleInputChange}
-                                        className={`form-control ps-0 border-0 ${validationErrors.newPassword ? 'is-invalid' : ''}`}
-                                        placeholder="Nhập mật khẩu mới"
-                                        disabled={isLoading}
-                                        aria-describedby={
-                                            validationErrors.newPassword
-                                                ? 'newPassword-error'
-                                                : undefined
-                                        }
-                                    />
-                                    <button
-                                        type="button"
-                                        className="input-group-text bg-white border-0"
-                                        style={{ cursor: 'pointer' }}
-                                        onClick={() => togglePasswordVisibility('newPassword')}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                togglePasswordVisibility('newPassword');
-                                            }
-                                        }}
-                                        aria-label={
-                                            showPasswords.newPassword
-                                                ? 'Ẩn mật khẩu'
-                                                : 'Hiển thị mật khẩu'
-                                        }
-                                        tabIndex={0}
-                                    >
-                                        <i
-                                            className={`ti ${showPasswords.newPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
-                                        ></i>
-                                    </button>
-                                </div>
-                            </div>
-                            {validationErrors.newPassword && (
-                                <div id="newPassword-error" className="invalid-feedback d-block">
-                                    {validationErrors.newPassword}
-                                </div>
-                            )}
-                        </div>
+                        <Input
+                            label="Mật khẩu"
+                            type="password"
+                            name="newPassword"
+                            value={formData.newPassword}
+                            onChange={handleInputChange}
+                            placeholder="Nhập mật khẩu mới"
+                            icon="lock"
+                            showPasswordToggle={true}
+                            showPassword={showPasswords.newPassword}
+                            onTogglePassword={() => togglePasswordVisibility('newPassword')}
+                            error={validationErrors.newPassword}
+                            disabled={isLoading}
+                            required={false}
+                        />
 
                         {/* Confirm Password Field */}
-                        <div className="mb-3">
-                            <label htmlFor="confirmNewPassword" className="form-label">
-                                Xác nhận mật khẩu
-                            </label>
-                            <div className="position-relative">
-                                <div className="pass-group input-group position-relative border rounded">
-                                    <span className="input-group-text bg-white border-0">
-                                        <i className="ti ti-lock text-dark fs-14"></i>
-                                    </span>
-                                    <input
-                                        id="confirmNewPassword"
-                                        type={
-                                            showPasswords.confirmNewPassword ? 'text' : 'password'
-                                        }
-                                        name="confirmNewPassword"
-                                        value={formData.confirmNewPassword}
-                                        onChange={handleInputChange}
-                                        className={`form-control ps-0 border-0 ${validationErrors.confirmNewPassword ? 'is-invalid' : ''}`}
-                                        placeholder="Xác nhận mật khẩu mới"
-                                        disabled={isLoading}
-                                        aria-describedby={
-                                            validationErrors.confirmNewPassword
-                                                ? 'confirmNewPassword-error'
-                                                : undefined
-                                        }
-                                    />
-                                    <button
-                                        type="button"
-                                        className="input-group-text bg-white border-0"
-                                        style={{ cursor: 'pointer' }}
-                                        onClick={() =>
-                                            togglePasswordVisibility('confirmNewPassword')
-                                        }
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                togglePasswordVisibility('confirmNewPassword');
-                                            }
-                                        }}
-                                        aria-label={
-                                            showPasswords.confirmNewPassword
-                                                ? 'Ẩn mật khẩu xác nhận'
-                                                : 'Hiển thị mật khẩu xác nhận'
-                                        }
-                                        tabIndex={0}
-                                    >
-                                        <i
-                                            className={`ti ${showPasswords.confirmNewPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
-                                        ></i>
-                                    </button>
-                                </div>
-                            </div>
-                            {validationErrors.confirmNewPassword && (
-                                <div
-                                    id="confirmNewPassword-error"
-                                    className="invalid-feedback d-block"
-                                >
-                                    {validationErrors.confirmNewPassword}
-                                </div>
-                            )}
-                        </div>
+                        <Input
+                            label="Xác nhận mật khẩu"
+                            type="password"
+                            name="confirmNewPassword"
+                            value={formData.confirmNewPassword}
+                            onChange={handleInputChange}
+                            placeholder="Xác nhận mật khẩu mới"
+                            icon="lock"
+                            showPasswordToggle={true}
+                            showPassword={showPasswords.confirmNewPassword}
+                            onTogglePassword={() => togglePasswordVisibility('confirmNewPassword')}
+                            error={validationErrors.confirmNewPassword}
+                            disabled={isLoading}
+                            required={false}
+                        />
 
                         {/* General Error */}
                         {displayError && (

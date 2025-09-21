@@ -6,9 +6,8 @@ import { useFacebookAuth } from '@/hooks/useFacebookAuth';
 import { LoginFormData } from '@/types/auth.types';
 import { AuthService } from '@/services/auth.service';
 import ExternalAuthButtons from '@/components/ExternalAuthButtons';
+import Input from '@/components/Input';
 import { toast } from 'react-toastify';
-import EmailInput from '@/components/forms/EmailInput';
-import { VALIDATION_MESSAGES } from '@/constants/validation';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -71,13 +70,13 @@ const Login: React.FC = () => {
         const errors: typeof validationErrors = {};
 
         if (!formData.email) {
-            errors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
+            errors.email = 'Email là bắt buộc';
         } else if (!AuthService.validateEmail(formData.email)) {
-            errors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
+            errors.email = 'Vui lòng nhập địa chỉ email hợp lệ';
         }
 
         if (!formData.password) {
-            errors.password = VALIDATION_MESSAGES.PASSWORD_REQUIRED;
+            errors.password = 'Mật khẩu là bắt buộc';
         }
 
         setValidationErrors(errors);
@@ -133,63 +132,32 @@ const Login: React.FC = () => {
                             </p>
                         </div>
 
-                        <EmailInput
+                        <Input
+                            label="Địa chỉ Email"
+                            type="email"
+                            name="email"
                             value={formData.email}
                             onChange={handleInputChange}
+                            placeholder="Nhập địa chỉ Email"
+                            icon="mail"
                             error={validationErrors.email}
+                            required={false}
                         />
 
-                        <div className="mb-3">
-                            <label htmlFor="password" className="form-label">
-                                Mật khẩu
-                            </label>
-                            <div className="position-relative">
-                                <div
-                                    className={`pass-group input-group position-relative border rounded ${validationErrors.password ? 'border-danger' : ''}`}
-                                >
-                                    <span className="input-group-text bg-white border-0">
-                                        <i className="ti ti-lock text-dark fs-14" />
-                                    </span>
-                                    <input
-                                        id="password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        className={`pass-input form-control ps-0 border-0 ${validationErrors.password ? 'is-invalid' : ''}`}
-                                        placeholder="****************"
-                                        aria-describedby={
-                                            validationErrors.password ? 'password-error' : undefined
-                                        }
-                                    />
-                                    <button
-                                        type="button"
-                                        className="input-group-text bg-white border-0"
-                                        onClick={togglePasswordVisibility}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                togglePasswordVisibility();
-                                            }
-                                        }}
-                                        style={{ cursor: 'pointer' }}
-                                        aria-label={
-                                            showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'
-                                        }
-                                        tabIndex={0}
-                                    >
-                                        <i
-                                            className={`ti ${showPassword ? 'ti-eye' : 'ti-eye-off'} text-dark fs-14`}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-                            {validationErrors.password && (
-                                <div id="password-error" className="invalid-feedback d-block">
-                                    {validationErrors.password}
-                                </div>
-                            )}
-                        </div>
+                        <Input
+                            label="Mật khẩu"
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            placeholder="****************"
+                            icon="lock"
+                            showPasswordToggle={true}
+                            showPassword={showPassword}
+                            onTogglePassword={togglePasswordVisibility}
+                            error={validationErrors.password}
+                            required={false}
+                        />
 
                         <div className="d-flex align-items-center justify-content-between mb-3">
                             <div className="d-flex align-items-center">

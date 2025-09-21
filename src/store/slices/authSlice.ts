@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { AuthService } from '@/services/auth.service';
 import {
     AuthState,
@@ -10,26 +10,28 @@ import {
 } from '@/types/auth.types';
 import { getRolesFromJwt } from '@/utils/jwt';
 
-// Helper function to validate token and roles
-const validateTokenAndRoles = (response: any, rejectWithValue: any) => {
+// Helper function to validate roles
+const validateRoles = (response: any, rejectWithValue: any) => {
     const token = response.data?.token;
     if (token) {
         const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-        const allowed = ['ADMIN', 'DOCTOR', 'CLINIC'];
+        const allowed = ['ADMIN', 'DOCTOR', 'HOSPITAL'];
         const hasAllowed = roles.some((r) => allowed.includes(r));
         if (!hasAllowed) {
             return rejectWithValue(
                 'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
             );
         }
-        AuthService.setToken(token);
+        // Only save roles, not token
+        AuthService.setRoles(roles);
+        return { roles }; // Return roles data
     }
     return null; // No error
 };
 
 // Initial state
 const initialState: AuthState = {
-    token: AuthService.getToken(),
+    roles: AuthService.getRoles(),
     isAuthenticated: AuthService.isAuthenticated(),
     isLoading: false,
     error: null,
@@ -42,11 +44,16 @@ export const loginAsync = createAsyncThunk(
         try {
             const response = await AuthService.login(credentials);
 
-            // Validate token and roles using helper function
-            const validationError = validateTokenAndRoles(response, rejectWithValue);
-            if (validationError) return validationError;
-
-            return response.data;
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult && validationResult.roles) {
+                return { roles: validationResult.roles };
+            }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
         } catch (error: any) {
             return rejectWithValue(error.message || 'Login failed');
         }
@@ -95,11 +102,16 @@ export const googleLoginAsync = createAsyncThunk(
         try {
             const response = await AuthService.googleLogin(request);
 
-            // Validate token and roles using helper function
-            const validationError = validateTokenAndRoles(response, rejectWithValue);
-            if (validationError) return validationError;
-
-            return response.data;
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult && validationResult.roles) {
+                return { roles: validationResult.roles };
+            }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
         } catch (error: any) {
             return rejectWithValue(error.message || 'Google login failed');
         }
@@ -112,11 +124,16 @@ export const facebookLoginAsync = createAsyncThunk(
         try {
             const response = await AuthService.facebookLogin(request);
 
-            // Validate token and roles using helper function
-            const validationError = validateTokenAndRoles(response, rejectWithValue);
-            if (validationError) return validationError;
-
-            return response.data;
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult && validationResult.roles) {
+                return { roles: validationResult.roles };
+            }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
         } catch (error: any) {
             return rejectWithValue(error.message || 'Facebook login failed');
         }
@@ -131,10 +148,6 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
-        updateToken: (state, action: PayloadAction<string>) => {
-            state.token = action.payload;
-            state.isAuthenticated = true;
-        },
     },
     extraReducers: (builder) => {
         builder
@@ -145,8 +158,8 @@ const authSlice = createSlice({
             })
             .addCase(loginAsync.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.token = action.payload?.token || null;
-                state.isAuthenticated = true;
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
             .addCase(loginAsync.rejected, (state, action) => {
@@ -181,7 +194,7 @@ const authSlice = createSlice({
             })
             // Logout cases
             .addCase(logoutAsync.fulfilled, (state) => {
-                state.token = null;
+                state.roles = [];
                 state.isAuthenticated = false;
                 state.error = null;
                 state.isLoading = false;
@@ -191,8 +204,8 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(googleLoginAsync.fulfilled, (state, action) => {
-                state.token = action.payload?.token || null;
-                state.isAuthenticated = true;
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
             .addCase(googleLoginAsync.rejected, (state, action) => {
@@ -203,8 +216,8 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(facebookLoginAsync.fulfilled, (state, action) => {
-                state.token = action.payload?.token || null;
-                state.isAuthenticated = true;
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
             .addCase(facebookLoginAsync.rejected, (state, action) => {
@@ -213,6 +226,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError, updateToken } = authSlice.actions;
+export const { clearError } = authSlice.actions;
 
 export default authSlice.reducer;

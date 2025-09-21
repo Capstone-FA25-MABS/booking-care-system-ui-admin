@@ -13,7 +13,7 @@ import { LoginRequest, GoogleLoginRequest, FacebookLoginRequest } from '@/types/
 
 export const useAuth = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { token, isAuthenticated, isLoading, error } = useSelector(
+    const { roles, isAuthenticated, isLoading, error } = useSelector(
         (state: RootState) => state.auth
     );
 
@@ -52,7 +52,7 @@ export const useAuth = () => {
     }, [dispatch]);
 
     return {
-        token,
+        roles,
         isAuthenticated,
         isLoading,
         error,

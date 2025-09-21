@@ -12,12 +12,12 @@ const AUTH_ENDPOINTS = {
     BASE: '/auth',
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
     GOOGLE_LOGIN: '/auth/google-login',
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
 } as const;
-
-import { API_ENDPOINTS, PASSWORD_VALIDATION_DETAILS } from '@/constants/validation';
 
 /**
  * Auth Service
@@ -70,11 +70,7 @@ export class AuthService {
                 message: response.message || 'Logout successful',
             };
         } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Logout failed',
-                data: null,
-            };
+            throw new Error(error.message || 'Logout failed');
         }
     }
 
@@ -83,7 +79,7 @@ export class AuthService {
      */
     static async forgotPassword(request: ForgotPasswordRequest): Promise<ApiResponse> {
         try {
-            const response: any = await axiosInstance.post(API_ENDPOINTS.FORGOT_PASSWORD, request);
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, request);
 
             return {
                 success: response.success ?? true,
@@ -100,7 +96,7 @@ export class AuthService {
      */
     static async resetPassword(request: ResetPasswordRequest): Promise<ApiResponse> {
         try {
-            const response: any = await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, request);
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.RESET_PASSWORD, request);
 
             return {
                 success: response.success ?? true,
@@ -116,9 +112,8 @@ export class AuthService {
      * Validate email format
      */
     static validateEmail(email: string): boolean {
-        //const emailRegex = ;
-        //return emailRegex.test(email);
-        return email ? true : false;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 
     /**
@@ -157,24 +152,23 @@ export class AuthService {
         const errors: string[] = [];
 
         if (password.length < 8) {
-            errors.push(PASSWORD_VALIDATION_DETAILS.MIN_LENGTH);
+            errors.push('Password must be at least 8 characters long');
         }
 
-        // Use efficient regex patterns without lookaheads to prevent ReDoS
-        if (!/[a-z]/.test(password)) {
-            errors.push(PASSWORD_VALIDATION_DETAILS.LOWERCASE_REQUIRED);
+        if (!/(?=.*[a-z])/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
         }
 
-        if (!/[A-Z]/.test(password)) {
-            errors.push(PASSWORD_VALIDATION_DETAILS.UPPERCASE_REQUIRED);
+        if (!/(?=.*[A-Z])/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
         }
 
-        if (!/\d/.test(password)) {
-            errors.push(PASSWORD_VALIDATION_DETAILS.DIGIT_REQUIRED);
+        if (!/(?=.*\d)/.test(password)) {
+            errors.push('Password must contain at least one digit');
         }
 
-        if (!/[@$!%*?&]/.test(password)) {
-            errors.push(PASSWORD_VALIDATION_DETAILS.SPECIAL_CHAR_REQUIRED);
+        if (!/(?=.*[@$!%*?&])/.test(password)) {
+            errors.push('Password must contain at least one special character');
         }
 
         return {
@@ -184,39 +178,40 @@ export class AuthService {
     }
 
     /**
-     * Check if user is authenticated
+     * Check if user is authenticated based on roles
      */
     static isAuthenticated(): boolean {
-        const token = localStorage.getItem('token');
-        return !!token;
+        const roles = this.getRoles();
+        return roles.length > 0;
     }
 
     /**
-     * Get stored token
+     * Get stored roles
      */
-    static getToken(): string | null {
-        return localStorage.getItem('token');
+    static getRoles(): string[] {
+        const roles = localStorage.getItem('roles');
+        return roles ? JSON.parse(roles) : [];
     }
 
     /**
-     * Set token in localStorage
+     * Set roles in localStorage
      */
-    static setToken(token: string): void {
-        localStorage.setItem('token', token);
+    static setRoles(roles: string[]): void {
+        localStorage.setItem('roles', JSON.stringify(roles));
     }
 
     /**
-     * Remove token from localStorage
+     * Remove roles from localStorage
      */
-    static removeToken(): void {
-        localStorage.removeItem('token');
+    static removeRoles(): void {
+        localStorage.removeItem('roles');
     }
 
     /**
      * Clear all auth data
      */
     static clearAuthData(): void {
-        this.removeToken();
+        this.removeRoles();
     }
 
     /**
@@ -265,9 +260,9 @@ export const {
     validatePhoneNumber,
     validatePassword,
     isAuthenticated,
-    getToken,
-    setToken,
-    removeToken,
+    getRoles,
+    setRoles,
+    removeRoles,
     clearAuthData,
 } = AuthService;
 

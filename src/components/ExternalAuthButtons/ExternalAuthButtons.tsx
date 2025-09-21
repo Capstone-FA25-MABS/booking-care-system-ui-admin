@@ -1,5 +1,5 @@
 import React from 'react';
-import FullScreenSpinner from '@/components/common/FullScreenSpinner';
+import FullScreenSpinner from '@/components/FullScreenSpinner';
 import facebook_logo from '@/assets/img/icons/facebook-logo.svg';
 import google_logo from '@/assets/img/icons/google-logo.svg';
 import styles from './ExternalAuthButtons.module.scss';

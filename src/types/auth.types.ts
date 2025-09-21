@@ -55,7 +55,7 @@ export interface ResetPasswordFormData {
 
 // Auth state types
 export interface AuthState {
-    token: string | null;
+    roles: string[];
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;

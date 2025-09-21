@@ -1,7 +1,6 @@
 /**
  * Path constants for the application
  */
-
 export const PATHS = {
     // General paths
     HOME: '/',
