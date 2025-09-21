@@ -154,19 +154,19 @@ export class AuthService {
             errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
         }
 
-        if (!PASSWORD_REGEX.LOOKAHEAD_LOWERCASE.test(password)) {
+        if (!PASSWORD_REGEX.HAS_LOWERCASE.test(password)) {
             errors.push('Password must contain at least one lowercase letter');
         }
 
-        if (!PASSWORD_REGEX.LOOKAHEAD_UPPERCASE.test(password)) {
+        if (!PASSWORD_REGEX.HAS_UPPERCASE.test(password)) {
             errors.push('Password must contain at least one uppercase letter');
         }
 
-        if (!PASSWORD_REGEX.LOOKAHEAD_DIGIT.test(password)) {
+        if (!PASSWORD_REGEX.HAS_DIGIT.test(password)) {
             errors.push('Password must contain at least one digit');
         }
 
-        if (!PASSWORD_REGEX.LOOKAHEAD_SPECIAL.test(password)) {
+        if (!PASSWORD_REGEX.HAS_SPECIAL.test(password)) {
             errors.push('Password must contain at least one special character');
         }
 

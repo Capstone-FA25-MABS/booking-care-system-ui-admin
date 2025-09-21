@@ -10,10 +10,11 @@ export const PASSWORD_REGEX = {
     UPPERCASE: /[A-Z]/,
     DIGIT: /\d/,
     SPECIAL_CHAR: /[@$!%*?&]/,
-    LOOKAHEAD_LOWERCASE: /(?=.*[a-z])/,
-    LOOKAHEAD_UPPERCASE: /(?=.*[A-Z])/,
-    LOOKAHEAD_DIGIT: /(?=.*\d)/,
-    LOOKAHEAD_SPECIAL: /(?=.*[@$!%*?&])/,
+    // Safe alternatives to lookahead patterns to prevent ReDoS
+    HAS_LOWERCASE: /[a-z]/,
+    HAS_UPPERCASE: /[A-Z]/,
+    HAS_DIGIT: /\d/,
+    HAS_SPECIAL: /[@$!%*?&]/,
 } as const;
 
 // Password minimum length
