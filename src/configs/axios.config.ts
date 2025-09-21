@@ -87,7 +87,6 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
 
         try {
             localStorage.removeItem('persist:booking-care-root');
-            localStorage.removeItem('token');
         } catch {
             // Ignore localStorage errors
         }
