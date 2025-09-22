@@ -2,141 +2,89 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import styles from './ListDoctors.module.scss';
-import Calendar from '@/components/Calendar';
+// import Calendar from '@/components/Calendar';
 
 // Import ảnh trực tiếp
 import doctor01 from '@/assets/img/doctors/doctor-01.jpg';
 import doctor02 from '@/assets/img/doctors/doctor-02.jpg';
 import doctor03 from '@/assets/img/doctors/doctor-03.jpg';
 import doctor04 from '@/assets/img/doctors/doctor-04.jpg';
-import doctor05 from '@/assets/img/doctors/doctor-05.jpg';
-import doctor06 from '@/assets/img/doctors/doctor-06.jpg';
-import doctor07 from '@/assets/img/doctors/doctor-07.jpg';
-import doctor08 from '@/assets/img/doctors/doctor-08.jpg';
-import doctor09 from '@/assets/img/doctors/doctor-09.jpg';
 
 interface Doctor {
     id: string;
-    name: string;
-    designation: string;
-    department: string;
-    phone: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    experience: string;
-    status: 'Available' | 'Unavailable';
-    avatar: string;
+    position: { name: string };
+    specialtyId: string;
+    yearsOfExperience: number;
+    status: string;
+    avatarUrl: string;
+    prices: { serviceTypeName: string; amount: number }[];
+    createdAt: string;
 }
 
-const doctors: Doctor[] = [
+const mockDoctors: Doctor[] = [
     {
-        id: '1',
-        name: 'Dr. Mick Thompson',
-        designation: 'Cardiologist',
-        department: 'Cardiology',
-        phone: '+1 54554 54584',
-        email: 'mick.thompson@example.com',
-        experience: '10 năm',
-        status: 'Available',
-        avatar: doctor01,
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd6',
+        firstName: 'Ngô',
+        lastName: 'Văn I',
+        email: 'dr.ngo.van.i@bookingcare.com',
+        position: { name: 'Bác sĩ ngoại khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd1',
+        yearsOfExperience: 7,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 750000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 450000 },
+        ],
+        createdAt: '2025-09-14T09:30:59.67',
     },
     {
-        id: '2',
-        name: 'Dr. Sarah Johnson',
-        designation: 'Orthopedic Surgeon',
-        department: 'Orthopedics',
-        phone: '+1 43554 54584',
-        email: 'sarah.johnson@example.com',
-        experience: '8 năm',
-        status: 'Available',
-        avatar: doctor02,
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd7',
+        firstName: 'Trần',
+        lastName: 'Thị A',
+        email: 'dr.tran.thi.a@bookingcare.com',
+        position: { name: 'Bác sĩ nhi khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd2',
+        yearsOfExperience: 10,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 600000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 300000 },
+        ],
+        createdAt: '2025-09-15T10:00:00.00',
     },
     {
-        id: '3',
-        name: 'Dr. Emily Carter',
-        designation: 'Pediatrician',
-        department: 'Pediatrics',
-        phone: '+1 47554 54585',
-        email: 'emily.carter@example.com',
-        experience: '12 năm',
-        status: 'Available',
-        avatar: doctor03,
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd8',
+        firstName: 'Lê',
+        lastName: 'Văn B',
+        email: 'dr.le.van.b@bookingcare.com',
+        position: { name: 'Bác sĩ nội khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd3',
+        yearsOfExperience: 5,
+        status: 'ACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1200000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 800000 },
+        ],
+        createdAt: '2025-09-16T11:00:00.00',
     },
     {
-        id: '4',
-        name: 'Dr. David Lee',
-        designation: 'Gynecologist',
-        department: 'Gynecology',
-        phone: '+1 54114 54586',
-        email: 'david.lee@example.com',
-        experience: '9 năm',
-        status: 'Available',
-        avatar: doctor04,
-    },
-    {
-        id: '5',
-        name: 'Dr. Anna Kim',
-        designation: 'Psychiatrist',
-        department: 'Psychiatry',
-        phone: '+1 51247 54587',
-        email: 'anna.kim@example.com',
-        experience: '7 năm',
-        status: 'Available',
-        avatar: doctor05,
-    },
-    {
-        id: '6',
-        name: 'Dr. John Smith',
-        designation: 'Neurosurgeon',
-        department: 'Neurology',
-        phone: '+1 41452 54588',
-        email: 'john.smith@example.com',
-        experience: '15 năm',
-        status: 'Unavailable',
-        avatar: doctor06,
-    },
-    {
-        id: '7',
-        name: 'Dr. Lisa White',
-        designation: 'Oncologist',
-        department: 'Oncology',
-        phone: '+1 51425 54589',
-        email: 'lisa.white@example.com',
-        experience: '11 năm',
-        status: 'Available',
-        avatar: doctor07,
-    },
-    {
-        id: '8',
-        name: 'Dr. Patricia Brown',
-        designation: 'Pulmonologist',
-        department: 'Pulmonology',
-        phone: '+1 42565 54590',
-        email: 'patricia.brown@example.com',
-        experience: '6 năm',
-        status: 'Available',
-        avatar: doctor08,
-    },
-    {
-        id: '9',
-        name: 'Dr. Rachel Green',
-        designation: 'Urologist',
-        department: 'Urology',
-        phone: '+1 45214 54591',
-        email: 'rachel.green@example.com',
-        experience: '13 năm',
-        status: 'Available',
-        avatar: doctor09,
-    },
-    {
-        id: '10',
-        name: 'Dr. Michael Smith',
-        designation: 'Cardiologist',
-        department: 'Cardiology',
-        phone: '+1 41245 54592',
-        email: 'michael.smith@example.com',
-        experience: '10 năm',
-        status: 'Available',
-        avatar: doctor09,
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd9',
+        firstName: 'Phạm',
+        lastName: 'Thị C',
+        email: 'dr.pham.thi.c@bookingcare.com',
+        position: { name: 'Bác sĩ ngoại khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd1',
+        yearsOfExperience: 8,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [{ serviceTypeName: 'TELEHEALTH', amount: 400000 }],
+        createdAt: '2025-09-17T12:00:00.00',
     },
 ];
 
@@ -192,51 +140,122 @@ const selectCustomStyles = {
 };
 
 const ListDoctors: React.FC = () => {
-    const [selectedDoctors, setSelectedDoctors] = useState<string[]>(['m-1']);
-    const [selectedDesignations, setSelectedDesignations] = useState<string[]>(['m-1']);
-    const [selectedDepartments, setSelectedDepartments] = useState<string[]>(['m-1']);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedAmounts, setSelectedAmounts] = useState<string[]>(['m-1']);
-    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['m-1']);
-    const [sortBy, setSortBy] = useState<string>('Recent');
+    const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
+    const [originalDoctors] = useState<Doctor[]>(mockDoctors);
+    const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
+    const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+    const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+    const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>([]);
+    const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+    // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
-    // State cho popup calendar
-    const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
+    // const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
 
     const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        // Implement filter logic here
+        let filteredDoctors = [...originalDoctors];
+
+        // Lọc theo bác sĩ
+        if (selectedDoctors.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                selectedDoctors.includes(doctor.id)
+            );
+        }
+
+        // Lọc theo học hàm/học vị
+        if (selectedPositions.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                selectedPositions.includes(doctor.position.name)
+            );
+        }
+
+        // Lọc theo chuyên khoa
+        if (selectedSpecialties.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                selectedSpecialties.includes(doctor.specialtyId)
+            );
+        }
+
+        // Lọc theo loại dịch vụ
+        if (selectedServiceTypes.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                doctor.prices.some((price) => selectedServiceTypes.includes(price.serviceTypeName))
+            );
+        }
+
+        // Lọc theo giá
+        if (selectedPrices.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                doctor.prices.some((price) => {
+                    const amount = price.amount;
+                    if (selectedPrices.includes('m-1') && amount < 500000) return true;
+                    if (selectedPrices.includes('m-2') && amount >= 500000 && amount <= 1000000)
+                        return true;
+                    if (selectedPrices.includes('m-3') && amount > 1000000) return true;
+                    return false;
+                })
+            );
+        }
+
+        // Lọc theo trạng thái
+        if (selectedStatuses.length > 0) {
+            filteredDoctors = filteredDoctors.filter((doctor) =>
+                selectedStatuses.includes(doctor.status)
+            );
+        }
+
+        // Lọc theo ngày (dựa trên createdAt)
+        // if (selectedDate) {
+        //   filteredDoctors = filteredDoctors.filter((doctor) => {
+        //     const createdAtDate = new Date(doctor.createdAt);
+        //     return (
+        //       createdAtDate.getDate() === selectedDate.getDate() &&
+        //       createdAtDate.getMonth() === selectedDate.getMonth() &&
+        //       createdAtDate.getFullYear() === selectedDate.getFullYear()
+        //     );
+        //   });
+        // }
+
+        setDoctors(filteredDoctors);
+        setShowFilterModal(false);
     };
 
     const handleClearFilters = () => {
-        setSelectedDoctors(['m-1']);
-        setSelectedDesignations(['m-1']);
-        setSelectedDepartments(['m-1']);
-        setSelectedDate(null);
-        setSelectedAmounts(['m-1']);
-        setSelectedStatuses(['m-1']);
+        setSelectedDoctors([]);
+        setSelectedPositions([]);
+        setSelectedSpecialties([]);
+        setSelectedServiceTypes([]);
+        setSelectedPrices([]);
+        setSelectedStatuses([]);
+        // setSelectedDate(null);
+        setDoctors(originalDoctors);
     };
 
     const handleResetFilter = (type: string) => {
         switch (type) {
             case 'doctors':
-                setSelectedDoctors(['m-1']);
+                setSelectedDoctors([]);
                 break;
-            case 'designations':
-                setSelectedDesignations(['m-1']);
+            case 'positions':
+                setSelectedPositions([]);
                 break;
-            case 'departments':
-                setSelectedDepartments(['m-1']);
+            case 'specialties':
+                setSelectedSpecialties([]);
                 break;
-            case 'date':
-                setSelectedDate(null);
+            case 'serviceTypes':
+                setSelectedServiceTypes([]);
                 break;
-            case 'amounts':
-                setSelectedAmounts(['m-1']);
+            case 'prices':
+                setSelectedPrices([]);
                 break;
             case 'statuses':
-                setSelectedStatuses(['m-1']);
+                setSelectedStatuses([]);
                 break;
+            // case 'date':
+            //   setSelectedDate(null);
+            //   break;
             default:
                 break;
         }
@@ -250,7 +269,7 @@ const ListDoctors: React.FC = () => {
                         <h4 className="fw-bold mb-0">
                             Danh Sách Bác Sĩ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Bác Sĩ: 565
+                                Tổng Bác Sĩ: {doctors.length}
                             </span>
                         </h4>
                     </div>
@@ -311,7 +330,7 @@ const ListDoctors: React.FC = () => {
                                         <input
                                             type="text"
                                             className="form-control shadow-sm"
-                                            placeholder="Tìm kiếm"
+                                            placeholder="Tìm kiếm bác sĩ..."
                                         />
                                         <span className="input-icon-addon text-dark shadow fs-18 d-inline-flex p-0 header-search-icon">
                                             <i className="ti ti-command"></i>
@@ -366,13 +385,14 @@ const ListDoctors: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên & Chức vụ</th>
+                                <th>Tên & Học hàm/Học vị</th>
                                 <th>Chuyên khoa</th>
-                                <th>Số điện thoại</th>
                                 <th>Email</th>
                                 <th>Kinh nghiệm</th>
+                                <th>Loại dịch vụ</th>
+                                <th>Giá</th>
                                 <th>Trạng thái</th>
-                                <th>Quản lý</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -381,46 +401,62 @@ const ListDoctors: React.FC = () => {
                                     <td>
                                         <div className="d-flex align-items-center">
                                             <Link
-                                                to="/clinic/doctor-details"
+                                                to={`/clinic/doctor-details/${doctor.id}`}
                                                 className="avatar me-2"
                                             >
                                                 <img
-                                                    src={doctor.avatar}
-                                                    alt="Doctor"
+                                                    src={doctor.avatarUrl}
+                                                    alt="Bác sĩ"
                                                     className="rounded-circle"
                                                 />
                                             </Link>
                                             <div>
                                                 <h6 className="mb-1 fs-14 fw-semibold">
-                                                    <Link to="/clinic/doctor-details">
-                                                        {doctor.name}
+                                                    <Link
+                                                        to={`/clinic/doctor-details/${doctor.id}`}
+                                                    >
+                                                        {doctor.firstName} {doctor.lastName}
                                                     </Link>
                                                 </h6>
                                                 <span className="fs-13 d-block">
-                                                    {doctor.designation}
+                                                    {doctor.position.name}
                                                 </span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{doctor.department}</td>
-                                    <td>{doctor.phone}</td>
+                                    <td>{doctor.specialtyId}</td>
                                     <td>
                                         <a href={`mailto:${doctor.email}`}>{doctor.email}</a>
                                     </td>
                                     <td>
                                         <h6 className="fs-14 fw-semibold mb-0">
-                                            {doctor.experience}
+                                            {doctor.yearsOfExperience} năm
                                         </h6>
+                                    </td>
+                                    <td>
+                                        {doctor.prices
+                                            .map((price) =>
+                                                price.serviceTypeName === 'IN_PERSON'
+                                                    ? 'Trực tiếp'
+                                                    : 'Từ xa'
+                                            )
+                                            .join(', ')}
+                                    </td>
+                                    <td>
+                                        {doctor.prices
+                                            .map(
+                                                (price) =>
+                                                    `${price.amount.toLocaleString('vi-VN')} VNĐ`
+                                            )
+                                            .join(', ')}
                                     </td>
                                     <td>
                                         <span
                                             className={`badge badge-soft-${
-                                                doctor.status === 'Available' ? 'success' : 'danger'
-                                            } border border-${doctor.status === 'Available' ? 'success' : 'danger'}`}
+                                                doctor.status === 'ACTIVE' ? 'success' : 'danger'
+                                            } border border-${doctor.status === 'ACTIVE' ? 'success' : 'danger'}`}
                                         >
-                                            {doctor.status === 'Available'
-                                                ? 'Có mặt'
-                                                : 'Không có mặt'}
+                                            {doctor.status === 'ACTIVE' ? 'Có mặt' : 'Không có mặt'}
                                         </span>
                                     </td>
                                     <td>
@@ -437,7 +473,7 @@ const ListDoctors: React.FC = () => {
                                                 <ul className="dropdown-menu">
                                                     <li>
                                                         <Link
-                                                            to="/clinic/doctors/edit/1"
+                                                            to={`/clinic/doctors/edit/${doctor.id}`}
                                                             className="dropdown-item d-flex align-items-center"
                                                         >
                                                             Sửa
@@ -469,7 +505,6 @@ const ListDoctors: React.FC = () => {
                 </p>
             </div>
 
-            {/* Modal Bootstrap cho filter */}
             {showFilterModal && (
                 <div
                     className="modal fade show"
@@ -479,21 +514,21 @@ const ListDoctors: React.FC = () => {
                     <div className="modal-dialog modal-dialog-centered">
                         <div className={`modal-content ${styles.modalContent}`}>
                             <div className={`modal-header ${styles.modalHeader}`}>
-                                <h4 className={styles.modalTitle}>Filter</h4>
+                                <h4 className={styles.modalTitle}>Lọc Bác Sĩ</h4>
                                 <a
                                     className={styles.clearAll}
                                     onClick={() => {
                                         handleClearFilters();
                                     }}
                                 >
-                                    Clear All
+                                    Xóa Tất Cả
                                 </a>
                             </div>
                             <div className={styles.modalBody}>
-                                {/* Doctor */}
+                                {/* Bác sĩ */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Doctor</label>
+                                        <label className={styles.label}>Bác Sĩ</label>
                                         <a
                                             className={styles.resetLink}
                                             onClick={(e) => {
@@ -501,49 +536,45 @@ const ListDoctors: React.FC = () => {
                                                 handleResetFilter('doctors');
                                             }}
                                         >
-                                            Reset
+                                            Đặt lại
                                         </a>
                                     </div>
                                     <Select
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
-                                        value={[
-                                            { value: 'm-1', label: 'Dr. Mick Thompson' },
-                                            { value: 'm-2', label: 'Dr. Sarah Johnson' },
-                                            { value: 'm-3', label: 'Dr. Emily Carter' },
-                                            { value: 'm-4', label: 'Dr. David Lee' },
-                                            { value: 'm-5', label: 'Dr. Anna Kim' },
-                                        ].filter((option) =>
-                                            selectedDoctors.includes(option.value)
-                                        )}
+                                        value={originalDoctors
+                                            .map((doctor) => ({
+                                                value: doctor.id,
+                                                label: `${doctor.firstName} ${doctor.lastName}`,
+                                            }))
+                                            .filter((option) =>
+                                                selectedDoctors.includes(option.value)
+                                            )}
                                         onChange={(options) =>
                                             setSelectedDoctors(
-                                                options.map((option) => option.value)
+                                                options ? options.map((option) => option.value) : []
                                             )
                                         }
-                                        options={[
-                                            { value: 'm-1', label: 'Dr. Mick Thompson' },
-                                            { value: 'm-2', label: 'Dr. Sarah Johnson' },
-                                            { value: 'm-3', label: 'Dr. Emily Carter' },
-                                            { value: 'm-4', label: 'Dr. David Lee' },
-                                            { value: 'm-5', label: 'Dr. Anna Kim' },
-                                        ]}
-                                        placeholder="Select doctor..."
+                                        options={originalDoctors.map((doctor) => ({
+                                            value: doctor.id,
+                                            label: `${doctor.firstName} ${doctor.lastName}`,
+                                        }))}
+                                        placeholder="Chọn bác sĩ..."
                                     />
                                 </div>
-                                {/* Designation */}
+                                {/* Học hàm/Học vị */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Designation</label>
+                                        <label className={styles.label}>Học hàm/Học vị</label>
                                         <a
                                             className={styles.resetLink}
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleResetFilter('designations');
+                                                handleResetFilter('positions');
                                             }}
                                         >
-                                            Reset
+                                            Đặt lại
                                         </a>
                                     </div>
                                     <Select
@@ -551,39 +582,46 @@ const ListDoctors: React.FC = () => {
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
                                         value={[
-                                            { value: 'm-1', label: 'Cardiologist' },
-                                            { value: 'm-2', label: 'Orthopedic Surgeon' },
-                                            { value: 'm-3', label: 'Pediatrician' },
-                                            { value: 'm-4', label: 'Gynecologist' },
-                                        ].filter((option) =>
-                                            selectedDesignations.includes(option.value)
-                                        )}
+                                            ...new Set(
+                                                originalDoctors.map(
+                                                    (doctor) => doctor.position.name
+                                                )
+                                            ),
+                                        ]
+                                            .map((position) => ({
+                                                value: position,
+                                                label: position,
+                                            }))
+                                            .filter((option) =>
+                                                selectedPositions.includes(option.value)
+                                            )}
                                         onChange={(options) =>
-                                            setSelectedDesignations(
-                                                options.map((option) => option.value)
+                                            setSelectedPositions(
+                                                options ? options.map((option) => option.value) : []
                                             )
                                         }
                                         options={[
-                                            { value: 'm-1', label: 'Cardiologist' },
-                                            { value: 'm-2', label: 'Orthopedic Surgeon' },
-                                            { value: 'm-3', label: 'Pediatrician' },
-                                            { value: 'm-4', label: 'Gynecologist' },
-                                        ]}
-                                        placeholder="Select designation..."
+                                            ...new Set(
+                                                originalDoctors.map(
+                                                    (doctor) => doctor.position.name
+                                                )
+                                            ),
+                                        ].map((position) => ({ value: position, label: position }))}
+                                        placeholder="Chọn học hàm/học vị..."
                                     />
                                 </div>
-                                {/* Department */}
+                                {/* Chuyên khoa */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Department</label>
+                                        <label className={styles.label}>Chuyên Khoa</label>
                                         <a
                                             className={styles.resetLink}
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleResetFilter('departments');
+                                                handleResetFilter('specialties');
                                             }}
                                         >
-                                            Reset
+                                            Đặt lại
                                         </a>
                                     </div>
                                     <Select
@@ -591,79 +629,45 @@ const ListDoctors: React.FC = () => {
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
                                         value={[
-                                            { value: 'm-1', label: 'Cardiology' },
-                                            { value: 'm-2', label: 'Orthopedics' },
-                                            { value: 'm-3', label: 'Pediatrics' },
-                                        ].filter((option) =>
-                                            selectedDepartments.includes(option.value)
-                                        )}
+                                            ...new Set(
+                                                originalDoctors.map((doctor) => doctor.specialtyId)
+                                            ),
+                                        ]
+                                            .map((specialty) => ({
+                                                value: specialty,
+                                                label: specialty,
+                                            }))
+                                            .filter((option) =>
+                                                selectedSpecialties.includes(option.value)
+                                            )}
                                         onChange={(options) =>
-                                            setSelectedDepartments(
-                                                options.map((option) => option.value)
+                                            setSelectedSpecialties(
+                                                options ? options.map((option) => option.value) : []
                                             )
                                         }
                                         options={[
-                                            { value: 'm-1', label: 'Cardiology' },
-                                            { value: 'm-2', label: 'Orthopedics' },
-                                            { value: 'm-3', label: 'Pediatrics' },
-                                        ]}
-                                        placeholder="Select department..."
+                                            ...new Set(
+                                                originalDoctors.map((doctor) => doctor.specialtyId)
+                                            ),
+                                        ].map((specialty) => ({
+                                            value: specialty,
+                                            label: specialty,
+                                        }))}
+                                        placeholder="Chọn chuyên khoa..."
                                     />
                                 </div>
-                                {/* Date */}
-                                <div className="mb-3">
-                                    <label className={`${styles.label} mb-1`}>
-                                        Date<span className="text-danger ms-1">*</span>
-                                    </label>
-                                    <div style={{ position: 'relative' }}>
-                                        <div className="input-icon-end position-relative">
-                                            <input
-                                                type="text"
-                                                className={`form-control shadow-none ${styles.inputDate}`}
-                                                placeholder="dd-mm-yyyy"
-                                                value={
-                                                    selectedDate
-                                                        ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getFullYear()}`
-                                                        : ''
-                                                }
-                                                readOnly
-                                                onClick={(e) => setCalendarAnchor(e.currentTarget)}
-                                                style={{ cursor: 'pointer' }}
-                                            />
-                                            <span
-                                                className="input-icon-addon"
-                                                style={{ pointerEvents: 'none' }}
-                                            >
-                                                <i className="ti ti-calendar"></i>
-                                            </span>
-                                        </div>
-                                        <Calendar
-                                            value={selectedDate}
-                                            onChange={(date) => {
-                                                setSelectedDate(date);
-                                                setCalendarAnchor(null);
-                                            }}
-                                            anchorEl={calendarAnchor}
-                                            open={Boolean(calendarAnchor)}
-                                            onClose={() => setCalendarAnchor(null)}
-                                            usePopper={true}
-                                            isTodaySelected={true}
-                                            styles={{ width: 320 }}
-                                        />
-                                    </div>
-                                </div>
-                                {/* Amount */}
+                                {/* Loại dịch vụ */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Amount</label>
+                                        <label className={styles.label}>Loại Dịch Vụ</label>
                                         <a
                                             className={styles.resetLink}
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleResetFilter('amounts');
+                                                handleResetFilter('serviceTypes');
                                             }}
                                         >
-                                            Reset
+                                            Đặt lại
                                         </a>
                                     </div>
                                     <Select
@@ -671,29 +675,77 @@ const ListDoctors: React.FC = () => {
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
                                         value={[
-                                            { value: 'm-1', label: '$501 - $1000' },
-                                            { value: 'm-2', label: '$1001 - $2000' },
-                                            { value: 'm-3', label: '$2001 - $3000' },
-                                        ].filter((option) =>
-                                            selectedAmounts.includes(option.value)
-                                        )}
+                                            ...new Set(
+                                                originalDoctors.flatMap((doctor) =>
+                                                    doctor.prices.map((p) => p.serviceTypeName)
+                                                )
+                                            ),
+                                        ]
+                                            .map((type) => ({
+                                                value: type,
+                                                label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
+                                            }))
+                                            .filter((option) =>
+                                                selectedServiceTypes.includes(option.value)
+                                            )}
                                         onChange={(options) =>
-                                            setSelectedAmounts(
-                                                options.map((option) => option.value)
+                                            setSelectedServiceTypes(
+                                                options ? options.map((option) => option.value) : []
                                             )
                                         }
                                         options={[
-                                            { value: 'm-1', label: '$501 - $1000' },
-                                            { value: 'm-2', label: '$1001 - $2000' },
-                                            { value: 'm-3', label: '$2001 - $3000' },
-                                        ]}
-                                        placeholder="Select amount..."
+                                            ...new Set(
+                                                originalDoctors.flatMap((doctor) =>
+                                                    doctor.prices.map((p) => p.serviceTypeName)
+                                                )
+                                            ),
+                                        ].map((type) => ({
+                                            value: type,
+                                            label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
+                                        }))}
+                                        placeholder="Chọn loại dịch vụ..."
                                     />
                                 </div>
-                                {/* Status */}
+                                {/* Giá */}
+                                <div className="mb-3">
+                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                        <label className={styles.label}>Giá</label>
+                                        <a
+                                            className={styles.resetLink}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleResetFilter('prices');
+                                            }}
+                                        >
+                                            Đặt lại
+                                        </a>
+                                    </div>
+                                    <Select
+                                        isMulti
+                                        classNamePrefix="select2"
+                                        styles={selectCustomStyles}
+                                        value={[
+                                            { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
+                                            { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
+                                            { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
+                                        ].filter((option) => selectedPrices.includes(option.value))}
+                                        onChange={(options) =>
+                                            setSelectedPrices(
+                                                options ? options.map((option) => option.value) : []
+                                            )
+                                        }
+                                        options={[
+                                            { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
+                                            { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
+                                            { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
+                                        ]}
+                                        placeholder="Chọn mức giá..."
+                                    />
+                                </div>
+                                {/* Trạng thái */}
                                 <div className="mb-2">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Status</label>
+                                        <label className={styles.label}>Trạng Thái</label>
                                         <a
                                             className={styles.resetLink}
                                             onClick={(e) => {
@@ -701,7 +753,7 @@ const ListDoctors: React.FC = () => {
                                                 handleResetFilter('statuses');
                                             }}
                                         >
-                                            Reset
+                                            Đặt lại
                                         </a>
                                     </div>
                                     <Select
@@ -709,23 +761,69 @@ const ListDoctors: React.FC = () => {
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
                                         value={[
-                                            { value: 'm-1', label: 'Available' },
-                                            { value: 'm-2', label: 'Unavailable' },
+                                            { value: 'ACTIVE', label: 'Có mặt' },
+                                            { value: 'INACTIVE', label: 'Không có mặt' },
                                         ].filter((option) =>
                                             selectedStatuses.includes(option.value)
                                         )}
                                         onChange={(options) =>
                                             setSelectedStatuses(
-                                                options.map((option) => option.value)
+                                                options ? options.map((option) => option.value) : []
                                             )
                                         }
                                         options={[
-                                            { value: 'm-1', label: 'Available' },
-                                            { value: 'm-2', label: 'Unavailable' },
+                                            { value: 'ACTIVE', label: 'Có mặt' },
+                                            { value: 'INACTIVE', label: 'Không có mặt' },
                                         ]}
-                                        placeholder="Select status..."
+                                        placeholder="Chọn trạng thái..."
                                     />
                                 </div>
+                                {/* Ngày */}
+                                {/* <div className="mb-3">
+                  <label className={`${styles.label} mb-1`}>
+                    Ngày<span className="text-danger ms-1">*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <div className="input-icon-end position-relative">
+                      <input
+                        type="text"
+                        className={`form-control shadow-none ${styles.inputDate}`}
+                        placeholder="dd-mm-yyyy"
+                        value={
+                          selectedDate
+                            ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(
+                                selectedDate.getMonth() + 1
+                              )
+                                .toString()
+                                .padStart(2, '0')}-${selectedDate.getFullYear()}`
+                            : ''
+                        }
+                        readOnly
+                        onClick={(e) => setCalendarAnchor(e.currentTarget)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span
+                        className="input-icon-addon"
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        <i className="ti ti-calendar"></i>
+                      </span>
+                    </div>
+                    <Calendar
+                      value={selectedDate}
+                      onChange={(date) => {
+                        setSelectedDate(date);
+                        setCalendarAnchor(null);
+                      }}
+                      anchorEl={calendarAnchor}
+                      open={Boolean(calendarAnchor)}
+                      onClose={() => setCalendarAnchor(null)}
+                      usePopper={true}
+                      isTodaySelected={true}
+                      styles={{ width: 320 }}
+                    />
+                  </div>
+                </div> */}
                             </div>
                             <div className={`modal-footer ${styles.modalFooter}`}>
                                 <button
@@ -733,14 +831,14 @@ const ListDoctors: React.FC = () => {
                                     className={`btn btn-light btn-md me-2 ${styles.btn}`}
                                     onClick={() => setShowFilterModal(false)}
                                 >
-                                    Close
+                                    Đóng
                                 </button>
                                 <button
                                     type="button"
                                     className={`btn btn-primary btn-md ${styles.btn}`}
                                     onClick={handleFilterSubmit}
                                 >
-                                    Filter
+                                    Lọc
                                 </button>
                             </div>
                         </div>

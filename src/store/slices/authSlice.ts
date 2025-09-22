@@ -1,99 +1,141 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { AuthService } from '@/services/auth.service';
+import {
+    AuthState,
+    LoginRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    GoogleLoginRequest,
+    FacebookLoginRequest,
+} from '@/types/auth.types';
+import { getRolesFromJwt } from '@/utils/jwt';
 
-// Types
-export interface User {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone?: string;
-    avatar?: string;
-    role: 'patient' | 'doctor' | 'admin';
-    isEmailVerified: boolean;
-}
-
-export interface AuthState {
-    user: User | null;
-    token: string | null;
-    refreshToken: string | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
-    loginAttempts: number;
-    lastLoginAttempt: number | null;
-}
+// Helper function to validate roles
+const validateRoles = (response: any, rejectWithValue: any) => {
+    const token = response.data?.token;
+    if (token) {
+        const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
+        const allowed = ['ADMIN', 'DOCTOR', 'HOSPITAL'];
+        const hasAllowed = roles.some((r) => allowed.includes(r));
+        if (!hasAllowed) {
+            return rejectWithValue(
+                'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
+            );
+        }
+        // Only save roles, not token
+        AuthService.setRoles(roles);
+        return { roles }; // Return roles data
+    }
+    return null; // No error
+};
 
 // Initial state
 const initialState: AuthState = {
-    user: null,
-    token: null,
-    refreshToken: null,
-    isAuthenticated: false,
+    roles: AuthService.getRoles(),
+    isAuthenticated: AuthService.isAuthenticated(),
     isLoading: false,
     error: null,
-    loginAttempts: 0,
-    lastLoginAttempt: null,
 };
 
 // Async thunks
 export const loginAsync = createAsyncThunk(
     'auth/login',
-    async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    async (credentials: LoginRequest, { rejectWithValue }) => {
         try {
-            // This would be replaced with actual API call
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            });
+            const response = await AuthService.login(credentials);
 
-            if (!response.ok) {
-                throw new Error('Login failed');
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult?.roles) {
+                return { roles: validationResult.roles };
             }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Login failed');
+        }
+    }
+);
 
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : 'Login failed');
+export const forgotPasswordAsync = createAsyncThunk(
+    'auth/forgotPassword',
+    async (request: ForgotPasswordRequest, { rejectWithValue }) => {
+        try {
+            const response = await AuthService.forgotPassword(request);
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Forgot password request failed');
+        }
+    }
+);
+
+export const resetPasswordAsync = createAsyncThunk(
+    'auth/resetPassword',
+    async (request: ResetPasswordRequest, { rejectWithValue }) => {
+        try {
+            const response = await AuthService.resetPassword(request);
+            return response;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Password reset failed');
         }
     }
 );
 
 export const logoutAsync = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
     try {
-        // Call logout API if needed
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-        });
+        await AuthService.logout();
+        AuthService.clearAuthData();
         return true;
-    } catch (error) {
-        return rejectWithValue(error instanceof Error ? error.message : 'Logout failed');
+    } catch (error: any) {
+        // Clear auth data even if API call fails
+        AuthService.clearAuthData();
+        return rejectWithValue(error.message || 'Logout failed');
     }
 });
 
-export const refreshTokenAsync = createAsyncThunk(
-    'auth/refreshToken',
-    async (_, { getState, rejectWithValue }) => {
+export const googleLoginAsync = createAsyncThunk(
+    'auth/googleLogin',
+    async (request: GoogleLoginRequest, { rejectWithValue }) => {
         try {
-            const state = getState() as { auth: AuthState };
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${state.auth.refreshToken}`,
-                },
-            });
+            const response = await AuthService.googleLogin(request);
 
-            if (!response.ok) {
-                throw new Error('Token refresh failed');
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult?.roles) {
+                return { roles: validationResult.roles };
             }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Google login failed');
+        }
+    }
+);
 
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : 'Token refresh failed');
+export const facebookLoginAsync = createAsyncThunk(
+    'auth/facebookLogin',
+    async (request: FacebookLoginRequest, { rejectWithValue }) => {
+        try {
+            const response = await AuthService.facebookLogin(request);
+
+            // Validate roles using helper function
+            const validationResult = validateRoles(response, rejectWithValue);
+            if (validationResult?.roles) {
+                return { roles: validationResult.roles };
+            }
+            if (validationResult === null) {
+                // No token found, return empty roles
+                return { roles: [] };
+            }
+            return validationResult; // This is the error case
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Facebook login failed');
         }
     }
 );
@@ -106,31 +148,6 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
-        setCredentials: (
-            state,
-            action: PayloadAction<{ user: User; token: string; refreshToken: string }>
-        ) => {
-            state.user = action.payload.user;
-            state.token = action.payload.token;
-            state.refreshToken = action.payload.refreshToken;
-            state.isAuthenticated = true;
-            state.error = null;
-            state.loginAttempts = 0;
-            state.lastLoginAttempt = null;
-        },
-        updateUser: (state, action: PayloadAction<Partial<User>>) => {
-            if (state.user) {
-                state.user = { ...state.user, ...action.payload };
-            }
-        },
-        incrementLoginAttempts: (state) => {
-            state.loginAttempts += 1;
-            state.lastLoginAttempt = Date.now();
-        },
-        resetLoginAttempts: (state) => {
-            state.loginAttempts = 0;
-            state.lastLoginAttempt = null;
-        },
     },
     extraReducers: (builder) => {
         builder
@@ -141,52 +158,74 @@ const authSlice = createSlice({
             })
             .addCase(loginAsync.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload.user;
-                state.token = action.payload.token;
-                state.refreshToken = action.payload.refreshToken;
-                state.isAuthenticated = true;
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
-                state.loginAttempts = 0;
-                state.lastLoginAttempt = null;
             })
             .addCase(loginAsync.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
-                state.loginAttempts += 1;
-                state.lastLoginAttempt = Date.now();
+            })
+            // Forgot password cases
+            .addCase(forgotPasswordAsync.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(forgotPasswordAsync.fulfilled, (state) => {
+                state.isLoading = false;
+                state.error = null;
+            })
+            .addCase(forgotPasswordAsync.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            // Reset password cases
+            .addCase(resetPasswordAsync.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(resetPasswordAsync.fulfilled, (state) => {
+                state.isLoading = false;
+                state.error = null;
+            })
+            .addCase(resetPasswordAsync.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
             })
             // Logout cases
             .addCase(logoutAsync.fulfilled, (state) => {
-                state.user = null;
-                state.token = null;
-                state.refreshToken = null;
+                state.roles = [];
                 state.isAuthenticated = false;
                 state.error = null;
                 state.isLoading = false;
-                state.loginAttempts = 0;
-                state.lastLoginAttempt = null;
             })
-            // Refresh token cases
-            .addCase(refreshTokenAsync.fulfilled, (state, action) => {
-                state.token = action.payload.token;
-                state.refreshToken = action.payload.refreshToken;
+            // Google login cases
+            .addCase(googleLoginAsync.pending, (state) => {
                 state.error = null;
             })
-            .addCase(refreshTokenAsync.rejected, (state) => {
-                state.user = null;
-                state.token = null;
-                state.refreshToken = null;
-                state.isAuthenticated = false;
+            .addCase(googleLoginAsync.fulfilled, (state, action) => {
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
+                state.error = null;
+            })
+            .addCase(googleLoginAsync.rejected, (state, action) => {
+                state.error = action.payload as string;
+            })
+            // Facebook login cases
+            .addCase(facebookLoginAsync.pending, (state) => {
+                state.error = null;
+            })
+            .addCase(facebookLoginAsync.fulfilled, (state, action) => {
+                state.roles = action.payload?.roles || [];
+                state.isAuthenticated = state.roles.length > 0;
+                state.error = null;
+            })
+            .addCase(facebookLoginAsync.rejected, (state, action) => {
+                state.error = action.payload as string;
             });
     },
 });
 
-export const {
-    clearError,
-    setCredentials,
-    updateUser,
-    incrementLoginAttempts,
-    resetLoginAttempts,
-} = authSlice.actions;
+export const { clearError } = authSlice.actions;
 
 export default authSlice.reducer;
