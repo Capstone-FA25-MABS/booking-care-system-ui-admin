@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import styles from './ListDoctors.module.scss';
-// import Calendar from '@/components/Calendar';
 
 // Import ảnh trực tiếp
 import doctor01 from '@/assets/img/doctors/doctor-01.jpg';
@@ -122,15 +121,24 @@ const selectCustomStyles = {
         color: '#6B7280',
         ':hover': { backgroundColor: '#E5E7EB', color: '#EF4444' },
     }),
-    option: (provided: any, state: any) => ({
-        ...provided,
-        backgroundColor: state.isSelected ? '#EEF2FF' : state.isFocused ? '#F3F4F6' : '#fff',
-        color: '#111827',
-        fontSize: '14px',
-        padding: '8px 14px',
-        cursor: 'pointer',
-        fontWeight: 400,
-    }),
+    option: (provided: any, state: any) => {
+        let backgroundColor = '#fff';
+        if (state.isSelected) {
+            backgroundColor = '#EEF2FF';
+        } else if (state.isFocused) {
+            backgroundColor = '#F3F4F6';
+        }
+
+        return {
+            ...provided,
+            backgroundColor,
+            color: '#111827',
+            fontSize: '14px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontWeight: 400,
+        };
+    },
     menu: (provided: any) => ({
         ...provided,
         borderRadius: '8px',
@@ -148,10 +156,8 @@ const ListDoctors: React.FC = () => {
     const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>([]);
     const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-    // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
-    // const [calendarAnchor, setCalendarAnchor] = useState<HTMLElement | null>(null);
 
     const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -206,18 +212,6 @@ const ListDoctors: React.FC = () => {
             );
         }
 
-        // Lọc theo ngày (dựa trên createdAt)
-        // if (selectedDate) {
-        //   filteredDoctors = filteredDoctors.filter((doctor) => {
-        //     const createdAtDate = new Date(doctor.createdAt);
-        //     return (
-        //       createdAtDate.getDate() === selectedDate.getDate() &&
-        //       createdAtDate.getMonth() === selectedDate.getMonth() &&
-        //       createdAtDate.getFullYear() === selectedDate.getFullYear()
-        //     );
-        //   });
-        // }
-
         setDoctors(filteredDoctors);
         setShowFilterModal(false);
     };
@@ -229,7 +223,6 @@ const ListDoctors: React.FC = () => {
         setSelectedServiceTypes([]);
         setSelectedPrices([]);
         setSelectedStatuses([]);
-        // setSelectedDate(null);
         setDoctors(originalDoctors);
     };
 
@@ -253,9 +246,6 @@ const ListDoctors: React.FC = () => {
             case 'statuses':
                 setSelectedStatuses([]);
                 break;
-            // case 'date':
-            //   setSelectedDate(null);
-            //   break;
             default:
                 break;
         }
@@ -275,23 +265,24 @@ const ListDoctors: React.FC = () => {
                     </div>
                     <div className="text-end d-flex">
                         <div className="dropdown me-1">
-                            <a
+                            <button
                                 className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
                                 data-bs-toggle="dropdown"
+                                type="button"
                             >
                                 Xuất Dữ Liệu
                                 <i className="ti ti-chevron-down ms-2"></i>
-                            </a>
+                            </button>
                             <ul className="dropdown-menu p-2">
                                 <li>
-                                    <a className="dropdown-item" href="#">
+                                    <button className="dropdown-item" type="button">
                                         Tải xuống dạng PDF
-                                    </a>
+                                    </button>
                                 </li>
                                 <li>
-                                    <a className="dropdown-item" href="#">
+                                    <button className="dropdown-item" type="button">
                                         Tải xuống dạng Excel
-                                    </a>
+                                    </button>
                                 </li>
                             </ul>
                         </div>
@@ -322,12 +313,16 @@ const ListDoctors: React.FC = () => {
                     <div className="search-set mb-3">
                         <div className="d-flex align-items-center flex-wrap gap-2">
                             <div className="table-search d-flex align-items-center mb-0">
+                                <label htmlFor="doctor-search" className="visually-hidden">
+                                    Tìm kiếm bác sĩ
+                                </label>
                                 <div className="search-input">
                                     <div className="input-icon-start position-relative">
                                         <span className="input-icon-addon">
                                             <i className="ti ti-search"></i>
                                         </span>
                                         <input
+                                            id="doctor-search"
                                             type="text"
                                             className="form-control shadow-sm"
                                             placeholder="Tìm kiếm bác sĩ..."
@@ -350,12 +345,13 @@ const ListDoctors: React.FC = () => {
                             </button>
                         </div>
                         <div className="dropdown">
-                            <a
+                            <button
                                 className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
                                 data-bs-toggle="dropdown"
+                                type="button"
                             >
                                 <span className="me-1">Sắp xếp theo:</span> {sortBy}
-                            </a>
+                            </button>
                             <ul className="dropdown-menu dropdown-menu-end p-2">
                                 {[
                                     'Mới Thêm Gần Đây',
@@ -365,15 +361,13 @@ const ListDoctors: React.FC = () => {
                                     '7 Ngày Qua',
                                 ].map((option) => (
                                     <li key={option}>
-                                        <a
+                                        <button
                                             className="dropdown-item rounded-1"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setSortBy(option);
-                                            }}
+                                            onClick={() => setSortBy(option)}
+                                            type="button"
                                         >
                                             {option}
-                                        </a>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -467,9 +461,13 @@ const ListDoctors: React.FC = () => {
                                                 </Link>
                                             </div>
                                             <div className="action-item">
-                                                <a data-bs-toggle="dropdown">
+                                                <button
+                                                    className={styles.dotsButton}
+                                                    data-bs-toggle="dropdown"
+                                                    type="button"
+                                                >
                                                     <i className="ti ti-dots-vertical"></i>
-                                                </a>
+                                                </button>
                                                 <ul className="dropdown-menu">
                                                     <li>
                                                         <Link
@@ -480,13 +478,14 @@ const ListDoctors: React.FC = () => {
                                                         </Link>
                                                     </li>
                                                     <li>
-                                                        <a
+                                                        <button
                                                             className="dropdown-item d-flex align-items-center"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#delete_modal"
+                                                            type="button"
                                                         >
                                                             Xóa
-                                                        </a>
+                                                        </button>
                                                     </li>
                                                 </ul>
                                             </div>
@@ -515,31 +514,45 @@ const ListDoctors: React.FC = () => {
                         <div className={`modal-content ${styles.modalContent}`}>
                             <div className={`modal-header ${styles.modalHeader}`}>
                                 <h4 className={styles.modalTitle}>Lọc Bác Sĩ</h4>
-                                <a
+                                <button
                                     className={styles.clearAll}
                                     onClick={() => {
                                         handleClearFilters();
                                     }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleClearFilters();
+                                        }
+                                    }}
+                                    type="button"
                                 >
                                     Xóa Tất Cả
-                                </a>
+                                </button>
                             </div>
                             <div className={styles.modalBody}>
                                 {/* Bác sĩ */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Bác Sĩ</label>
-                                        <a
+                                        <label htmlFor="doctors-select" className={styles.label}>
+                                            Bác Sĩ
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('doctors');
+                                            onClick={() => handleResetFilter('doctors')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('doctors');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="doctors-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -566,18 +579,25 @@ const ListDoctors: React.FC = () => {
                                 {/* Học hàm/Học vị */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Học hàm/Học vị</label>
-                                        <a
+                                        <label htmlFor="positions-select" className={styles.label}>
+                                            Học hàm/Học vị
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('positions');
+                                            onClick={() => handleResetFilter('positions')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('positions');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="positions-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -613,18 +633,28 @@ const ListDoctors: React.FC = () => {
                                 {/* Chuyên khoa */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Chuyên Khoa</label>
-                                        <a
+                                        <label
+                                            htmlFor="specialties-select"
+                                            className={styles.label}
+                                        >
+                                            Chuyên Khoa
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('specialties');
+                                            onClick={() => handleResetFilter('specialties')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('specialties');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="specialties-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -659,18 +689,28 @@ const ListDoctors: React.FC = () => {
                                 {/* Loại dịch vụ */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Loại Dịch Vụ</label>
-                                        <a
+                                        <label
+                                            htmlFor="service-types-select"
+                                            className={styles.label}
+                                        >
+                                            Loại Dịch Vụ
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('serviceTypes');
+                                            onClick={() => handleResetFilter('serviceTypes')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('serviceTypes');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="service-types-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -709,18 +749,25 @@ const ListDoctors: React.FC = () => {
                                 {/* Giá */}
                                 <div className="mb-3">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Giá</label>
-                                        <a
+                                        <label htmlFor="prices-select" className={styles.label}>
+                                            Giá
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('prices');
+                                            onClick={() => handleResetFilter('prices')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('prices');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="prices-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -745,18 +792,25 @@ const ListDoctors: React.FC = () => {
                                 {/* Trạng thái */}
                                 <div className="mb-2">
                                     <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label className={styles.label}>Trạng Thái</label>
-                                        <a
+                                        <label htmlFor="statuses-select" className={styles.label}>
+                                            Trạng Thái
+                                        </label>
+                                        <button
                                             className={styles.resetLink}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handleResetFilter('statuses');
+                                            onClick={() => handleResetFilter('statuses')}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleResetFilter('statuses');
+                                                }
                                             }}
+                                            type="button"
                                         >
                                             Đặt lại
-                                        </a>
+                                        </button>
                                     </div>
                                     <Select
+                                        id="statuses-select"
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
@@ -778,52 +832,6 @@ const ListDoctors: React.FC = () => {
                                         placeholder="Chọn trạng thái..."
                                     />
                                 </div>
-                                {/* Ngày */}
-                                {/* <div className="mb-3">
-                  <label className={`${styles.label} mb-1`}>
-                    Ngày<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <div className="input-icon-end position-relative">
-                      <input
-                        type="text"
-                        className={`form-control shadow-none ${styles.inputDate}`}
-                        placeholder="dd-mm-yyyy"
-                        value={
-                          selectedDate
-                            ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(
-                                selectedDate.getMonth() + 1
-                              )
-                                .toString()
-                                .padStart(2, '0')}-${selectedDate.getFullYear()}`
-                            : ''
-                        }
-                        readOnly
-                        onClick={(e) => setCalendarAnchor(e.currentTarget)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <span
-                        className="input-icon-addon"
-                        style={{ pointerEvents: 'none' }}
-                      >
-                        <i className="ti ti-calendar"></i>
-                      </span>
-                    </div>
-                    <Calendar
-                      value={selectedDate}
-                      onChange={(date) => {
-                        setSelectedDate(date);
-                        setCalendarAnchor(null);
-                      }}
-                      anchorEl={calendarAnchor}
-                      open={Boolean(calendarAnchor)}
-                      onClose={() => setCalendarAnchor(null)}
-                      usePopper={true}
-                      isTodaySelected={true}
-                      styles={{ width: 320 }}
-                    />
-                  </div>
-                </div> */}
                             </div>
                             <div className={`modal-footer ${styles.modalFooter}`}>
                                 <button
