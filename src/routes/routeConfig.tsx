@@ -9,6 +9,7 @@ import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import AddDoctor from '@/pages/clinics/Doctors/AddDoctor/AddDoctor';
 import NewAppointment from '@/pages/clinics/Appointments/NewAppointment';
+import Messages from '@/pages/clinics/Messages';
 import Login from '@/pages/authentication/Login';
 import ForgotPassword from '@/pages/authentication/ForgotPassword';
 import ResetPassword from '@/pages/authentication/ResetPassword';
@@ -58,6 +59,7 @@ const routes: RouteObject[] = [
                     { path: PATHS.CLINIC.APPOINTMENTS.NEW, element: <NewAppointment /> },
                 ],
             },
+            { path: PATHS.CLINIC.MESSAGES, element: <Messages /> },
         ],
     },
     {

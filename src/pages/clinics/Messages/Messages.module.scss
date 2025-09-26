@@ -1,0 +1,14 @@
+.pageWrapper {
+    margin-left: 0 !important;
+
+    .content {
+        padding: 0;
+    }
+}
+
+.chatUsers {
+    h6 > :first-child {
+        font-size: 16px;
+        font-weight: 400;
+    }
+}

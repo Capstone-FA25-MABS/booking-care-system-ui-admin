@@ -86,7 +86,7 @@ export const listGroupMenuItemClinic: Array<{
             {
                 label: 'Messages',
                 icon: 'ti ti-messages',
-                link: '/clinic/messages',
+                link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.MESSAGES),
             },
         ],
     },
