@@ -270,8 +270,7 @@ const ListDoctors: React.FC = () => {
                                 data-bs-toggle="dropdown"
                                 type="button"
                             >
-                                Xuất Dữ Liệu
-                                <i className="ti ti-chevron-down ms-2"></i>
+                                Xuất Dữ Liệu <i className="ti ti-chevron-down ms-2"></i>
                             </button>
                             <ul className="dropdown-menu p-2">
                                 <li>
@@ -500,7 +499,11 @@ const ListDoctors: React.FC = () => {
 
             <div className="footer text-center bg-white p-2 border-top">
                 <p className="text-dark mb-0">
-                    2025 &copy; <a className="link-primary">Preclinic</a>, Tất Cả Quyền Được Bảo Lưu
+                    2025 &copy;{' '}
+                    <Link to="/" className="link-primary">
+                        Preclinic
+                    </Link>
+                    , Tất Cả Quyền Được Bảo Lưu
                 </p>
             </div>
 
