@@ -1,4 +1,5 @@
 // Mock data for Messages component
+import { User, Message } from './types';
 import user01 from '@/assets/img/users/user-01.jpg';
 import user02 from '@/assets/img/users/user-02.jpg';
 import user03 from '@/assets/img/users/user-03.jpg';
@@ -10,26 +11,6 @@ import user08 from '@/assets/img/users/user-08.jpg';
 import user09 from '@/assets/img/users/user-09.jpg';
 import user10 from '@/assets/img/users/user-10.jpg';
 import user11 from '@/assets/img/users/user-11.jpg';
-
-export interface User {
-    id: number;
-    name: string;
-    avatar: string;
-    lastMessage: string;
-    time: string;
-    isRead: boolean;
-    isActive: boolean;
-    unreadCount: number;
-}
-
-export interface Message {
-    id: number;
-    sender: string;
-    avatar: string;
-    content: string;
-    time: string;
-    isOwn: boolean;
-}
 
 export const mockUsers: User[] = [
     {
