@@ -5,14 +5,16 @@ import ChatHeader from './components/ChatHeader';
 import ChatUserNav from './components/ChatUserNav';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
+import VideoCall from './components/VideoCall';
 import { User, Message } from './types';
-
+import user02 from '@/assets/img/users/user-02.jpg';
 import clsx from 'clsx';
 import styles from './Messages.module.scss';
 
 const Messages: React.FC = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [messageInput, setMessageInput] = useState('');
+    const [isVideoCallVisible, setIsVideoCallVisible] = useState(false);
 
     // Use imported mock data with type annotations
     const users: User[] = mockUsers;
@@ -41,6 +43,19 @@ const Messages: React.FC = () => {
 
     const handleInputChange = (value: string) => {
         setMessageInput(value);
+    };
+
+    const handleVideoCallStart = () => {
+        setIsVideoCallVisible(true);
+    };
+
+    const handleVideoCallClose = () => {
+        setIsVideoCallVisible(false);
+    };
+
+    const handleVoiceCallStart = () => {
+        // Future implementation for voice call
+        console.log('Voice call started');
     };
 
     return (
@@ -82,7 +97,10 @@ const Messages: React.FC = () => {
                                 <div className="card border-0 mb-0 h-100 d-flex flex-column">
                                     {/* Chat Header */}
                                     <div className={styles.chatHeader}>
-                                        <ChatHeader />
+                                        <ChatHeader
+                                            onVideoCallStart={handleVideoCallStart}
+                                            onVoiceCallStart={handleVoiceCallStart}
+                                        />
                                     </div>
 
                                     {/* Messages Container */}
@@ -111,6 +129,14 @@ const Messages: React.FC = () => {
                 </div>
             </div>
             {/* End Content */}
+
+            {/* Video Call Component */}
+            <VideoCall
+                isVisible={isVideoCallVisible}
+                onClose={handleVideoCallClose}
+                participantName="Mark Smith"
+                participantAvatar={user02}
+            />
         </div>
     );
 };

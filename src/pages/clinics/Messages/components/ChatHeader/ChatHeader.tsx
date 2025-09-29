@@ -5,12 +5,16 @@ interface ChatHeaderProps {
     userName?: string;
     userStatus?: string;
     userAvatar?: string;
+    onVideoCallStart?: () => void;
+    onVoiceCallStart?: () => void;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
     userName = 'Mark Smith',
     userStatus = 'Online',
     userAvatar = user01,
+    onVideoCallStart,
+    onVoiceCallStart,
 }) => {
     return (
         <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 p-3">
@@ -32,6 +36,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     data-bs-placement="top"
                     data-bs-original-title="Voice Call"
                     type="button"
+                    onClick={onVoiceCallStart}
                 >
                     <i className="ti ti-phone"></i>
                 </button>
@@ -41,6 +46,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     data-bs-placement="top"
                     data-bs-original-title="Video Call"
                     type="button"
+                    onClick={onVideoCallStart}
                 >
                     <i className="ti ti-video"></i>
                 </button>
