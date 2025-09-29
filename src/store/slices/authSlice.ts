@@ -22,17 +22,16 @@ const validateRoles = (response: any, rejectWithValue: any) => {
                 'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
             );
         }
-        // Only save roles, not token
-        AuthService.setRoles(roles);
-        return { roles }; // Return roles data
+        // Return roles data (Redux will persist automatically)
+        return { roles };
     }
     return null; // No error
 };
 
-// Initial state
+// Initial state - Redux Persist will automatically restore roles
 const initialState: AuthState = {
-    roles: AuthService.getRoles(),
-    isAuthenticated: AuthService.isAuthenticated(),
+    roles: [],
+    isAuthenticated: false,
     isLoading: false,
     error: null,
 };
