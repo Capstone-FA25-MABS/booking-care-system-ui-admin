@@ -5,6 +5,7 @@ import ChatHeader from './components/ChatHeader';
 import ChatUserNav from './components/ChatUserNav';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
+import EmojiPicker from './components/MessageInput/EmojiPicker';
 import VideoCall from './components/VideoCall';
 import { User, Message } from './types';
 import user02 from '@/assets/img/users/user-02.jpg';
@@ -15,6 +16,7 @@ const Messages: React.FC = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [messageInput, setMessageInput] = useState('');
     const [isVideoCallVisible, setIsVideoCallVisible] = useState(false);
+    const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
 
     // Use imported mock data with type annotations
     const users: User[] = mockUsers;
@@ -28,6 +30,13 @@ const Messages: React.FC = () => {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        // Close emoji picker when Escape is pressed
+        if (e.key === 'Escape' && isEmojiPickerVisible) {
+            setIsEmojiPickerVisible(false);
+            e.preventDefault();
+            return;
+        }
+
         if (e.key === 'Enter') {
             handleSendMessage();
         }
@@ -56,6 +65,21 @@ const Messages: React.FC = () => {
     const handleVoiceCallStart = () => {
         // Future implementation for voice call
         console.log('Bắt đầu cuộc gọi thoại');
+    };
+
+    const handleEmojiSelect = (emoji: string) => {
+        // For now, just append to the end of the message
+        // In a real implementation, you might want to handle cursor position
+        setMessageInput((prev) => prev + emoji);
+        setIsEmojiPickerVisible(false);
+    };
+
+    const handleEmojiButtonClick = () => {
+        setIsEmojiPickerVisible(!isEmojiPickerVisible);
+    };
+
+    const handleEmojiPickerClose = () => {
+        setIsEmojiPickerVisible(false);
     };
 
     return (
@@ -119,6 +143,8 @@ const Messages: React.FC = () => {
                                                 onInputChange={handleInputChange}
                                                 onSendMessage={handleSendMessage}
                                                 onKeyDown={handleKeyDown}
+                                                onEmojiSelect={handleEmojiSelect}
+                                                onEmojiButtonClick={handleEmojiButtonClick}
                                             />
                                         </div>
                                     </div>
@@ -129,6 +155,17 @@ const Messages: React.FC = () => {
                 </div>
             </div>
             {/* End Content */}
+
+            {/* Emoji Picker - Positioned absolutely to avoid layout issues */}
+            {isEmojiPickerVisible && (
+                <div className={styles.emojiPickerOverlay}>
+                    <EmojiPicker
+                        isVisible={isEmojiPickerVisible}
+                        onEmojiSelect={handleEmojiSelect}
+                        onClose={handleEmojiPickerClose}
+                    />
+                </div>
+            )}
 
             {/* Video Call Component */}
             <VideoCall

@@ -154,18 +154,30 @@ const VideoCall: React.FC<VideoCallProps> = ({
         e.stopPropagation();
     };
 
+    // Double-click to snap to nearest corner
+    const handleDoubleClick = () => {
+        snapToCorner();
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
         if (!isDragging || !containerRef.current || !localVideoContainerRef.current) return;
 
         const containerRect = containerRef.current.getBoundingClientRect();
+        const localVideoWidth = 200;
+        const localVideoHeight = 150;
+        const padding = 16;
 
         // Calculate new position relative to mouse
-        const newX = e.clientX - containerRect.left - dragOffset.x;
-        const newY = e.clientY - containerRect.top - dragOffset.y;
+        let newX = e.clientX - containerRect.left - dragOffset.x;
+        let newY = e.clientY - containerRect.top - dragOffset.y;
+
+        // Constrain to container bounds
+        newX = Math.max(padding, Math.min(newX, containerRect.width - localVideoWidth - padding));
+        newY = Math.max(padding, Math.min(newY, containerRect.height - localVideoHeight - padding));
 
         // Convert to transform offset (relative to initial position at top-right)
-        const initialX = containerRect.width - 216; // 200px width + 16px padding
-        const initialY = 16;
+        const initialX = containerRect.width - localVideoWidth - padding;
+        const initialY = padding;
 
         const transformX = newX - initialX;
         const transformY = newY - initialY;
@@ -176,11 +188,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
     const handleMouseUp = () => {
         setIsDragging(false);
-        snapToCorner();
+        // Don't automatically snap - let user control where they want the video
+        // snapToCorner();
     };
 
     const handleTouchEndWithSnap = () => {
         setIsDragging(false);
+        // Keep snap for touch since it's more common on mobile to want corner placement
         snapToCorner();
     };
 
@@ -342,6 +356,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                 }}
                                 onMouseDown={handleMouseDown}
                                 onTouchStart={handleTouchStart}
+                                onDoubleClick={handleDoubleClick}
+                                title="Kéo để di chuyển, double-click để snap về góc"
+                                role="button"
+                                tabIndex={0}
                             >
                                 <video
                                     ref={localVideoRef}
