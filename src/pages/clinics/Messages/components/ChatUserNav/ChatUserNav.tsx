@@ -26,15 +26,15 @@ const ChatUserNav: React.FC<ChatUserNavProps> = ({ users, searchKeyword, onSearc
                         <img src={user01} alt="user" />
                     </span>
                     <div>
-                        <h6 className="fs-14 mb-1">James Hong</h6>
-                        <p className="mb-0">Admin</p>
+                        <h6 className="fs-14 mb-1">Trần Quang Hải</h6>
+                        <p className="mb-0">Quản trị viên</p>
                     </div>
                 </div>
                 <button
                     className="btn p-2 btn-primary"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    data-bs-title="New Chat"
+                    data-bs-title="Cuộc trò chuyện mới"
                     type="button"
                 >
                     <i className="ti ti-plus"></i>
@@ -50,7 +50,7 @@ const ChatUserNav: React.FC<ChatUserNavProps> = ({ users, searchKeyword, onSearc
                     <input
                         type="text"
                         className="form-control"
-                        placeholder="Search Keyword"
+                        placeholder="Tìm kiếm..."
                         value={searchKeyword}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
@@ -60,7 +60,7 @@ const ChatUserNav: React.FC<ChatUserNavProps> = ({ users, searchKeyword, onSearc
             {/* User List Container */}
             <div className={styles.userListContainer}>
                 <div className={clsx(styles.chatUsers, 'p-3')}>
-                    <h6>All Messages</h6>
+                    <h6>Tất cả tin nhắn</h6>
                     {users.map((user) => (
                         <UserListItem key={user.id} user={user} />
                     ))}

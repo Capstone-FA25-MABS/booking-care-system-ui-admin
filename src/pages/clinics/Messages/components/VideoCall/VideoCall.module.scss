@@ -303,6 +303,9 @@
 .buttonItems {
     position: fixed;
     bottom: 16px;
+    button {
+        border: 0;
+    }
 }
 // Call controls container
 .joinVideo .position-absolute.bottom-0 {

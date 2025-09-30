@@ -22,7 +22,7 @@ const Messages: React.FC = () => {
 
     const handleSendMessage = () => {
         if (messageInput.trim()) {
-            console.log('Sending message:', messageInput);
+            console.log('Đang gửi tin nhắn:', messageInput);
             setMessageInput('');
         }
     };
@@ -34,7 +34,7 @@ const Messages: React.FC = () => {
     };
 
     const handleMessageAction = (action: string) => {
-        console.log('Message action:', action);
+        console.log('Thao tác tin nhắn:', action);
     };
 
     const handleSearchChange = (value: string) => {
@@ -55,7 +55,7 @@ const Messages: React.FC = () => {
 
     const handleVoiceCallStart = () => {
         // Future implementation for voice call
-        console.log('Voice call started');
+        console.log('Bắt đầu cuộc gọi thoại');
     };
 
     return (
@@ -65,15 +65,15 @@ const Messages: React.FC = () => {
                 {/* Page Header */}
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
                     <div className="flex-grow-1">
-                        <h4 className="fs-18 fw-semibold mb-0">Message</h4>
+                        <h4 className="fs-18 fw-semibold mb-0">Tin nhắn</h4>
                     </div>
                     <div className="text-end">
                         <ol className="breadcrumb m-0 py-0">
                             <li className="breadcrumb-item">
-                                <a href="index.html">Home</a>
+                                <a href="index.html">Trang chủ</a>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                Message
+                                Tin nhắn
                             </li>
                         </ol>
                     </div>
@@ -134,7 +134,7 @@ const Messages: React.FC = () => {
             <VideoCall
                 isVisible={isVideoCallVisible}
                 onClose={handleVideoCallClose}
-                participantName="Mark Smith"
+                participantName="Nguyễn Văn An"
                 participantAvatar={user02}
             />
         </div>

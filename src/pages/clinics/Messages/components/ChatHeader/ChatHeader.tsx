@@ -10,8 +10,8 @@ interface ChatHeaderProps {
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
-    userName = 'Mark Smith',
-    userStatus = 'Online',
+    userName = 'Nguyễn Văn An',
+    userStatus = 'Đang hoạt động',
     userAvatar = user01,
     onVideoCallStart,
     onVoiceCallStart,
@@ -34,7 +34,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    data-bs-original-title="Voice Call"
+                    data-bs-original-title="Cuộc gọi thoại"
                     type="button"
                     onClick={onVoiceCallStart}
                 >
@@ -44,7 +44,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    data-bs-original-title="Video Call"
+                    data-bs-original-title="Cuộc gọi video"
                     type="button"
                     onClick={onVideoCallStart}
                 >
@@ -54,7 +54,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    data-bs-original-title="Info"
+                    data-bs-original-title="Thông tin"
                     type="button"
                 >
                     <i className="ti ti-info-circle"></i>

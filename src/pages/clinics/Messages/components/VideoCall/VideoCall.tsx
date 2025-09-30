@@ -13,7 +13,7 @@ interface VideoCallProps {
 const VideoCall: React.FC<VideoCallProps> = ({
     isVisible,
     onClose,
-    participantName = 'Joe Lewis',
+    participantName = 'Nguyễn Văn An',
     participantAvatar = '/src/assets/img/users/user-01.jpg',
 }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);

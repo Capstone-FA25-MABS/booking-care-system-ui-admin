@@ -19,7 +19,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 <input
                     type="text"
                     className="form-control border-0"
-                    placeholder="Type Something..."
+                    placeholder="Nhập tin nhắn..."
                     value={messageInput}
                     onChange={(e) => onInputChange(e.target.value)}
                     onKeyDown={onKeyDown}
@@ -44,27 +44,27 @@ const MessageInput: React.FC<MessageInputProps> = ({
                     <ul className="dropdown-menu p-2">
                         <li>
                             <button className="dropdown-item" type="button">
-                                <i className="ti ti-camera-selfie me-2"></i> Camera
+                                <i className="ti ti-camera-selfie me-2"></i> Máy ảnh
                             </button>
                         </li>
                         <li>
                             <button className="dropdown-item" type="button">
-                                <i className="ti ti-photo-up me-2"></i> Gallery
+                                <i className="ti ti-photo-up me-2"></i> Thư viện ảnh
                             </button>
                         </li>
                         <li>
                             <button className="dropdown-item" type="button">
-                                <i className="ti ti-music me-2"></i> Audio
+                                <i className="ti ti-music me-2"></i> Âm thanh
                             </button>
                         </li>
                         <li>
                             <button className="dropdown-item" type="button">
-                                <i className="ti ti-map-pin-share me-2"></i> Location
+                                <i className="ti ti-map-pin-share me-2"></i> Vị trí
                             </button>
                         </li>
                         <li>
                             <button className="dropdown-item" type="button">
-                                <i className="ti ti-user-check me-2"></i> Contact
+                                <i className="ti ti-user-check me-2"></i> Liên hệ
                             </button>
                         </li>
                     </ul>
