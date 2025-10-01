@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import Overlay from '../../common/Overlay';
 import styles from './EmojiPicker.module.scss';
 
 interface EmojiPickerProps {
@@ -149,7 +150,7 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ isVisible, onEmojiSelect, onC
     return (
         <>
             {/* Overlay để đóng khi click bên ngoài */}
-            <div className={styles.overlay} onClick={onClose} />
+            <Overlay isVisible={isVisible} onClick={onClose} />
 
             <div className={clsx(styles.emojiPicker, 'card shadow')}>
                 <div className={styles.header}>
