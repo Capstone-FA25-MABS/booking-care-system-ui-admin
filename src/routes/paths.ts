@@ -32,6 +32,7 @@ export const PATHS = {
             NEW: 'new',
             CALENDAR: 'calendar',
         },
+        MESSAGES: 'messages',
     },
 
     // Not Found path
