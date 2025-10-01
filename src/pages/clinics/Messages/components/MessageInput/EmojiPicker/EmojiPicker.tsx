@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import Overlay from '../../common/Overlay';
+import { EMOJI_CATEGORIES } from './emojiData';
 import styles from './EmojiPicker.module.scss';
 
 interface EmojiPickerProps {
@@ -10,141 +11,6 @@ interface EmojiPickerProps {
 }
 
 const EmojiPicker: React.FC<EmojiPickerProps> = ({ isVisible, onEmojiSelect, onClose }) => {
-    const emojiCategories = {
-        'Mặt cười': [
-            '😀',
-            '😃',
-            '😄',
-            '😁',
-            '😆',
-            '😅',
-            '😂',
-            '🤣',
-            '😊',
-            '😇',
-            '🙂',
-            '🙃',
-            '😉',
-            '😌',
-            '😍',
-            '🥰',
-            '😘',
-            '😗',
-            '😙',
-            '😚',
-        ],
-        'Cảm xúc': [
-            '😋',
-            '😛',
-            '😝',
-            '😜',
-            '🤪',
-            '🤨',
-            '🧐',
-            '🤓',
-            '😎',
-            '🤩',
-            '🥳',
-            '😏',
-            '😒',
-            '😞',
-            '😔',
-            '😟',
-            '😕',
-            '🙁',
-            '☹️',
-            '😣',
-        ],
-        'Trái tim': [
-            '❤️',
-            '🧡',
-            '💛',
-            '💚',
-            '💙',
-            '💜',
-            '🤎',
-            '🖤',
-            '🤍',
-            '💕',
-            '💞',
-            '💓',
-            '💗',
-            '💖',
-            '💘',
-            '💝',
-            '💟',
-            '❣️',
-            '💔',
-            '❤️‍🔥',
-        ],
-        'Tay và cử chỉ': [
-            '👍',
-            '👎',
-            '👌',
-            '🤌',
-            '🤏',
-            '✌️',
-            '🤞',
-            '🤟',
-            '🤘',
-            '🤙',
-            '👈',
-            '👉',
-            '👆',
-            '🖕',
-            '👇',
-            '☝️',
-            '👋',
-            '🤚',
-            '🖐️',
-            '✋',
-        ],
-        'Hoạt động': [
-            '⚽',
-            '🏀',
-            '🏈',
-            '⚾',
-            '🥎',
-            '🎾',
-            '🏐',
-            '🏉',
-            '🥏',
-            '🎱',
-            '🪀',
-            '🏓',
-            '🏸',
-            '🏒',
-            '🏑',
-            '🥍',
-            '🏏',
-            '🪃',
-            '🥅',
-            '⛳',
-        ],
-        'Thực phẩm': [
-            '🍎',
-            '🍐',
-            '🍊',
-            '🍋',
-            '🍌',
-            '🍉',
-            '🍇',
-            '🍓',
-            '🫐',
-            '🍈',
-            '🍒',
-            '🍑',
-            '🥭',
-            '🍍',
-            '🥥',
-            '🥝',
-            '🍅',
-            '🍆',
-            '🥑',
-            '🥦',
-        ],
-    };
-
     if (!isVisible) return null;
 
     return (
@@ -161,11 +27,11 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ isVisible, onEmojiSelect, onC
                 </div>
 
                 <div className={styles.content}>
-                    {Object.entries(emojiCategories).map(([category, emojis]) => (
+                    {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
                         <div key={category} className={styles.category}>
                             <div className={styles.categoryTitle}>{category}</div>
                             <div className={styles.emojiGrid}>
-                                {emojis.map((emoji, index) => (
+                                {emojis.map((emoji: string, index: number) => (
                                     <button
                                         key={`${category}-${index}`}
                                         className={styles.emojiButton}

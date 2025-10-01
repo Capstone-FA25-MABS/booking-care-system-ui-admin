@@ -71,7 +71,6 @@ const Messages: React.FC = () => {
         // For now, just append to the end of the message
         // In a real implementation, you might want to handle cursor position
         setMessageInput((prev) => prev + emoji);
-        setIsEmojiPickerVisible(false);
     };
 
     const handleEmojiButtonClick = () => {
