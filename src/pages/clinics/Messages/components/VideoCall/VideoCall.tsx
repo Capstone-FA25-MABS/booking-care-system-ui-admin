@@ -32,7 +32,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const localVideoContainerRef = useRef<HTMLDivElement>(null);
+    const localVideoContainerRef = useRef<HTMLButtonElement>(null);
 
     // WebRTC related refs for future integration
     // const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -157,6 +157,14 @@ const VideoCall: React.FC<VideoCallProps> = ({
     // Double-click to snap to nearest corner
     const handleDoubleClick = () => {
         snapToCorner();
+    };
+
+    // Keyboard support for accessibility
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            snapToCorner(); // Snap to corner when Enter or Space is pressed
+        }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -337,7 +345,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                             </div>
 
                             {/* Local Video (Picture in Picture) - Draggable */}
-                            <div
+                            <button
                                 ref={localVideoContainerRef}
                                 className={clsx(
                                     styles.localVideoContainer,
@@ -353,13 +361,17 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     cursor: isDragging ? 'grabbing' : 'grab',
                                     zIndex: isDragging ? 1001 : 1000,
                                     transform: `translate(${localVideoPosition.x}px, ${localVideoPosition.y}px)`,
+                                    border: 'none',
+                                    background: 'transparent',
                                 }}
                                 onMouseDown={handleMouseDown}
                                 onTouchStart={handleTouchStart}
                                 onDoubleClick={handleDoubleClick}
-                                title="Kéo để di chuyển, double-click để snap về góc"
-                                role="button"
-                                tabIndex={0}
+                                onClick={snapToCorner}
+                                onKeyDown={handleKeyDown}
+                                type="button"
+                                aria-label="Local video - kéo để di chuyển, click để snap về góc"
+                                title="Kéo để di chuyển, click để snap về góc"
                             >
                                 <video
                                     ref={localVideoRef}
@@ -390,7 +402,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                 <div className={clsx(styles.dragIndicator)}>
                                     <i className="ti ti-grip-horizontal"></i>
                                 </div>
-                            </div>
+                            </button>
 
                             {/* Call Duration and Fullscreen Button */}
                             <div className="position-absolute start-0 top-0 p-2 z-1 d-flex align-items-center">
