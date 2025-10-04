@@ -1,0 +1,95 @@
+.messageInputContainer {
+    position: relative;
+    width: 100%;
+}
+
+.messageFooter {
+    display: flex;
+    align-items: center;
+    min-height: 60px; /* Đảm bảo height cố định */
+    padding: 8px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+}
+
+.inputWrapper {
+    flex: 1;
+    margin-right: 12px;
+}
+
+.controlsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0; /* Không cho phép shrink */
+}
+
+.quickEmojiWrapper {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.quickEmojiButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f8f9fa;
+        transform: scale(1.1);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
+.emojiPickerWrapper {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.moreOptionsWrapper {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .quickEmojiWrapper {
+        gap: 2px;
+    }
+
+    .quickEmojiButton {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    .controlsWrapper {
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quickEmojiWrapper {
+        display: none; // Ẩn quick emoji trên mobile rất nhỏ
+    }
+
+    .messageFooter {
+        min-height: 50px;
+        padding: 4px 8px;
+    }
+}
