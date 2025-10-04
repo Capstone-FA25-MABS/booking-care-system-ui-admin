@@ -114,16 +114,14 @@ export const useSidebarToggle = () => {
 
                 if (isSubItem) {
                     // Clicked on a sub-item → expand sidebar
-                    body.classList.remove('mini-sidebar');
-                    body.classList.remove('expand-menu');
+                    body.classList.remove('mini-sidebar', 'expand-menu');
                     toggleBtn?.classList.add('active');
                     localStorage.setItem('sidebarMode', 'expanded');
                 }
                 // If clicked on parent link/button (not sub-item) → do nothing
             } else {
                 // This is a single menu item (no submenu) → expand sidebar
-                body.classList.remove('mini-sidebar');
-                body.classList.remove('expand-menu');
+                body.classList.remove('mini-sidebar', 'expand-menu');
                 toggleBtn?.classList.add('active');
                 localStorage.setItem('sidebarMode', 'expanded');
             }
