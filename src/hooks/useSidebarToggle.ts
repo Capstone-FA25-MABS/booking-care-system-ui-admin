@@ -63,22 +63,8 @@ export const useSidebarToggle = () => {
 
                 if (isNearSidebar) {
                     body.classList.add('expand-menu');
-                    // Expand submenus
-                    const submenus = document.querySelectorAll('.subdrop + ul');
-                    submenus.forEach((submenu) => {
-                        if (submenu instanceof HTMLElement) {
-                            submenu.style.display = 'block';
-                        }
-                    });
                 } else {
                     body.classList.remove('expand-menu');
-                    // Collapse submenus
-                    const submenus = document.querySelectorAll('.subdrop + ul');
-                    submenus.forEach((submenu) => {
-                        if (submenu instanceof HTMLElement) {
-                            submenu.style.display = 'none';
-                        }
-                    });
                 }
             }
         };
@@ -87,6 +73,68 @@ export const useSidebarToggle = () => {
 
         return () => {
             document.removeEventListener('mouseover', handleMouseOver);
+        };
+    }, []);
+
+    /**
+     * Expand sidebar when clicking on menu items in mini mode
+     * - Single menu items: expand immediately on click
+     * - Menu items with sub-items: expand only when clicking on sub-item (not parent)
+     */
+    useEffect(() => {
+        const handleMenuItemClick = (e: Event) => {
+            const body = document.body;
+            const toggleBtn = document.getElementById('toggle_btn');
+            const target = e.target as HTMLElement;
+
+            // Only proceed if in mini mode
+            if (!body.classList.contains('mini-sidebar')) {
+                return;
+            }
+
+            // First, find the closest link or button
+            const clickedElement = target.closest('a, button');
+            if (!clickedElement) {
+                return;
+            }
+
+            // Find the parent <li> element
+            const parentLi = clickedElement.closest('li');
+            if (!parentLi) {
+                return;
+            }
+
+            // Check if parent li has submenu class
+            const hasSubmenu = parentLi.classList.contains('submenu');
+
+            if (hasSubmenu) {
+                // This is a parent with submenu
+                // Check if the clicked element is a sub-item (inside nested ul)
+                const isSubItem = clickedElement.closest('.submenu ul');
+
+                if (isSubItem) {
+                    // Clicked on a sub-item → expand sidebar
+                    body.classList.remove('mini-sidebar');
+                    body.classList.remove('expand-menu');
+                    toggleBtn?.classList.add('active');
+                    localStorage.setItem('sidebarMode', 'expanded');
+                }
+                // If clicked on parent link/button (not sub-item) → do nothing
+            } else {
+                // This is a single menu item (no submenu) → expand sidebar
+                body.classList.remove('mini-sidebar');
+                body.classList.remove('expand-menu');
+                toggleBtn?.classList.add('active');
+                localStorage.setItem('sidebarMode', 'expanded');
+            }
+        };
+
+        // Listen to clicks on sidebar menu
+        const sidebar = document.querySelector('.sidebar');
+        sidebar?.addEventListener('click', handleMenuItemClick);
+
+        return () => {
+            sidebar?.removeEventListener('click', handleMenuItemClick);
         };
     }, []);
 

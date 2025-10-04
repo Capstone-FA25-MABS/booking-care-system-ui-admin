@@ -50,11 +50,11 @@ export const getRoleConfig = (role: string): RoleConfig | undefined => {
  * Priority: ADMIN > DOCTOR > STAFF
  */
 export const getPrimaryRole = (roles: string[]): UserRole | null => {
-    const upperRoles = roles.map((r) => r.toUpperCase());
+    const upperRoles = new Set(roles.map((r) => r.toUpperCase()));
 
-    if (upperRoles.includes(UserRole.ADMIN)) return UserRole.ADMIN;
-    if (upperRoles.includes(UserRole.DOCTOR)) return UserRole.DOCTOR;
-    if (upperRoles.includes(UserRole.STAFF)) return UserRole.STAFF;
+    if (upperRoles.has(UserRole.ADMIN)) return UserRole.ADMIN;
+    if (upperRoles.has(UserRole.DOCTOR)) return UserRole.DOCTOR;
+    if (upperRoles.has(UserRole.STAFF)) return UserRole.STAFF;
 
     return null;
 };

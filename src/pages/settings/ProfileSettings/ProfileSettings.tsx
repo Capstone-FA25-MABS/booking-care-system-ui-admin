@@ -26,8 +26,11 @@ const ProfileSettings = () => {
                                         <div className="col-lg-12">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-2">
-                                                    <label className="form-label mb-0">
-                                                        Profile Image
+                                                    <label
+                                                        htmlFor="profileUpload"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        Profile Image{' '}
                                                         <span className="text-danger ms-1">*</span>
                                                     </label>
                                                 </div>
@@ -67,13 +70,20 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
-                                                        First Name
+                                                    <label
+                                                        htmlFor="firstName"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        First Name{' '}
                                                         <span className="text-danger ms-1">*</span>
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="text" className="form-control" />
+                                                    <input
+                                                        type="text"
+                                                        id="firstName"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -81,13 +91,20 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
-                                                        Last Name
+                                                    <label
+                                                        htmlFor="lastName"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        Last Name{' '}
                                                         <span className="text-danger ms-1">*</span>
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="text" className="form-control" />
+                                                    <input
+                                                        type="text"
+                                                        id="lastName"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -96,13 +113,20 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
-                                                        Email
+                                                    <label
+                                                        htmlFor="email"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        Email{' '}
                                                         <span className="text-danger ms-1">*</span>
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="email" className="form-control" />
+                                                    <input
+                                                        type="email"
+                                                        id="email"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -110,13 +134,20 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
-                                                        Phone Number
+                                                    <label
+                                                        htmlFor="phoneNumber"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        Phone Number{' '}
                                                         <span className="text-danger ms-1">*</span>
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="tel" className="form-control" />
+                                                    <input
+                                                        type="tel"
+                                                        id="phoneNumber"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -131,12 +162,19 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
+                                                    <label
+                                                        htmlFor="addressLine1"
+                                                        className="form-label mb-0"
+                                                    >
                                                         Address Line 1
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="text" className="form-control" />
+                                                    <input
+                                                        type="text"
+                                                        id="addressLine1"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -144,12 +182,19 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
+                                                    <label
+                                                        htmlFor="addressLine2"
+                                                        className="form-label mb-0"
+                                                    >
                                                         Address Line 2
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="text" className="form-control" />
+                                                    <input
+                                                        type="text"
+                                                        id="addressLine2"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -157,12 +202,15 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
+                                                    <label
+                                                        htmlFor="country"
+                                                        className="form-label mb-0"
+                                                    >
                                                         Country
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <select className="form-select">
+                                                    <select id="country" className="form-select">
                                                         <option>Select</option>
                                                         <option>USA</option>
                                                         <option>Canada</option>
@@ -176,10 +224,15 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">State</label>
+                                                    <label
+                                                        htmlFor="state"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        State
+                                                    </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <select className="form-select">
+                                                    <select id="state" className="form-select">
                                                         <option>Select</option>
                                                         <option>California</option>
                                                         <option>Ontario</option>
@@ -193,10 +246,15 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">City</label>
+                                                    <label
+                                                        htmlFor="city"
+                                                        className="form-label mb-0"
+                                                    >
+                                                        City
+                                                    </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <select className="form-select">
+                                                    <select id="city" className="form-select">
                                                         <option>Select</option>
                                                         <option>Los Angeles</option>
                                                         <option>Toronto</option>
@@ -210,12 +268,19 @@ const ProfileSettings = () => {
                                         <div className="col-lg-6">
                                             <div className="row align-items-center mb-3">
                                                 <div className="col-lg-4">
-                                                    <label className="form-label mb-0">
+                                                    <label
+                                                        htmlFor="pincode"
+                                                        className="form-label mb-0"
+                                                    >
                                                         Pincode
                                                     </label>
                                                 </div>
                                                 <div className="col-lg-8">
-                                                    <input type="text" className="form-control" />
+                                                    <input
+                                                        type="text"
+                                                        id="pincode"
+                                                        className="form-control"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

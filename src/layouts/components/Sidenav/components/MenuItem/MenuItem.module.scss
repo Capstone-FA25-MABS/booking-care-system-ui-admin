@@ -15,3 +15,27 @@
             opacity 0.3s ease-in;
     }
 }
+
+/* Override default styles for submenu */
+:global(.sidebar .sidebar-menu > ul > li > a) {
+    // Reset default active styling for non-active items
+    &:not(.active):not(.subdrop) {
+        background: transparent !important;
+        border-left: none !important;
+        color: var(--menu-item-color) !important;
+    }
+}
+
+/* Auto-close submenus in mini mode when not hovering */
+:global {
+    .mini-sidebar:not(.expand-menu) .sidebar-menu .submenu {
+        ul {
+            display: none !important;
+        }
+
+        &.subdrop > a,
+        &.subdrop > button {
+            background: transparent !important;
+        }
+    }
+}
