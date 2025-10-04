@@ -1,5 +1,7 @@
 import SimpleBar from 'simplebar-react';
 import GroupMenuItem from './components/GroupMenuItem';
+import { useSidebarToggle } from '@/hooks/useSidebarToggle';
+import type { MenuConfig } from '@/types/menu.types';
 
 import logo from '@/assets/img/logo.svg';
 import logoSmall from '@/assets/img/logo-small.svg';
@@ -12,19 +14,13 @@ import clinic04 from '@/assets/img/icons/clinic-04.svg';
 import sidebarIcon from '@/assets/img/icons/sidebar-icon.svg';
 
 interface SidenavProps {
-    listGroupMenuItem: Array<{
-        title: string;
-        items: Array<{
-            label: string;
-            link?: string;
-            icon: string;
-            subItems?: Array<{ label: string; link: string }>;
-        }>;
-    }>;
+    listGroupMenuItem: MenuConfig;
     handleClickCloseSidebar: () => void;
 }
 
 const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSidebar }) => {
+    const { toggleMiniSidebar } = useSidebarToggle();
+
     return (
         <div className="sidebar" id="sidebar">
             {/* Start Logo */}
@@ -45,6 +41,16 @@ const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSi
                         <img src={logoWhite} alt="Logo" />
                     </a>
                 </div>
+
+                {/* Sidebar Toggle Button */}
+                <button
+                    className="sidenav-toggle-btn btn border-0 p-0 active"
+                    id="toggle_btn"
+                    onClick={toggleMiniSidebar}
+                    type="button"
+                >
+                    <i className="ti ti-arrow-left text-body"></i>
+                </button>
 
                 {/* Sidebar Menu Close */}
                 <button className="sidebar-close" onClick={handleClickCloseSidebar}>
