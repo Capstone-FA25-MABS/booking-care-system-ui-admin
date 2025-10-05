@@ -15,7 +15,7 @@ const validateRoles = (response: any, rejectWithValue: any) => {
     const token = response.data?.token;
     if (token) {
         const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-        const allowed = ['ADMIN', 'DOCTOR', 'HOSPITAL'];
+        const allowed = ['ADMIN', 'DOCTOR', 'STAFF'];
         const hasAllowed = roles.some((r) => allowed.includes(r));
         if (!hasAllowed) {
             return rejectWithValue(

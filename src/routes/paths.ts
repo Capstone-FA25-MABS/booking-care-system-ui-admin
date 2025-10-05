@@ -10,6 +10,17 @@ export const PATHS = {
     RESET_PASSWORD: '/reset-password',
     DASHBOARD: '/dashboard',
 
+    // Common paths (shared across roles)
+    COMMON: {
+        ACCOUNT_SETTINGS: {
+            ROOT: '/settings',
+            PROFILE: '/settings/profile',
+            SECURITY: '/settings/security',
+            NOTIFICATIONS: '/settings/notifications',
+            INTEGRATIONS: '/settings/integrations',
+        },
+    },
+
     // Admin paths
     ADMIN: {
         ROOT: '/admin',
@@ -18,7 +29,20 @@ export const PATHS = {
         SETTINGS: 'settings',
     },
 
-    // Clinic paths
+    // Doctor paths
+    DOCTOR: {
+        ROOT: '/doctor',
+        DASHBOARD: 'dashboard',
+        APPOINTMENTS: {
+            ROOT: 'appointments',
+            CALENDAR: 'calendar',
+        },
+        SCHEDULE: 'schedule',
+        PATIENTS: 'patients',
+        MESSAGES: 'messages',
+    },
+
+    // Clinic/Staff paths
     CLINIC: {
         ROOT: '/clinic',
         DASHBOARD: 'dashboard',

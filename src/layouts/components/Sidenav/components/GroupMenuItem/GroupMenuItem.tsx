@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import MenuItem from '../MenuItem';
+import type { MenuItem as MenuItemType } from '@/types/menu.types';
 
 interface GroupMenuItemProps {
     title: string;
-    items: Array<{
-        label: string;
-        link?: string;
-        icon: string;
-        subItems?: Array<{ label: string; link: string }>;
-    }>;
+    items: MenuItemType[];
 }
 
 const GroupMenuItem: React.FC<GroupMenuItemProps> = ({ title, items }) => {
+    const [openItemIndex, setOpenItemIndex] = useState<number | null>(null);
+
+    const handleToggle = (index: number) => {
+        // If clicking the same item, close it. Otherwise, open the new one
+        setOpenItemIndex((prev) => (prev === index ? null : index));
+    };
+
     return (
         <>
             <li className="menu-title">
@@ -26,6 +30,8 @@ const GroupMenuItem: React.FC<GroupMenuItemProps> = ({ title, items }) => {
                                 iconClassName={item.icon}
                                 subItems={item.subItems}
                                 link={item.link}
+                                isOpen={openItemIndex === index}
+                                onToggle={() => handleToggle(index)}
                             />
                         ))}
                 </ul>

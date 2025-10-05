@@ -1,21 +1,15 @@
 import { ReactNode, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import clsx from 'clsx';
+import type { MenuConfig } from '@/types/menu.types';
 
 import MainHeader from '../components/MainHeader';
 import Sidenav from '../components/Sidenav';
+import { useSidebarToggle } from '@/hooks/useSidebarToggle';
 import styles from './MainLayout.module.scss';
 
 interface MainLayoutProps {
-    listGroupMenuItem: Array<{
-        title: string;
-        items: Array<{
-            label: string;
-            link?: string;
-            icon: string;
-            subItems?: Array<{ label: string; link: string }>;
-        }>;
-    }>;
+    listGroupMenuItem: MenuConfig;
     children?: ReactNode;
 }
 
@@ -23,6 +17,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) 
     const sidebarRef = useRef<HTMLDivElement>(null);
     const sidebarOverlayRef = useRef<HTMLDivElement>(null);
     const mainWrapperRef = useRef<HTMLDivElement>(null);
+
+    // Initialize sidebar toggle functionality
+    useSidebarToggle();
 
     const toggleSidebarExpand = (expand: boolean) => {
         sidebarRef.current?.classList.toggle('expand-menu', expand);
@@ -39,7 +36,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) 
     };
 
     return (
-        <div className={clsx(styles.mainLayoutContainer, 'mini-sidebar')} ref={sidebarRef}>
+        <div className={clsx(styles.mainLayoutContainer)} ref={sidebarRef}>
             <div className="main-wrapper" ref={mainWrapperRef}>
                 <MainHeader handleClickMenuButton={openSidebar} />
                 <div
@@ -51,7 +48,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) 
                         listGroupMenuItem={listGroupMenuItem}
                     />
                 </div>
-                <main className={styles.contentContainer}>{children ?? <Outlet />}</main>
+                <div className="page-wrapper">
+                    <main className={styles.contentContainer}>{children ?? <Outlet />}</main>
+                </div>
             </div>
             <div className="sidebar-overlay" ref={sidebarOverlayRef}></div>
         </div>

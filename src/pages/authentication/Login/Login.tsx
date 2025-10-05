@@ -8,10 +8,11 @@ import { AuthService } from '@/services/auth.service';
 import ExternalAuthButtons from '@/components/ExternalAuthButtons';
 import Input from '@/components/Input';
 import { toast } from 'react-toastify';
+import { getRedirectPathByRole } from '@/utils/navigation';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
-    const { login, isLoading, error, isAuthenticated, clearError } = useAuth();
+    const { login, isLoading, error, isAuthenticated, clearError, roles } = useAuth();
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -26,24 +27,31 @@ const Login: React.FC = () => {
     }>({});
     const [externalAuthError, setExternalAuthError] = useState<string | null>(null);
 
+    // Get redirect path based on user roles
+    const handleSuccessRedirect = () => {
+        const redirectPath = getRedirectPathByRole(roles);
+        navigate(redirectPath);
+    };
+
     // Google Auth Hook
     const { isLoading: googleLoading, login: triggerGoogleLogin } = useGoogleAuth(
-        () => navigate('/dashboard'), // onSuccess
+        handleSuccessRedirect, // onSuccess
         () => setExternalAuthError('Đăng nhập Google thất bại. Vui lòng thử lại.') // onError
     );
 
     // Facebook Auth Hook
     const { isLoading: facebookLoading, login: triggerFacebookLogin } = useFacebookAuth(
-        () => navigate('/dashboard'), // onSuccess
+        handleSuccessRedirect, // onSuccess
         () => setExternalAuthError('Đăng nhập Facebook thất bại. Vui lòng thử lại.') // onError
     );
 
     // Redirect if already authenticated
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard');
+        if (isAuthenticated && roles.length > 0) {
+            const redirectPath = getRedirectPathByRole(roles);
+            navigate(redirectPath);
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, roles, navigate]);
 
     // Clear errors when component mounts
     useEffect(() => {
