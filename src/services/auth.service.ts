@@ -158,40 +158,10 @@ export class AuthService {
     }
 
     /**
-     * Check if user is authenticated based on roles
-     */
-    static isAuthenticated(): boolean {
-        const roles = this.getRoles();
-        return roles.length > 0;
-    }
-
-    /**
-     * Get stored roles
-     */
-    static getRoles(): string[] {
-        const roles = localStorage.getItem('roles');
-        return roles ? JSON.parse(roles) : [];
-    }
-
-    /**
-     * Set roles in localStorage
-     */
-    static setRoles(roles: string[]): void {
-        localStorage.setItem('roles', JSON.stringify(roles));
-    }
-
-    /**
-     * Remove roles from localStorage
-     */
-    static removeRoles(): void {
-        localStorage.removeItem('roles');
-    }
-
-    /**
      * Clear all auth data
      */
     static clearAuthData(): void {
-        this.removeRoles();
+        localStorage.removeItem('persist:booking-care-root');
     }
 
     /**
@@ -239,10 +209,6 @@ export const {
     validateEmail,
     validatePhoneNumber,
     validatePassword,
-    isAuthenticated,
-    getRoles,
-    setRoles,
-    removeRoles,
     clearAuthData,
 } = AuthService;
 
