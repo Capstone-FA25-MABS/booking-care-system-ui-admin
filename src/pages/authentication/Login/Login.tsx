@@ -29,7 +29,7 @@ const Login: React.FC = () => {
 
     // Get redirect path based on user roles
     const handleSuccessRedirect = () => {
-        const redirectPath = getRedirectPathByRole(AuthService.getRoles());
+        const redirectPath = getRedirectPathByRole(roles);
         navigate(redirectPath);
     };
 
