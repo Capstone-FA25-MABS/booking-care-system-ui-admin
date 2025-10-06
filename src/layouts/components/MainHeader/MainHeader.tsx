@@ -34,7 +34,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
             // Dispatch smart fetch based on role (only for management roles)
             dispatch(
                 fetchProfileByRole({
-                    role: role as Exclude<Role, Role.PATIENT>,
+                    role,
                 })
             );
         }
