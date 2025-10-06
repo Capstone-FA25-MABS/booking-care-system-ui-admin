@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { AppDispatch, RootState } from '@/store';
 import { forgotPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { ForgotPasswordFormData } from '@/types/auth.types';
@@ -8,11 +9,14 @@ import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
 import Input from '@/components/Input';
 
+const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
 const ForgotPassword: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { isLoading, error: authError } = useSelector((state: RootState) => state.auth);
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
 
     const [formData, setFormData] = useState<ForgotPasswordFormData>({
         email: '',
@@ -24,6 +28,8 @@ const ForgotPassword: React.FC = () => {
 
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
+    const [isHuman, setIsHuman] = useState(false);
+    const [showCaptcha, setShowCaptcha] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -61,15 +67,24 @@ const ForgotPassword: React.FC = () => {
         return Object.keys(errors).length === 0;
     };
 
+    const canSubmit = formData.email.trim() && AuthService.validateEmail(formData.email) && isHuman;
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) return;
+        if (!validateForm() || !canSubmit) return;
 
         try {
             setLocalError(null);
 
             await dispatch(forgotPasswordAsync({ email: formData.email })).unwrap();
+
+            // Reset human verification and reCAPTCHA
+            setIsHuman(false);
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+            }
+
             setIsSubmitted(true);
         } catch (err: any) {
             setLocalError(err || 'Yêu cầu quên mật khẩu thất bại');
@@ -129,11 +144,37 @@ const ForgotPassword: React.FC = () => {
                             icon="mail"
                             error={validationErrors.email}
                             required={false}
+                            onFocus={() => setShowCaptcha(true)}
                         />
-
                         {(localError || authError) && (
                             <div className="alert alert-danger text-center" role="alert">
                                 {localError || authError}
+                            </div>
+                        )}
+                        {/* Captcha */}
+                        {showCaptcha && (
+                            <div className="mb-3">
+                                {siteKey ? (
+                                    <ReCAPTCHA
+                                        ref={recaptchaRef}
+                                        sitekey={siteKey}
+                                        onChange={(value) => setIsHuman(!!value)}
+                                        onExpired={() => setIsHuman(false)}
+                                    />
+                                ) : (
+                                    <div className="d-flex align-items-center p-3 bg-light rounded border">
+                                        <input
+                                            type="checkbox"
+                                            id="captcha"
+                                            className="me-2"
+                                            checked={isHuman}
+                                            onChange={(e) => setIsHuman(e.target.checked)}
+                                        />
+                                        <label htmlFor="captcha" className="text-muted mb-0">
+                                            Tôi không phải là robot
+                                        </label>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -141,7 +182,7 @@ const ForgotPassword: React.FC = () => {
                             <button
                                 type="submit"
                                 className="btn bg-primary text-white w-100"
-                                disabled={isLoading}
+                                disabled={!canSubmit || isLoading}
                             >
                                 {isLoading ? 'Đang gửi...' : 'Đặt lại mật khẩu'}
                             </button>

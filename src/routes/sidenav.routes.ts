@@ -1,4 +1,12 @@
 import { buildPath, PATHS } from './paths';
+import type { MenuConfig } from '@/types/menu.types';
+import {
+    createAccountSettingsMenuItem,
+    createAppointmentsMenuItem,
+    createDoctorsMenuItem,
+    createMessagesMenuItem,
+    createSimpleMenuItem,
+} from './menu.items';
 
 export const listGroupMenuItemHospital: Array<{
     title: string;
@@ -61,46 +69,89 @@ export const listGroupMenuItemHospital: Array<{
             {
                 label: 'Locations',
                 icon: 'ti ti-map-pin',
-                link: '/clinic/locations',
+                link: '/hospital/locations',
             },
             {
                 label: 'Services',
                 icon: 'ti ti-user-cog',
-                link: '/clinic/services',
+                link: '/hospital/services',
             },
             {
                 label: 'Specializations',
                 icon: 'ti ti-user-shield',
-                link: '/clinic/specializations',
+                link: '/hospital/specializations',
             },
             {
                 label: 'Assets',
                 icon: 'ti ti-asset',
-                link: '/clinic/assets',
+                link: '/hospital/assets',
             },
             {
                 label: 'Activities',
                 icon: 'ti ti-activity',
-                link: '/clinic/activities',
+                link: '/hospital/activities',
             },
             {
                 label: 'Messages',
                 icon: 'ti ti-messages',
                 link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.MESSAGES),
             },
+            createDoctorsMenuItem(),
+            createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
+            createSimpleMenuItem('Services', 'ti ti-user-cog', '/hospital/services'),
+            createSimpleMenuItem(
+                'Specializations',
+                'ti ti-user-shield',
+                '/hospital/specializations'
+            ),
+            createSimpleMenuItem('Assets', 'ti ti-asset', '/hospital/assets'),
+            createSimpleMenuItem('Activities', 'ti ti-activity', '/hospital/activities'),
+            createMessagesMenuItem('staff'),
         ],
+    },
+    {
+        title: 'Settings',
+        items: [createAccountSettingsMenuItem()],
     },
 ];
 
-export const listGroupMenuItemAdmin: Array<{
-    title: string;
-    items: Array<{
-        label: string;
-        link?: string;
-        icon: string;
-        subItems?: Array<{ label: string; link: string }>;
-    }>;
-}> = [
+/**
+ * Doctor menu configuration
+ */
+export const listGroupMenuItemDoctor: MenuConfig = [
+    {
+        title: 'Main Menu',
+        items: [
+            createSimpleMenuItem(
+                'Dashboard',
+                'ti ti-layout-dashboard',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.DASHBOARD)
+            ),
+            createAppointmentsMenuItem('doctor'),
+            createSimpleMenuItem(
+                'Schedule',
+                'ti ti-calendar-time',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.SCHEDULE)
+            ),
+            createSimpleMenuItem(
+                'Patients',
+                'ti ti-user-heart',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
+            ),
+            createMessagesMenuItem('doctor'),
+        ],
+    },
+    {
+        title: 'Settings',
+        items: [createAccountSettingsMenuItem()],
+    },
+];
+
+/**
+ * Admin menu configuration
+ */
+export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Main Menu',
         items: [
@@ -125,5 +176,9 @@ export const listGroupMenuItemAdmin: Array<{
                 ],
             },
         ],
+    },
+    {
+        title: 'Settings',
+        items: [createAccountSettingsMenuItem()],
     },
 ];

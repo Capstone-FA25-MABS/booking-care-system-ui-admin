@@ -15,24 +15,23 @@ const validateRoles = (response: any, rejectWithValue: any) => {
     const token = response.data?.token;
     if (token) {
         const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
-        const allowed = ['ADMIN', 'DOCTOR', 'HOSPITAL'];
+        const allowed = ['ADMIN', 'DOCTOR', 'STAFF'];
         const hasAllowed = roles.some((r) => allowed.includes(r));
         if (!hasAllowed) {
             return rejectWithValue(
                 'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
             );
         }
-        // Only save roles, not token
-        AuthService.setRoles(roles);
-        return { roles }; // Return roles data
+        // Return roles data (Redux will persist automatically)
+        return { roles };
     }
     return null; // No error
 };
 
-// Initial state
+// Initial state - Redux Persist will automatically restore roles
 const initialState: AuthState = {
-    roles: AuthService.getRoles(),
-    isAuthenticated: AuthService.isAuthenticated(),
+    roles: [],
+    isAuthenticated: false,
     isLoading: false,
     error: null,
 };

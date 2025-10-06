@@ -1,10 +1,41 @@
-// .subMenuList {
-//     max-height: 0;
-//     overflow: hidden;
-//     transition: max-height 1s ease;
-// }
+.subMenuList {
+    display: block !important;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+        max-height 0.2s ease-out,
+        opacity 0.2s ease-out;
+    margin: 4px 0 0 !important;
+    &.open {
+        max-height: 1000px; /* big enough to fit all items */
+        opacity: 1;
+        transition:
+            max-height 0.3s ease-in,
+            opacity 0.3s ease-in;
+    }
+}
 
-// .subMenuList.open {
-//     max-height: 500px;
-//     /* big enough to fit all items */
-// }
+/* Override default styles for submenu */
+:global(.sidebar .sidebar-menu > ul > li > a) {
+    // Reset default active styling for non-active items
+    &:not(.active):not(.subdrop) {
+        background: transparent !important;
+        border-left: none !important;
+        color: var(--menu-item-color) !important;
+    }
+}
+
+/* Auto-close submenus in mini mode when not hovering */
+:global {
+    .mini-sidebar:not(.expand-menu) .sidebar-menu .submenu {
+        ul {
+            display: none !important;
+        }
+
+        &.subdrop > a,
+        &.subdrop > button {
+            background: transparent !important;
+        }
+    }
+}
