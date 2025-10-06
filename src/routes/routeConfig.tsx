@@ -24,7 +24,7 @@ import {
     listGroupMenuItemDoctor,
 } from './sidenav.routes';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { UserRole } from '@/types/role.types';
+import { Role } from '@/enums/common.enums';
 
 const routes: RouteObject[] = [
     {
@@ -45,7 +45,7 @@ const routes: RouteObject[] = [
     {
         path: PATHS.ADMIN.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+            <ProtectedRoute allowedRoles={[Role.ADMIN]}>
                 <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
             </ProtectedRoute>
         ),
@@ -59,7 +59,7 @@ const routes: RouteObject[] = [
     {
         path: PATHS.DOCTOR.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.DOCTOR]}>
+            <ProtectedRoute allowedRoles={[Role.DOCTOR]}>
                 <MainLayout listGroupMenuItem={listGroupMenuItemDoctor} />
             </ProtectedRoute>
         ),
@@ -79,7 +79,7 @@ const routes: RouteObject[] = [
     {
         path: PATHS.CLINIC.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
+            <ProtectedRoute allowedRoles={[Role.STAFF]}>
                 <MainLayout listGroupMenuItem={listGroupMenuItemClinic} />
             </ProtectedRoute>
         ),
@@ -107,7 +107,7 @@ const routes: RouteObject[] = [
     {
         path: PATHS.COMMON.ACCOUNT_SETTINGS.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.STAFF]}>
+            <ProtectedRoute allowedRoles={[Role.ADMIN, Role.DOCTOR, Role.STAFF]}>
                 <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
             </ProtectedRoute>
         ),

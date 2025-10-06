@@ -1,37 +1,37 @@
+import { Role } from '../enums/common.enums';
+
 /**
- * User roles in the system
+ * Re-export Role for backward compatibility
+ * @deprecated Use Role from common.enums instead
  */
-export enum UserRole {
-    ADMIN = 'ADMIN',
-    DOCTOR = 'DOCTOR',
-    STAFF = 'STAFF',
-}
+export { Role as UserRole } from '../enums/common.enums';
 
 /**
  * Role configuration for layout and routes
  */
 export interface RoleConfig {
-    role: UserRole;
+    role: Role;
     defaultPath: string;
     layoutType: 'admin' | 'doctor' | 'staff';
 }
 
 /**
  * Role configurations mapping
+ * Note: Only management roles (ADMIN, DOCTOR, STAFF) are configured here
  */
-export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
-    [UserRole.ADMIN]: {
-        role: UserRole.ADMIN,
+export const ROLE_CONFIGS: Record<Exclude<Role, Role.PATIENT>, RoleConfig> = {
+    [Role.ADMIN]: {
+        role: Role.ADMIN,
         defaultPath: '/admin/dashboard',
         layoutType: 'admin',
     },
-    [UserRole.DOCTOR]: {
-        role: UserRole.DOCTOR,
+    [Role.DOCTOR]: {
+        role: Role.DOCTOR,
         defaultPath: '/doctor/dashboard',
         layoutType: 'doctor',
     },
-    [UserRole.STAFF]: {
-        role: UserRole.STAFF,
+    [Role.STAFF]: {
+        role: Role.STAFF,
         defaultPath: '/clinic/dashboard',
         layoutType: 'staff',
     },
@@ -41,20 +41,20 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
  * Get role config by role name
  */
 export const getRoleConfig = (role: string): RoleConfig | undefined => {
-    const upperRole = role.toUpperCase() as UserRole;
-    return ROLE_CONFIGS[upperRole];
+    const upperRole = role.toUpperCase() as Role;
+    return ROLE_CONFIGS[upperRole as Exclude<Role, Role.PATIENT>];
 };
 
 /**
  * Get primary role from multiple roles
  * Priority: ADMIN > DOCTOR > STAFF
  */
-export const getPrimaryRole = (roles: string[]): UserRole | null => {
+export const getPrimaryRole = (roles: string[]): Role | null => {
     const upperRoles = new Set(roles.map((r) => r.toUpperCase()));
 
-    if (upperRoles.has(UserRole.ADMIN)) return UserRole.ADMIN;
-    if (upperRoles.has(UserRole.DOCTOR)) return UserRole.DOCTOR;
-    if (upperRoles.has(UserRole.STAFF)) return UserRole.STAFF;
+    if (upperRoles.has(Role.ADMIN)) return Role.ADMIN;
+    if (upperRoles.has(Role.DOCTOR)) return Role.DOCTOR;
+    if (upperRoles.has(Role.STAFF)) return Role.STAFF;
 
     return null;
 };

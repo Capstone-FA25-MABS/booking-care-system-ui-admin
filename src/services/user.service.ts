@@ -6,7 +6,7 @@ import {
     UpdateAdminRequest,
     UpdateDoctorRequest,
     UpdateHospitalRequest,
-} from '@/types/user.type';
+} from '@/types/user.types';
 
 // Base API endpoints
 const USER_ENDPOINTS = {

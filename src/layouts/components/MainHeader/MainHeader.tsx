@@ -18,6 +18,7 @@ import { RootState, AppDispatch } from '@/store';
 import { logoutAsync } from '@/store/slices/authSlice';
 import { fetchProfileByRole, clearAllUserProfiles } from '@/store/slices/userSlice';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import { Role } from '@/enums/common.enums';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -29,11 +30,11 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
 
     // Auto-fetch user profile on component mount if authenticated and no profile exists
     useEffect(() => {
-        if (isAuthenticated && role && !profile) {
-            // Dispatch smart fetch based on role
+        if (isAuthenticated && role && !profile && role !== Role.PATIENT) {
+            // Dispatch smart fetch based on role (only for management roles)
             dispatch(
                 fetchProfileByRole({
-                    role: role as 'ADMIN' | 'DOCTOR' | 'STAFF',
+                    role: role as Exclude<Role, Role.PATIENT>,
                 })
             );
         }
