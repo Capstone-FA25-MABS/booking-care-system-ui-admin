@@ -702,13 +702,13 @@ const ListAppointments: React.FC = () => {
                         <div className="text-end d-flex">
                             {/* dropdown*/}
                             <div className="dropdown me-1">
-                                <a
-                                    href="javascript:void(0);"
+                                <button
+                                    type="button"
                                     className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
                                     data-bs-toggle="dropdown"
                                 >
                                     Xuất Dữ Liệu<i className="ti ti-chevron-down ms-2"></i>
-                                </a>
+                                </button>
                                 <ul className="dropdown-menu p-2">
                                     <li>
                                         <a className="dropdown-item" href="#">
@@ -737,13 +737,13 @@ const ListAppointments: React.FC = () => {
                                 </a>
                             </div>
 
-                            <a
-                                href="javascript:void(0);"
+                            <button
+                                type="button"
                                 className="btn btn-primary ms-2 fs-13 btn-md"
                                 onClick={() => setShowNewAppointment(true)}
                             >
                                 <i className="ti ti-plus me-1"></i> Lịch Hẹn Mới
-                            </a>
+                            </button>
                         </div>
                     </div>
                     {/* End Page Header */}
@@ -925,38 +925,42 @@ const ListAppointments: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="action-item">
-                                            <a href="javascript:void(0);" data-bs-toggle="dropdown">
+                                            <button
+                                                type="button"
+                                                className="btn btn-link p-0"
+                                                data-bs-toggle="dropdown"
+                                            >
                                                 <i className="ti ti-dots-vertical"></i>
-                                            </a>
+                                            </button>
                                             <ul className="dropdown-menu p-2">
                                                 <li>
-                                                    <a
-                                                        href="javascript:void(0);"
-                                                        className="dropdown-item d-flex align-items-center"
+                                                    <button
+                                                        type="button"
+                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                                         onClick={() => handleEditClick(appointment)}
                                                     >
                                                         Sửa
-                                                    </a>
+                                                    </button>
                                                 </li>
                                                 <li>
-                                                    <a
-                                                        href="javascript:void(0);"
-                                                        className="dropdown-item d-flex align-items-center"
+                                                    <button
+                                                        type="button"
+                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                                         onClick={() => handleViewClick(appointment)}
                                                     >
                                                         Xem
-                                                    </a>
+                                                    </button>
                                                 </li>
                                                 <li>
-                                                    <a
-                                                        href="javascript:void(0);"
-                                                        className="dropdown-item d-flex align-items-center"
+                                                    <button
+                                                        type="button"
+                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                                         onClick={() =>
                                                             handleDeleteClick(appointment)
                                                         }
                                                     >
                                                         Xóa
-                                                    </a>
+                                                    </button>
                                                 </li>
                                             </ul>
                                         </td>
@@ -986,7 +990,7 @@ const ListAppointments: React.FC = () => {
                 <div className="footer text-center bg-white p-2 border-top">
                     <p className="text-dark mb-0">
                         2025 &copy;{' '}
-                        <a href="javascript:void(0);" className="link-primary">
+                        <a href="#" className="link-primary">
                             Preclinic
                         </a>
                         , Tất Cả Quyền Được Bảo Lưu
@@ -1291,7 +1295,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1352,7 +1356,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1479,7 +1483,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1536,7 +1540,7 @@ const ListAppointments: React.FC = () => {
                 <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
                     <div className=" d-flex justify-content-end gap-2">
                         <a
-                            href="javascript:void(0);"
+                            href="#"
                             className="btn btn-light btm-md"
                             onClick={() => setShowNewAppointment(false)}
                         >
@@ -1604,7 +1608,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1669,7 +1673,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1799,7 +1803,7 @@ const ListAppointments: React.FC = () => {
                                     </label>
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -1857,7 +1861,7 @@ const ListAppointments: React.FC = () => {
                 <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
                     <div className=" d-flex justify-content-end gap-2">
                         <a
-                            href="javascript:void(0);"
+                            href="#"
                             className="btn btn-light btm-md"
                             onClick={() => setShowEditAppointment(false)}
                         >
@@ -1970,7 +1974,7 @@ const ListAppointments: React.FC = () => {
                                 <div className="mb-3">
                                     <div className="dropdown">
                                         <a
-                                            href="javascript:void(0);"
+                                            href="#"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
@@ -2047,7 +2051,7 @@ const ListAppointments: React.FC = () => {
                             <p className="mb-3 position-relative z-1">Bạn có chắc chắn muốn xóa?</p>
                             <div className="d-flex justify-content-center">
                                 <a
-                                    href="javascript:void(0);"
+                                    href="#"
                                     className="btn btn-light position-relative z-1 me-3"
                                     onClick={() => setShowDeleteModal(false)}
                                 >

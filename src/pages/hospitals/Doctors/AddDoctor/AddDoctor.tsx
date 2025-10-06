@@ -457,8 +457,11 @@ const AddDoctor: React.FC = () => {
             }
         });
 
-        // Email validation
-        if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+        // Email validation - using a more secure regex pattern
+        if (
+            formData.email &&
+            !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+        ) {
             newErrors.email = 'Định dạng email không hợp lệ';
         }
 
