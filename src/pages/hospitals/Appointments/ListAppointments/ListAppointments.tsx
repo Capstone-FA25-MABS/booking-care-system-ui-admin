@@ -564,41 +564,46 @@ const ListAppointments: React.FC = () => {
         setShowDeleteModal(true);
     };
 
+    // Helper functions for filtering
+    const filterByPatients = (appointments: Appointment[]) => {
+        if (selectedPatients.length === 0) return appointments;
+        return appointments.filter((appointment) =>
+            selectedPatients.includes(appointment.patient.id)
+        );
+    };
+
+    const filterByTypes = (appointments: Appointment[]) => {
+        if (selectedTypes.length === 0) return appointments;
+        return appointments.filter((appointment) => selectedTypes.includes(appointment.type));
+    };
+
+    const filterByDoctors = (appointments: Appointment[]) => {
+        if (selectedDoctors.length === 0) return appointments;
+        return appointments.filter((appointment) =>
+            selectedDoctors.includes(appointment.doctor?.id || '')
+        );
+    };
+
+    const filterByDateRange = (appointments: Appointment[]) => {
+        if (!selectedDateRange.start || !selectedDateRange.end) return appointments;
+        return appointments.filter((appointment) => {
+            const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
+            return (
+                appointmentDate >= selectedDateRange.start! &&
+                appointmentDate <= selectedDateRange.end!
+            );
+        });
+    };
+
     const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         let filteredAppointments = [...originalAppointments];
 
-        // Lọc theo bệnh nhân
-        if (selectedPatients.length > 0) {
-            filteredAppointments = filteredAppointments.filter((appointment) =>
-                selectedPatients.includes(appointment.patient.id)
-            );
-        }
-
-        // Lọc theo loại khám
-        if (selectedTypes.length > 0) {
-            filteredAppointments = filteredAppointments.filter((appointment) =>
-                selectedTypes.includes(appointment.type)
-            );
-        }
-
-        // Lọc theo bác sĩ
-        if (selectedDoctors.length > 0) {
-            filteredAppointments = filteredAppointments.filter((appointment) =>
-                selectedDoctors.includes(appointment.doctor?.id || '')
-            );
-        }
-
-        // Lọc theo khoảng thời gian
-        if (selectedDateRange.start && selectedDateRange.end) {
-            filteredAppointments = filteredAppointments.filter((appointment) => {
-                const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
-                return (
-                    appointmentDate >= selectedDateRange.start! &&
-                    appointmentDate <= selectedDateRange.end!
-                );
-            });
-        }
+        // Apply all filters sequentially
+        filteredAppointments = filterByPatients(filteredAppointments);
+        filteredAppointments = filterByTypes(filteredAppointments);
+        filteredAppointments = filterByDoctors(filteredAppointments);
+        filteredAppointments = filterByDateRange(filteredAppointments);
 
         setAppointments(filteredAppointments);
         setCurrentPage(1); // Reset về trang 1 khi filter
@@ -711,14 +716,20 @@ const ListAppointments: React.FC = () => {
                                 </button>
                                 <ul className="dropdown-menu p-2">
                                     <li>
-                                        <a className="dropdown-item" href="#">
+                                        <button
+                                            type="button"
+                                            className="dropdown-item w-100 text-start border-0 bg-transparent"
+                                        >
                                             Tải xuống dạng PDF
-                                        </a>
+                                        </button>
                                     </li>
                                     <li>
-                                        <a className="dropdown-item" href="#">
+                                        <button
+                                            type="button"
+                                            className="dropdown-item w-100 text-start border-0 bg-transparent"
+                                        >
                                             Tải xuống dạng Excel
-                                        </a>
+                                        </button>
                                     </li>
                                 </ul>
                             </div>
@@ -990,7 +1001,7 @@ const ListAppointments: React.FC = () => {
                 <div className="footer text-center bg-white p-2 border-top">
                     <p className="text-dark mb-0">
                         2025 &copy;{' '}
-                        <a href="#" className="link-primary">
+                        <a href="/" className="link-primary">
                             Preclinic
                         </a>
                         , Tất Cả Quyền Được Bảo Lưu
@@ -1294,15 +1305,15 @@ const ListAppointments: React.FC = () => {
                                         Bệnh Nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {newAppointment.patient || 'Select'}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1355,15 +1366,15 @@ const ListAppointments: React.FC = () => {
                                         Loại Khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {newAppointment.type || 'Select'}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1378,8 +1389,8 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentTypes.map((type, index) => (
-                                                    <li key={index}>
+                                                {appointmentTypes.map((type) => (
+                                                    <li key={type}>
                                                         <label className="dropdown-item px-2 d-flex align-items-center text-dark">
                                                             <input
                                                                 className="form-check-input m-0 me-2"
@@ -1482,15 +1493,15 @@ const ListAppointments: React.FC = () => {
                                         Trạng Thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {newAppointment.status || 'Select'}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1505,8 +1516,8 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={index}>
+                                                {appointmentStatuses.map((status) => (
+                                                    <li key={status}>
                                                         <label className="dropdown-item px-2 d-flex align-items-center text-dark">
                                                             <input
                                                                 className="form-check-input m-0 me-2"
@@ -1539,13 +1550,13 @@ const ListAppointments: React.FC = () => {
                 </div>
                 <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
                     <div className=" d-flex justify-content-end gap-2">
-                        <a
-                            href="#"
+                        <button
+                            type="button"
                             className="btn btn-light btm-md"
                             onClick={() => setShowNewAppointment(false)}
                         >
                             Cancel
-                        </a>
+                        </button>
                         <button
                             className="btn btn-primary btm-md"
                             id="filter-submit"
@@ -1607,15 +1618,15 @@ const ListAppointments: React.FC = () => {
                                         Bệnh Nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {editAppointment.patient}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1672,15 +1683,15 @@ const ListAppointments: React.FC = () => {
                                         Loại Khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {editAppointment.type}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1695,8 +1706,8 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-0 list-style-none">
-                                                {appointmentTypes.map((type, index) => (
-                                                    <li key={index}>
+                                                {appointmentTypes.map((type) => (
+                                                    <li key={type}>
                                                         <label className="dropdown-item px-2 d-flex align-items-center text-dark">
                                                             <input
                                                                 className="form-check-input m-0 me-2"
@@ -1802,15 +1813,15 @@ const ListAppointments: React.FC = () => {
                                         Trạng Thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {editAppointment.status}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1825,8 +1836,8 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={index}>
+                                                {appointmentStatuses.map((status) => (
+                                                    <li key={status}>
                                                         <label className="dropdown-item px-2 d-flex align-items-center text-dark">
                                                             <input
                                                                 className="form-check-input m-0 me-2"
@@ -1860,13 +1871,13 @@ const ListAppointments: React.FC = () => {
                 </div>
                 <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
                     <div className=" d-flex justify-content-end gap-2">
-                        <a
-                            href="#"
+                        <button
+                            type="button"
                             className="btn btn-light btm-md"
                             onClick={() => setShowEditAppointment(false)}
                         >
                             Cancel
-                        </a>
+                        </button>
                         <button
                             className="btn btn-primary btm-md"
                             id="filter-submit2"
@@ -1973,15 +1984,15 @@ const ListAppointments: React.FC = () => {
                             <div className="col-lg-6 col-md-6">
                                 <div className="mb-3">
                                     <div className="dropdown">
-                                        <a
-                                            href="#"
+                                        <button
+                                            type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
                                             data-bs-auto-close="outside"
                                             aria-expanded="true"
                                         >
                                             {selectedAppointment?.status || 'Pending'}
-                                        </a>
+                                        </button>
                                         <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                                             <div className="mb-3">
                                                 <div className="input-icon-start position-relative">
@@ -1996,8 +2007,8 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-0 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={index}>
+                                                {appointmentStatuses.map((status) => (
+                                                    <li key={status}>
                                                         <label className="dropdown-item px-2 d-flex align-items-center text-dark">
                                                             <input
                                                                 className="form-check-input m-0 me-2"
@@ -2050,20 +2061,20 @@ const ListAppointments: React.FC = () => {
                             <h5 className="fw-bold mb-1 position-relative z-1">Xác Nhận Xóa</h5>
                             <p className="mb-3 position-relative z-1">Bạn có chắc chắn muốn xóa?</p>
                             <div className="d-flex justify-content-center">
-                                <a
-                                    href="#"
+                                <button
+                                    type="button"
                                     className="btn btn-light position-relative z-1 me-3"
                                     onClick={() => setShowDeleteModal(false)}
                                 >
                                     Hủy
-                                </a>
-                                <a
-                                    href="#"
+                                </button>
+                                <button
+                                    type="button"
                                     className="btn btn-danger position-relative z-1"
                                     onClick={handleDeleteConfirm}
                                 >
                                     Có, Xóa
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>

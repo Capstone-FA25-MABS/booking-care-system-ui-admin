@@ -379,7 +379,11 @@ const AddDoctor: React.FC = () => {
 
         setFormData((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
+            [name]: (() => {
+                if (type === 'checkbox') return checked;
+                if (type === 'number') return Number(value);
+                return value;
+            })(),
         }));
 
         // Clear error when user starts typing
@@ -435,10 +439,8 @@ const AddDoctor: React.FC = () => {
         }));
     };
 
-    const validateForm = (): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        // Required fields validation
+    // Helper functions for validation
+    const validateRequiredFields = (newErrors: Record<string, string>) => {
         const requiredFields = [
             'firstName',
             'lastName',
@@ -456,29 +458,43 @@ const AddDoctor: React.FC = () => {
                 newErrors[field] = 'Trường này là bắt buộc';
             }
         });
+    };
 
-        // Email validation - using a more secure regex pattern
+    const validateEmail = (newErrors: Record<string, string>) => {
         if (
             formData.email &&
             !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
         ) {
             newErrors.email = 'Định dạng email không hợp lệ';
         }
+    };
 
-        // Years of experience validation
+    const validateYearsOfExperience = (newErrors: Record<string, string>) => {
         if (formData.yearsOfExperience < 0) {
             newErrors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
         }
+    };
 
-        // Language validation
+    const validateLanguages = (newErrors: Record<string, string>) => {
         if (formData.languageIds.length === 0) {
             newErrors.languageIds = 'Vui lòng chọn ít nhất một ngôn ngữ';
         }
+    };
 
-        // Service prices validation
+    const validateServicePrices = (newErrors: Record<string, string>) => {
         if (formData.servicePrices.length === 0) {
             newErrors.servicePrices = 'Vui lòng thêm ít nhất một loại dịch vụ';
         }
+    };
+
+    const validateForm = (): boolean => {
+        const newErrors: Record<string, string> = {};
+
+        validateRequiredFields(newErrors);
+        validateEmail(newErrors);
+        validateYearsOfExperience(newErrors);
+        validateLanguages(newErrors);
+        validateServicePrices(newErrors);
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -1065,7 +1081,10 @@ const AddDoctor: React.FC = () => {
                                         ) : (
                                             <div className="row">
                                                 {formData.servicePrices.map((price, index) => (
-                                                    <div key={index} className="col-md-6 mb-3">
+                                                    <div
+                                                        key={`${price.serviceTypeId}-${index}`}
+                                                        className="col-md-6 mb-3"
+                                                    >
                                                         <div className="card border">
                                                             <div className="card-body">
                                                                 <div className="d-flex justify-content-between align-items-start mb-3">

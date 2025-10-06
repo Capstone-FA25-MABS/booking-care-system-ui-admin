@@ -125,7 +125,7 @@
 
     &::after {
         content: '\f073'; // Font Awesome calendar-days icon
-        font-family: 'Font Awesome 6 Free';
+        font-family: 'Font Awesome 6 Free', sans-serif;
         font-weight: 900;
         position: absolute;
         right: 12px;
@@ -146,15 +146,6 @@
     z-index: 99999 !important;
 }
 
-:global(.react-select__menu) {
-    z-index: 99999 !important;
-}
-
-:global(.react-select__menu-portal) {
-    z-index: 99999 !important;
-}
-
-// Ensure dropdown menu appears above modal footer
 :global(.react-select__menu) {
     z-index: 99999 !important;
     position: absolute !important;
