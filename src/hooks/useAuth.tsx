@@ -19,7 +19,8 @@ export const useAuth = () => {
 
     const login = useCallback(
         async (credentials: LoginRequest) => {
-            await dispatch(loginAsync(credentials)).unwrap();
+            const result = await dispatch(loginAsync(credentials)).unwrap();
+            return result;
         },
         [dispatch]
     );
@@ -35,14 +36,16 @@ export const useAuth = () => {
 
     const googleLogin = useCallback(
         async (request: GoogleLoginRequest) => {
-            await dispatch(googleLoginAsync(request)).unwrap();
+            const result = await dispatch(googleLoginAsync(request)).unwrap();
+            return result;
         },
         [dispatch]
     );
 
     const facebookLogin = useCallback(
         async (request: FacebookLoginRequest) => {
-            await dispatch(facebookLoginAsync(request)).unwrap();
+            const result = await dispatch(facebookLoginAsync(request)).unwrap();
+            return result;
         },
         [dispatch]
     );

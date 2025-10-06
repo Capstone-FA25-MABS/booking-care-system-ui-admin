@@ -34,7 +34,10 @@ interface FacebookUser {
  * Facebook OAuth hook for modern authentication
  * Uses Facebook SDK for JavaScript
  */
-export const useFacebookAuth = (onSuccess?: () => void, onError?: (error: string) => void) => {
+export const useFacebookAuth = (
+    onSuccess?: (roles: string[]) => void,
+    onError?: (error: string) => void
+) => {
     const [isLoading, setIsLoading] = useState(false);
     const { facebookLogin } = useAuth();
 
@@ -101,14 +104,15 @@ export const useFacebookAuth = (onSuccess?: () => void, onError?: (error: string
                         }
 
                         try {
-                            // Send access token to backend
-                            await facebookLogin({
+                            // Send access token to backend and get roles from response
+                            const result = await facebookLogin({
                                 accessToken: response.authResponse!.accessToken,
                             });
+                            const roles = result?.roles || [];
 
                             setIsLoading(false);
                             toast.success('Đăng nhập Facebook thành công!');
-                            onSuccess?.();
+                            onSuccess?.(roles);
                         } catch (error) {
                             setIsLoading(false);
                             toast.error('Xác thực Facebook thất bại. Vui lòng thử lại.');
