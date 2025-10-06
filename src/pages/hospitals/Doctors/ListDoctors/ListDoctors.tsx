@@ -571,7 +571,7 @@ const selectCustomStyles = {
 
 const ListDoctors: React.FC = () => {
     const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
-    const [originalDoctors] = useState<Doctor[]>(mockDoctors);
+    const [originalDoctors, setOriginalDoctors] = useState<Doctor[]>(mockDoctors);
     const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
     const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
     const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
@@ -709,7 +709,9 @@ const ListDoctors: React.FC = () => {
         if (doctorToDelete) {
             // Remove doctor from list
             setDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorToDelete.id));
-            setOriginalDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorToDelete.id));
+            setOriginalDoctors((prev: Doctor[]) =>
+                prev.filter((doctor: Doctor) => doctor.id !== doctorToDelete.id)
+            );
 
             // Close modal
             setShowDeleteModal(false);

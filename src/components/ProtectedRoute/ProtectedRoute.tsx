@@ -35,9 +35,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         if (roles.includes('DOCTOR')) {
             return <Navigate to={PATHS.DOCTOR.ROOT} replace />;
         }
-        // If user has STAFF role, redirect to clinic dashboard
+        // If user has STAFF role, redirect to hospital dashboard
         if (roles.includes('STAFF')) {
-            return <Navigate to={PATHS.CLINIC.ROOT} replace />;
+            return <Navigate to={PATHS.HOSPITAL.ROOT} replace />;
         }
         // Fallback: redirect to login
         return <Navigate to={PATHS.LOGIN} replace />;

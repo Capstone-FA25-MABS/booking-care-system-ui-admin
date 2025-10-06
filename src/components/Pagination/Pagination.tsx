@@ -6,6 +6,7 @@ interface PaginationProps {
     totalPages: number;
     onPageChange: (page: number) => void;
     itemsPerPage?: number;
+    totalItems?: number;
     showInfo?: boolean;
     onItemsPerPageChange?: (itemsPerPage: number) => void;
     showItemsPerPage?: boolean;
@@ -17,6 +18,7 @@ const Pagination: React.FC<PaginationProps> = ({
     totalPages,
     onPageChange,
     itemsPerPage = 10,
+    totalItems: _totalItems,
     showInfo: _showInfo = true,
     onItemsPerPageChange,
     showItemsPerPage = true,
