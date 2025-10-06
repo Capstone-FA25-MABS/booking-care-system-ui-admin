@@ -1,5 +1,8 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from './api.config';
+import AuthService from '@/services/auth.service';
+import { resetAuthState } from '@/store/slices/authSlice';
+import { clearAllUserProfiles } from '@/store/slices/userSlice';
 
 // Extend Axios config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -9,6 +12,16 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
     // mark retry
     _retry?: boolean;
 }
+
+// Dependency injection for Redux store (to avoid circular dependency)
+type ReduxStore = {
+    dispatch: (action: any) => void;
+};
+let reduxStore: ReduxStore | null = null;
+
+export const injectStore = (_store: ReduxStore) => {
+    reduxStore = _store;
+};
 
 // Create axios instance
 const instance = axios.create({
@@ -73,6 +86,25 @@ const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
         .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
 };
 
+const handleForceLogout = () => {
+    AuthService.clearAuthData();
+
+    // Clear Redux state using injected store
+    try {
+        if (reduxStore) {
+            reduxStore?.dispatch(resetAuthState());
+            reduxStore?.dispatch(clearAllUserProfiles());
+        }
+    } catch (error) {
+        console.error('Failed to clear Redux state:', error);
+    }
+
+    // Redirect to login
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+    }
+};
+
 const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) => {
     try {
         const refreshResponse: any = await instance.post('/auth/refresh-token');
@@ -85,15 +117,9 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         processQueue(refreshError as any, null);
         isRefreshing = false;
 
-        try {
-            localStorage.removeItem('persist:booking-care-root');
-        } catch {
-            // Ignore localStorage errors
-        }
+        // Force logout and clear all state
+        handleForceLogout();
 
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
         return Promise.reject(new Error(String(refreshError)));
     }
 };
