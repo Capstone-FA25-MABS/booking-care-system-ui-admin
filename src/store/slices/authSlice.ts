@@ -8,32 +8,65 @@ import {
     GoogleLoginRequest,
     FacebookLoginRequest,
 } from '@/types/auth.types';
-import { getRolesFromJwt } from '@/utils/jwt';
+import { getAllJwtInfo } from '@/utils/jwt';
 
-// Helper function to validate roles
+// Helper function to validate roles for admin front-end
 const validateRoles = (response: any, rejectWithValue: any) => {
     const token = response.data?.token;
     if (token) {
-        const roles = getRolesFromJwt(token).map((r) => r.toUpperCase());
+        // Get all JWT information
+        const jwtInfo = getAllJwtInfo(token);
+        const roles = jwtInfo.roles.map((r) => r.toUpperCase());
+
+        // For admin front-end, allow ADMIN, DOCTOR, STAFF roles
         const allowed = ['ADMIN', 'DOCTOR', 'STAFF'];
         const hasAllowed = roles.some((r) => allowed.includes(r));
         if (!hasAllowed) {
             return rejectWithValue(
-                'Tài khoản của bạn không có quyền truy cập vào cổng thông tin này.'
+                'Tài khoản của bạn không có quyền truy cập vào cổng quản trị này.'
             );
         }
-        // Return roles data (Redux will persist automatically)
-        return { roles };
+        // Return all JWT information
+        return {
+            roles,
+            emailConfirmed: jwtInfo.emailConfirmed,
+            phoneConfirmed: jwtInfo.phoneConfirmed,
+            hasExternalProvider: jwtInfo.hasExternalProvider,
+        };
     }
     return null; // No error
 };
 
-// Initial state - Redux Persist will automatically restore roles
+// Helper function to handle validation result (DRY principle)
+const handleValidationResult = (validationResult: any) => {
+    if (validationResult?.roles) {
+        return {
+            roles: validationResult.roles,
+            emailConfirmed: validationResult.emailConfirmed,
+            phoneConfirmed: validationResult.phoneConfirmed,
+            hasExternalProvider: validationResult.hasExternalProvider,
+        };
+    }
+    if (validationResult === null) {
+        return {
+            roles: [],
+            emailConfirmed: false,
+            phoneConfirmed: false,
+            hasExternalProvider: false,
+        };
+    }
+    return validationResult; // This is the error case
+};
+
+// Initial state - Redux Persist will automatically restore
 const initialState: AuthState = {
     roles: [],
     isAuthenticated: false,
     isLoading: false,
     error: null,
+    emailConfirmed: false,
+    phoneConfirmed: false,
+    hasExternalProvider: false,
 };
 
 // Async thunks
@@ -45,14 +78,7 @@ export const loginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult?.roles) {
-                return { roles: validationResult.roles };
-            }
-            if (validationResult === null) {
-                // No token found, return empty roles
-                return { roles: [] };
-            }
-            return validationResult; // This is the error case
+            return handleValidationResult(validationResult);
         } catch (error: any) {
             return rejectWithValue(error.message || 'Login failed');
         }
@@ -103,14 +129,7 @@ export const googleLoginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult?.roles) {
-                return { roles: validationResult.roles };
-            }
-            if (validationResult === null) {
-                // No token found, return empty roles
-                return { roles: [] };
-            }
-            return validationResult; // This is the error case
+            return handleValidationResult(validationResult);
         } catch (error: any) {
             return rejectWithValue(error.message || 'Google login failed');
         }
@@ -125,14 +144,7 @@ export const facebookLoginAsync = createAsyncThunk(
 
             // Validate roles using helper function
             const validationResult = validateRoles(response, rejectWithValue);
-            if (validationResult?.roles) {
-                return { roles: validationResult.roles };
-            }
-            if (validationResult === null) {
-                // No token found, return empty roles
-                return { roles: [] };
-            }
-            return validationResult; // This is the error case
+            return handleValidationResult(validationResult);
         } catch (error: any) {
             return rejectWithValue(error.message || 'Facebook login failed');
         }
@@ -147,6 +159,16 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+        resetAuthState: (state) => {
+            // Reset to initial state (used for force logout)
+            state.roles = [];
+            state.isAuthenticated = false;
+            state.isLoading = false;
+            state.error = null;
+            state.emailConfirmed = false;
+            state.phoneConfirmed = false;
+            state.hasExternalProvider = false;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -158,6 +180,9 @@ const authSlice = createSlice({
             .addCase(loginAsync.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.roles = action.payload?.roles || [];
+                state.emailConfirmed = action.payload?.emailConfirmed || false;
+                state.phoneConfirmed = action.payload?.phoneConfirmed || false;
+                state.hasExternalProvider = action.payload?.hasExternalProvider || false;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
@@ -204,6 +229,9 @@ const authSlice = createSlice({
             })
             .addCase(googleLoginAsync.fulfilled, (state, action) => {
                 state.roles = action.payload?.roles || [];
+                state.emailConfirmed = action.payload?.emailConfirmed || false;
+                state.phoneConfirmed = action.payload?.phoneConfirmed || false;
+                state.hasExternalProvider = action.payload?.hasExternalProvider || false;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
@@ -216,6 +244,9 @@ const authSlice = createSlice({
             })
             .addCase(facebookLoginAsync.fulfilled, (state, action) => {
                 state.roles = action.payload?.roles || [];
+                state.emailConfirmed = action.payload?.emailConfirmed || false;
+                state.phoneConfirmed = action.payload?.phoneConfirmed || false;
+                state.hasExternalProvider = action.payload?.hasExternalProvider || false;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
@@ -225,6 +256,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, resetAuthState } = authSlice.actions;
 
 export default authSlice.reducer;
