@@ -28,20 +28,20 @@ const Login: React.FC = () => {
     const [externalAuthError, setExternalAuthError] = useState<string | null>(null);
 
     // Get redirect path based on user roles
-    const handleSuccessRedirect = () => {
-        const redirectPath = getRedirectPathByRole(roles);
+    const handleSuccessRedirect = (rolesFromAuth: string[]) => {
+        const redirectPath = getRedirectPathByRole(rolesFromAuth);
         navigate(redirectPath);
     };
 
     // Google Auth Hook
     const { isLoading: googleLoading, login: triggerGoogleLogin } = useGoogleAuth(
-        handleSuccessRedirect, // onSuccess
+        handleSuccessRedirect, // onSuccess - receives roles from Google login
         () => setExternalAuthError('Đăng nhập Google thất bại. Vui lòng thử lại.') // onError
     );
 
     // Facebook Auth Hook
     const { isLoading: facebookLoading, login: triggerFacebookLogin } = useFacebookAuth(
-        handleSuccessRedirect, // onSuccess
+        handleSuccessRedirect, // onSuccess - receives roles from Facebook login
         () => setExternalAuthError('Đăng nhập Facebook thất bại. Vui lòng thử lại.') // onError
     );
 
@@ -104,9 +104,12 @@ const Login: React.FC = () => {
                 password: formData.password,
             };
 
-            await login(loginRequest);
+            // Get roles from login result
+            const result = await login(loginRequest);
+            const rolesFromAuth = result?.roles || [];
+
             toast.success('Đăng nhập thành công');
-            navigate('/dashboard');
+            handleSuccessRedirect(rolesFromAuth);
         } catch (err) {
             console.error('Login failed:', err);
         }

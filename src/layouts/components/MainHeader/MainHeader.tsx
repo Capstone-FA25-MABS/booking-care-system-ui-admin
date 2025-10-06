@@ -2,6 +2,10 @@ interface MainHeaderProps {
     handleClickMenuButton: () => void;
 }
 
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import logo from '@/assets/img/logo.svg';
 import logoSmall from '@/assets/img/logo-small.svg';
 import logoWhite from '@/assets/img/logo-white.svg';
@@ -10,8 +14,48 @@ import doctor02 from '@/assets/img/doctors/doctor-02.jpg';
 import doctor06 from '@/assets/img/doctors/doctor-06.jpg';
 import doctor07 from '@/assets/img/doctors/doctor-07.jpg';
 import user01 from '@/assets/img/users/user-01.jpg';
+import { RootState, AppDispatch } from '@/store';
+import { logoutAsync } from '@/store/slices/authSlice';
+import { fetchProfileByRole, clearAllUserProfiles } from '@/store/slices/userSlice';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+    // Use custom hook to get current user profile
+    const { profile, role, displayName, roleDisplay, avatarUrl } = useCurrentUserProfile();
+
+    // Auto-fetch user profile on component mount if authenticated and no profile exists
+    useEffect(() => {
+        if (isAuthenticated && role && !profile) {
+            // Dispatch smart fetch based on role
+            dispatch(
+                fetchProfileByRole({
+                    role: role as 'ADMIN' | 'DOCTOR' | 'STAFF',
+                })
+            );
+        }
+    }, [isAuthenticated, role, profile, dispatch]);
+
+    // Handle logout
+    const handleLogout = async () => {
+        try {
+            await dispatch(logoutAsync()).unwrap();
+            dispatch(clearAllUserProfiles()); // Clear all profiles
+            toast.success('Đăng xuất thành công');
+            navigate('/login');
+        } catch (error: any) {
+            toast.error(error?.message || 'Đăng xuất thất bại');
+        }
+    };
+
+    // Get avatar URL with fallback
+    const getAvatarUrl = () => {
+        return avatarUrl || user01;
+    };
+
     return (
         <header className="navbar-header">
             <div className="page-container topbar-menu">
@@ -362,7 +406,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             aria-expanded="false"
                         >
                             <img
-                                src={user01}
+                                src={getAvatarUrl()}
                                 width="32"
                                 className="rounded-circle d-flex"
                                 alt="user-image"
@@ -374,15 +418,15 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                         <div className="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
                             <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                                 <img
-                                    src={user01}
+                                    src={getAvatarUrl()}
                                     className="rounded-circle"
                                     width="42"
                                     height="42"
                                     alt=""
                                 />
                                 <div className="ms-2">
-                                    <p className="fw-medium text-dark mb-0">Jimmy Anderson</p>
-                                    <span className="d-block fs-13">Administrator</span>
+                                    <p className="fw-medium text-dark mb-0">{displayName}</p>
+                                    <span className="d-block fs-13">{roleDisplay}</span>
                                 </div>
                             </div>
 
@@ -419,10 +463,14 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
 
                             {/* Item */}
                             <div className="pt-2 mt-2 border-top">
-                                <a href="login.html" className="dropdown-item text-danger">
+                                <button
+                                    onClick={handleLogout}
+                                    className="dropdown-item text-danger"
+                                    type="button"
+                                >
                                     <i className="ti ti-logout me-1 fs-17 align-middle"></i>
                                     <span className="align-middle">Log Out</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
