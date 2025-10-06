@@ -59,4 +59,7 @@ export interface AuthState {
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
+    emailConfirmed: boolean;
+    phoneConfirmed: boolean;
+    hasExternalProvider: boolean;
 }
