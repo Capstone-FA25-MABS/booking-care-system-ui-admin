@@ -1,0 +1,229 @@
+.paginationContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 16px 0;
+}
+
+// Row Per Page Section
+.itemsPerPageSection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.itemsPerPageLabel {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.itemsPerPageSelect {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s ease-in-out;
+
+    &:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    &:hover {
+        border-color: #9ca3af;
+    }
+}
+
+.entriesLabel {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pageButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+
+    &:hover:not(.disabled) {
+        background-color: #f3f4f6;
+        border-color: #d1d5db;
+        color: #1f2937;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #6366f1;
+    }
+
+    &.active {
+        background-color: #6366f1;
+        border-color: #6366f1;
+        color: #ffffff;
+
+        &:hover {
+            background-color: #5b5fcf;
+            border-color: #5b5fcf;
+        }
+    }
+
+    &.disabled {
+        background-color: #f9fafb;
+        border-color: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    i {
+        font-size: 12px;
+    }
+}
+
+// Current page button - highlighted like in the image
+.currentPageButton {
+    background-color: #6366f1 !important;
+    border-color: #6366f1 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+
+    &:hover {
+        background-color: #5b5fcf !important;
+        border-color: #5b5fcf !important;
+    }
+}
+
+.prevButton,
+.nextButton {
+    font-weight: 600;
+
+    i {
+        font-size: 12px;
+    }
+}
+
+.ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .paginationContainer {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .paginationInfo {
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .pagination {
+        gap: 2px;
+    }
+
+    .pageButton {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 8px;
+        font-size: 13px;
+    }
+
+    .ellipsis {
+        min-width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pageButton {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 12px;
+    }
+
+    .ellipsis {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+    .pageButton {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+
+        &:hover:not(.disabled) {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #ffffff;
+        }
+
+        &.active {
+            background-color: #6366f1;
+            border-color: #6366f1;
+            color: #ffffff;
+        }
+
+        &.disabled {
+            background-color: #111827;
+            border-color: #1f2937;
+            color: #6b7280;
+        }
+    }
+
+    .ellipsis {
+        color: #6b7280;
+    }
+
+    .paginationInfo {
+        color: #9ca3af;
+    }
+}

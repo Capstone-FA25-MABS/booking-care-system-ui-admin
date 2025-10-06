@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Select from 'react-select';
+import Pagination from '@/components/Pagination';
 import styles from './ListDoctors.module.scss';
 
 // Import ảnh trực tiếp
@@ -85,6 +86,423 @@ const mockDoctors: Doctor[] = [
         prices: [{ serviceTypeName: 'TELEHEALTH', amount: 400000 }],
         createdAt: '2025-09-17T12:00:00.00',
     },
+    // Thêm 26 bác sĩ nữa để có tổng cộng 30 bác sĩ
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd10',
+        firstName: 'Hoàng',
+        lastName: 'Văn D',
+        email: 'dr.hoang.van.d@bookingcare.com',
+        position: { name: 'Bác sĩ tim mạch' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd4',
+        yearsOfExperience: 12,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1500000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 900000 },
+        ],
+        createdAt: '2025-09-18T08:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd11',
+        firstName: 'Vũ',
+        lastName: 'Thị E',
+        email: 'dr.vu.thi.e@bookingcare.com',
+        position: { name: 'Bác sĩ da liễu' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd5',
+        yearsOfExperience: 6,
+        status: 'ACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 800000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 500000 },
+        ],
+        createdAt: '2025-09-19T09:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd12',
+        firstName: 'Đặng',
+        lastName: 'Văn F',
+        email: 'dr.dang.van.f@bookingcare.com',
+        position: { name: 'Bác sĩ thần kinh' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd6',
+        yearsOfExperience: 15,
+        status: 'INACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 2000000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1200000 },
+        ],
+        createdAt: '2025-09-20T10:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd13',
+        firstName: 'Bùi',
+        lastName: 'Thị G',
+        email: 'dr.bui.thi.g@bookingcare.com',
+        position: { name: 'Bác sĩ mắt' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd7',
+        yearsOfExperience: 9,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1000000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 600000 },
+        ],
+        createdAt: '2025-09-21T11:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd14',
+        firstName: 'Phan',
+        lastName: 'Văn H',
+        email: 'dr.phan.van.h@bookingcare.com',
+        position: { name: 'Bác sĩ tai mũi họng' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd8',
+        yearsOfExperience: 11,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 900000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 550000 },
+        ],
+        createdAt: '2025-09-22T12:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd15',
+        firstName: 'Tôn',
+        lastName: 'Thị I',
+        email: 'dr.ton.thi.i@bookingcare.com',
+        position: { name: 'Bác sĩ sản phụ khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd9',
+        yearsOfExperience: 13,
+        status: 'ACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1300000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 700000 },
+        ],
+        createdAt: '2025-09-23T13:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd16',
+        firstName: 'Đinh',
+        lastName: 'Văn J',
+        email: 'dr.dinh.van.j@bookingcare.com',
+        position: { name: 'Bác sĩ xương khớp' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd10',
+        yearsOfExperience: 8,
+        status: 'INACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1100000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 650000 },
+        ],
+        createdAt: '2025-09-24T14:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd17',
+        firstName: 'Hồ',
+        lastName: 'Thị K',
+        email: 'dr.ho.thi.k@bookingcare.com',
+        position: { name: 'Bác sĩ tiêu hóa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd11',
+        yearsOfExperience: 7,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 950000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 580000 },
+        ],
+        createdAt: '2025-09-25T15:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd18',
+        firstName: 'Mai',
+        lastName: 'Văn L',
+        email: 'dr.mai.van.l@bookingcare.com',
+        position: { name: 'Bác sĩ nội tiết' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd12',
+        yearsOfExperience: 14,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1400000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 850000 },
+        ],
+        createdAt: '2025-09-26T16:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd19',
+        firstName: 'Lý',
+        lastName: 'Thị M',
+        email: 'dr.ly.thi.m@bookingcare.com',
+        position: { name: 'Bác sĩ tâm thần' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd13',
+        yearsOfExperience: 16,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1800000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1000000 },
+        ],
+        createdAt: '2025-09-27T17:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd20',
+        firstName: 'Cao',
+        lastName: 'Văn N',
+        email: 'dr.cao.van.n@bookingcare.com',
+        position: { name: 'Bác sĩ ung bướu' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd14',
+        yearsOfExperience: 18,
+        status: 'ACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 2500000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1500000 },
+        ],
+        createdAt: '2025-09-28T18:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd21',
+        firstName: 'Đào',
+        lastName: 'Thị O',
+        email: 'dr.dao.thi.o@bookingcare.com',
+        position: { name: 'Bác sĩ nhi khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd2',
+        yearsOfExperience: 6,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 700000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 400000 },
+        ],
+        createdAt: '2025-09-29T19:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd22',
+        firstName: 'Võ',
+        lastName: 'Văn P',
+        email: 'dr.vo.van.p@bookingcare.com',
+        position: { name: 'Bác sĩ ngoại khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd1',
+        yearsOfExperience: 9,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1200000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 700000 },
+        ],
+        createdAt: '2025-09-30T20:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd23',
+        firstName: 'Dương',
+        lastName: 'Thị Q',
+        email: 'dr.duong.thi.q@bookingcare.com',
+        position: { name: 'Bác sĩ nội khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd3',
+        yearsOfExperience: 12,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1000000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 600000 },
+        ],
+        createdAt: '2025-10-01T21:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd24',
+        firstName: 'Nguyễn',
+        lastName: 'Văn R',
+        email: 'dr.nguyen.van.r@bookingcare.com',
+        position: { name: 'Bác sĩ tim mạch' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd4',
+        yearsOfExperience: 20,
+        status: 'ACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 2000000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1200000 },
+        ],
+        createdAt: '2025-10-02T22:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd25',
+        firstName: 'Trương',
+        lastName: 'Thị S',
+        email: 'dr.truong.thi.s@bookingcare.com',
+        position: { name: 'Bác sĩ da liễu' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd5',
+        yearsOfExperience: 8,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 850000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 520000 },
+        ],
+        createdAt: '2025-10-03T23:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd26',
+        firstName: 'Lương',
+        lastName: 'Văn T',
+        email: 'dr.luong.van.t@bookingcare.com',
+        position: { name: 'Bác sĩ thần kinh' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd6',
+        yearsOfExperience: 17,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 2200000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1300000 },
+        ],
+        createdAt: '2025-10-04T00:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd27',
+        firstName: 'Hà',
+        lastName: 'Thị U',
+        email: 'dr.ha.thi.u@bookingcare.com',
+        position: { name: 'Bác sĩ mắt' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd7',
+        yearsOfExperience: 10,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1100000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 650000 },
+        ],
+        createdAt: '2025-10-05T01:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd28',
+        firstName: 'Phùng',
+        lastName: 'Văn V',
+        email: 'dr.phung.van.v@bookingcare.com',
+        position: { name: 'Bác sĩ tai mũi họng' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd8',
+        yearsOfExperience: 13,
+        status: 'ACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 950000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 570000 },
+        ],
+        createdAt: '2025-10-06T02:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd29',
+        firstName: 'Tạ',
+        lastName: 'Thị W',
+        email: 'dr.ta.thi.w@bookingcare.com',
+        position: { name: 'Bác sĩ sản phụ khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd9',
+        yearsOfExperience: 11,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1250000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 750000 },
+        ],
+        createdAt: '2025-10-07T03:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd30',
+        firstName: 'Quách',
+        lastName: 'Văn X',
+        email: 'dr.quach.van.x@bookingcare.com',
+        position: { name: 'Bác sĩ xương khớp' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd10',
+        yearsOfExperience: 15,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1600000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 950000 },
+        ],
+        createdAt: '2025-10-08T04:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd31',
+        firstName: 'Vương',
+        lastName: 'Thị Y',
+        email: 'dr.vuong.thi.y@bookingcare.com',
+        position: { name: 'Bác sĩ tiêu hóa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd11',
+        yearsOfExperience: 7,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 900000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 550000 },
+        ],
+        createdAt: '2025-10-09T05:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd32',
+        firstName: 'Tô',
+        lastName: 'Văn Z',
+        email: 'dr.to.van.z@bookingcare.com',
+        position: { name: 'Bác sĩ nội tiết' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd12',
+        yearsOfExperience: 19,
+        status: 'ACTIVE',
+        avatarUrl: doctor03,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1700000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1000000 },
+        ],
+        createdAt: '2025-10-10T06:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd33',
+        firstName: 'Lâm',
+        lastName: 'Thị AA',
+        email: 'dr.lam.thi.aa@bookingcare.com',
+        position: { name: 'Bác sĩ tâm thần' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd13',
+        yearsOfExperience: 14,
+        status: 'ACTIVE',
+        avatarUrl: doctor04,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 1900000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1100000 },
+        ],
+        createdAt: '2025-10-11T07:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd34',
+        firstName: 'Thạch',
+        lastName: 'Văn BB',
+        email: 'dr.thach.van.bb@bookingcare.com',
+        position: { name: 'Bác sĩ ung bướu' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd14',
+        yearsOfExperience: 21,
+        status: 'ACTIVE',
+        avatarUrl: doctor01,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 2800000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 1700000 },
+        ],
+        createdAt: '2025-10-12T08:00:00.00',
+    },
+    {
+        id: 'bd33ae9c-eed1-4b39-aa2f-015c96f77dd35',
+        firstName: 'Sơn',
+        lastName: 'Thị CC',
+        email: 'dr.son.thi.cc@bookingcare.com',
+        position: { name: 'Bác sĩ nhi khoa' },
+        specialtyId: '25e24629-2bd5-4849-934c-63160ef1fcd2',
+        yearsOfExperience: 5,
+        status: 'INACTIVE',
+        avatarUrl: doctor02,
+        prices: [
+            { serviceTypeName: 'IN_PERSON', amount: 650000 },
+            { serviceTypeName: 'TELEHEALTH', amount: 380000 },
+        ],
+        createdAt: '2025-10-13T09:00:00.00',
+    },
 ];
 
 const selectCustomStyles = {
@@ -143,7 +561,11 @@ const selectCustomStyles = {
         ...provided,
         borderRadius: '8px',
         boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        zIndex: 9999,
+        zIndex: 99999,
+    }),
+    menuPortal: (provided: any) => ({
+        ...provided,
+        zIndex: 99999,
     }),
 };
 
@@ -158,6 +580,30 @@ const ListDoctors: React.FC = () => {
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+
+    // Pagination logic
+    const paginatedDoctors = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return doctors.slice(startIndex, endIndex);
+    }, [doctors, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(doctors.length / itemsPerPage);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (newItemsPerPage: number) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1); // Reset về trang 1 khi thay đổi items per page
+    };
 
     const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -213,6 +659,7 @@ const ListDoctors: React.FC = () => {
         }
 
         setDoctors(filteredDoctors);
+        setCurrentPage(1); // Reset về trang 1 khi filter
         setShowFilterModal(false);
     };
 
@@ -224,6 +671,7 @@ const ListDoctors: React.FC = () => {
         setSelectedPrices([]);
         setSelectedStatuses([]);
         setDoctors(originalDoctors);
+        setCurrentPage(1); // Reset về trang 1 khi clear filter
     };
 
     const handleResetFilter = (type: string) => {
@@ -249,6 +697,34 @@ const ListDoctors: React.FC = () => {
             default:
                 break;
         }
+    };
+
+    // Delete functions
+    const handleDeleteClick = (doctor: Doctor) => {
+        setDoctorToDelete(doctor);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (doctorToDelete) {
+            // Remove doctor from list
+            setDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorToDelete.id));
+            setOriginalDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorToDelete.id));
+
+            // Close modal
+            setShowDeleteModal(false);
+            setDoctorToDelete(null);
+
+            // Show success message
+            alert(
+                `Đã xóa bác sĩ ${doctorToDelete.firstName} ${doctorToDelete.lastName} thành công!`
+            );
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setShowDeleteModal(false);
+        setDoctorToDelete(null);
     };
 
     return (
@@ -287,20 +763,20 @@ const ListDoctors: React.FC = () => {
                         </div>
                         <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
                             <Link
-                                to="/clinic/doctors"
+                                to="/hospitals/doctors"
                                 className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
                             >
                                 <i className="ti ti-list fs-14 text-body"></i>
                             </Link>
                             <Link
-                                to="/clinic/doctors"
+                                to="/hospitals/doctors"
                                 className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
                             >
                                 <i className="ti ti-layout-grid fs-14 text-body"></i>
                             </Link>
                         </div>
                         <Link
-                            to="/clinic/doctors/add"
+                            to="/hospitals/doctors/add"
                             className="btn btn-primary ms-2 fs-13 btn-md"
                         >
                             <i className="ti ti-plus me-1"></i>Thêm Bác Sĩ
@@ -389,7 +865,7 @@ const ListDoctors: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {doctors.map((doctor) => (
+                            {paginatedDoctors.map((doctor) => (
                                 <tr key={doctor.id}>
                                     <td>
                                         <div className="d-flex align-items-center">
@@ -470,7 +946,7 @@ const ListDoctors: React.FC = () => {
                                                 <ul className="dropdown-menu">
                                                     <li>
                                                         <Link
-                                                            to={`/clinic/doctors/edit/${doctor.id}`}
+                                                            to={`/hospitals/doctors/edit/${doctor.id}`}
                                                             className="dropdown-item d-flex align-items-center"
                                                         >
                                                             Sửa
@@ -479,8 +955,9 @@ const ListDoctors: React.FC = () => {
                                                     <li>
                                                         <button
                                                             className="dropdown-item d-flex align-items-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete_modal"
+                                                            onClick={() =>
+                                                                handleDeleteClick(doctor)
+                                                            }
                                                             type="button"
                                                         >
                                                             Xóa
@@ -496,6 +973,19 @@ const ListDoctors: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                itemsPerPage={itemsPerPage}
+                totalItems={doctors.length}
+                showInfo={false}
+                showItemsPerPage={true}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                itemsPerPageOptions={[10, 25, 50, 100]}
+            />
 
             <div className="footer text-center bg-white p-2 border-top">
                 <p className="text-dark mb-0">
@@ -517,21 +1007,23 @@ const ListDoctors: React.FC = () => {
                         <div className={`modal-content ${styles.modalContent}`}>
                             <div className={`modal-header ${styles.modalHeader}`}>
                                 <h4 className={styles.modalTitle}>Lọc Bác Sĩ</h4>
-                                <button
-                                    className={styles.clearAll}
-                                    onClick={() => {
-                                        handleClearFilters();
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
+                                <div className="d-flex align-items-center">
+                                    <button
+                                        className={styles.clearAll}
+                                        onClick={() => {
                                             handleClearFilters();
-                                        }
-                                    }}
-                                    type="button"
-                                >
-                                    Xóa Tất Cả
-                                </button>
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleClearFilters();
+                                            }
+                                        }}
+                                        type="button"
+                                    >
+                                        Xóa Tất Cả
+                                    </button>
+                                </div>
                             </div>
                             <div className={styles.modalBody}>
                                 {/* Bác sĩ */}
@@ -559,6 +1051,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={originalDoctors
                                             .map((doctor) => ({
                                                 value: doctor.id,
@@ -604,6 +1097,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={[
                                             ...new Set(
                                                 originalDoctors.map(
@@ -661,6 +1155,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={[
                                             ...new Set(
                                                 originalDoctors.map((doctor) => doctor.specialtyId)
@@ -717,6 +1212,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={[
                                             ...new Set(
                                                 originalDoctors.flatMap((doctor) =>
@@ -774,6 +1270,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={[
                                             { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
                                             { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
@@ -817,6 +1314,7 @@ const ListDoctors: React.FC = () => {
                                         isMulti
                                         classNamePrefix="select2"
                                         styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
                                         value={[
                                             { value: 'ACTIVE', label: 'Có mặt' },
                                             { value: 'INACTIVE', label: 'Không có mặt' },
@@ -856,6 +1354,49 @@ const ListDoctors: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <div
+                className={`modal fade ${showDeleteModal ? 'show' : ''}`}
+                id="delete_modal"
+                style={{ display: showDeleteModal ? 'block' : 'none' }}
+            >
+                <div className="modal-dialog modal-dialog-centered modal-sm">
+                    <div className="modal-content">
+                        <div className="modal-body text-center position-relative">
+                            <div className="mb-3 position-relative z-1">
+                                <span className="avatar avatar-lg bg-danger text-white">
+                                    <i className="ti ti-trash fs-24"></i>
+                                </span>
+                            </div>
+                            <h5 className="fw-bold mb-1 position-relative z-1">Xác Nhận Xóa</h5>
+                            <p className="mb-3 position-relative z-1">
+                                Bạn có chắc chắn muốn xóa bác sĩ{' '}
+                                <strong>
+                                    {doctorToDelete?.firstName} {doctorToDelete?.lastName}
+                                </strong>
+                                ?
+                            </p>
+                            <div className="d-flex justify-content-center">
+                                <a
+                                    href="javascript:void(0);"
+                                    className="btn btn-light position-relative z-1 me-3"
+                                    onClick={handleDeleteCancel}
+                                >
+                                    Hủy
+                                </a>
+                                <a
+                                    href="javascript:void(0);"
+                                    className="btn btn-danger position-relative z-1"
+                                    onClick={handleDeleteConfirm}
+                                >
+                                    Có, Xóa
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

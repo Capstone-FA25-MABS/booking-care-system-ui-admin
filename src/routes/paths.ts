@@ -18,9 +18,9 @@ export const PATHS = {
         SETTINGS: 'settings',
     },
 
-    // Clinic paths
-    CLINIC: {
-        ROOT: '/clinic',
+    // Hospital paths
+    HOSPITAL: {
+        ROOT: '/hospitals',
         DASHBOARD: 'dashboard',
         DOCTORS: {
             ROOT: 'doctors',

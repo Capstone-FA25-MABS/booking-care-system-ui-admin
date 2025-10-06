@@ -1,6 +1,6 @@
 import { buildPath, PATHS } from './paths';
 
-export const listGroupMenuItemClinic: Array<{
+export const listGroupMenuItemHospital: Array<{
     title: string;
     items: Array<{
         label: string;
@@ -10,50 +10,50 @@ export const listGroupMenuItemClinic: Array<{
     }>;
 }> = [
     {
-        title: 'Clinic',
+        title: 'Hospital',
         items: [
             {
-                label: 'Doctors',
+                label: 'Bác sĩ',
                 icon: 'ti ti-user-plus',
                 subItems: [
                     {
-                        label: 'Doctors',
-                        link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.ROOT),
+                        label: 'Danh sách bác sĩ',
+                        link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTORS.ROOT),
                     },
                     // { label: 'Doctor Details', link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.DETAILS) },
                     {
-                        label: 'Add Doctor',
+                        label: 'Thêm bác sĩ',
                         link: buildPath(
-                            PATHS.CLINIC.ROOT,
-                            PATHS.CLINIC.DOCTORS.ROOT,
-                            PATHS.CLINIC.DOCTORS.ADD
+                            PATHS.HOSPITAL.ROOT,
+                            PATHS.HOSPITAL.DOCTORS.ROOT,
+                            PATHS.HOSPITAL.DOCTORS.ADD
                         ),
                     },
                     // { label: 'Doctor Schedule', link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.SCHEDULE) },
                 ],
             },
             {
-                label: 'Appointments',
+                label: 'Lịch hẹn',
                 icon: 'ti ti-calendar-check',
                 subItems: [
                     {
-                        label: 'Appointments',
-                        link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.APPOINTMENTS.ROOT),
+                        label: 'Danh sách lịch hẹn',
+                        link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.APPOINTMENTS.ROOT),
                     },
                     {
-                        label: 'New Appointment',
+                        label: 'Thêm lịch hẹn',
                         link: buildPath(
-                            PATHS.CLINIC.ROOT,
-                            PATHS.CLINIC.APPOINTMENTS.ROOT,
-                            PATHS.CLINIC.APPOINTMENTS.NEW
+                            PATHS.HOSPITAL.ROOT,
+                            PATHS.HOSPITAL.APPOINTMENTS.ROOT,
+                            PATHS.HOSPITAL.APPOINTMENTS.NEW
                         ),
                     },
                     {
                         label: 'Calendar',
                         link: buildPath(
-                            PATHS.CLINIC.ROOT,
-                            PATHS.CLINIC.APPOINTMENTS.ROOT,
-                            PATHS.CLINIC.APPOINTMENTS.CALENDAR
+                            PATHS.HOSPITAL.ROOT,
+                            PATHS.HOSPITAL.APPOINTMENTS.ROOT,
+                            PATHS.HOSPITAL.APPOINTMENTS.CALENDAR
                         ),
                     },
                 ],
@@ -86,7 +86,7 @@ export const listGroupMenuItemClinic: Array<{
             {
                 label: 'Messages',
                 icon: 'ti ti-messages',
-                link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.MESSAGES),
+                link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.MESSAGES),
             },
         ],
     },

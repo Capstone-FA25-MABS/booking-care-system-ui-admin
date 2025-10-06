@@ -1,0 +1,77 @@
+// AddDoctor Component Styles
+
+// Profile image styles removed - using inline styles now
+
+// Section Border Bottom
+.section-border {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-border:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+// React Select Custom Styles (using select2 prefix like ListDoctors)
+:global(.select2) {
+    // Error state for select2
+    &.is-invalid .select2__control {
+        border-color: #dc3545 !important;
+
+        &:hover,
+        &:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+        }
+    }
+}
+
+// Language selection cards - using inline styles now
+
+// Service price cards
+.service-price-card {
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Form validation
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+
+// Button styles
+.btn {
+    transition: all 0.3s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+}
+
+// Card styles
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+}
+
+// Icon styles
+.feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
