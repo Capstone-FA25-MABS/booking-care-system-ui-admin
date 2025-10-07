@@ -1190,11 +1190,15 @@ const ListAppointments: React.FC = () => {
                         <div className="row">
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-id"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Mã Lịch Hẹn <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-group">
                                         <input
+                                            id="appointment-id"
                                             type="text"
                                             className="form-control rounded bg-light"
                                             value={newAppointment.appointmentId}
@@ -1211,11 +1215,15 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="patient-dropdown"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Bệnh Nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
+                                            id="patient-dropdown"
                                             type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
@@ -1276,11 +1284,15 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-type-dropdown"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Loại Khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
+                                            id="appointment-type-dropdown"
                                             type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
@@ -1304,7 +1316,7 @@ const ListAppointments: React.FC = () => {
                                             </div>
                                             <ul className="mb-3 list-style-none">
                                                 {appointmentTypes.map((type, index) => (
-                                                    <li key={`type-${index}`}>
+                                                    <li key={`type-${type}-${index}`}>
                                                         <label
                                                             htmlFor={`type-${index}`}
                                                             className="dropdown-item px-2 d-flex align-items-center text-dark"
@@ -1334,12 +1346,16 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-6">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-date"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         {' '}
                                         Ngày Khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-icon-end position-relative">
                                         <input
+                                            id="appointment-date"
                                             type="text"
                                             className="form-control datetimepicker"
                                             placeholder="dd/mm/yyyy"
@@ -1360,12 +1376,16 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-6">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-time"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         {' '}
                                         Giờ <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-icon-end position-relative">
                                         <input
+                                            id="appointment-time"
                                             type="text"
                                             className="form-control timepicker"
                                             placeholder="-- : --"
@@ -1387,10 +1407,14 @@ const ListAppointments: React.FC = () => {
                             <div className="col-lg-12">
                                 <div className="mb-3">
                                     <div>
-                                        <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                        <label
+                                            htmlFor="appointment-reason"
+                                            className="form-label mb-1 text-dark fs-14 fw-medium"
+                                        >
                                             Lý Do Khám
                                         </label>
                                         <textarea
+                                            id="appointment-reason"
                                             rows={4}
                                             className="form-control rounded"
                                             value={newAppointment.reason}
@@ -1407,11 +1431,15 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-status-dropdown"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Trạng Thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
+                                            id="appointment-status-dropdown"
                                             type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
@@ -1435,7 +1463,7 @@ const ListAppointments: React.FC = () => {
                                             </div>
                                             <ul className="mb-3 list-style-none">
                                                 {appointmentStatuses.map((status, index) => (
-                                                    <li key={`status-${index}`}>
+                                                    <li key={`status-${status}-${index}`}>
                                                         <label
                                                             htmlFor={`status-${index}`}
                                                             className="dropdown-item px-2 d-flex align-items-center text-dark"
@@ -1633,7 +1661,7 @@ const ListAppointments: React.FC = () => {
                                             </div>
                                             <ul className="mb-0 list-style-none">
                                                 {appointmentTypes.map((type, index) => (
-                                                    <li key={`edit-type-${index}`}>
+                                                    <li key={`edit-type-${type}-${index}`}>
                                                         <label
                                                             htmlFor={`edit-type-${index}`}
                                                             className="dropdown-item px-2 d-flex align-items-center text-dark"
@@ -1767,7 +1795,7 @@ const ListAppointments: React.FC = () => {
                                             </div>
                                             <ul className="mb-3 list-style-none">
                                                 {appointmentStatuses.map((status, index) => (
-                                                    <li key={`edit-status-${index}`}>
+                                                    <li key={`edit-status-${status}-${index}`}>
                                                         <label
                                                             htmlFor={`edit-status-${index}`}
                                                             className="dropdown-item px-2 d-flex align-items-center text-dark"
@@ -1947,7 +1975,7 @@ const ListAppointments: React.FC = () => {
                                             </div>
                                             <ul className="mb-0 list-style-none">
                                                 {appointmentStatuses.map((status, index) => (
-                                                    <li key={`view-status-${index}`}>
+                                                    <li key={`view-status-${status}-${index}`}>
                                                         <label
                                                             htmlFor={`view-status-${index}`}
                                                             className="dropdown-item px-2 d-flex align-items-center text-dark"

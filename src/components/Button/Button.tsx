@@ -56,11 +56,10 @@ export const Button: React.FC<ButtonProps> = ({
     const renderIcon = () => {
         if (loading) {
             return (
-                <span
+                <output
                     className="spinner-border spinner-border-sm me-2"
-                    role="status"
                     aria-hidden="true"
-                ></span>
+                ></output>
             );
         }
         if (icon) {

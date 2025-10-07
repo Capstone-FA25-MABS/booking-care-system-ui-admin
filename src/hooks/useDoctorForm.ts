@@ -33,7 +33,7 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
 
     const handleLanguageToggle = useCallback((languageId: Guid) => {
         setFormData((prev) => {
-            const existingIndex = prev.languageIds.findIndex((id) => id === languageId);
+            const existingIndex = prev.languageIds.indexOf(languageId);
 
             if (existingIndex >= 0) {
                 // Remove language

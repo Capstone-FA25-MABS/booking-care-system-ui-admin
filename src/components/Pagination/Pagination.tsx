@@ -80,7 +80,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                 {getPageNumbers().map((page, index) => {
                     if (page === '...') {
                         return (
-                            <span key={`ellipsis-${index}`} className={styles.ellipsis}>
+                            <span
+                                key={`ellipsis-${index}-${currentPage}`}
+                                className={styles.ellipsis}
+                            >
                                 ...
                             </span>
                         );
@@ -91,7 +94,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 
                     return (
                         <button
-                            key={pageNumber}
+                            key={`page-${pageNumber}`}
                             className={`${styles.pageButton} ${isActive ? styles.active : ''}`}
                             onClick={() => onPageChange(pageNumber)}
                             aria-label={`Trang ${pageNumber}`}
