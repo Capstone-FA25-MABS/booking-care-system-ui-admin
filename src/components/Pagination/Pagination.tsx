@@ -15,47 +15,45 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 
     // Tạo danh sách số trang để hiển thị
     const getPageNumbers = () => {
-        const pages: (number | string)[] = [];
         const maxVisiblePages = 7; // Số trang tối đa hiển thị
 
         if (totalPages <= maxVisiblePages) {
             // Nếu tổng số trang <= 7, hiển thị tất cả
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
-        } else {
-            // Logic hiển thị trang với ellipsis
-            if (currentPage <= 4) {
-                // Trang hiện tại ở đầu
-                for (let i = 1; i <= 5; i++) {
-                    pages.push(i);
-                }
-                pages.push('...');
-                pages.push(totalPages - 1);
-                pages.push(totalPages);
-            } else if (currentPage >= totalPages - 3) {
-                // Trang hiện tại ở cuối
-                pages.push(1);
-                pages.push(2);
-                pages.push('...');
-                for (let i = totalPages - 4; i <= totalPages; i++) {
-                    pages.push(i);
-                }
-            } else {
-                // Trang hiện tại ở giữa
-                pages.push(1);
-                pages.push(2);
-                pages.push('...');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    pages.push(i);
-                }
-                pages.push('...');
-                pages.push(totalPages - 1);
-                pages.push(totalPages);
-            }
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
         }
 
-        return pages;
+        // Logic hiển thị trang với ellipsis
+        if (currentPage <= 4) {
+            // Trang hiện tại ở đầu
+            return [1, 2, 3, 4, 5, '...', totalPages - 1, totalPages];
+        }
+
+        if (currentPage >= totalPages - 3) {
+            // Trang hiện tại ở cuối
+            return [
+                1,
+                2,
+                '...',
+                totalPages - 4,
+                totalPages - 3,
+                totalPages - 2,
+                totalPages - 1,
+                totalPages,
+            ];
+        }
+
+        // Trang hiện tại ở giữa
+        return [
+            1,
+            2,
+            '...',
+            currentPage - 1,
+            currentPage,
+            currentPage + 1,
+            '...',
+            totalPages - 1,
+            totalPages,
+        ];
     };
 
     return (
@@ -76,7 +74,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                 {getPageNumbers().map((page, index) => {
                     if (page === '...') {
                         return (
-                            <span key={`ellipsis-${index}`} className={styles.ellipsis}>
+                            <span
+                                key={`ellipsis-${currentPage}-${index}`}
+                                className={styles.ellipsis}
+                            >
                                 ...
                             </span>
                         );
@@ -87,7 +88,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 
                     return (
                         <button
-                            key={pageNumber}
+                            key={`page-${pageNumber}`}
                             className={`${styles.pageButton} ${isActive ? styles.active : ''}`}
                             onClick={() => onPageChange(pageNumber)}
                             aria-label={`Trang ${pageNumber}`}
@@ -101,7 +102,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                 {/* Nút Next */}
                 <button
                     className={`${styles.pageButton} ${styles.nextButton} ${currentPage === totalPages ? styles.disabled : ''}`}
-                    onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
+                    onClick={() => {
+                        if (currentPage < totalPages) {
+                            onPageChange(currentPage + 1);
+                        }
+                    }}
                     disabled={currentPage === totalPages}
                     aria-label="Trang tiếp theo"
                 >

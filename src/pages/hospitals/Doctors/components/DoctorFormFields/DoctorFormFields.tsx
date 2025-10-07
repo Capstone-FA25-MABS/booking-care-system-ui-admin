@@ -103,11 +103,12 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                         <div className="col-md-9">
                             <div className="row">
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label">
+                                    <label htmlFor="firstName" className="form-label">
                                         <i className="feather-user me-1"></i>
                                         Tên <span className="text-danger">*</span>
                                     </label>
                                     <input
+                                        id="firstName"
                                         type="text"
                                         className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
                                         name="firstName"

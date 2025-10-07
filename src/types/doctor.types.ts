@@ -1,45 +1,44 @@
 // Shared types for Doctor forms
-export type Guid = string; // UUID/GUID type alias
 
 export interface Position {
-    id: Guid;
+    id: string;
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface Specialty {
-    id: Guid;
+    id: string;
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface Language {
-    id: Guid;
+    id: string;
     name: string;
     flag: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface ServiceType {
-    id: Guid;
+    id: string;
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface Hospital {
-    id: Guid;
+    id: string;
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface DoctorPrice {
-    serviceTypeId: Guid;
+    serviceTypeId: string;
     amount: number;
     note: string;
 }
 
 export interface DoctorLanguage {
-    languageId: Guid;
+    languageId: string;
     proficiency: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'NATIVE';
 }
 
@@ -54,9 +53,9 @@ export interface DoctorFormData {
     bio: string;
     yearsOfExperience: number;
     avatar: File | string | null;
-    positionId: Guid;
-    specialtyId: Guid;
-    hospitalId: Guid;
-    languageIds: Guid[];
+    positionId: string;
+    specialtyId: string;
+    hospitalId: string;
+    languageIds: string[];
     servicePrices: DoctorPrice[];
 }

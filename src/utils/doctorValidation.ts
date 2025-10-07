@@ -47,7 +47,7 @@ export const validateDoctorForm = (
         errors.servicePrices = 'Vui lòng thêm ít nhất một dịch vụ';
     } else {
         // Validate each service price
-        formData.servicePrices.forEach((servicePrice, index) => {
+        for (const [index, servicePrice] of formData.servicePrices.entries()) {
             if (!servicePrice.serviceTypeId) {
                 errors[`servicePrices_${index}_serviceTypeId` as keyof DoctorFormData] =
                     'Vui lòng chọn loại dịch vụ';
@@ -56,7 +56,7 @@ export const validateDoctorForm = (
                 errors[`servicePrices_${index}_amount` as keyof DoctorFormData] =
                     'Giá dịch vụ phải lớn hơn 0';
             }
-        });
+        }
     }
 
     return errors;

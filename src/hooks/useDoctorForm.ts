@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice, Guid } from '../types/doctor.types';
+import { DoctorFormData, DoctorPrice } from '../types/doctor.types';
 import { validateDoctorForm } from '../utils/doctorValidation';
 import { emptyGuid } from '../utils/guid';
 
@@ -31,9 +31,9 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
         [errors]
     );
 
-    const handleLanguageToggle = useCallback((languageId: Guid) => {
+    const handleLanguageToggle = useCallback((languageId: string) => {
         setFormData((prev) => {
-            const existingIndex = prev.languageIds.findIndex((id) => id === languageId);
+            const existingIndex = prev.languageIds.indexOf(languageId);
 
             if (existingIndex >= 0) {
                 // Remove language

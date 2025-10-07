@@ -46,7 +46,7 @@ export const useListPage = <T extends Record<string, any>>({
         }
 
         // Apply filters
-        Object.entries(filters).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(filters)) {
             if (value !== '' && value !== null && value !== undefined) {
                 filtered = filtered.filter((item) => {
                     const itemValue = item[key];
@@ -56,7 +56,7 @@ export const useListPage = <T extends Record<string, any>>({
                     return itemValue === value;
                 });
             }
-        });
+        }
 
         return filtered;
     }, [data, searchTerm, searchFields, filters]);

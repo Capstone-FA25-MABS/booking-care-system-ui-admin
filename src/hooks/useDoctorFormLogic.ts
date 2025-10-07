@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice, Guid } from '@/types/doctor.types';
+import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
 import { emptyGuid } from '@/utils/guid';
 
 export interface UseDoctorFormLogicProps {
@@ -34,7 +34,7 @@ export const useDoctorFormLogic = ({
         [errors]
     );
 
-    const handleLanguageToggle = useCallback((languageId: Guid) => {
+    const handleLanguageToggle = useCallback((languageId: string) => {
         setFormData((prev) => ({
             ...prev,
             languageIds: prev.languageIds.includes(languageId)
@@ -100,11 +100,11 @@ export const useDoctorFormLogic = ({
             'hospitalId',
         ];
 
-        requiredFields.forEach((field) => {
+        for (const field of requiredFields) {
             if (!formData[field as keyof DoctorFormData]) {
                 newErrors[field as keyof typeof newErrors] = 'Trường này là bắt buộc';
             }
-        });
+        }
 
         if (
             formData.email &&
@@ -127,14 +127,14 @@ export const useDoctorFormLogic = ({
                 : 'Vui lòng thêm ít nhất một loại dịch vụ';
         }
 
-        formData.servicePrices.forEach((price, index) => {
+        for (const [index, price] of formData.servicePrices.entries()) {
             if (!price.serviceTypeId) {
                 newErrors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
             }
             if (price.amount <= 0) {
                 newErrors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
             }
-        });
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

@@ -895,7 +895,7 @@ const ListAppointments: React.FC = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                Sắp Tới
+                                Sắp Tới{' '}
                                 <span
                                     className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
                                 >
@@ -909,7 +909,7 @@ const ListAppointments: React.FC = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                Đã Hủy
+                                Đã Hủy{' '}
                                 <span
                                     className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
                                 >
@@ -923,7 +923,7 @@ const ListAppointments: React.FC = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                Hoàn Thành
+                                Hoàn Thành{' '}
                                 <span
                                     className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
                                 >
@@ -937,7 +937,7 @@ const ListAppointments: React.FC = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                Đang Khám
+                                Đang Khám{' '}
                                 <span
                                     className={`badge ${activeStatusTab === 'pending' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
                                 >
@@ -1192,11 +1192,15 @@ const ListAppointments: React.FC = () => {
                         <div className="row">
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointmentId"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Mã Lịch Hẹn <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-group">
                                         <input
+                                            id="appointmentId"
                                             type="text"
                                             className="form-control rounded bg-light"
                                             value={newAppointment.appointmentId}
@@ -1213,11 +1217,15 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="patientSelect"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Bệnh Nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
+                                            id="patientSelect"
                                             type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
