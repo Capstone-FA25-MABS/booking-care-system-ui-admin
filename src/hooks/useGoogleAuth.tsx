@@ -9,7 +9,7 @@ interface UseGoogleAuthReturn {
 }
 
 export const useGoogleAuth = (
-    onSuccess?: () => void,
+    onSuccess?: (roles: string[]) => void,
     onError?: (error: any) => void
 ): UseGoogleAuthReturn => {
     const [isLoading, setIsLoading] = useState(false);
@@ -21,11 +21,12 @@ export const useGoogleAuth = (
             try {
                 setIsLoading(true);
 
-                // Use auth hook's googleLogin method
-                await googleLogin({ accessToken: tokenResponse.access_token });
+                // Use auth hook's googleLogin method and get roles from response
+                const result = await googleLogin({ accessToken: tokenResponse.access_token });
+                const roles = result?.roles || [];
 
                 toast.success('Đăng nhập thành công');
-                onSuccess?.();
+                onSuccess?.(roles);
             } catch (error) {
                 console.error('Google authentication failed:', error);
                 toast.error(error as string);

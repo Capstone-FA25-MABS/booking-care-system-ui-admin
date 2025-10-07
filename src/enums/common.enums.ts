@@ -32,3 +32,28 @@ export enum Gender {
      */
     OTHER,
 }
+
+/**
+ * User roles in the system
+ */
+export enum Role {
+    /**
+     * Administrator role with full system access.
+     */
+    ADMIN = 'ADMIN',
+
+    /**
+     * Doctor role for medical professionals.
+     */
+    DOCTOR = 'DOCTOR',
+
+    /**
+     * Staff role for hospital/clinic staff.
+     */
+    STAFF = 'STAFF',
+
+    /**
+     * Patient role for end users.
+     */
+    PATIENT = 'PATIENT',
+}

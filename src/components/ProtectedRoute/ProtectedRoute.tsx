@@ -1,12 +1,12 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { UserRole } from '@/types/role.types';
+import { Role } from '@/enums/common.enums';
 import { PATHS } from '@/routes/paths';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
-    allowedRoles: UserRole[];
+    allowedRoles: Role[];
 }
 
 /**
@@ -23,7 +23,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     }
 
     // Check if user has any of the allowed roles
-    const hasAccess = roles.some((role) => allowedRoles.includes(role.toUpperCase() as UserRole));
+    const hasAccess = roles.some((role) => allowedRoles.includes(role.toUpperCase() as Role));
 
     // No access -> redirect to appropriate dashboard or unauthorized page
     if (!hasAccess) {
