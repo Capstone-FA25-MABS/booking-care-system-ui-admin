@@ -4,7 +4,7 @@ import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
-import SortDropdown from '@/components/SortDropdown';
+import FilterSortToolbar from '@/components/FilterSortToolbar';
 import ExportDropdown from '@/components/ExportDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import styles from './ListDoctors.module.scss';
@@ -722,8 +722,9 @@ const ListDoctors: React.FC = () => {
                         <div className="d-flex align-items-center flex-wrap gap-2">
                             <div className="table-search d-flex align-items-center mb-0">
                                 <div className="search-input">
-                                    <label>
+                                    <label htmlFor="doctorSearch" aria-label="Search doctors">
                                         <input
+                                            id="doctorSearch"
                                             type="search"
                                             className="form-control form-control-sm"
                                             placeholder="Search"
@@ -735,26 +736,17 @@ const ListDoctors: React.FC = () => {
                         </div>
                     </div>
                     <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
-                        <Button
-                            variant="white"
-                            size="md"
-                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                            icon="ti ti-filter text-gray-5"
-                            onClick={() => setShowFilterModal(true)}
-                        >
-                            Lọc
-                        </Button>
-                        <SortDropdown
-                            options={[
+                        <FilterSortToolbar
+                            onFilterClick={() => setShowFilterModal(true)}
+                            sortOptions={[
                                 { value: 'recent', label: 'Mới Thêm Gần Đây' },
                                 { value: 'asc', label: 'Tăng Dần' },
                                 { value: 'desc', label: 'Giảm Dần' },
                                 { value: 'last-month', label: 'Tháng Trước' },
                                 { value: 'last-7-days', label: '7 Ngày Qua' },
                             ]}
-                            selectedValue={sortBy}
-                            onSelect={setSortBy}
-                            placeholder="Sắp xếp theo:"
+                            selectedSort={sortBy}
+                            onSortChange={setSortBy}
                         />
                     </div>
                 </div>

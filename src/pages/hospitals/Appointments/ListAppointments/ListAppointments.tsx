@@ -5,7 +5,7 @@ import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
-import SortDropdown from '@/components/SortDropdown';
+import FilterSortToolbar from '@/components/FilterSortToolbar';
 import ExportDropdown from '@/components/ExportDropdown';
 import StatusBadge from '@/components/StatusBadge';
 
@@ -881,7 +881,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Sắp Tới
+                            Sắp Tới{' '}
                             <span
                                 className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
                             >
@@ -933,26 +933,17 @@ const ListAppointments: React.FC = () => {
                     </div>
 
                     <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
-                        <Button
-                            variant="white"
-                            size="md"
-                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                            icon="ti ti-filter text-gray-5"
-                            onClick={() => setShowFilterModal(true)}
-                        >
-                            Lọc
-                        </Button>
-                        <SortDropdown
-                            options={[
+                        <FilterSortToolbar
+                            onFilterClick={() => setShowFilterModal(true)}
+                            sortOptions={[
                                 { value: 'recent', label: 'Gần đây' },
                                 { value: 'asc', label: 'Tăng dần' },
                                 { value: 'desc', label: 'Giảm dần' },
                                 { value: 'last-month', label: 'Tháng trước' },
                                 { value: 'last-7-days', label: '7 ngày qua' },
                             ]}
-                            selectedValue={sortBy}
-                            onSelect={setSortBy}
-                            placeholder="Sắp xếp theo:"
+                            selectedSort={sortBy}
+                            onSortChange={setSortBy}
                         />
                     </div>
                 </div>
@@ -1912,7 +1903,7 @@ const ListAppointments: React.FC = () => {
                                         className="form-check-input m-0 me-2"
                                         type="checkbox"
                                         defaultChecked
-                                    />
+                                    />{' '}
                                     <span className="visually-hidden">Khám từ xa</span>
                                 </label>
                             </div>

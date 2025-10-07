@@ -64,6 +64,7 @@ const AvatarSection: React.FC<{
                     htmlFor="profileImage"
                     className="position-absolute top-0 start-0 w-100 h-100"
                     style={{ cursor: 'pointer' }}
+                    aria-label="Upload profile image"
                 ></label>
             </div>
             <p className="mt-2 mb-0 text-muted">Ảnh đại diện</p>
@@ -222,11 +223,12 @@ const ProfessionalInfoSection: React.FC<{
             <h5 className="card-title mb-4">Thông tin chuyên môn</h5>
             <div className="row">
                 <div className="col-md-4 mb-3">
-                    <label className="form-label">
-                        <i className="feather-briefcase me-1"></i>
-                        Chức vụ <span className="text-danger">*</span>
+                    <label htmlFor="positionId" className="form-label">
+                        <i className="feather-briefcase me-1"></i> Chức vụ{' '}
+                        <span className="text-danger">*</span>
                     </label>
                     <Select
+                        inputId="positionId"
                         options={mockPositions.map((position) => ({
                             value: position.id,
                             label: position.name,
@@ -259,11 +261,12 @@ const ProfessionalInfoSection: React.FC<{
                     )}
                 </div>
                 <div className="col-md-4 mb-3">
-                    <label className="form-label">
-                        <i className="feather-heart me-1"></i>
-                        Chuyên khoa <span className="text-danger">*</span>
+                    <label htmlFor="specialtyId" className="form-label">
+                        <i className="feather-heart me-1"></i> Chuyên khoa{' '}
+                        <span className="text-danger">*</span>
                     </label>
                     <Select
+                        inputId="specialtyId"
                         options={mockSpecialties.map((specialty) => ({
                             value: specialty.id,
                             label: specialty.name,
@@ -297,11 +300,12 @@ const ProfessionalInfoSection: React.FC<{
                     )}
                 </div>
                 <div className="col-md-4 mb-3">
-                    <label className="form-label">
-                        <i className="feather-home me-1"></i>
-                        Bệnh viện <span className="text-danger">*</span>
+                    <label htmlFor="hospitalId" className="form-label">
+                        <i className="feather-home me-1"></i> Bệnh viện{' '}
+                        <span className="text-danger">*</span>
                     </label>
                     <Select
+                        inputId="hospitalId"
                         options={mockHospitals.map((hospital) => ({
                             value: hospital.id,
                             label: hospital.name,
@@ -429,11 +433,11 @@ const ServicePriceItem: React.FC<{
             </div>
             <div className="row">
                 <div className="col-md-6 mb-3">
-                    <label className="form-label">
-                        <i className="feather-briefcase me-1"></i>
-                        Loại dịch vụ
+                    <label htmlFor={`serviceType-${index}`} className="form-label">
+                        <i className="feather-briefcase me-1"></i> Loại dịch vụ
                     </label>
                     <Select
+                        inputId={`serviceType-${index}`}
                         options={mockServiceTypes.map((service) => ({
                             value: service.id,
                             label: service.name,
@@ -462,11 +466,11 @@ const ServicePriceItem: React.FC<{
                     />
                 </div>
                 <div className="col-md-6 mb-3">
-                    <label className="form-label">
-                        <i className="feather-dollar-sign me-1"></i>
-                        Giá (VNĐ)
+                    <label htmlFor={`serviceAmount-${index}`} className="form-label">
+                        <i className="feather-dollar-sign me-1"></i> Giá (VNĐ)
                     </label>
                     <NumericFormat
+                        id={`serviceAmount-${index}`}
                         customInput={(inputProps: any) => (
                             <input
                                 {...inputProps}
@@ -510,8 +514,7 @@ const ServicePricesSection: React.FC<{
         <div className="card-body">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h5 className="card-title mb-0">
-                    <i className="feather-dollar-sign me-2"></i>
-                    Dịch vụ và giá
+                    <i className="feather-dollar-sign me-2"></i> Dịch vụ và giá
                 </h5>
                 <Button
                     type="button"

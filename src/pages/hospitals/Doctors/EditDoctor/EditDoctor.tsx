@@ -75,32 +75,30 @@ const EditDoctor: React.FC = () => {
     };
 
     return (
-        <>
-            <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                    <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">Chỉnh sửa Bác Sĩ</h4>
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="col-sm-12">
-                        <DoctorFormFields
-                            formData={formData}
-                            errors={errors}
-                            onInputChange={handleInputChange}
-                            onLanguageToggle={handleLanguageToggle}
-                            onServicePriceChange={handleServicePriceChange}
-                            onAddServicePrice={addServicePrice}
-                            onRemoveServicePrice={removeServicePrice}
-                            onFileChange={handleFileChange}
-                            onSubmit={handleSubmit}
-                            onCancel={handleCancel}
-                            isEdit={true}
-                        />
-                    </div>
+        <div className="content">
+            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                <div className="flex-grow-1">
+                    <h4 className="fw-bold mb-0">Chỉnh sửa Bác Sĩ</h4>
                 </div>
             </div>
-        </>
+            <div className="row">
+                <div className="col-sm-12">
+                    <DoctorFormFields
+                        formData={formData}
+                        errors={errors}
+                        onInputChange={handleInputChange}
+                        onLanguageToggle={handleLanguageToggle}
+                        onServicePriceChange={handleServicePriceChange}
+                        onAddServicePrice={addServicePrice}
+                        onRemoveServicePrice={removeServicePrice}
+                        onFileChange={handleFileChange}
+                        onSubmit={handleSubmit}
+                        onCancel={handleCancel}
+                        isEdit={true}
+                    />
+                </div>
+            </div>
+        </div>
     );
 };
 

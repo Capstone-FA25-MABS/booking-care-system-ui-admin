@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice, Guid } from '@/types/doctor.types';
-import { emptyGuid } from '@/utils/guid';
+import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
 
 export interface UseDoctorFormLogicProps {
     initialData: DoctorFormData;
@@ -34,7 +33,7 @@ export const useDoctorFormLogic = ({
         [errors]
     );
 
-    const handleLanguageToggle = useCallback((languageId: Guid) => {
+    const handleLanguageToggle = useCallback((languageId: string) => {
         setFormData((prev) => ({
             ...prev,
             languageIds: prev.languageIds.includes(languageId)
@@ -61,10 +60,7 @@ export const useDoctorFormLogic = ({
     const addServicePrice = useCallback(() => {
         setFormData((prev) => ({
             ...prev,
-            servicePrices: [
-                ...prev.servicePrices,
-                { serviceTypeId: emptyGuid(), amount: 0, note: '' },
-            ],
+            servicePrices: [...prev.servicePrices, { serviceTypeId: '', amount: 0, note: '' }],
         }));
     }, []);
 
@@ -153,9 +149,9 @@ export const useDoctorFormLogic = ({
             bio: '',
             yearsOfExperience: 0,
             avatar: null,
-            positionId: emptyGuid(),
-            specialtyId: emptyGuid(),
-            hospitalId: emptyGuid(),
+            positionId: '',
+            specialtyId: '',
+            hospitalId: '',
             languageIds: [],
             servicePrices: [],
         };

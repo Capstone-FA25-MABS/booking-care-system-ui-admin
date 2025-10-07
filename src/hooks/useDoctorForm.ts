@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice, Guid } from '../types/doctor.types';
+import { DoctorFormData, DoctorPrice } from '../types/doctor.types';
 import { validateDoctorForm } from '../utils/doctorValidation';
-import { emptyGuid } from '../utils/guid';
 
 export const useDoctorForm = (initialData: DoctorFormData) => {
     const [formData, setFormData] = useState<DoctorFormData>(initialData);
@@ -75,10 +74,7 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
     const addServicePrice = useCallback(() => {
         setFormData((prev) => ({
             ...prev,
-            servicePrices: [
-                ...prev.servicePrices,
-                { serviceTypeId: emptyGuid(), amount: 0, note: '' },
-            ],
+            servicePrices: [...prev.servicePrices, { serviceTypeId: '', amount: 0, note: '' }],
         }));
 
         // Clear servicePrices validation error when adding a new service
