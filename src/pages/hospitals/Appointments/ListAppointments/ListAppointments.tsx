@@ -8,6 +8,8 @@ import ModalFilter from '@/components/ModalFilter';
 import FilterSortToolbar from '@/components/FilterSortToolbar';
 import ExportDropdown from '@/components/ExportDropdown';
 import StatusBadge from '@/components/StatusBadge';
+import PatientDropdown from '@/components/PatientDropdown';
+import StatusDropdown from '@/components/StatusDropdown';
 import {
     mockAppointments as importedMockAppointments,
     mockPatients as importedMockPatients,
@@ -651,52 +653,18 @@ const ListAppointments: React.FC = () => {
                                         >
                                             {newAppointment.patient || 'Select'}
                                         </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Search"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-3 list-style-none">
-                                                {mockPatients.map((patient) => (
-                                                    <li key={patient.id}>
-                                                        <label
-                                                            htmlFor={`patient-${patient.id}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`patient-${patient.id}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="patient"
-                                                                value={patient.name}
-                                                                onChange={(e) =>
-                                                                    setNewAppointment({
-                                                                        ...newAppointment,
-                                                                        patient: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            <span className="avatar avatar-sm rounded-circle me-2">
-                                                                <img
-                                                                    src={patient.avatar}
-                                                                    className="flex-shrink-0 rounded-circle"
-                                                                    alt={`Avatar của ${patient.name}`}
-                                                                />
-                                                            </span>
-                                                            {patient.name}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        <PatientDropdown
+                                            patients={mockPatients}
+                                            selectedPatient={newAppointment.patient}
+                                            onSelect={(patientName) =>
+                                                setNewAppointment({
+                                                    ...newAppointment,
+                                                    patient: patientName,
+                                                })
+                                            }
+                                            idPrefix="patient"
+                                            name="patient"
+                                        />
                                     </div>
                                 </div>
                             </div>{' '}
@@ -867,48 +835,18 @@ const ListAppointments: React.FC = () => {
                                         >
                                             {newAppointment.status || 'Select'}
                                         </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Select"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={`status-${status}-${index}`}>
-                                                        <label
-                                                            htmlFor={`status-${index}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`status-${index}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="status"
-                                                                value={status}
-                                                                checked={
-                                                                    status === newAppointment.status
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setNewAppointment({
-                                                                        ...newAppointment,
-                                                                        status: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            {status}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        <StatusDropdown
+                                            statuses={appointmentStatuses}
+                                            selectedStatus={newAppointment.status}
+                                            onSelect={(status) =>
+                                                setNewAppointment({
+                                                    ...newAppointment,
+                                                    status: status,
+                                                })
+                                            }
+                                            idPrefix="status"
+                                            name="status"
+                                        />
                                     </div>
                                 </div>
                             </div>{' '}
@@ -1004,56 +942,18 @@ const ListAppointments: React.FC = () => {
                                         >
                                             {editAppointment.patient}
                                         </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Search"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-3 list-style-none">
-                                                {mockPatients.map((patient) => (
-                                                    <li key={patient.id}>
-                                                        <label
-                                                            htmlFor={`edit-patient-${patient.id}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`edit-patient-${patient.id}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="editPatient"
-                                                                value={patient.name}
-                                                                checked={
-                                                                    patient.name ===
-                                                                    editAppointment.patient
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setEditAppointment({
-                                                                        ...editAppointment,
-                                                                        patient: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            <span className="avatar avatar-sm rounded-circle me-2">
-                                                                <img
-                                                                    src={patient.avatar}
-                                                                    className="flex-shrink-0 rounded-circle"
-                                                                    alt={`Avatar của ${patient.name}`}
-                                                                />
-                                                            </span>
-                                                            {patient.name}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        <PatientDropdown
+                                            patients={mockPatients}
+                                            selectedPatient={editAppointment.patient}
+                                            onSelect={(patientName) =>
+                                                setEditAppointment({
+                                                    ...editAppointment,
+                                                    patient: patientName,
+                                                })
+                                            }
+                                            idPrefix="edit-patient"
+                                            name="editPatient"
+                                        />
                                     </div>
                                 </div>
                             </div>{' '}
@@ -1205,11 +1105,15 @@ const ListAppointments: React.FC = () => {
                             {/* end col*/}
                             <div className="col-lg-12">
                                 <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                                    <label
+                                        htmlFor="appointment-status-dropdown"
+                                        className="form-label mb-1 text-dark fs-14 fw-medium"
+                                    >
                                         Trạng Thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
+                                            id="appointment-status-dropdown"
                                             type="button"
                                             className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
                                             data-bs-toggle="dropdown"
@@ -1218,49 +1122,18 @@ const ListAppointments: React.FC = () => {
                                         >
                                             {editAppointment.status}
                                         </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Select"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={`edit-status-${status}-${index}`}>
-                                                        <label
-                                                            htmlFor={`edit-status-${index}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`edit-status-${index}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="editStatus"
-                                                                value={status}
-                                                                checked={
-                                                                    status ===
-                                                                    editAppointment.status
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setEditAppointment({
-                                                                        ...editAppointment,
-                                                                        status: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            {status}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        <StatusDropdown
+                                            statuses={appointmentStatuses}
+                                            selectedStatus={editAppointment.status}
+                                            onSelect={(status) =>
+                                                setEditAppointment({
+                                                    ...editAppointment,
+                                                    status: status,
+                                                })
+                                            }
+                                            idPrefix="edit-status"
+                                            name="editStatus"
+                                        />
                                     </div>
                                 </div>
                             </div>{' '}

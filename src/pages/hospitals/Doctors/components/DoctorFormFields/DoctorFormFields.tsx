@@ -374,12 +374,10 @@ const LanguagesSection: React.FC<{
                                 key={language.id}
                                 className={`border rounded p-3 ${formData.languageIds.includes(language.id) ? 'border-primary bg-light' : 'border-light bg-white'}`}
                                 style={{
-                                    cursor: 'pointer',
                                     transition: 'all 0.3s ease',
                                     minWidth: '150px',
                                     maxWidth: '200px',
                                 }}
-                                onClick={() => onLanguageToggle(language.id)}
                             >
                                 <div className="form-check d-flex align-items-center">
                                     <input
@@ -388,11 +386,13 @@ const LanguagesSection: React.FC<{
                                         id={`language-${language.id}`}
                                         checked={formData.languageIds.includes(language.id)}
                                         onChange={() => onLanguageToggle(language.id)}
+                                        style={{ cursor: 'pointer' }}
                                     />
                                     <div>
                                         <label
                                             className="form-check-label fw-bold mb-0 d-block"
                                             htmlFor={`language-${language.id}`}
+                                            style={{ cursor: 'pointer' }}
                                         >
                                             {language.name}
                                         </label>
