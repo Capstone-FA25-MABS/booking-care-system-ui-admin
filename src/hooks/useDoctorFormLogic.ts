@@ -100,11 +100,11 @@ export const useDoctorFormLogic = ({
             'hospitalId',
         ];
 
-        requiredFields.forEach((field) => {
+        for (const field of requiredFields) {
             if (!formData[field as keyof DoctorFormData]) {
                 newErrors[field as keyof typeof newErrors] = 'Trường này là bắt buộc';
             }
-        });
+        }
 
         if (
             formData.email &&
@@ -127,14 +127,15 @@ export const useDoctorFormLogic = ({
                 : 'Vui lòng thêm ít nhất một loại dịch vụ';
         }
 
-        formData.servicePrices.forEach((price, index) => {
+        for (let index = 0; index < formData.servicePrices.length; index++) {
+            const price = formData.servicePrices[index];
             if (!price.serviceTypeId) {
                 newErrors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
             }
             if (price.amount <= 0) {
                 newErrors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
             }
-        });
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

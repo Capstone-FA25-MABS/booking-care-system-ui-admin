@@ -71,8 +71,7 @@ const ListPage: React.FC<ListPageProps> = ({
                                 onClick={onFilterClick}
                                 className="d-flex align-items-center gap-2"
                             >
-                                <i className="ti ti-filter"></i>
-                                Filter
+                                <i className="ti ti-filter"></i> Filter
                             </Button>
                             <SortDropdown
                                 options={[

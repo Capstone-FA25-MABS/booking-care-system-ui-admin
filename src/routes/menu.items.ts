@@ -1,6 +1,5 @@
 import type { MenuItem } from '@/types/menu.types';
 import { buildPath, PATHS } from './paths';
-import { DASHBOARD_MENU_CONFIG } from '@/constants/menu.constants';
 
 /**
  * Shared menu item factories
@@ -13,15 +12,15 @@ import { DASHBOARD_MENU_CONFIG } from '@/constants/menu.constants';
 export const createAppointmentsMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
     if (role === 'staff') {
         return {
-            label: 'Appointments',
+            label: 'Lịch hẹn',
             icon: 'ti ti-calendar-check',
             subItems: [
                 {
-                    label: 'Appointments',
+                    label: 'Danh sách lịch hẹn',
                     link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.APPOINTMENTS.ROOT),
                 },
                 {
-                    label: 'New Appointment',
+                    label: 'Thêm lịch hẹn',
                     link: buildPath(
                         PATHS.HOSPITAL.ROOT,
                         PATHS.HOSPITAL.APPOINTMENTS.ROOT,
@@ -75,18 +74,18 @@ export const createMessagesMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
 };
 
 /**
- * Create Doctors menu item (Clinic only)
+ * Create Doctors menu item (Hospital only)
  */
 export const createDoctorsMenuItem = (): MenuItem => ({
-    label: 'Doctors',
+    label: 'Bác sĩ',
     icon: 'ti ti-user-plus',
     subItems: [
         {
-            label: 'Doctors',
+            label: 'Danh sách bác sĩ',
             link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTORS.ROOT),
         },
         {
-            label: 'Add Doctor',
+            label: 'Thêm bác sĩ',
             link: buildPath(
                 PATHS.HOSPITAL.ROOT,
                 PATHS.HOSPITAL.DOCTORS.ROOT,
@@ -99,7 +98,15 @@ export const createDoctorsMenuItem = (): MenuItem => ({
 /**
  * Create Dashboard menu item for Admin with multiple dashboards
  */
-export const createDashboardMenuItem = (): MenuItem => DASHBOARD_MENU_CONFIG;
+export const createDashboardMenuItem = (): MenuItem => ({
+    label: 'Dashboard',
+    icon: 'ti ti-layout-dashboard',
+    subItems: [
+        { label: 'Admin Dashboard', link: '/admin/dashboard' },
+        { label: 'Doctor Dashboard', link: '/doctor/dashboard' },
+        { label: 'Patient Dashboard', link: '/patient/dashboard' },
+    ],
+});
 
 /**
  * Create Account Settings menu item (shared across all roles)

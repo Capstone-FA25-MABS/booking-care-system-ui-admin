@@ -25,13 +25,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
     };
 
     const addFirstPages = (pages: (number | string)[]) => {
-        pages.push(1);
-        pages.push(2);
+        pages.push(1, 2);
     };
 
     const addLastPages = (pages: (number | string)[]) => {
-        pages.push(totalPages - 1);
-        pages.push(totalPages);
+        pages.push(totalPages - 1, totalPages);
     };
 
     const getPageNumbers = () => {

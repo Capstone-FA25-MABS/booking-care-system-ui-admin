@@ -834,279 +834,261 @@ const ListAppointments: React.FC = () => {
     };
 
     return (
-        <div className="main-wrapper">
-            <div className="settings-wrapper">
-                <div className="content">
-                    {/* Start Page Header */}
-                    <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
-                        <div className="flex-grow-1">
-                            <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
-                        </div>
-                        <div className="text-end d-flex">
-                            <ExportDropdown
-                                options={[
-                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                    {
-                                        value: 'excel',
-                                        label: 'Tải xuống dạng Excel',
-                                        format: 'excel',
-                                    },
-                                ]}
-                                onExport={(format: string) => {
-                                    console.log('Exporting:', format);
-                                    // Handle export logic here
-                                }}
-                            />
-                            <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                                <Link
-                                    to="/doctors-appointment"
-                                    className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
-                                >
-                                    <i className="ti ti-list fs-14 text-body"></i>
-                                </Link>
-                                <Link
-                                    to="/doctors-appointment-details"
-                                    className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
-                                >
-                                    <i className="fa-solid fa-calendar-days"></i>
-                                </Link>
-                            </div>
-
-                            <Button
-                                variant="primary"
-                                size="md"
-                                className="ms-2 fs-13"
-                                icon="ti ti-plus"
-                                onClick={() => setShowNewAppointment(true)}
-                            >
-                                Lịch Hẹn Mới
-                            </Button>
-                        </div>
+        <>
+            <div className="content">
+                {/* Start Page Header */}
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
                     </div>
-                    {/* End Page Header */}
+                    <div className="text-end d-flex">
+                        <ExportDropdown
+                            options={[
+                                { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
+                                {
+                                    value: 'excel',
+                                    label: 'Tải xuống dạng Excel',
+                                    format: 'excel',
+                                },
+                            ]}
+                            onExport={(format: string) => {
+                                console.log('Exporting:', format);
+                                // Handle export logic here
+                            }}
+                        />
 
-                    {/* Start Filter */}
-                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                        {/* Status Tabs */}
-                        <div className="d-flex gap-2">
-                            <button
-                                className={`btn ${activeStatusTab === 'upcoming' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
-                                onClick={() => {
-                                    setActiveStatusTab('upcoming');
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                Sắp Tới
-                                <span
-                                    className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                                >
-                                    {getStatusCounts().upcoming}
-                                </span>
-                            </button>
-                            <button
-                                className={`btn ${activeStatusTab === 'cancelled' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
-                                onClick={() => {
-                                    setActiveStatusTab('cancelled');
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                Đã Hủy
-                                <span
-                                    className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                                >
-                                    {getStatusCounts().cancelled}
-                                </span>
-                            </button>
-                            <button
-                                className={`btn ${activeStatusTab === 'completed' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
-                                onClick={() => {
-                                    setActiveStatusTab('completed');
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                Hoàn Thành
-                                <span
-                                    className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                                >
-                                    {getStatusCounts().completed}
-                                </span>
-                            </button>
-                            <button
-                                className={`btn ${activeStatusTab === 'pending' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
-                                onClick={() => {
-                                    setActiveStatusTab('pending');
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                Đang Khám
-                                <span
-                                    className={`badge ${activeStatusTab === 'pending' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                                >
-                                    {getStatusCounts().pending}
-                                </span>
-                            </button>
-                        </div>
-
-                        <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
-                            <Button
-                                variant="white"
-                                size="md"
-                                className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                                icon="ti ti-filter text-gray-5"
-                                onClick={() => setShowFilterModal(true)}
-                            >
-                                Lọc
-                            </Button>
-                            <SortDropdown
-                                options={[
-                                    { value: 'recent', label: 'Gần đây' },
-                                    { value: 'asc', label: 'Tăng dần' },
-                                    { value: 'desc', label: 'Giảm dần' },
-                                    { value: 'last-month', label: 'Tháng trước' },
-                                    { value: 'last-7-days', label: '7 ngày qua' },
-                                ]}
-                                selectedValue={sortBy}
-                                onSelect={setSortBy}
-                                placeholder="Sắp xếp theo:"
-                            />
-                        </div>
+                        <Button
+                            variant="primary"
+                            size="md"
+                            className="ms-2 fs-13"
+                            icon="ti ti-plus"
+                            onClick={() => setShowNewAppointment(true)}
+                        >
+                            Lịch Hẹn Mới
+                        </Button>
                     </div>
-                    {/* End Filter */}
+                </div>
+                {/* End Page Header */}
 
-                    {/* Start Table */}
-                    <div className="table-responsive">
-                        <table className="table datatable table-nowrap">
-                            <thead className="">
-                                <tr>
-                                    <th className="no-sort">Ngày & Giờ</th>
-                                    <th>Bệnh Nhân</th>
-                                    <th>Bác Sĩ</th>
-                                    <th>Hình Thức</th>
-                                    <th>Trạng Thái</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedAppointments.map((appointment) => (
-                                    <tr key={appointment.id}>
-                                        <td>
-                                            {appointment.date} - {appointment.time}
-                                        </td>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <Link
-                                                    to="/doctors-patient-details"
-                                                    className="avatar avatar-md me-2"
-                                                >
-                                                    <img
-                                                        src={appointment.patient.avatar}
-                                                        alt="product"
-                                                        className="rounded-circle"
-                                                    />
-                                                </Link>
-                                                <Link
-                                                    to="/doctors-patient-details"
-                                                    className="fw-semibold"
-                                                >
-                                                    {appointment.patient.name}
-                                                    <span className="text-body fs-13 fw-normal d-block">
-                                                        {appointment.patient.phone}
-                                                    </span>
-                                                </Link>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <Link
-                                                    to="/doctors-profile"
-                                                    className="avatar avatar-md me-2"
-                                                >
-                                                    <img
-                                                        src={appointment.doctor?.avatar || user01}
-                                                        alt="doctor"
-                                                        className="rounded-circle"
-                                                    />
-                                                </Link>
-                                                <Link to="/doctors-profile" className="fw-semibold">
-                                                    {appointment.doctor?.name || 'Chưa phân công'}
-                                                    <span className="text-body fs-13 fw-normal d-block">
-                                                        {appointment.doctor?.specialty || ''}
-                                                    </span>
-                                                </Link>
-                                            </div>
-                                        </td>
-                                        <td>{appointment.type}</td>
-                                        <td>
-                                            <StatusBadge status={appointment.status} />
-                                        </td>
-                                        <td className="action-item">
-                                            <button
-                                                type="button"
-                                                className="btn btn-link p-0"
-                                                data-bs-toggle="dropdown"
+                {/* Start Filter */}
+                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+                    {/* Status Tabs */}
+                    <div className="d-flex gap-2">
+                        <button
+                            className={`btn ${activeStatusTab === 'upcoming' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            onClick={() => {
+                                setActiveStatusTab('upcoming');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Sắp Tới
+                            <span
+                                className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
+                            >
+                                {getStatusCounts().upcoming}
+                            </span>
+                        </button>
+                        <button
+                            className={`btn ${activeStatusTab === 'cancelled' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            onClick={() => {
+                                setActiveStatusTab('cancelled');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Đã Hủy{' '}
+                            <span
+                                className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
+                            >
+                                {getStatusCounts().cancelled}
+                            </span>
+                        </button>
+                        <button
+                            className={`btn ${activeStatusTab === 'completed' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            onClick={() => {
+                                setActiveStatusTab('completed');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Hoàn Thành{' '}
+                            <span
+                                className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
+                            >
+                                {getStatusCounts().completed}
+                            </span>
+                        </button>
+                        <button
+                            className={`btn ${activeStatusTab === 'pending' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            onClick={() => {
+                                setActiveStatusTab('pending');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Đang Khám{' '}
+                            <span
+                                className={`badge ${activeStatusTab === 'pending' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
+                            >
+                                {getStatusCounts().pending}
+                            </span>
+                        </button>
+                    </div>
+
+                    <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
+                        <Button
+                            variant="white"
+                            size="md"
+                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                            icon="ti ti-filter text-gray-5"
+                            onClick={() => setShowFilterModal(true)}
+                        >
+                            Lọc
+                        </Button>
+                        <SortDropdown
+                            options={[
+                                { value: 'recent', label: 'Gần đây' },
+                                { value: 'asc', label: 'Tăng dần' },
+                                { value: 'desc', label: 'Giảm dần' },
+                                { value: 'last-month', label: 'Tháng trước' },
+                                { value: 'last-7-days', label: '7 ngày qua' },
+                            ]}
+                            selectedValue={sortBy}
+                            onSelect={setSortBy}
+                            placeholder="Sắp xếp theo:"
+                        />
+                    </div>
+                </div>
+                {/* End Filter */}
+
+                {/* Start Table */}
+                <div className="table-responsive">
+                    <table className="table datatable table-nowrap">
+                        <thead className="">
+                            <tr>
+                                <th className="no-sort">Ngày & Giờ</th>
+                                <th>Bệnh Nhân</th>
+                                <th>Bác Sĩ</th>
+                                <th>Hình Thức</th>
+                                <th>Trạng Thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginatedAppointments.map((appointment) => (
+                                <tr key={appointment.id}>
+                                    <td>
+                                        {appointment.date} - {appointment.time}
+                                    </td>
+                                    <td>
+                                        <div className="d-flex align-items-center">
+                                            <Link
+                                                to="/doctors-patient-details"
+                                                className="avatar avatar-md me-2"
                                             >
-                                                <i className="ti ti-dots-vertical"></i>
-                                            </button>
-                                            <ul className="dropdown-menu p-2">
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                        onClick={() => handleEditClick(appointment)}
-                                                    >
-                                                        Sửa
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                        onClick={() => handleViewClick(appointment)}
-                                                    >
-                                                        Xem
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                        onClick={() =>
-                                                            handleDeleteClick(appointment)
-                                                        }
-                                                    >
-                                                        Xóa
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {/* End Table */}
+                                                <img
+                                                    src={appointment.patient.avatar}
+                                                    alt="product"
+                                                    className="rounded-circle"
+                                                />
+                                            </Link>
+                                            <Link
+                                                to="/doctors-patient-details"
+                                                className="fw-semibold"
+                                            >
+                                                {appointment.patient.name}
+                                                <span className="text-body fs-13 fw-normal d-block">
+                                                    {appointment.patient.phone}
+                                                </span>
+                                            </Link>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="d-flex align-items-center">
+                                            <Link
+                                                to="/doctors-profile"
+                                                className="avatar avatar-md me-2"
+                                            >
+                                                <img
+                                                    src={appointment.doctor?.avatar || user01}
+                                                    alt="doctor"
+                                                    className="rounded-circle"
+                                                />
+                                            </Link>
+                                            <Link to="/doctors-profile" className="fw-semibold">
+                                                {appointment.doctor?.name || 'Chưa phân công'}
+                                                <span className="text-body fs-13 fw-normal d-block">
+                                                    {appointment.doctor?.specialty || ''}
+                                                </span>
+                                            </Link>
+                                        </div>
+                                    </td>
+                                    <td>{appointment.type}</td>
+                                    <td>
+                                        <StatusBadge status={appointment.status} />
+                                    </td>
+                                    <td className="action-item">
+                                        <button
+                                            type="button"
+                                            className="btn btn-link p-0"
+                                            data-bs-toggle="dropdown"
+                                        >
+                                            <i className="ti ti-dots-vertical"></i>
+                                        </button>
+                                        <ul className="dropdown-menu p-2">
+                                            <li>
+                                                <button
+                                                    type="button"
+                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                                    onClick={() => handleEditClick(appointment)}
+                                                >
+                                                    Sửa
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button
+                                                    type="button"
+                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                                    onClick={() => handleViewClick(appointment)}
+                                                >
+                                                    Xem
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button
+                                                    type="button"
+                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                                    onClick={() => handleDeleteClick(appointment)}
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-                {/* End Content */}
-
-                {/* Pagination */}
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
-
-                {/* Footer Start */}
-                <div className="footer text-center bg-white p-2 border-top">
-                    <p className="text-dark mb-0">
-                        2025 &copy;{' '}
-                        <Link to="/" className="link-primary">
-                            Preclinic
-                        </Link>
-                        , Tất Cả Quyền Được Bảo Lưu
-                    </p>
-                </div>
-                {/* Footer End */}
+                {/* End Table */}
             </div>
+            {/* End Content */}
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+
+            {/* Footer Start */}
+            <div className="footer text-center bg-white p-2 border-top">
+                <p className="text-dark mb-0">
+                    2025 &copy;{' '}
+                    <Link to="/" className="link-primary">
+                        Preclinic
+                    </Link>
+                    , Tất Cả Quyền Được Bảo Lưu
+                </p>
+            </div>
+            {/* Footer End */}
 
             {/* Filter Modal */}
             <ModalFilter
@@ -2014,7 +1996,7 @@ const ListAppointments: React.FC = () => {
                 message="Bạn có chắc chắn muốn xóa lịch hẹn này không?"
                 itemName={selectedAppointment?.appointmentId}
             />
-        </div>
+        </>
     );
 };
 

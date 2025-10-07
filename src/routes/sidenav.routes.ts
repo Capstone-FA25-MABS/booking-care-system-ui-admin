@@ -1,62 +1,18 @@
-import { buildPath, PATHS } from './paths';
 import type { MenuConfig } from '@/types/menu.types';
+import { buildPath, PATHS } from './paths';
 import {
     createAccountSettingsMenuItem,
     createAppointmentsMenuItem,
+    createDashboardMenuItem,
     createDoctorsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
 } from './menu.items';
-import {
-    DOCTORS_MENU_CONFIG,
-    APPOINTMENTS_MENU_CONFIG,
-    DASHBOARD_MENU_CONFIG,
-} from '@/constants/menu.constants';
 
-export const listGroupMenuItemHospital: Array<{
-    title: string;
-    items: Array<{
-        label: string;
-        link?: string;
-        icon: string;
-        subItems?: Array<{ label: string; link: string }>;
-    }>;
-}> = [
+export const listGroupMenuItemHospital: MenuConfig = [
     {
         title: 'Hospital',
         items: [
-            DOCTORS_MENU_CONFIG,
-            APPOINTMENTS_MENU_CONFIG,
-            {
-                label: 'Locations',
-                icon: 'ti ti-map-pin',
-                link: '/hospital/locations',
-            },
-            {
-                label: 'Services',
-                icon: 'ti ti-user-cog',
-                link: '/hospital/services',
-            },
-            {
-                label: 'Specializations',
-                icon: 'ti ti-user-shield',
-                link: '/hospital/specializations',
-            },
-            {
-                label: 'Assets',
-                icon: 'ti ti-asset',
-                link: '/hospital/assets',
-            },
-            {
-                label: 'Activities',
-                icon: 'ti ti-activity',
-                link: '/hospital/activities',
-            },
-            {
-                label: 'Messages',
-                icon: 'ti ti-messages',
-                link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.MESSAGES),
-            },
             createDoctorsMenuItem(),
             createAppointmentsMenuItem('staff'),
             createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
@@ -116,7 +72,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Main Menu',
         items: [
-            DASHBOARD_MENU_CONFIG,
+            createDashboardMenuItem(),
             {
                 label: 'Applications',
                 icon: 'ti ti-apps',

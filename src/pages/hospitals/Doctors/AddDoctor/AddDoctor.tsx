@@ -62,34 +62,32 @@ const AddDoctor: React.FC = () => {
     };
 
     return (
-        <div className="main-wrapper">
-            <div className="settings-wrapper">
-                <div className="content">
-                    <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                        <div className="flex-grow-1">
-                            <h4 className="fw-bold mb-0">Thêm Bác Sĩ</h4>
-                        </div>
+        <>
+            <div className="content">
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-bold mb-0">Thêm Bác Sĩ</h4>
                     </div>
-                    <div className="row">
-                        <div className="col-sm-12">
-                            <DoctorFormFields
-                                formData={formData}
-                                errors={errors}
-                                onInputChange={handleInputChange}
-                                onLanguageToggle={handleLanguageToggle}
-                                onServicePriceChange={handleServicePriceChange}
-                                onAddServicePrice={addServicePrice}
-                                onRemoveServicePrice={removeServicePrice}
-                                onFileChange={handleFileChange}
-                                onSubmit={handleSubmit}
-                                onCancel={handleCancel}
-                                isEdit={false}
-                            />
-                        </div>
+                </div>
+                <div className="row">
+                    <div className="col-sm-12">
+                        <DoctorFormFields
+                            formData={formData}
+                            errors={errors}
+                            onInputChange={handleInputChange}
+                            onLanguageToggle={handleLanguageToggle}
+                            onServicePriceChange={handleServicePriceChange}
+                            onAddServicePrice={addServicePrice}
+                            onRemoveServicePrice={removeServicePrice}
+                            onFileChange={handleFileChange}
+                            onSubmit={handleSubmit}
+                            onCancel={handleCancel}
+                            isEdit={false}
+                        />
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
