@@ -46,9 +46,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.ADMIN.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            // </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.ADMIN.DASHBOARD} replace /> },
@@ -80,9 +80,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.HOSPITAL.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[UserRole.STAFF]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
+            // </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.HOSPITAL.DASHBOARD} replace /> },
@@ -109,9 +109,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.COMMON.ACCOUNT_SETTINGS.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.STAFF]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.STAFF]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            // </ProtectedRoute>
         ),
         children: [
             {

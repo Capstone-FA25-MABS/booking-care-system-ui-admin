@@ -5,51 +5,61 @@ interface PaginationProps {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
-    itemsPerPage?: number;
-    totalItems?: number;
-    showInfo?: boolean;
-    onItemsPerPageChange?: (itemsPerPage: number) => void;
-    showItemsPerPage?: boolean;
-    itemsPerPageOptions?: number[];
 }
 
-const Pagination: React.FC<PaginationProps> = ({
-    currentPage,
-    totalPages,
-    onPageChange,
-    itemsPerPage = 10,
-    totalItems: _totalItems,
-    showInfo: _showInfo = true,
-    onItemsPerPageChange,
-    showItemsPerPage = true,
-    itemsPerPageOptions = [10, 25, 50, 100],
-}) => {
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
     // Không hiển thị pagination nếu chỉ có 1 trang
     if (totalPages <= 1) {
         return null;
     }
 
+    // Tạo danh sách số trang để hiển thị
+    const getPageNumbers = () => {
+        const pages: (number | string)[] = [];
+        const maxVisiblePages = 7; // Số trang tối đa hiển thị
+
+        if (totalPages <= maxVisiblePages) {
+            // Nếu tổng số trang <= 7, hiển thị tất cả
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Logic hiển thị trang với ellipsis
+            if (currentPage <= 4) {
+                // Trang hiện tại ở đầu
+                for (let i = 1; i <= 5; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages - 1);
+                pages.push(totalPages);
+            } else if (currentPage >= totalPages - 3) {
+                // Trang hiện tại ở cuối
+                pages.push(1);
+                pages.push(2);
+                pages.push('...');
+                for (let i = totalPages - 4; i <= totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Trang hiện tại ở giữa
+                pages.push(1);
+                pages.push(2);
+                pages.push('...');
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages - 1);
+                pages.push(totalPages);
+            }
+        }
+
+        return pages;
+    };
+
     return (
         <div className={styles.paginationContainer}>
-            {/* Row Per Page Selector */}
-            {showItemsPerPage && onItemsPerPageChange && (
-                <div className={styles.itemsPerPageSection}>
-                    <span className={styles.itemsPerPageLabel}>Hiển thị</span>
-                    <select
-                        className={styles.itemsPerPageSelect}
-                        value={itemsPerPage}
-                        onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                    >
-                        {itemsPerPageOptions.map((option) => (
-                            <option key={option} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
-                    <span className={styles.entriesLabel}></span>
-                </div>
-            )}
-
             {/* Pagination Controls */}
             <div className={styles.pagination}>
                 {/* Nút Previous */}
@@ -59,17 +69,34 @@ const Pagination: React.FC<PaginationProps> = ({
                     disabled={currentPage === 1}
                     aria-label="Trang trước"
                 >
-                    <i className="fa-solid fa-chevron-left"></i>
+                    <i className="ti ti-chevron-left"></i>
                 </button>
 
-                {/* Current Page Button */}
-                <button
-                    className={`${styles.pageButton} ${styles.currentPageButton} ${styles.active}`}
-                    aria-label={`Trang ${currentPage}`}
-                    aria-current="page"
-                >
-                    {currentPage}
-                </button>
+                {/* Page Numbers */}
+                {getPageNumbers().map((page, index) => {
+                    if (page === '...') {
+                        return (
+                            <span key={`ellipsis-${index}`} className={styles.ellipsis}>
+                                ...
+                            </span>
+                        );
+                    }
+
+                    const pageNumber = page as number;
+                    const isActive = pageNumber === currentPage;
+
+                    return (
+                        <button
+                            key={pageNumber}
+                            className={`${styles.pageButton} ${isActive ? styles.active : ''}`}
+                            onClick={() => onPageChange(pageNumber)}
+                            aria-label={`Trang ${pageNumber}`}
+                            aria-current={isActive ? 'page' : undefined}
+                        >
+                            {pageNumber}
+                        </button>
+                    );
+                })}
 
                 {/* Nút Next */}
                 <button
@@ -78,7 +105,7 @@ const Pagination: React.FC<PaginationProps> = ({
                     disabled={currentPage === totalPages}
                     aria-label="Trang tiếp theo"
                 >
-                    <i className="fa-solid fa-chevron-right"></i>
+                    <i className="ti ti-chevron-right"></i>
                 </button>
             </div>
         </div>

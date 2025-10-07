@@ -1,0 +1,670 @@
+import React from 'react';
+import Select from 'react-select';
+import { NumericFormat } from 'react-number-format';
+import Button from '@/components/Button';
+import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
+import {
+    mockPositions,
+    mockSpecialties,
+    mockLanguages,
+    mockServiceTypes,
+    mockHospitals,
+} from '@/data/doctor.mockData';
+import styles from './DoctorFormFields.module.scss';
+
+interface DoctorFormFieldsProps {
+    formData: DoctorFormData;
+    errors: Partial<
+        Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+    >;
+    onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onLanguageToggle: (languageId: string) => void;
+    onServicePriceChange: (index: number, field: keyof DoctorPrice, value: string | number) => void;
+    onAddServicePrice: () => void;
+    onRemoveServicePrice: (index: number) => void;
+    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onSubmit: (e: React.FormEvent) => void;
+    onCancel: () => void;
+    isEdit?: boolean;
+}
+
+const selectCustomStyles = {
+    control: (provided: any) => ({
+        ...provided,
+        minHeight: '40px',
+        borderRadius: '8px',
+        borderColor: '#E5E7EB',
+        boxShadow: 'none',
+        fontSize: '14px',
+        padding: '1px 0',
+    }),
+    valueContainer: (provided: any) => ({
+        ...provided,
+        padding: '1px 8px',
+    }),
+    multiValue: (provided: any) => ({
+        ...provided,
+        background: '#F3F4F6',
+        borderRadius: '6px',
+        fontSize: '13px',
+        color: '#111827',
+        margin: '2px 4px',
+    }),
+    multiValueLabel: (provided: any) => ({
+        ...provided,
+        color: '#111827',
+        fontWeight: 400,
+        padding: '2px 6px',
+        fontSize: '13px',
+    }),
+    multiValueRemove: (provided: any) => ({
+        ...provided,
+        color: '#6B7280',
+        ':hover': { backgroundColor: '#E5E7EB', color: '#EF4444' },
+    }),
+    option: (provided: any, state: any) => {
+        let backgroundColor = '#fff';
+        if (state.isSelected) {
+            backgroundColor = '#EEF2FF';
+        } else if (state.isFocused) {
+            backgroundColor = '#F3F4F6';
+        }
+        return {
+            ...provided,
+            backgroundColor,
+            color: '#111827',
+            fontSize: '14px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontWeight: 400,
+        };
+    },
+    menu: (provided: any) => ({
+        ...provided,
+        borderRadius: '8px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        zIndex: 99999,
+    }),
+    menuList: (provided: any) => ({
+        ...provided,
+        padding: '4px 0',
+    }),
+    menuPortal: (provided: any) => ({
+        ...provided,
+        zIndex: 99999,
+    }),
+    placeholder: (provided: any) => ({
+        ...provided,
+        color: '#9CA3AF',
+        fontSize: '14px',
+    }),
+    singleValue: (provided: any) => ({
+        ...provided,
+        color: '#111827',
+        fontSize: '14px',
+    }),
+};
+
+const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
+    formData,
+    errors,
+    onInputChange,
+    onLanguageToggle,
+    onServicePriceChange,
+    onAddServicePrice,
+    onRemoveServicePrice,
+    onFileChange,
+    onSubmit,
+    onCancel,
+    isEdit = false,
+}) => {
+    return (
+        <form onSubmit={onSubmit}>
+            <div className="card mb-4">
+                <div className={`card-body ${styles.sectionBorder}`}>
+                    <h5 className="card-title mb-4">Thông tin cơ bản</h5>
+                    <div className="row">
+                        <div className="col-md-3 mb-4">
+                            <div className="text-center">
+                                <div className="position-relative d-inline-block">
+                                    <div
+                                        className="bg-light rounded-circle d-flex align-items-center justify-content-center"
+                                        style={{ width: '120px', height: '120px' }}
+                                    >
+                                        {formData.avatar ? (
+                                            <img
+                                                src={
+                                                    typeof formData.avatar === 'string'
+                                                        ? formData.avatar
+                                                        : URL.createObjectURL(formData.avatar)
+                                                }
+                                                alt="Profile"
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '50%',
+                                                }}
+                                            />
+                                        ) : (
+                                            <i className="feather-user fs-1 text-muted"></i>
+                                        )}
+                                    </div>
+                                    <div
+                                        className="position-absolute bottom-0 end-0 bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                                        style={{ width: '30px', height: '30px' }}
+                                    >
+                                        <i
+                                            className="feather-camera text-white"
+                                            style={{ fontSize: '14px' }}
+                                        ></i>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        name="avatar"
+                                        id="profileImage"
+                                        onChange={onFileChange}
+                                        className="d-none"
+                                    />
+                                    <label
+                                        htmlFor="profileImage"
+                                        className="position-absolute top-0 start-0 w-100 h-100"
+                                        style={{ cursor: 'pointer' }}
+                                    ></label>
+                                </div>
+                                <p className="mt-2 mb-0 text-muted">Ảnh đại diện</p>
+                            </div>
+                        </div>
+                        <div className="col-md-9">
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-user me-1"></i>
+                                        Tên <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
+                                        name="firstName"
+                                        value={formData.firstName}
+                                        onChange={onInputChange}
+                                        placeholder="Nhập tên"
+                                    />
+                                    {errors.firstName && (
+                                        <div className="invalid-feedback">{errors.firstName}</div>
+                                    )}
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-user me-1"></i>
+                                        Họ <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
+                                        name="lastName"
+                                        value={formData.lastName}
+                                        onChange={onInputChange}
+                                        placeholder="Nhập họ"
+                                    />
+                                    {errors.lastName && (
+                                        <div className="invalid-feedback">{errors.lastName}</div>
+                                    )}
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-mail me-1"></i>
+                                        Email <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={onInputChange}
+                                        placeholder="Nhập email"
+                                    />
+                                    {errors.email && (
+                                        <div className="invalid-feedback">{errors.email}</div>
+                                    )}
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-users me-1"></i>
+                                        Giới tính <span className="text-danger">*</span>
+                                    </label>
+                                    <Select
+                                        options={[
+                                            { value: 'MALE', label: 'Nam' },
+                                            { value: 'FEMALE', label: 'Nữ' },
+                                        ]}
+                                        value={
+                                            formData.gender
+                                                ? {
+                                                      value: formData.gender,
+                                                      label:
+                                                          formData.gender === 'MALE' ? 'Nam' : 'Nữ',
+                                                  }
+                                                : null
+                                        }
+                                        onChange={(selectedOption) => {
+                                            onInputChange({
+                                                target: {
+                                                    name: 'gender',
+                                                    value: selectedOption?.value || '',
+                                                },
+                                            } as React.ChangeEvent<HTMLInputElement>);
+                                        }}
+                                        placeholder="Chọn giới tính"
+                                        className={errors.gender ? 'is-invalid' : ''}
+                                        classNamePrefix="select2"
+                                        styles={selectCustomStyles}
+                                        menuPortalTarget={document.body}
+                                    />
+                                    {errors.gender && (
+                                        <div className="text-danger mt-1">{errors.gender}</div>
+                                    )}
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-map-pin me-1"></i>
+                                        Địa chỉ <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.address ? 'is-invalid' : ''}`}
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={onInputChange}
+                                        placeholder="Nhập địa chỉ"
+                                    />
+                                    {errors.address && (
+                                        <div className="invalid-feedback">{errors.address}</div>
+                                    )}
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-award me-1"></i>
+                                        Số năm kinh nghiệm <span className="text-danger">*</span>
+                                    </label>
+                                    <NumericFormat
+                                        customInput={(inputProps: any) => (
+                                            <input
+                                                {...inputProps}
+                                                className={`form-control ${errors.yearsOfExperience ? 'is-invalid' : ''}`}
+                                            />
+                                        )}
+                                        value={formData.yearsOfExperience}
+                                        onValueChange={(values) => {
+                                            onInputChange({
+                                                target: {
+                                                    name: 'yearsOfExperience',
+                                                    value: values.floatValue || 0,
+                                                },
+                                            } as unknown as React.ChangeEvent<HTMLInputElement>);
+                                        }}
+                                        thousandSeparator=""
+                                        allowNegative={false}
+                                        decimalScale={0}
+                                    />
+                                    {errors.yearsOfExperience && (
+                                        <div className="invalid-feedback">
+                                            {errors.yearsOfExperience}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="col-12 mb-3">
+                                    <label className="form-label">
+                                        <i className="feather-file-text me-1"></i>
+                                        Tiểu sử <span className="text-danger">*</span>
+                                    </label>
+                                    <textarea
+                                        className={`form-control ${errors.bio ? 'is-invalid' : ''}`}
+                                        name="bio"
+                                        value={formData.bio}
+                                        onChange={onInputChange}
+                                        rows={4}
+                                        placeholder="Mô tả về bác sĩ"
+                                    />
+                                    {errors.bio && (
+                                        <div className="invalid-feedback">{errors.bio}</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card mb-4">
+                <div className={`card-body ${styles.sectionBorder}`}>
+                    <h5 className="card-title mb-4">Thông tin chuyên môn</h5>
+                    <div className="row">
+                        <div className="col-md-4 mb-3">
+                            <label className="form-label">
+                                <i className="feather-briefcase me-1"></i>
+                                Chức vụ <span className="text-danger">*</span>
+                            </label>
+                            <Select
+                                options={mockPositions.map((position) => ({
+                                    value: position.id,
+                                    label: position.name,
+                                }))}
+                                value={
+                                    formData.positionId
+                                        ? {
+                                              value: formData.positionId,
+                                              label: mockPositions.find(
+                                                  (p) => p.id === formData.positionId
+                                              )?.name,
+                                          }
+                                        : null
+                                }
+                                onChange={(selectedOption) => {
+                                    onInputChange({
+                                        target: {
+                                            name: 'positionId',
+                                            value: selectedOption?.value || '',
+                                        },
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                placeholder="Chọn chức vụ"
+                                className={errors.positionId ? 'is-invalid' : ''}
+                                classNamePrefix="select2"
+                                styles={selectCustomStyles}
+                                menuPortalTarget={document.body}
+                            />
+                            {errors.positionId && (
+                                <div className="text-danger mt-1">{errors.positionId}</div>
+                            )}
+                        </div>
+                        <div className="col-md-4 mb-3">
+                            <label className="form-label">
+                                <i className="feather-heart me-1"></i>
+                                Chuyên khoa <span className="text-danger">*</span>
+                            </label>
+                            <Select
+                                options={mockSpecialties.map((specialty) => ({
+                                    value: specialty.id,
+                                    label: specialty.name,
+                                }))}
+                                value={
+                                    formData.specialtyId
+                                        ? {
+                                              value: formData.specialtyId,
+                                              label: mockSpecialties.find(
+                                                  (s) => s.id === formData.specialtyId
+                                              )?.name,
+                                          }
+                                        : null
+                                }
+                                onChange={(selectedOption) => {
+                                    onInputChange({
+                                        target: {
+                                            name: 'specialtyId',
+                                            value: selectedOption?.value || '',
+                                        },
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                placeholder="Chọn chuyên khoa"
+                                className={errors.specialtyId ? 'is-invalid' : ''}
+                                classNamePrefix="select2"
+                                styles={selectCustomStyles}
+                                menuPortalTarget={document.body}
+                            />
+                            {errors.specialtyId && (
+                                <div className="text-danger mt-1">{errors.specialtyId}</div>
+                            )}
+                        </div>
+                        <div className="col-md-4 mb-3">
+                            <label className="form-label">
+                                <i className="feather-home me-1"></i>
+                                Bệnh viện <span className="text-danger">*</span>
+                            </label>
+                            <Select
+                                options={mockHospitals.map((hospital) => ({
+                                    value: hospital.id,
+                                    label: hospital.name,
+                                }))}
+                                value={
+                                    formData.hospitalId
+                                        ? {
+                                              value: formData.hospitalId,
+                                              label: mockHospitals.find(
+                                                  (h) => h.id === formData.hospitalId
+                                              )?.name,
+                                          }
+                                        : null
+                                }
+                                onChange={(selectedOption) => {
+                                    onInputChange({
+                                        target: {
+                                            name: 'hospitalId',
+                                            value: selectedOption?.value || '',
+                                        },
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                placeholder="Chọn bệnh viện"
+                                className={errors.hospitalId ? 'is-invalid' : ''}
+                                classNamePrefix="select2"
+                                styles={selectCustomStyles}
+                                menuPortalTarget={document.body}
+                            />
+                            {errors.hospitalId && (
+                                <div className="text-danger mt-1">{errors.hospitalId}</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card mb-4">
+                <div className={`card-body ${styles.sectionBorder}`}>
+                    <h5 className="card-title mb-4">
+                        <i className="feather-globe me-2"></i>
+                        Ngôn ngữ
+                    </h5>
+                    <div className="row">
+                        <div className="col-12">
+                            <div className="d-flex flex-wrap gap-2">
+                                {mockLanguages.map((language) => (
+                                    <div
+                                        key={language.id}
+                                        className={`border rounded p-3 ${formData.languageIds.includes(language.id) ? 'border-primary bg-light' : 'border-light bg-white'}`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            minWidth: '150px',
+                                            maxWidth: '200px',
+                                        }}
+                                        onClick={() => onLanguageToggle(language.id)}
+                                    >
+                                        <div className="form-check d-flex align-items-center">
+                                            <input
+                                                className="form-check-input me-2"
+                                                type="checkbox"
+                                                id={`language-${language.id}`}
+                                                checked={formData.languageIds.includes(language.id)}
+                                                onChange={() => onLanguageToggle(language.id)}
+                                            />
+                                            <div>
+                                                <label
+                                                    className="form-check-label fw-bold mb-0 d-block"
+                                                    htmlFor={`language-${language.id}`}
+                                                >
+                                                    {language.name}
+                                                </label>
+                                                <small
+                                                    className={`text-muted ${formData.languageIds.includes(language.id) ? 'text-primary' : ''}`}
+                                                >
+                                                    {formData.languageIds.includes(language.id)
+                                                        ? 'Đã chọn'
+                                                        : 'Chưa chọn'}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.languageIds && (
+                                <div className="alert alert-danger mt-3 mb-0">
+                                    <i className="feather-alert-circle me-1"></i>
+                                    {errors.languageIds}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card mb-4">
+                <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <h5 className="card-title mb-0">
+                            <i className="feather-dollar-sign me-2"></i>
+                            Dịch vụ và giá
+                        </h5>
+                        <Button
+                            type="button"
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={onAddServicePrice}
+                        >
+                            Thêm dịch vụ
+                        </Button>
+                    </div>
+                    {formData.servicePrices.length === 0 ? (
+                        <div className="text-center text-muted py-4">
+                            <i className="feather-plus-circle fs-1 mb-3"></i>
+                            <p>Chưa có dịch vụ nào. Nhấn "Thêm dịch vụ" để bắt đầu.</p>
+                        </div>
+                    ) : (
+                        <div className="row">
+                            {formData.servicePrices.map((price, index) => (
+                                <div
+                                    key={`${price.serviceTypeId}-${index}`}
+                                    className="col-md-6 mb-3"
+                                >
+                                    <div className="border rounded p-3">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 className="mb-0">Dịch vụ {index + 1}</h6>
+                                            <Button
+                                                type="button"
+                                                variant="outline-danger"
+                                                size="sm"
+                                                onClick={() => onRemoveServicePrice(index)}
+                                            >
+                                                <i className="fa-solid fa-xmark"></i>
+                                            </Button>
+                                        </div>
+                                        <div className="row">
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label">
+                                                    <i className="feather-briefcase me-1"></i>
+                                                    Loại dịch vụ
+                                                </label>
+                                                <Select
+                                                    options={mockServiceTypes.map((service) => ({
+                                                        value: service.id,
+                                                        label: service.name,
+                                                    }))}
+                                                    value={
+                                                        price.serviceTypeId
+                                                            ? {
+                                                                  value: price.serviceTypeId,
+                                                                  label:
+                                                                      mockServiceTypes.find(
+                                                                          (s) =>
+                                                                              s.id ===
+                                                                              price.serviceTypeId
+                                                                      )?.name || '',
+                                                              }
+                                                            : null
+                                                    }
+                                                    onChange={(selectedOption) =>
+                                                        onServicePriceChange(
+                                                            index,
+                                                            'serviceTypeId',
+                                                            selectedOption?.value || ''
+                                                        )
+                                                    }
+                                                    placeholder="Chọn loại dịch vụ"
+                                                    classNamePrefix="select2"
+                                                    styles={selectCustomStyles}
+                                                    menuPortalTarget={document.body}
+                                                />
+                                            </div>
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label">
+                                                    <i className="feather-dollar-sign me-1"></i>
+                                                    Giá (VNĐ)
+                                                </label>
+                                                <NumericFormat
+                                                    customInput={(inputProps: any) => (
+                                                        <input
+                                                            {...inputProps}
+                                                            className={`form-control ${
+                                                                errors[
+                                                                    `servicePrices_${index}_amount` as keyof DoctorFormData
+                                                                ]
+                                                                    ? 'is-invalid'
+                                                                    : ''
+                                                            }`}
+                                                        />
+                                                    )}
+                                                    value={price.amount}
+                                                    onValueChange={(values) =>
+                                                        onServicePriceChange(
+                                                            index,
+                                                            'amount',
+                                                            values.floatValue || 0
+                                                        )
+                                                    }
+                                                    thousandSeparator=","
+                                                    allowNegative={false}
+                                                    decimalScale={0}
+                                                    suffix=" VNĐ"
+                                                />
+                                                {errors[
+                                                    `servicePrices_${index}_amount` as keyof DoctorFormData
+                                                ] && (
+                                                    <div className="invalid-feedback">
+                                                        {
+                                                            errors[
+                                                                `servicePrices_${index}_amount` as keyof DoctorFormData
+                                                            ]
+                                                        }
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {errors.servicePrices && (
+                        <div className="text-danger mt-2">{errors.servicePrices}</div>
+                    )}
+                    <div className="text-end mb-4 mt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            className="btn btn-light btn-md me-2"
+                            onClick={onCancel}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="submit" variant="primary">
+                            {isEdit ? 'Cập nhật bác sĩ' : 'Lưu bác sĩ'}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    );
+};
+
+export default DoctorFormFields;

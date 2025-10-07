@@ -1,8 +1,11 @@
-import React, { useState, useRef, useMemo } from 'react';
-import Select from 'react-select';
+import React, { useState, useMemo } from 'react';
 import styles from './ListAppointments.module.scss';
-import DateRangePicker from '@/components/DateRangePicker';
 import Pagination from '@/components/Pagination';
+import Button from '@/components/Button';
+import ModalDelete from '@/components/ModalDelete';
+import ModalFilter from '@/components/ModalFilter';
+import SortDropdown from '@/components/SortDropdown';
+import ExportDropdown from '@/components/ExportDropdown';
 
 // Types definition
 interface Patient {
@@ -63,8 +66,6 @@ import avatar14 from '@/assets/img/profiles/avatar-14.jpg';
 import avatar15 from '@/assets/img/profiles/avatar-15.jpg';
 import avatar16 from '@/assets/img/profiles/avatar-16.jpg';
 import avatar2 from '@/assets/img/users/avatar-2.jpg';
-import deleteModalBg01 from '@/assets/img/bg/delete-modal-bg-01.png';
-import deleteModalBg02 from '@/assets/img/bg/delete-modal-bg-02.png';
 
 const mockPatients: Patient[] = [
     { id: '1', name: 'Nguyễn Thị Lan', avatar: user02 },
@@ -403,71 +404,208 @@ const mockAppointments: Appointment[] = [
         reason: 'Khám sức khỏe định kỳ',
         status: 'Đã khám',
     },
-];
-
-const selectCustomStyles = {
-    control: (provided: any) => ({
-        ...provided,
-        minHeight: '40px',
-        borderRadius: '8px',
-        borderColor: '#E5E7EB',
-        boxShadow: 'none',
-        fontSize: '14px',
-        padding: '1px 0',
-    }),
-    valueContainer: (provided: any) => ({
-        ...provided,
-        padding: '1px 8px',
-    }),
-    multiValue: (provided: any) => ({
-        ...provided,
-        background: '#F3F4F6',
-        borderRadius: '6px',
-        fontSize: '13px',
-        color: '#111827',
-        margin: '2px 4px',
-    }),
-    multiValueLabel: (provided: any) => ({
-        ...provided,
-        color: '#111827',
-        fontWeight: 400,
-        padding: '2px 6px',
-        fontSize: '13px',
-    }),
-    multiValueRemove: (provided: any) => ({
-        ...provided,
-        color: '#6B7280',
-        ':hover': { backgroundColor: '#E5E7EB', color: '#EF4444' },
-    }),
-    option: (provided: any, state: any) => {
-        let backgroundColor = '#fff';
-        if (state.isSelected) {
-            backgroundColor = '#EEF2FF';
-        } else if (state.isFocused) {
-            backgroundColor = '#F3F4F6';
-        }
-
-        return {
-            ...provided,
-            backgroundColor,
-            color: '#111827',
-            fontSize: '14px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontWeight: 400,
-        };
+    // Thêm 20 appointments nữa để test pagination
+    {
+        id: '31',
+        appointmentId: 'AP031',
+        patient: { id: '31', name: 'Nguyễn Văn Hùng', avatar: user03, phone: '0931 234 567' },
+        type: 'Trực tuyến',
+        date: '10/10/2024',
+        time: '14:30',
+        reason: 'Tư vấn sức khỏe',
+        status: 'Đã đặt lịch',
     },
-    menu: (provided: any) => ({
-        ...provided,
-        borderRadius: '8px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        zIndex: 99999,
-    }),
-    menuPortal: (provided: any) => ({
-        ...provided,
-        zIndex: 99999,
-    }),
-};
+    {
+        id: '32',
+        appointmentId: 'AP032',
+        patient: { id: '32', name: 'Trần Thị Lan', avatar: user04, phone: '0932 345 678' },
+        type: 'Trực tiếp',
+        date: '05/10/2024',
+        time: '09:45',
+        reason: 'Tái khám',
+        status: 'Đang khám',
+    },
+    {
+        id: '33',
+        appointmentId: 'AP033',
+        patient: { id: '33', name: 'Lê Văn Minh', avatar: user05, phone: '0933 456 789' },
+        type: 'Trực tuyến',
+        date: '01/10/2024',
+        time: '16:15',
+        reason: 'Khám sức khỏe',
+        status: 'Đã hủy',
+    },
+    {
+        id: '34',
+        appointmentId: 'AP034',
+        patient: { id: '34', name: 'Phạm Thị Nga', avatar: user06, phone: '0934 567 890' },
+        type: 'Trực tiếp',
+        date: '28/09/2024',
+        time: '11:20',
+        reason: 'Khám sức khỏe định kỳ',
+        status: 'Đã khám',
+    },
+    {
+        id: '35',
+        appointmentId: 'AP035',
+        patient: { id: '35', name: 'Hoàng Văn Oanh', avatar: user07, phone: '0935 678 901' },
+        type: 'Trực tuyến',
+        date: '25/09/2024',
+        time: '13:40',
+        reason: 'Tư vấn sức khỏe',
+        status: 'Đã đặt lịch',
+    },
+    {
+        id: '36',
+        appointmentId: 'AP036',
+        patient: { id: '36', name: 'Vũ Thị Phúc', avatar: user08, phone: '0936 789 012' },
+        type: 'Trực tiếp',
+        date: '20/09/2024',
+        time: '08:50',
+        reason: 'Tái khám',
+        status: 'Đang khám',
+    },
+    {
+        id: '37',
+        appointmentId: 'AP037',
+        patient: { id: '37', name: 'Đặng Văn Quang', avatar: user09, phone: '0937 890 123' },
+        type: 'Trực tuyến',
+        date: '15/09/2024',
+        time: '15:25',
+        reason: 'Khám sức khỏe',
+        status: 'Đã hủy',
+    },
+    {
+        id: '38',
+        appointmentId: 'AP038',
+        patient: { id: '38', name: 'Bùi Thị Rinh', avatar: user10, phone: '0938 901 234' },
+        type: 'Trực tiếp',
+        date: '10/09/2024',
+        time: '12:10',
+        reason: 'Khám sức khỏe định kỳ',
+        status: 'Đã khám',
+    },
+    {
+        id: '39',
+        appointmentId: 'AP039',
+        patient: { id: '39', name: 'Ngô Văn Sơn', avatar: user01, phone: '0939 012 345' },
+        type: 'Trực tuyến',
+        date: '05/09/2024',
+        time: '17:35',
+        reason: 'Tư vấn sức khỏe',
+        status: 'Đã đặt lịch',
+    },
+    {
+        id: '40',
+        appointmentId: 'AP040',
+        patient: { id: '40', name: 'Đinh Thị Tuyết', avatar: user02, phone: '0940 123 456' },
+        type: 'Trực tiếp',
+        date: '01/09/2024',
+        time: '10:45',
+        reason: 'Tái khám',
+        status: 'Đang khám',
+    },
+    {
+        id: '41',
+        appointmentId: 'AP041',
+        patient: { id: '41', name: 'Hồ Văn Uyên', avatar: user03, phone: '0941 234 567' },
+        type: 'Trực tuyến',
+        date: '28/08/2024',
+        time: '14:20',
+        reason: 'Khám sức khỏe',
+        status: 'Đã hủy',
+    },
+    {
+        id: '42',
+        appointmentId: 'AP042',
+        patient: { id: '42', name: 'Lý Thị Vân', avatar: user04, phone: '0942 345 678' },
+        type: 'Trực tiếp',
+        date: '25/08/2024',
+        time: '09:15',
+        reason: 'Khám sức khỏe định kỳ',
+        status: 'Đã khám',
+    },
+    {
+        id: '43',
+        appointmentId: 'AP043',
+        patient: { id: '43', name: 'Cao Văn Xuyên', avatar: user05, phone: '0943 456 789' },
+        type: 'Trực tuyến',
+        date: '20/08/2024',
+        time: '16:50',
+        reason: 'Tư vấn sức khỏe',
+        status: 'Đã đặt lịch',
+    },
+    {
+        id: '44',
+        appointmentId: 'AP044',
+        patient: { id: '44', name: 'Thạch Thị Yến', avatar: user06, phone: '0944 567 890' },
+        type: 'Trực tiếp',
+        date: '15/08/2024',
+        time: '11:30',
+        reason: 'Tái khám',
+        status: 'Đang khám',
+    },
+    {
+        id: '45',
+        appointmentId: 'AP045',
+        patient: { id: '45', name: 'Sơn Văn Zin', avatar: user07, phone: '0945 678 901' },
+        type: 'Trực tuyến',
+        date: '10/08/2024',
+        time: '13:45',
+        reason: 'Khám sức khỏe',
+        status: 'Đã hủy',
+    },
+    {
+        id: '46',
+        appointmentId: 'AP046',
+        patient: { id: '46', name: 'Lương Thị Anh', avatar: user08, phone: '0946 789 012' },
+        type: 'Trực tiếp',
+        date: '05/08/2024',
+        time: '08:25',
+        reason: 'Khám sức khỏe định kỳ',
+        status: 'Đã khám',
+    },
+    {
+        id: '47',
+        appointmentId: 'AP047',
+        patient: { id: '47', name: 'Hà Văn Bình', avatar: user09, phone: '0947 890 123' },
+        type: 'Trực tuyến',
+        date: '01/08/2024',
+        time: '15:10',
+        reason: 'Tư vấn sức khỏe',
+        status: 'Đã đặt lịch',
+    },
+    {
+        id: '48',
+        appointmentId: 'AP048',
+        patient: { id: '48', name: 'Phùng Thị Cường', avatar: user10, phone: '0948 901 234' },
+        type: 'Trực tiếp',
+        date: '28/07/2024',
+        time: '12:55',
+        reason: 'Tái khám',
+        status: 'Đang khám',
+    },
+    {
+        id: '49',
+        appointmentId: 'AP049',
+        patient: { id: '49', name: 'Tạ Văn Dung', avatar: user01, phone: '0949 012 345' },
+        type: 'Trực tuyến',
+        date: '25/07/2024',
+        time: '17:20',
+        reason: 'Khám sức khỏe',
+        status: 'Đã hủy',
+    },
+    {
+        id: '50',
+        appointmentId: 'AP050',
+        patient: { id: '50', name: 'Quách Thị Em', avatar: user02, phone: '0950 123 456' },
+        type: 'Trực tiếp',
+        date: '20/07/2024',
+        time: '10:40',
+        reason: 'Khám sức khỏe định kỳ',
+        status: 'Đã khám',
+    },
+];
 
 const ListAppointments: React.FC = () => {
     const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
@@ -488,15 +626,13 @@ const ListAppointments: React.FC = () => {
         start: Date | null;
         end: Date | null;
     }>({ start: null, end: null });
-    const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-    const dateRangeAnchorRef = useRef<HTMLDivElement>(null);
 
     // Status tab state
     const [activeStatusTab, setActiveStatusTab] = useState<string>('upcoming');
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPage = 10;
 
     // Form states for new appointment
     const [newAppointment, setNewAppointment] = useState<AppointmentFormData>({
@@ -595,8 +731,7 @@ const ListAppointments: React.FC = () => {
         });
     };
 
-    const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
+    const handleFilterSubmit = () => {
         let filteredAppointments = [...originalAppointments];
 
         // Apply all filters sequentially
@@ -646,11 +781,6 @@ const ListAppointments: React.FC = () => {
         setCurrentPage(page);
     };
 
-    const handleItemsPerPageChange = (newItemsPerPage: number) => {
-        setItemsPerPage(newItemsPerPage);
-        setCurrentPage(1); // Reset về trang 1 khi thay đổi items per page
-    };
-
     // Get count for each status tab
     const getStatusCounts = () => {
         return {
@@ -659,25 +789,6 @@ const ListAppointments: React.FC = () => {
             cancelled: appointments.filter((apt) => apt.status === 'Đã hủy').length,
             pending: appointments.filter((apt) => apt.status === 'Đang khám').length,
         };
-    };
-
-    const handleResetFilter = (type: string) => {
-        switch (type) {
-            case 'patients':
-                setSelectedPatients([]);
-                break;
-            case 'types':
-                setSelectedTypes([]);
-                break;
-            case 'doctors':
-                setSelectedDoctors([]);
-                break;
-            case 'dateRange':
-                setSelectedDateRange({ start: null, end: null });
-                break;
-            default:
-                break;
-        }
     };
 
     const getStatusBadgeClass = (status: AppointmentStatus) => {
@@ -697,7 +808,7 @@ const ListAppointments: React.FC = () => {
 
     return (
         <div className="main-wrapper">
-            <div className="page-wrapper">
+            <div className="settings-wrapper">
                 <div className="content">
                     {/* Start Page Header */}
                     <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
@@ -705,34 +816,20 @@ const ListAppointments: React.FC = () => {
                             <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
                         </div>
                         <div className="text-end d-flex">
-                            {/* dropdown*/}
-                            <div className="dropdown me-1">
-                                <button
-                                    type="button"
-                                    className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown"
-                                >
-                                    Xuất Dữ Liệu<i className="ti ti-chevron-down ms-2"></i>
-                                </button>
-                                <ul className="dropdown-menu p-2">
-                                    <li>
-                                        <button
-                                            type="button"
-                                            className="dropdown-item w-100 text-start border-0 bg-transparent"
-                                        >
-                                            Tải xuống dạng PDF
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button
-                                            type="button"
-                                            className="dropdown-item w-100 text-start border-0 bg-transparent"
-                                        >
-                                            Tải xuống dạng Excel
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
+                            <ExportDropdown
+                                options={[
+                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
+                                    {
+                                        value: 'excel',
+                                        label: 'Tải xuống dạng Excel',
+                                        format: 'excel',
+                                    },
+                                ]}
+                                onExport={(format: string) => {
+                                    console.log('Exporting:', format);
+                                    // Handle export logic here
+                                }}
+                            />
                             <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
                                 <a
                                     href="doctors-appointment.html"
@@ -748,13 +845,15 @@ const ListAppointments: React.FC = () => {
                                 </a>
                             </div>
 
-                            <button
-                                type="button"
-                                className="btn btn-primary ms-2 fs-13 btn-md"
+                            <Button
+                                variant="primary"
+                                size="md"
+                                className="ms-2 fs-13"
+                                icon="ti ti-plus"
                                 onClick={() => setShowNewAppointment(true)}
                             >
-                                <i className="ti ti-plus me-1"></i> Lịch Hẹn Mới
-                            </button>
+                                Lịch Hẹn Mới
+                            </Button>
                         </div>
                     </div>
                     {/* End Page Header */}
@@ -822,42 +921,27 @@ const ListAppointments: React.FC = () => {
                         </div>
 
                         <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
-                            <div className="dropdown me-2">
-                                <button
-                                    className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                                    onClick={() => setShowFilterModal(true)}
-                                >
-                                    <i className="ti ti-filter text-gray-5 me-1"></i>Lọc
-                                </button>
-                            </div>
-                            <div className="dropdown">
-                                <button
-                                    className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                                    data-bs-toggle="dropdown"
-                                    type="button"
-                                >
-                                    <span className="me-1">Sắp xếp theo:</span> {sortBy}
-                                </button>
-                                <ul className="dropdown-menu dropdown-menu-end p-2">
-                                    {[
-                                        'Gần đây',
-                                        'Tăng dần',
-                                        'Giảm dần',
-                                        'Tháng trước',
-                                        '7 ngày qua',
-                                    ].map((option) => (
-                                        <li key={option}>
-                                            <button
-                                                className="dropdown-item rounded-1"
-                                                onClick={() => setSortBy(option)}
-                                                type="button"
-                                            >
-                                                {option}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+                            <Button
+                                variant="white"
+                                size="md"
+                                className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                                icon="ti ti-filter text-gray-5"
+                                onClick={() => setShowFilterModal(true)}
+                            >
+                                Lọc
+                            </Button>
+                            <SortDropdown
+                                options={[
+                                    { value: 'recent', label: 'Gần đây' },
+                                    { value: 'asc', label: 'Tăng dần' },
+                                    { value: 'desc', label: 'Giảm dần' },
+                                    { value: 'last-month', label: 'Tháng trước' },
+                                    { value: 'last-7-days', label: '7 ngày qua' },
+                                ]}
+                                selectedValue={sortBy}
+                                onSelect={setSortBy}
+                                placeholder="Sắp xếp theo:"
+                            />
                         </div>
                     </div>
                     {/* End Filter */}
@@ -989,12 +1073,6 @@ const ListAppointments: React.FC = () => {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={handlePageChange}
-                    itemsPerPage={itemsPerPage}
-                    totalItems={getFilteredAppointments().length}
-                    showInfo={false}
-                    showItemsPerPage={true}
-                    onItemsPerPageChange={handleItemsPerPageChange}
-                    itemsPerPageOptions={[10, 25, 50, 100]}
                 />
 
                 {/* Footer Start */}
@@ -1011,250 +1089,62 @@ const ListAppointments: React.FC = () => {
             </div>
 
             {/* Filter Modal */}
-            {showFilterModal && (
-                <div
-                    className="modal fade show"
-                    style={{ display: 'block', background: 'rgba(0,0,0,0.15)' }}
-                    tabIndex={-1}
-                >
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className={`modal-content ${styles.modalContent}`}>
-                            <div className={`modal-header ${styles.modalHeader}`}>
-                                <h4 className={styles.modalTitle}>Lọc Lịch Hẹn</h4>
-                                <div className="d-flex align-items-center">
-                                    <button
-                                        className={styles.clearAll}
-                                        onClick={() => {
-                                            handleClearFilters();
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                handleClearFilters();
-                                            }
-                                        }}
-                                        type="button"
-                                    >
-                                        Xóa Tất Cả
-                                    </button>
-                                </div>
-                            </div>
-                            <div className={styles.modalBody}>
-                                {/* Bệnh nhân */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="patients-select" className={styles.label}>
-                                            Bệnh Nhân
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('patients')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('patients');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="patients-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={mockPatients
-                                            .map((patient) => ({
-                                                value: patient.id,
-                                                label: patient.name,
-                                            }))
-                                            .filter((option) =>
-                                                selectedPatients.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedPatients(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={mockPatients.map((patient) => ({
-                                            value: patient.id,
-                                            label: patient.name,
-                                        }))}
-                                        placeholder="Chọn bệnh nhân..."
-                                    />
-                                </div>
-
-                                {/* Loại khám */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="types-select" className={styles.label}>
-                                            Loại Khám
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('types')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('types');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="types-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={appointmentTypes
-                                            .map((type) => ({
-                                                value: type,
-                                                label: type,
-                                            }))
-                                            .filter((option) =>
-                                                selectedTypes.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedTypes(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={appointmentTypes.map((type) => ({
-                                            value: type,
-                                            label: type,
-                                        }))}
-                                        placeholder="Chọn loại khám..."
-                                    />
-                                </div>
-
-                                {/* Bác sĩ */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="doctors-select" className={styles.label}>
-                                            Bác Sĩ
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('doctors')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('doctors');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="doctors-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            { value: 'dr1', label: 'BS. Nguyễn Văn A' },
-                                            { value: 'dr2', label: 'BS. Trần Thị B' },
-                                            { value: 'dr3', label: 'BS. Lê Văn C' },
-                                        ].filter((option) =>
-                                            selectedDoctors.includes(option.value)
-                                        )}
-                                        onChange={(options) =>
-                                            setSelectedDoctors(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={mockDoctors.map((doctor) => ({
-                                            value: doctor.id,
-                                            label: doctor.name,
-                                        }))}
-                                        placeholder="Chọn bác sĩ..."
-                                    />
-                                </div>
-
-                                {/* Khoảng thời gian */}
-                                <div className="mb-2">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="date-range-input" className={styles.label}>
-                                            Khoảng thời gian
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => {
-                                                setSelectedDateRange({ start: null, end: null });
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    setSelectedDateRange({
-                                                        start: null,
-                                                        end: null,
-                                                    });
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <div
-                                        ref={dateRangeAnchorRef}
-                                        className={`position-relative ${styles.dateInput}`}
-                                    >
-                                        <input
-                                            id="date-range-input"
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="Chọn khoảng thời gian..."
-                                            value={
-                                                selectedDateRange.start && selectedDateRange.end
-                                                    ? `${selectedDateRange.start.toLocaleDateString('vi-VN')} - ${selectedDateRange.end.toLocaleDateString('vi-VN')}`
-                                                    : selectedDateRange.start
-                                                      ? `${selectedDateRange.start.toLocaleDateString('vi-VN')} - Chọn ngày kết thúc`
-                                                      : ''
-                                            }
-                                            onClick={() => setShowDateRangePicker(true)}
-                                            readOnly
-                                        />
-                                        <DateRangePicker
-                                            value={selectedDateRange}
-                                            onChange={setSelectedDateRange}
-                                            anchorEl={dateRangeAnchorRef.current}
-                                            open={showDateRangePicker}
-                                            onClose={() => setShowDateRangePicker(false)}
-                                            placeholder="Chọn khoảng thời gian..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className={`modal-footer ${styles.modalFooter}`}>
-                                <button
-                                    type="button"
-                                    className={`btn btn-light btn-md me-2 ${styles.btn}`}
-                                    onClick={() => setShowFilterModal(false)}
-                                >
-                                    Đóng
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn btn-primary btn-md ${styles.btn}`}
-                                    onClick={handleFilterSubmit}
-                                >
-                                    Lọc
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ModalFilter
+                show={showFilterModal}
+                onHide={() => setShowFilterModal(false)}
+                onApply={handleFilterSubmit}
+                onReset={handleClearFilters}
+                title="Lọc Lịch Hẹn"
+                fields={[
+                    {
+                        name: 'patients',
+                        label: 'Bệnh Nhân',
+                        type: 'multiselect',
+                        value: selectedPatients,
+                        onChange: (value) => setSelectedPatients(value as string[]),
+                        options: mockPatients.map((patient) => ({
+                            value: patient.id,
+                            label: patient.name,
+                        })),
+                        placeholder: 'Chọn bệnh nhân...',
+                        resetValue: [],
+                    },
+                    {
+                        name: 'types',
+                        label: 'Loại Khám',
+                        type: 'multiselect',
+                        value: selectedTypes,
+                        onChange: (value) => setSelectedTypes(value as string[]),
+                        options: appointmentTypes.map((type) => ({
+                            value: type,
+                            label: type,
+                        })),
+                        placeholder: 'Chọn loại khám...',
+                        resetValue: [],
+                    },
+                    {
+                        name: 'doctors',
+                        label: 'Bác Sĩ',
+                        type: 'multiselect',
+                        value: selectedDoctors,
+                        onChange: (value) => setSelectedDoctors(value as string[]),
+                        options: mockDoctors.map((doctor) => ({
+                            value: doctor.id,
+                            label: doctor.name,
+                        })),
+                        placeholder: 'Chọn bác sĩ...',
+                        resetValue: [],
+                    },
+                    {
+                        name: 'dateRange',
+                        label: 'Khoảng thời gian',
+                        type: 'daterange',
+                        value: selectedDateRange,
+                        onChange: (value) => setSelectedDateRange(value as any),
+                        resetValue: { start: null, end: null },
+                    },
+                ]}
+            />
 
             {/* Start Add New Appointment */}
             <div
@@ -2034,53 +1924,15 @@ const ListAppointments: React.FC = () => {
             </div>
             {/* End Add New Appointment*/}
 
-            {/* Start Delete Modal  */}
-            <div
-                className={`modal fade ${showDeleteModal ? 'show' : ''}`}
-                id="delete_modal"
-                style={{ display: showDeleteModal ? 'block' : 'none' }}
-            >
-                <div className="modal-dialog modal-dialog-centered modal-sm">
-                    <div className="modal-content">
-                        <div className="modal-body text-center position-relative">
-                            <img
-                                src={deleteModalBg01}
-                                alt=""
-                                className="img-fluid position-absolute top-0 start-0 z-0"
-                            />
-                            <img
-                                src={deleteModalBg02}
-                                alt=""
-                                className="img-fluid position-absolute bottom-0 end-0 z-0"
-                            />
-                            <div className="mb-3 position-relative z-1">
-                                <span className="avatar avatar-lg bg-danger text-white">
-                                    <i className="ti ti-trash fs-24"></i>
-                                </span>
-                            </div>
-                            <h5 className="fw-bold mb-1 position-relative z-1">Xác Nhận Xóa</h5>
-                            <p className="mb-3 position-relative z-1">Bạn có chắc chắn muốn xóa?</p>
-                            <div className="d-flex justify-content-center">
-                                <button
-                                    type="button"
-                                    className="btn btn-light position-relative z-1 me-3"
-                                    onClick={() => setShowDeleteModal(false)}
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-danger position-relative z-1"
-                                    onClick={handleDeleteConfirm}
-                                >
-                                    Có, Xóa
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* End Delete Modal  */}
+            {/* Delete Modal */}
+            <ModalDelete
+                show={showDeleteModal}
+                onHide={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Xác Nhận Xóa"
+                message="Bạn có chắc chắn muốn xóa lịch hẹn này không?"
+                itemName={selectedAppointment?.appointmentId}
+            />
         </div>
     );
 };

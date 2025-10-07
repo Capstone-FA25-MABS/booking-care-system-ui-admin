@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import Select from 'react-select';
 import Pagination from '@/components/Pagination';
+import Button from '@/components/Button';
+import ModalDelete from '@/components/ModalDelete';
+import ModalFilter from '@/components/ModalFilter';
+import SortDropdown from '@/components/SortDropdown';
+import ExportDropdown from '@/components/ExportDropdown';
 import styles from './ListDoctors.module.scss';
 
 // Import ảnh trực tiếp
@@ -505,70 +509,6 @@ const mockDoctors: Doctor[] = [
     },
 ];
 
-const selectCustomStyles = {
-    control: (provided: any) => ({
-        ...provided,
-        minHeight: '40px',
-        borderRadius: '8px',
-        borderColor: '#E5E7EB',
-        boxShadow: 'none',
-        fontSize: '14px',
-        padding: '1px 0',
-    }),
-    valueContainer: (provided: any) => ({
-        ...provided,
-        padding: '1px 8px',
-    }),
-    multiValue: (provided: any) => ({
-        ...provided,
-        background: '#F3F4F6',
-        borderRadius: '6px',
-        fontSize: '13px',
-        color: '#111827',
-        margin: '2px 4px',
-    }),
-    multiValueLabel: (provided: any) => ({
-        ...provided,
-        color: '#111827',
-        fontWeight: 400,
-        padding: '2px 6px',
-        fontSize: '13px',
-    }),
-    multiValueRemove: (provided: any) => ({
-        ...provided,
-        color: '#6B7280',
-        ':hover': { backgroundColor: '#E5E7EB', color: '#EF4444' },
-    }),
-    option: (provided: any, state: any) => {
-        let backgroundColor = '#fff';
-        if (state.isSelected) {
-            backgroundColor = '#EEF2FF';
-        } else if (state.isFocused) {
-            backgroundColor = '#F3F4F6';
-        }
-
-        return {
-            ...provided,
-            backgroundColor,
-            color: '#111827',
-            fontSize: '14px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontWeight: 400,
-        };
-    },
-    menu: (provided: any) => ({
-        ...provided,
-        borderRadius: '8px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        zIndex: 99999,
-    }),
-    menuPortal: (provided: any) => ({
-        ...provided,
-        zIndex: 99999,
-    }),
-};
-
 const ListDoctors: React.FC = () => {
     const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
     const [originalDoctors, setOriginalDoctors] = useState<Doctor[]>(mockDoctors);
@@ -585,7 +525,7 @@ const ListDoctors: React.FC = () => {
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPage = 10;
 
     // Pagination logic
     const paginatedDoctors = useMemo(() => {
@@ -600,13 +540,7 @@ const ListDoctors: React.FC = () => {
         setCurrentPage(page);
     };
 
-    const handleItemsPerPageChange = (newItemsPerPage: number) => {
-        setItemsPerPage(newItemsPerPage);
-        setCurrentPage(1); // Reset về trang 1 khi thay đổi items per page
-    };
-
-    const handleFilterSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
+    const handleFilterSubmit = () => {
         let filteredDoctors = [...originalDoctors];
 
         // Lọc theo bác sĩ
@@ -730,674 +664,362 @@ const ListDoctors: React.FC = () => {
     };
 
     return (
-        <div className="page-wrapper">
-            <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                    <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">
-                            Danh Sách Bác Sĩ{' '}
-                            <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Bác Sĩ: {doctors.length}
-                            </span>
-                        </h4>
-                    </div>
-                    <div className="text-end d-flex">
-                        <div className="dropdown me-1">
-                            <button
-                                className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown"
-                                type="button"
-                            >
-                                Xuất Dữ Liệu <i className="ti ti-chevron-down ms-2"></i>
-                            </button>
-                            <ul className="dropdown-menu p-2">
-                                <li>
-                                    <button className="dropdown-item" type="button">
-                                        Tải xuống dạng PDF
-                                    </button>
-                                </li>
-                                <li>
-                                    <button className="dropdown-item" type="button">
-                                        Tải xuống dạng Excel
-                                    </button>
-                                </li>
-                            </ul>
+        <div className="main-wrapper">
+            <div className="settings-wrapper">
+                <div className="content">
+                    <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                        <div className="flex-grow-1">
+                            <h4 className="fw-bold mb-0">
+                                Danh Sách Bác Sĩ{' '}
+                                <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
+                                    Tổng Bác Sĩ: {doctors.length}
+                                </span>
+                            </h4>
                         </div>
-                        <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                            <Link
-                                to="/hospitals/doctors"
-                                className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
+                        <div className="text-end d-flex">
+                            <ExportDropdown
+                                options={[
+                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
+                                    {
+                                        value: 'excel',
+                                        label: 'Tải xuống dạng Excel',
+                                        format: 'excel',
+                                    },
+                                ]}
+                                onExport={(format: string) => {
+                                    console.log('Exporting:', format);
+                                    // Handle export logic here
+                                }}
+                            />
+                            <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
+                                <Link
+                                    to="/hospitals/doctors"
+                                    className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
+                                >
+                                    <i className="ti ti-list fs-14 text-body"></i>
+                                </Link>
+                                <Link
+                                    to="/hospitals/doctors"
+                                    className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                                >
+                                    <i className="ti ti-layout-grid fs-14 text-body"></i>
+                                </Link>
+                            </div>
+                            <Button
+                                variant="primary"
+                                size="md"
+                                className="ms-2 fs-13"
+                                icon="ti ti-plus"
+                                onClick={() => (window.location.href = '/hospitals/doctors/add')}
                             >
-                                <i className="ti ti-list fs-14 text-body"></i>
-                            </Link>
-                            <Link
-                                to="/hospitals/doctors"
-                                className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
-                            >
-                                <i className="ti ti-layout-grid fs-14 text-body"></i>
-                            </Link>
+                                Thêm Bác Sĩ
+                            </Button>
                         </div>
-                        <Link
-                            to="/hospitals/doctors/add"
-                            className="btn btn-primary ms-2 fs-13 btn-md"
-                        >
-                            <i className="ti ti-plus me-1"></i>Thêm Bác Sĩ
-                        </Link>
                     </div>
-                </div>
 
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <div className="search-set mb-3">
-                        <div className="d-flex align-items-center flex-wrap gap-2">
-                            <div className="table-search d-flex align-items-center mb-0">
-                                <label htmlFor="doctor-search" className="visually-hidden">
-                                    Tìm kiếm bác sĩ
-                                </label>
-                                <div className="search-input">
-                                    <div className="input-icon-start position-relative">
-                                        <span className="input-icon-addon">
-                                            <i className="ti ti-search"></i>
-                                        </span>
-                                        <input
-                                            id="doctor-search"
-                                            type="text"
-                                            className="form-control shadow-sm"
-                                            placeholder="Tìm kiếm bác sĩ..."
-                                        />
-                                        <span className="input-icon-addon text-dark shadow fs-18 d-inline-flex p-0 header-search-icon">
-                                            <i className="ti ti-command"></i>
-                                        </span>
+                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <div className="search-set mb-3">
+                            <div className="d-flex align-items-center flex-wrap gap-2">
+                                <div className="table-search d-flex align-items-center mb-0">
+                                    <label htmlFor="doctor-search" className="visually-hidden">
+                                        Tìm kiếm bác sĩ
+                                    </label>
+                                    <div className="search-input">
+                                        <div className="input-icon-start position-relative">
+                                            <span className="input-icon-addon">
+                                                <i className="ti ti-search"></i>
+                                            </span>
+                                            <input
+                                                id="doctor-search"
+                                                type="text"
+                                                className="form-control shadow-sm"
+                                                placeholder="Tìm kiếm bác sĩ..."
+                                            />
+                                            <span className="input-icon-addon text-dark shadow fs-18 d-inline-flex p-0 header-search-icon">
+                                                <i className="ti ti-command"></i>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
-                        <div className="dropdown me-2">
-                            <button
-                                className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                        <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
+                            <Button
+                                variant="white"
+                                size="md"
+                                className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                                icon="ti ti-filter text-gray-5"
                                 onClick={() => setShowFilterModal(true)}
                             >
-                                <i className="ti ti-filter text-gray-5 me-1"></i>Lọc
-                            </button>
-                        </div>
-                        <div className="dropdown">
-                            <button
-                                className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                                data-bs-toggle="dropdown"
-                                type="button"
-                            >
-                                <span className="me-1">Sắp xếp theo:</span> {sortBy}
-                            </button>
-                            <ul className="dropdown-menu dropdown-menu-end p-2">
-                                {[
-                                    'Mới Thêm Gần Đây',
-                                    'Tăng Dần',
-                                    'Giảm Dần',
-                                    'Tháng Trước',
-                                    '7 Ngày Qua',
-                                ].map((option) => (
-                                    <li key={option}>
-                                        <button
-                                            className="dropdown-item rounded-1"
-                                            onClick={() => setSortBy(option)}
-                                            type="button"
-                                        >
-                                            {option}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
+                                Lọc
+                            </Button>
+                            <SortDropdown
+                                options={[
+                                    { value: 'recent', label: 'Mới Thêm Gần Đây' },
+                                    { value: 'asc', label: 'Tăng Dần' },
+                                    { value: 'desc', label: 'Giảm Dần' },
+                                    { value: 'last-month', label: 'Tháng Trước' },
+                                    { value: 'last-7-days', label: '7 Ngày Qua' },
+                                ]}
+                                selectedValue={sortBy}
+                                onSelect={setSortBy}
+                                placeholder="Sắp xếp theo:"
+                            />
                         </div>
                     </div>
-                </div>
 
-                <div className="table-responsive">
-                    <table className="table table-nowrap datatable">
-                        <thead className="thead-light">
-                            <tr>
-                                <th>Tên & Học hàm/Học vị</th>
-                                <th>Chuyên khoa</th>
-                                <th>Email</th>
-                                <th>Kinh nghiệm</th>
-                                <th>Loại dịch vụ</th>
-                                <th>Giá</th>
-                                <th>Trạng thái</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedDoctors.map((doctor) => (
-                                <tr key={doctor.id}>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <Link
-                                                to={`/clinic/doctor-details/${doctor.id}`}
-                                                className="avatar me-2"
-                                            >
-                                                <img
-                                                    src={doctor.avatarUrl}
-                                                    alt="Bác sĩ"
-                                                    className="rounded-circle"
-                                                />
-                                            </Link>
-                                            <div>
-                                                <h6 className="mb-1 fs-14 fw-semibold">
-                                                    <Link
-                                                        to={`/clinic/doctor-details/${doctor.id}`}
-                                                    >
-                                                        {doctor.firstName} {doctor.lastName}
-                                                    </Link>
-                                                </h6>
-                                                <span className="fs-13 d-block">
-                                                    {doctor.position.name}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{doctor.specialtyId}</td>
-                                    <td>
-                                        <a href={`mailto:${doctor.email}`}>{doctor.email}</a>
-                                    </td>
-                                    <td>
-                                        <h6 className="fs-14 fw-semibold mb-0">
-                                            {doctor.yearsOfExperience} năm
-                                        </h6>
-                                    </td>
-                                    <td>
-                                        {doctor.prices
-                                            .map((price) =>
-                                                price.serviceTypeName === 'IN_PERSON'
-                                                    ? 'Trực tiếp'
-                                                    : 'Từ xa'
-                                            )
-                                            .join(', ')}
-                                    </td>
-                                    <td>
-                                        {doctor.prices
-                                            .map(
-                                                (price) =>
-                                                    `${price.amount.toLocaleString('vi-VN')} VNĐ`
-                                            )
-                                            .join(', ')}
-                                    </td>
-                                    <td>
-                                        <span
-                                            className={`badge badge-soft-${
-                                                doctor.status === 'ACTIVE' ? 'success' : 'danger'
-                                            } border border-${doctor.status === 'ACTIVE' ? 'success' : 'danger'}`}
-                                        >
-                                            {doctor.status === 'ACTIVE' ? 'Có mặt' : 'Không có mặt'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <div className="action-item me-2">
-                                                <Link to="/clinic/appointment-calendar">
-                                                    <i className="ti ti-calendar-cog"></i>
-                                                </Link>
-                                            </div>
-                                            <div className="action-item">
-                                                <button
-                                                    className={styles.dotsButton}
-                                                    data-bs-toggle="dropdown"
-                                                    type="button"
-                                                >
-                                                    <i className="ti ti-dots-vertical"></i>
-                                                </button>
-                                                <ul className="dropdown-menu">
-                                                    <li>
-                                                        <Link
-                                                            to={`/hospitals/doctors/edit/${doctor.id}`}
-                                                            className="dropdown-item d-flex align-items-center"
-                                                        >
-                                                            Sửa
-                                                        </Link>
-                                                    </li>
-                                                    <li>
-                                                        <button
-                                                            className="dropdown-item d-flex align-items-center"
-                                                            onClick={() =>
-                                                                handleDeleteClick(doctor)
-                                                            }
-                                                            type="button"
-                                                        >
-                                                            Xóa
-                                                        </button>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </td>
+                    <div className="table-responsive">
+                        <table className="table table-nowrap datatable">
+                            <thead className="thead-light">
+                                <tr>
+                                    <th>Tên & Học hàm/Học vị</th>
+                                    <th>Chuyên khoa</th>
+                                    <th>Email</th>
+                                    <th>Kinh nghiệm</th>
+                                    <th>Loại dịch vụ</th>
+                                    <th>Giá</th>
+                                    <th>Trạng thái</th>
+                                    <th></th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            </thead>
+                            <tbody>
+                                {paginatedDoctors.map((doctor) => (
+                                    <tr key={doctor.id}>
+                                        <td>
+                                            <div className="d-flex align-items-center">
+                                                <Link
+                                                    to={`/clinic/doctor-details/${doctor.id}`}
+                                                    className="avatar me-2"
+                                                >
+                                                    <img
+                                                        src={doctor.avatarUrl}
+                                                        alt="Bác sĩ"
+                                                        className="rounded-circle"
+                                                    />
+                                                </Link>
+                                                <div>
+                                                    <h6 className="mb-1 fs-14 fw-semibold">
+                                                        <Link
+                                                            to={`/clinic/doctor-details/${doctor.id}`}
+                                                        >
+                                                            {doctor.firstName} {doctor.lastName}
+                                                        </Link>
+                                                    </h6>
+                                                    <span className="fs-13 d-block">
+                                                        {doctor.position.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{doctor.specialtyId}</td>
+                                        <td>
+                                            <a href={`mailto:${doctor.email}`}>{doctor.email}</a>
+                                        </td>
+                                        <td>
+                                            <h6 className="fs-14 fw-semibold mb-0">
+                                                {doctor.yearsOfExperience} năm
+                                            </h6>
+                                        </td>
+                                        <td>
+                                            {doctor.prices
+                                                .map((price) =>
+                                                    price.serviceTypeName === 'IN_PERSON'
+                                                        ? 'Trực tiếp'
+                                                        : 'Từ xa'
+                                                )
+                                                .join(', ')}
+                                        </td>
+                                        <td>
+                                            {doctor.prices
+                                                .map(
+                                                    (price) =>
+                                                        `${price.amount.toLocaleString('vi-VN')} VNĐ`
+                                                )
+                                                .join(', ')}
+                                        </td>
+                                        <td>
+                                            <span
+                                                className={`badge badge-soft-${
+                                                    doctor.status === 'ACTIVE'
+                                                        ? 'success'
+                                                        : 'danger'
+                                                } border border-${doctor.status === 'ACTIVE' ? 'success' : 'danger'}`}
+                                            >
+                                                {doctor.status === 'ACTIVE'
+                                                    ? 'Có mặt'
+                                                    : 'Không có mặt'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex align-items-center">
+                                                <div className="action-item me-2">
+                                                    <Link to="/clinic/appointment-calendar">
+                                                        <i className="ti ti-calendar-cog"></i>
+                                                    </Link>
+                                                </div>
+                                                <div className="action-item">
+                                                    <button
+                                                        className={styles.dotsButton}
+                                                        data-bs-toggle="dropdown"
+                                                        type="button"
+                                                    >
+                                                        <i className="ti ti-dots-vertical"></i>
+                                                    </button>
+                                                    <ul className="dropdown-menu">
+                                                        <li>
+                                                            <Link
+                                                                to={`/hospitals/doctors/edit/${doctor.id}`}
+                                                                className="dropdown-item d-flex align-items-center"
+                                                            >
+                                                                Sửa
+                                                            </Link>
+                                                        </li>
+                                                        <li>
+                                                            <button
+                                                                className="dropdown-item d-flex align-items-center"
+                                                                onClick={() =>
+                                                                    handleDeleteClick(doctor)
+                                                                }
+                                                                type="button"
+                                                            >
+                                                                Xóa
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-            {/* Pagination */}
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                itemsPerPage={itemsPerPage}
-                totalItems={doctors.length}
-                showInfo={false}
-                showItemsPerPage={true}
-                onItemsPerPageChange={handleItemsPerPageChange}
-                itemsPerPageOptions={[10, 25, 50, 100]}
-            />
+                    {/* Pagination */}
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
 
-            <div className="footer text-center bg-white p-2 border-top">
-                <p className="text-dark mb-0">
-                    2025 &copy;{' '}
-                    <Link to="/" className="link-primary">
-                        Preclinic
-                    </Link>
-                    , Tất Cả Quyền Được Bảo Lưu
-                </p>
-            </div>
-
-            {showFilterModal && (
-                <div
-                    className="modal fade show"
-                    style={{ display: 'block', background: 'rgba(0,0,0,0.15)' }}
-                    tabIndex={-1}
-                >
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className={`modal-content ${styles.modalContent}`}>
-                            <div className={`modal-header ${styles.modalHeader}`}>
-                                <h4 className={styles.modalTitle}>Lọc Bác Sĩ</h4>
-                                <div className="d-flex align-items-center">
-                                    <button
-                                        className={styles.clearAll}
-                                        onClick={() => {
-                                            handleClearFilters();
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                handleClearFilters();
-                                            }
-                                        }}
-                                        type="button"
-                                    >
-                                        Xóa Tất Cả
-                                    </button>
-                                </div>
-                            </div>
-                            <div className={styles.modalBody}>
-                                {/* Bác sĩ */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="doctors-select" className={styles.label}>
-                                            Bác Sĩ
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('doctors')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('doctors');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="doctors-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={originalDoctors
-                                            .map((doctor) => ({
-                                                value: doctor.id,
-                                                label: `${doctor.firstName} ${doctor.lastName}`,
-                                            }))
-                                            .filter((option) =>
-                                                selectedDoctors.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedDoctors(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={originalDoctors.map((doctor) => ({
-                                            value: doctor.id,
-                                            label: `${doctor.firstName} ${doctor.lastName}`,
-                                        }))}
-                                        placeholder="Chọn bác sĩ..."
-                                    />
-                                </div>
-                                {/* Học hàm/Học vị */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="positions-select" className={styles.label}>
-                                            Học hàm/Học vị
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('positions')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('positions');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="positions-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            ...new Set(
-                                                originalDoctors.map(
-                                                    (doctor) => doctor.position.name
-                                                )
-                                            ),
-                                        ]
-                                            .map((position) => ({
-                                                value: position,
-                                                label: position,
-                                            }))
-                                            .filter((option) =>
-                                                selectedPositions.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedPositions(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={[
-                                            ...new Set(
-                                                originalDoctors.map(
-                                                    (doctor) => doctor.position.name
-                                                )
-                                            ),
-                                        ].map((position) => ({ value: position, label: position }))}
-                                        placeholder="Chọn học hàm/học vị..."
-                                    />
-                                </div>
-                                {/* Chuyên khoa */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label
-                                            htmlFor="specialties-select"
-                                            className={styles.label}
-                                        >
-                                            Chuyên Khoa
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('specialties')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('specialties');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="specialties-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            ...new Set(
-                                                originalDoctors.map((doctor) => doctor.specialtyId)
-                                            ),
-                                        ]
-                                            .map((specialty) => ({
-                                                value: specialty,
-                                                label: specialty,
-                                            }))
-                                            .filter((option) =>
-                                                selectedSpecialties.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedSpecialties(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={[
-                                            ...new Set(
-                                                originalDoctors.map((doctor) => doctor.specialtyId)
-                                            ),
-                                        ].map((specialty) => ({
-                                            value: specialty,
-                                            label: specialty,
-                                        }))}
-                                        placeholder="Chọn chuyên khoa..."
-                                    />
-                                </div>
-                                {/* Loại dịch vụ */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label
-                                            htmlFor="service-types-select"
-                                            className={styles.label}
-                                        >
-                                            Loại Dịch Vụ
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('serviceTypes')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('serviceTypes');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="service-types-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            ...new Set(
-                                                originalDoctors.flatMap((doctor) =>
-                                                    doctor.prices.map((p) => p.serviceTypeName)
-                                                )
-                                            ),
-                                        ]
-                                            .map((type) => ({
-                                                value: type,
-                                                label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
-                                            }))
-                                            .filter((option) =>
-                                                selectedServiceTypes.includes(option.value)
-                                            )}
-                                        onChange={(options) =>
-                                            setSelectedServiceTypes(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={[
-                                            ...new Set(
-                                                originalDoctors.flatMap((doctor) =>
-                                                    doctor.prices.map((p) => p.serviceTypeName)
-                                                )
-                                            ),
-                                        ].map((type) => ({
-                                            value: type,
-                                            label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
-                                        }))}
-                                        placeholder="Chọn loại dịch vụ..."
-                                    />
-                                </div>
-                                {/* Giá */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="prices-select" className={styles.label}>
-                                            Giá
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('prices')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('prices');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="prices-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
-                                            { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
-                                            { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
-                                        ].filter((option) => selectedPrices.includes(option.value))}
-                                        onChange={(options) =>
-                                            setSelectedPrices(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={[
-                                            { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
-                                            { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
-                                            { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
-                                        ]}
-                                        placeholder="Chọn mức giá..."
-                                    />
-                                </div>
-                                {/* Trạng thái */}
-                                <div className="mb-2">
-                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                        <label htmlFor="statuses-select" className={styles.label}>
-                                            Trạng Thái
-                                        </label>
-                                        <button
-                                            className={styles.resetLink}
-                                            onClick={() => handleResetFilter('statuses')}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleResetFilter('statuses');
-                                                }
-                                            }}
-                                            type="button"
-                                        >
-                                            Đặt lại
-                                        </button>
-                                    </div>
-                                    <Select
-                                        id="statuses-select"
-                                        isMulti
-                                        classNamePrefix="select2"
-                                        styles={selectCustomStyles}
-                                        menuPortalTarget={document.body}
-                                        value={[
-                                            { value: 'ACTIVE', label: 'Có mặt' },
-                                            { value: 'INACTIVE', label: 'Không có mặt' },
-                                        ].filter((option) =>
-                                            selectedStatuses.includes(option.value)
-                                        )}
-                                        onChange={(options) =>
-                                            setSelectedStatuses(
-                                                options ? options.map((option) => option.value) : []
-                                            )
-                                        }
-                                        options={[
-                                            { value: 'ACTIVE', label: 'Có mặt' },
-                                            { value: 'INACTIVE', label: 'Không có mặt' },
-                                        ]}
-                                        placeholder="Chọn trạng thái..."
-                                    />
-                                </div>
-                            </div>
-                            <div className={`modal-footer ${styles.modalFooter}`}>
-                                <button
-                                    type="button"
-                                    className={`btn btn-light btn-md me-2 ${styles.btn}`}
-                                    onClick={() => setShowFilterModal(false)}
-                                >
-                                    Đóng
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn btn-primary btn-md ${styles.btn}`}
-                                    onClick={handleFilterSubmit}
-                                >
-                                    Lọc
-                                </button>
-                            </div>
-                        </div>
+                    <div className="footer text-center bg-white p-2 border-top">
+                        <p className="text-dark mb-0">
+                            2025 &copy;{' '}
+                            <Link to="/" className="link-primary">
+                                Preclinic
+                            </Link>
+                            , Tất Cả Quyền Được Bảo Lưu
+                        </p>
                     </div>
                 </div>
-            )}
 
-            {/* Delete Confirmation Modal */}
-            <div
-                className={`modal fade ${showDeleteModal ? 'show' : ''}`}
-                id="delete_modal"
-                style={{ display: showDeleteModal ? 'block' : 'none' }}
-            >
-                <div className="modal-dialog modal-dialog-centered modal-sm">
-                    <div className="modal-content">
-                        <div className="modal-body text-center position-relative">
-                            <div className="mb-3 position-relative z-1">
-                                <span className="avatar avatar-lg bg-danger text-white">
-                                    <i className="ti ti-trash fs-24"></i>
-                                </span>
-                            </div>
-                            <h5 className="fw-bold mb-1 position-relative z-1">Xác Nhận Xóa</h5>
-                            <p className="mb-3 position-relative z-1">
-                                Bạn có chắc chắn muốn xóa bác sĩ{' '}
-                                <strong>
-                                    {doctorToDelete?.firstName} {doctorToDelete?.lastName}
-                                </strong>
-                                ?
-                            </p>
-                            <div className="d-flex justify-content-center">
-                                <a
-                                    href="javascript:void(0);"
-                                    className="btn btn-light position-relative z-1 me-3"
-                                    onClick={handleDeleteCancel}
-                                >
-                                    Hủy
-                                </a>
-                                <a
-                                    href="javascript:void(0);"
-                                    className="btn btn-danger position-relative z-1"
-                                    onClick={handleDeleteConfirm}
-                                >
-                                    Có, Xóa
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* Filter Modal */}
+                <ModalFilter
+                    show={showFilterModal}
+                    onHide={() => setShowFilterModal(false)}
+                    onApply={handleFilterSubmit}
+                    onReset={handleClearFilters}
+                    title="Lọc Bác Sĩ"
+                    fields={[
+                        {
+                            name: 'doctors',
+                            label: 'Bác Sĩ',
+                            type: 'multiselect',
+                            options: originalDoctors.map((doctor) => ({
+                                value: doctor.id,
+                                label: `${doctor.firstName} ${doctor.lastName}`,
+                            })),
+                            value: selectedDoctors,
+                            onChange: setSelectedDoctors,
+                            resetValue: () => handleResetFilter('doctors'),
+                        },
+                        {
+                            name: 'positions',
+                            label: 'Học hàm/Học vị',
+                            type: 'multiselect',
+                            options: [
+                                ...new Set(originalDoctors.map((doctor) => doctor.position.name)),
+                            ].map((position) => ({
+                                value: position,
+                                label: position,
+                            })),
+                            value: selectedPositions,
+                            onChange: setSelectedPositions,
+                            resetValue: () => handleResetFilter('positions'),
+                        },
+                        {
+                            name: 'specialties',
+                            label: 'Chuyên Khoa',
+                            type: 'multiselect',
+                            options: [
+                                ...new Set(originalDoctors.map((doctor) => doctor.specialtyId)),
+                            ].map((specialty) => ({
+                                value: specialty,
+                                label: specialty,
+                            })),
+                            value: selectedSpecialties,
+                            onChange: setSelectedSpecialties,
+                            resetValue: () => handleResetFilter('specialties'),
+                        },
+                        {
+                            name: 'serviceTypes',
+                            label: 'Loại Dịch Vụ',
+                            type: 'multiselect',
+                            options: [
+                                ...new Set(
+                                    originalDoctors.flatMap((doctor) =>
+                                        doctor.prices.map((p) => p.serviceTypeName)
+                                    )
+                                ),
+                            ].map((type) => ({
+                                value: type,
+                                label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
+                            })),
+                            value: selectedServiceTypes,
+                            onChange: setSelectedServiceTypes,
+                            resetValue: () => handleResetFilter('serviceTypes'),
+                        },
+                        {
+                            name: 'prices',
+                            label: 'Giá',
+                            type: 'multiselect',
+                            options: [
+                                { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
+                                { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
+                                { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
+                            ],
+                            value: selectedPrices,
+                            onChange: setSelectedPrices,
+                            resetValue: () => handleResetFilter('prices'),
+                        },
+                        {
+                            name: 'statuses',
+                            label: 'Trạng Thái',
+                            type: 'multiselect',
+                            options: [
+                                { value: 'ACTIVE', label: 'Có mặt' },
+                                { value: 'INACTIVE', label: 'Không có mặt' },
+                            ],
+                            value: selectedStatuses,
+                            onChange: setSelectedStatuses,
+                            resetValue: () => handleResetFilter('statuses'),
+                        },
+                    ]}
+                />
+
+                {/* Delete Modal */}
+                <ModalDelete
+                    show={showDeleteModal}
+                    onHide={handleDeleteCancel}
+                    onConfirm={handleDeleteConfirm}
+                    title="Xác Nhận Xóa"
+                    message="Bạn có chắc chắn muốn xóa bác sĩ này không?"
+                    itemName={
+                        doctorToDelete
+                            ? `${doctorToDelete.firstName} ${doctorToDelete.lastName}`
+                            : ''
+                    }
+                />
             </div>
         </div>
     );
