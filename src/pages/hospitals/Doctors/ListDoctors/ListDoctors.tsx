@@ -930,9 +930,10 @@ const ListDoctors: React.FC = () => {
                             type: 'multiselect',
                             options: [
                                 ...new Set(originalDoctors.map((doctor) => doctor.position.name)),
-                            ].map((position) => ({
+                            ].map((position, index) => ({
                                 value: position,
                                 label: position,
+                                key: `position-${index}`,
                             })),
                             value: selectedPositions,
                             onChange: setSelectedPositions,
@@ -944,9 +945,10 @@ const ListDoctors: React.FC = () => {
                             type: 'multiselect',
                             options: [
                                 ...new Set(originalDoctors.map((doctor) => doctor.specialtyId)),
-                            ].map((specialty) => ({
+                            ].map((specialty, index) => ({
                                 value: specialty,
                                 label: specialty,
+                                key: `specialty-${index}`,
                             })),
                             value: selectedSpecialties,
                             onChange: setSelectedSpecialties,
@@ -962,9 +964,10 @@ const ListDoctors: React.FC = () => {
                                         doctor.prices.map((p) => p.serviceTypeName)
                                     )
                                 ),
-                            ].map((type) => ({
+                            ].map((type, index) => ({
                                 value: type,
                                 label: type === 'IN_PERSON' ? 'Trực tiếp' : 'Từ xa',
+                                key: `service-type-${index}`,
                             })),
                             value: selectedServiceTypes,
                             onChange: setSelectedServiceTypes,
@@ -975,9 +978,13 @@ const ListDoctors: React.FC = () => {
                             label: 'Giá',
                             type: 'multiselect',
                             options: [
-                                { value: 'm-1', label: 'Dưới 500,000 VNĐ' },
-                                { value: 'm-2', label: '500,000 - 1,000,000 VNĐ' },
-                                { value: 'm-3', label: 'Trên 1,000,000 VNĐ' },
+                                { value: 'm-1', label: 'Dưới 500,000 VNĐ', key: 'price-m-1' },
+                                {
+                                    value: 'm-2',
+                                    label: '500,000 - 1,000,000 VNĐ',
+                                    key: 'price-m-2',
+                                },
+                                { value: 'm-3', label: 'Trên 1,000,000 VNĐ', key: 'price-m-3' },
                             ],
                             value: selectedPrices,
                             onChange: setSelectedPrices,
@@ -988,8 +995,12 @@ const ListDoctors: React.FC = () => {
                             label: 'Trạng Thái',
                             type: 'multiselect',
                             options: [
-                                { value: 'ACTIVE', label: 'Có mặt' },
-                                { value: 'INACTIVE', label: 'Không có mặt' },
+                                { value: 'ACTIVE', label: 'Có mặt', key: 'status-active' },
+                                {
+                                    value: 'INACTIVE',
+                                    label: 'Không có mặt',
+                                    key: 'status-inactive',
+                                },
                             ],
                             value: selectedStatuses,
                             onChange: setSelectedStatuses,

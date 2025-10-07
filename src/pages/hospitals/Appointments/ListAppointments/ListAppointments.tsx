@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
@@ -857,18 +858,18 @@ const ListAppointments: React.FC = () => {
                                 }}
                             />
                             <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                                <a
-                                    href="doctors-appointment.html"
+                                <Link
+                                    to="/doctors-appointment"
                                     className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
                                 >
                                     <i className="ti ti-list fs-14 text-body"></i>
-                                </a>
-                                <a
-                                    href="doctors-appointment-details.html"
+                                </Link>
+                                <Link
+                                    to="/doctors-appointment-details"
                                     className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
                                 >
                                     <i className="fa-solid fa-calendar-days"></i>
-                                </a>
+                                </Link>
                             </div>
 
                             <Button
@@ -993,8 +994,8 @@ const ListAppointments: React.FC = () => {
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                <a
-                                                    href="doctors-patient-details.html"
+                                                <Link
+                                                    to="/doctors-patient-details"
                                                     className="avatar avatar-md me-2"
                                                 >
                                                     <img
@@ -1002,22 +1003,22 @@ const ListAppointments: React.FC = () => {
                                                         alt="product"
                                                         className="rounded-circle"
                                                     />
-                                                </a>
-                                                <a
-                                                    href="doctors-patient-details.html"
+                                                </Link>
+                                                <Link
+                                                    to="/doctors-patient-details"
                                                     className="fw-semibold"
                                                 >
                                                     {appointment.patient.name}
                                                     <span className="text-body fs-13 fw-normal d-block">
                                                         {appointment.patient.phone}
                                                     </span>
-                                                </a>
+                                                </Link>
                                             </div>
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                <a
-                                                    href="doctors-profile.html"
+                                                <Link
+                                                    to="/doctors-profile"
                                                     className="avatar avatar-md me-2"
                                                 >
                                                     <img
@@ -1025,16 +1026,13 @@ const ListAppointments: React.FC = () => {
                                                         alt="doctor"
                                                         className="rounded-circle"
                                                     />
-                                                </a>
-                                                <a
-                                                    href="doctors-profile.html"
-                                                    className="fw-semibold"
-                                                >
+                                                </Link>
+                                                <Link to="/doctors-profile" className="fw-semibold">
                                                     {appointment.doctor?.name || 'Chưa phân công'}
                                                     <span className="text-body fs-13 fw-normal d-block">
                                                         {appointment.doctor?.specialty || ''}
                                                     </span>
-                                                </a>
+                                                </Link>
                                             </div>
                                         </td>
                                         <td>{appointment.type}</td>
@@ -1101,9 +1099,9 @@ const ListAppointments: React.FC = () => {
                 <div className="footer text-center bg-white p-2 border-top">
                     <p className="text-dark mb-0">
                         2025 &copy;{' '}
-                        <a href="/" className="link-primary">
+                        <Link to="/" className="link-primary">
                             Preclinic
-                        </a>
+                        </Link>
                         , Tất Cả Quyền Được Bảo Lưu
                     </p>
                 </div>
@@ -1242,8 +1240,12 @@ const ListAppointments: React.FC = () => {
                                             <ul className="mb-3 list-style-none">
                                                 {mockPatients.map((patient) => (
                                                     <li key={patient.id}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                        <label
+                                                            htmlFor={`patient-${patient.id}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`patient-${patient.id}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="patient"
@@ -1259,7 +1261,7 @@ const ListAppointments: React.FC = () => {
                                                                 <img
                                                                     src={patient.avatar}
                                                                     className="flex-shrink-0 rounded-circle"
-                                                                    alt="img"
+                                                                    alt={`Avatar của ${patient.name}`}
                                                                 />
                                                             </span>
                                                             {patient.name}
@@ -1301,10 +1303,14 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentTypes.map((type) => (
-                                                    <li key={type}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                {appointmentTypes.map((type, index) => (
+                                                    <li key={`type-${index}`}>
+                                                        <label
+                                                            htmlFor={`type-${index}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`type-${index}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="type"
@@ -1428,10 +1434,14 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status) => (
-                                                    <li key={status}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                {appointmentStatuses.map((status, index) => (
+                                                    <li key={`status-${index}`}>
+                                                        <label
+                                                            htmlFor={`status-${index}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`status-${index}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="status"
@@ -1555,8 +1565,12 @@ const ListAppointments: React.FC = () => {
                                             <ul className="mb-3 list-style-none">
                                                 {mockPatients.map((patient) => (
                                                     <li key={patient.id}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                        <label
+                                                            htmlFor={`edit-patient-${patient.id}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`edit-patient-${patient.id}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="editPatient"
@@ -1576,7 +1590,7 @@ const ListAppointments: React.FC = () => {
                                                                 <img
                                                                     src={patient.avatar}
                                                                     className="flex-shrink-0 rounded-circle"
-                                                                    alt="img"
+                                                                    alt={`Avatar của ${patient.name}`}
                                                                 />
                                                             </span>
                                                             {patient.name}
@@ -1618,10 +1632,14 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-0 list-style-none">
-                                                {appointmentTypes.map((type) => (
-                                                    <li key={type}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                {appointmentTypes.map((type, index) => (
+                                                    <li key={`edit-type-${index}`}>
+                                                        <label
+                                                            htmlFor={`edit-type-${index}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`edit-type-${index}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="editType"
@@ -1748,10 +1766,14 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentStatuses.map((status) => (
-                                                    <li key={status}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                {appointmentStatuses.map((status, index) => (
+                                                    <li key={`edit-status-${index}`}>
+                                                        <label
+                                                            htmlFor={`edit-status-${index}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`edit-status-${index}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="editStatus"
@@ -1871,21 +1893,26 @@ const ListAppointments: React.FC = () => {
                         <div className="d-flex align-items-center justify-content-between mb-3">
                             <div className="d-flex align-items-center">
                                 Khám Từ Xa
-                                <label className="d-flex align-items-center form-switch ps-1">
+                                <label
+                                    htmlFor="remote-consultation"
+                                    className="d-flex align-items-center form-switch ps-1"
+                                >
                                     <input
+                                        id="remote-consultation"
                                         className="form-check-input m-0 me-2"
                                         type="checkbox"
                                         defaultChecked
                                     />
+                                    <span className="visually-hidden">Khám từ xa</span>
                                 </label>
                             </div>
                             <div>
-                                <a
-                                    href="online-consulation.html"
+                                <Link
+                                    to="/online-consultation"
                                     className="btn-primary btn btn-sm rounded d-flex align-items-center"
                                 >
                                     <i className="ti ti-video me-1"></i> Start
-                                </a>
+                                </Link>
                             </div>
                         </div>
                         <div className="row align-items-center">
@@ -1919,10 +1946,14 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-0 list-style-none">
-                                                {appointmentStatuses.map((status) => (
-                                                    <li key={status}>
-                                                        <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                                {appointmentStatuses.map((status, index) => (
+                                                    <li key={`view-status-${index}`}>
+                                                        <label
+                                                            htmlFor={`view-status-${index}`}
+                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                        >
                                                             <input
+                                                                id={`view-status-${index}`}
                                                                 className="form-check-input m-0 me-2"
                                                                 type="radio"
                                                                 name="viewStatus"

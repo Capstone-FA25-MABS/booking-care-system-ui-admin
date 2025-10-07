@@ -6,6 +6,58 @@ export interface UseListPageProps<T> {
     searchFields?: (keyof T)[];
 }
 
+// Helper functions to reduce nesting levels
+const isStringMatch = (value: string, searchTerm: string): boolean => {
+    return value.toLowerCase().includes(searchTerm.toLowerCase());
+};
+
+const isObjectMatch = (value: any, searchTerm: string): boolean => {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+    return Object.values(value).some(
+        (val) => typeof val === 'string' && isStringMatch(val, searchTerm)
+    );
+};
+
+const isFieldMatch = (item: any, field: string, searchTerm: string): boolean => {
+    const value = item[field];
+    if (typeof value === 'string') {
+        return isStringMatch(value, searchTerm);
+    }
+    return isObjectMatch(value, searchTerm);
+};
+
+const isSearchMatch = (item: any, searchFields: string[], searchTerm: string): boolean => {
+    return searchFields.some((field) => isFieldMatch(item, field, searchTerm));
+};
+
+const isFilterMatch = (item: any, key: string, value: any): boolean => {
+    const itemValue = item[key];
+    if (typeof itemValue === 'string') {
+        return isStringMatch(itemValue, value);
+    }
+    return itemValue === value;
+};
+
+const applySearchFilter = <T>(data: T[], searchTerm: string, searchFields: (keyof T)[]): T[] => {
+    if (!searchTerm || searchFields.length === 0) {
+        return data;
+    }
+    return data.filter((item) => isSearchMatch(item, searchFields as string[], searchTerm));
+};
+
+const applyCustomFilters = <T>(data: T[], filters: Record<string, any>): T[] => {
+    return data.filter((item) => {
+        return Object.entries(filters).every(([key, value]) => {
+            if (value === '' || value === null || value === undefined) {
+                return true;
+            }
+            return isFilterMatch(item, key, value);
+        });
+    });
+};
+
 export const useListPage = <T extends Record<string, any>>({
     data,
     itemsPerPage = 10,
@@ -24,40 +76,8 @@ export const useListPage = <T extends Record<string, any>>({
     // Filter and search data
     const filteredData = useMemo(() => {
         let filtered = [...data];
-
-        // Apply search
-        if (searchTerm && searchFields.length > 0) {
-            filtered = filtered.filter((item) =>
-                searchFields.some((field) => {
-                    const value = item[field];
-                    if (typeof value === 'string') {
-                        return value.toLowerCase().includes(searchTerm.toLowerCase());
-                    }
-                    if (typeof value === 'object' && value !== null) {
-                        return Object.values(value).some(
-                            (val) =>
-                                typeof val === 'string' &&
-                                val.toLowerCase().includes(searchTerm.toLowerCase())
-                        );
-                    }
-                    return false;
-                })
-            );
-        }
-
-        // Apply filters
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== '' && value !== null && value !== undefined) {
-                filtered = filtered.filter((item) => {
-                    const itemValue = item[key];
-                    if (typeof itemValue === 'string') {
-                        return itemValue.toLowerCase().includes(value.toLowerCase());
-                    }
-                    return itemValue === value;
-                });
-            }
-        });
-
+        filtered = applySearchFilter(filtered, searchTerm, searchFields);
+        filtered = applyCustomFilters(filtered, filters);
         return filtered;
     }, [data, searchTerm, searchFields, filters]);
 
