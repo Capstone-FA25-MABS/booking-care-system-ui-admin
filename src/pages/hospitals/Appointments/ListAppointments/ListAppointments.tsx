@@ -39,7 +39,7 @@ interface Appointment {
 
 type AppointmentType = 'Trực tiếp' | 'Trực tuyến';
 
-type AppointmentStatus = 'Đã khám' | 'Đang khám' | 'Đã hủy' | 'Đã đặt lịch' | 'Chờ xác nhận';
+type AppointmentStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED' | 'SCHEDULED' | 'UPCOMING';
 
 interface AppointmentFormData {
     appointmentId: string;
@@ -88,14 +88,20 @@ const mockDoctors = [
 ];
 
 const appointmentTypes: AppointmentType[] = ['Trực tiếp', 'Trực tuyến'];
-const appointmentStatuses: AppointmentStatus[] = ['Đã khám', 'Đang khám', 'Đã hủy', 'Đã đặt lịch'];
+const appointmentStatuses: AppointmentStatus[] = [
+    'COMPLETED',
+    'PENDING',
+    'CANCELLED',
+    'SCHEDULED',
+    'UPCOMING',
+];
 
 // Status mapping for tabs
 const statusMapping = {
-    upcoming: 'Đã đặt lịch',
-    completed: 'Đã khám',
-    cancelled: 'Đã hủy',
-    pending: 'Đang khám',
+    upcoming: 'SCHEDULED',
+    completed: 'COMPLETED',
+    cancelled: 'CANCELLED',
+    pending: 'PENDING',
 };
 
 const mockAppointments: Appointment[] = [
@@ -108,7 +114,7 @@ const mockAppointments: Appointment[] = [
         date: '30/04/2025',
         time: '09:30',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '2',
@@ -119,7 +125,7 @@ const mockAppointments: Appointment[] = [
         date: '15/04/2025',
         time: '11:20',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '3',
@@ -130,7 +136,7 @@ const mockAppointments: Appointment[] = [
         date: '02/04/2025',
         time: '08:15',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '4',
@@ -141,7 +147,7 @@ const mockAppointments: Appointment[] = [
         date: '27/03/2025',
         time: '14:00',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '5',
@@ -152,7 +158,7 @@ const mockAppointments: Appointment[] = [
         date: '12/03/2025',
         time: '17:40',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '6',
@@ -162,7 +168,7 @@ const mockAppointments: Appointment[] = [
         date: '24/02/2025',
         time: '09:20',
         reason: 'Điều trị',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '7',
@@ -172,7 +178,7 @@ const mockAppointments: Appointment[] = [
         date: '16/02/2025',
         time: '11:40',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '8',
@@ -182,7 +188,7 @@ const mockAppointments: Appointment[] = [
         date: '01/02/2025',
         time: '16:00',
         reason: 'Tái khám',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '9',
@@ -192,7 +198,7 @@ const mockAppointments: Appointment[] = [
         date: '25/01/2025',
         time: '15:10',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '10',
@@ -202,7 +208,7 @@ const mockAppointments: Appointment[] = [
         date: '12/01/2025',
         time: '15:10',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     // Thêm 20 cuộc hẹn nữa để có tổng cộng 30 cuộc hẹn
     {
@@ -213,7 +219,7 @@ const mockAppointments: Appointment[] = [
         date: '28/01/2025',
         time: '11:30',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '12',
@@ -223,7 +229,7 @@ const mockAppointments: Appointment[] = [
         date: '20/01/2025',
         time: '14:15',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '13',
@@ -233,7 +239,7 @@ const mockAppointments: Appointment[] = [
         date: '15/01/2025',
         time: '16:45',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '14',
@@ -243,7 +249,7 @@ const mockAppointments: Appointment[] = [
         date: '08/01/2025',
         time: '08:30',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '15',
@@ -253,7 +259,7 @@ const mockAppointments: Appointment[] = [
         date: '02/01/2025',
         time: '12:00',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '16',
@@ -263,7 +269,7 @@ const mockAppointments: Appointment[] = [
         date: '28/12/2024',
         time: '15:30',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '17',
@@ -273,7 +279,7 @@ const mockAppointments: Appointment[] = [
         date: '22/12/2024',
         time: '17:15',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '18',
@@ -283,7 +289,7 @@ const mockAppointments: Appointment[] = [
         date: '18/12/2024',
         time: '10:45',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '19',
@@ -293,7 +299,7 @@ const mockAppointments: Appointment[] = [
         date: '12/12/2024',
         time: '13:20',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '20',
@@ -303,7 +309,7 @@ const mockAppointments: Appointment[] = [
         date: '05/12/2024',
         time: '14:50',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '21',
@@ -313,7 +319,7 @@ const mockAppointments: Appointment[] = [
         date: '30/11/2024',
         time: '16:10',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '22',
@@ -323,7 +329,7 @@ const mockAppointments: Appointment[] = [
         date: '25/11/2024',
         time: '09:15',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '23',
@@ -333,7 +339,7 @@ const mockAppointments: Appointment[] = [
         date: '20/11/2024',
         time: '11:40',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '24',
@@ -343,7 +349,7 @@ const mockAppointments: Appointment[] = [
         date: '15/11/2024',
         time: '13:25',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '25',
@@ -353,7 +359,7 @@ const mockAppointments: Appointment[] = [
         date: '10/11/2024',
         time: '15:55',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '26',
@@ -363,7 +369,7 @@ const mockAppointments: Appointment[] = [
         date: '05/11/2024',
         time: '08:40',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '27',
@@ -373,7 +379,7 @@ const mockAppointments: Appointment[] = [
         date: '30/10/2024',
         time: '12:35',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '28',
@@ -383,7 +389,7 @@ const mockAppointments: Appointment[] = [
         date: '25/10/2024',
         time: '14:05',
         reason: 'Tái khám',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '29',
@@ -393,7 +399,7 @@ const mockAppointments: Appointment[] = [
         date: '20/10/2024',
         time: '16:30',
         reason: 'Khám sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '30',
@@ -403,7 +409,7 @@ const mockAppointments: Appointment[] = [
         date: '15/10/2024',
         time: '10:20',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     // Thêm 20 appointments nữa để test pagination
     {
@@ -414,7 +420,7 @@ const mockAppointments: Appointment[] = [
         date: '10/10/2024',
         time: '14:30',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '32',
@@ -424,7 +430,7 @@ const mockAppointments: Appointment[] = [
         date: '05/10/2024',
         time: '09:45',
         reason: 'Tái khám',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '33',
@@ -434,7 +440,7 @@ const mockAppointments: Appointment[] = [
         date: '01/10/2024',
         time: '16:15',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '34',
@@ -444,7 +450,7 @@ const mockAppointments: Appointment[] = [
         date: '28/09/2024',
         time: '11:20',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '35',
@@ -454,7 +460,7 @@ const mockAppointments: Appointment[] = [
         date: '25/09/2024',
         time: '13:40',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '36',
@@ -464,7 +470,7 @@ const mockAppointments: Appointment[] = [
         date: '20/09/2024',
         time: '08:50',
         reason: 'Tái khám',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '37',
@@ -474,7 +480,7 @@ const mockAppointments: Appointment[] = [
         date: '15/09/2024',
         time: '15:25',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '38',
@@ -484,7 +490,7 @@ const mockAppointments: Appointment[] = [
         date: '10/09/2024',
         time: '12:10',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '39',
@@ -494,7 +500,7 @@ const mockAppointments: Appointment[] = [
         date: '05/09/2024',
         time: '17:35',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '40',
@@ -504,7 +510,7 @@ const mockAppointments: Appointment[] = [
         date: '01/09/2024',
         time: '10:45',
         reason: 'Tái khám',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '41',
@@ -514,7 +520,7 @@ const mockAppointments: Appointment[] = [
         date: '28/08/2024',
         time: '14:20',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '42',
@@ -524,7 +530,7 @@ const mockAppointments: Appointment[] = [
         date: '25/08/2024',
         time: '09:15',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '43',
@@ -534,7 +540,7 @@ const mockAppointments: Appointment[] = [
         date: '20/08/2024',
         time: '16:50',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '44',
@@ -544,7 +550,7 @@ const mockAppointments: Appointment[] = [
         date: '15/08/2024',
         time: '11:30',
         reason: 'Tái khám',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '45',
@@ -554,7 +560,7 @@ const mockAppointments: Appointment[] = [
         date: '10/08/2024',
         time: '13:45',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '46',
@@ -564,7 +570,7 @@ const mockAppointments: Appointment[] = [
         date: '05/08/2024',
         time: '08:25',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
     },
     {
         id: '47',
@@ -574,7 +580,7 @@ const mockAppointments: Appointment[] = [
         date: '01/08/2024',
         time: '15:10',
         reason: 'Tư vấn sức khỏe',
-        status: 'Đã đặt lịch',
+        status: 'SCHEDULED',
     },
     {
         id: '48',
@@ -584,7 +590,7 @@ const mockAppointments: Appointment[] = [
         date: '28/07/2024',
         time: '12:55',
         reason: 'Tái khám',
-        status: 'Đang khám',
+        status: 'PENDING',
     },
     {
         id: '49',
@@ -594,7 +600,7 @@ const mockAppointments: Appointment[] = [
         date: '25/07/2024',
         time: '17:20',
         reason: 'Khám sức khỏe',
-        status: 'Đã hủy',
+        status: 'CANCELLED',
     },
     {
         id: '50',
@@ -604,7 +610,41 @@ const mockAppointments: Appointment[] = [
         date: '20/07/2024',
         time: '10:40',
         reason: 'Khám sức khỏe định kỳ',
-        status: 'Đã khám',
+        status: 'COMPLETED',
+    },
+    // Thêm một số appointment với status UPCOMING
+    {
+        id: '51',
+        appointmentId: 'AP051',
+        patient: { id: '51', name: 'Nguyễn Văn Sắp', avatar: user01, phone: '0951 234 567' },
+        doctor: { id: '1', name: 'BS. Nguyễn Văn A', specialty: 'Tim mạch', avatar: user01 },
+        type: 'Trực tiếp',
+        date: '15/01/2025',
+        time: '09:00',
+        reason: 'Khám tim mạch',
+        status: 'UPCOMING',
+    },
+    {
+        id: '52',
+        appointmentId: 'AP052',
+        patient: { id: '52', name: 'Trần Thị Tới', avatar: user02, phone: '0952 345 678' },
+        doctor: { id: '2', name: 'BS. Trần Thị B', specialty: 'Nhi khoa', avatar: user02 },
+        type: 'Trực tuyến',
+        date: '20/01/2025',
+        time: '14:30',
+        reason: 'Tư vấn sức khỏe trẻ em',
+        status: 'UPCOMING',
+    },
+    {
+        id: '53',
+        appointmentId: 'AP053',
+        patient: { id: '53', name: 'Lê Văn Sắp', avatar: user03, phone: '0953 456 789' },
+        doctor: { id: '3', name: 'BS. Lê Văn C', specialty: 'Nội khoa', avatar: user03 },
+        type: 'Trực tiếp',
+        date: '25/01/2025',
+        time: '11:15',
+        reason: 'Khám nội tổng quát',
+        status: 'UPCOMING',
     },
 ];
 
@@ -643,7 +683,7 @@ const ListAppointments: React.FC = () => {
         date: '',
         time: '',
         reason: '',
-        status: 'Checked In',
+        status: 'PENDING',
     });
 
     // Form states for edit appointment
@@ -654,7 +694,7 @@ const ListAppointments: React.FC = () => {
         date: '20/08/2025',
         time: '01 : 20 : PM',
         reason: 'An account of the present illness, which includes the circumstances surrounding the onset of recent health changes and the Purpose.',
-        status: 'Checked Out',
+        status: 'COMPLETED',
     });
 
     const handleNewAppointmentSubmit = (e: React.FormEvent) => {
@@ -785,10 +825,10 @@ const ListAppointments: React.FC = () => {
     // Get count for each status tab
     const getStatusCounts = () => {
         return {
-            upcoming: appointments.filter((apt) => apt.status === 'Đã đặt lịch').length,
-            completed: appointments.filter((apt) => apt.status === 'Đã khám').length,
-            cancelled: appointments.filter((apt) => apt.status === 'Đã hủy').length,
-            pending: appointments.filter((apt) => apt.status === 'Đang khám').length,
+            upcoming: appointments.filter((apt) => apt.status === 'SCHEDULED').length,
+            completed: appointments.filter((apt) => apt.status === 'COMPLETED').length,
+            cancelled: appointments.filter((apt) => apt.status === 'CANCELLED').length,
+            pending: appointments.filter((apt) => apt.status === 'PENDING').length,
         };
     };
 
@@ -1888,7 +1928,7 @@ const ListAppointments: React.FC = () => {
                                                                 name="viewStatus"
                                                                 value={status}
                                                                 defaultChecked={
-                                                                    status === 'Đã khám'
+                                                                    status === 'COMPLETED'
                                                                 }
                                                             />
                                                             {status}
