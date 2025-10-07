@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice } from '../types/doctor.types';
+import { DoctorFormData, DoctorPrice, Guid } from '../types/doctor.types';
 import { validateDoctorForm } from '../utils/doctorValidation';
+import { emptyGuid } from '../utils/guid';
 
 export const useDoctorForm = (initialData: DoctorFormData) => {
     const [formData, setFormData] = useState<DoctorFormData>(initialData);
@@ -30,23 +31,21 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
         [errors]
     );
 
-    const handleLanguageToggle = useCallback((languageId: number) => {
+    const handleLanguageToggle = useCallback((languageId: Guid) => {
         setFormData((prev) => {
-            const existingIndex = prev.languages.findIndex(
-                (lang) => lang.languageId === languageId
-            );
+            const existingIndex = prev.languageIds.findIndex((id) => id === languageId);
 
             if (existingIndex >= 0) {
                 // Remove language
                 return {
                     ...prev,
-                    languages: prev.languages.filter((_, index) => index !== existingIndex),
+                    languageIds: prev.languageIds.filter((_, index) => index !== existingIndex),
                 };
             } else {
                 // Add language
                 return {
                     ...prev,
-                    languages: [...prev.languages, { languageId, proficiency: 'INTERMEDIATE' }],
+                    languageIds: [...prev.languageIds, languageId],
                 };
             }
         });
@@ -76,7 +75,10 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
     const addServicePrice = useCallback(() => {
         setFormData((prev) => ({
             ...prev,
-            servicePrices: [...prev.servicePrices, { serviceTypeId: '', price: 0, note: '' }],
+            servicePrices: [
+                ...prev.servicePrices,
+                { serviceTypeId: emptyGuid(), amount: 0, note: '' },
+            ],
         }));
 
         // Clear servicePrices validation error when adding a new service

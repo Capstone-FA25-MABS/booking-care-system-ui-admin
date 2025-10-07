@@ -6,6 +6,7 @@ import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
 import SortDropdown from '@/components/SortDropdown';
 import ExportDropdown from '@/components/ExportDropdown';
+import StatusBadge from '@/components/StatusBadge';
 
 // Types definition
 interface Patient {
@@ -791,21 +792,6 @@ const ListAppointments: React.FC = () => {
         };
     };
 
-    const getStatusBadgeClass = (status: AppointmentStatus) => {
-        switch (status) {
-            case 'Đã khám':
-                return 'badge-soft-primary rounded text-primary fw-medium fs-13';
-            case 'Đang khám':
-                return 'badge-soft-warning rounded text-warning fw-medium fs-13';
-            case 'Đã hủy':
-                return 'badge-soft-danger rounded text-danger fw-medium fs-13';
-            case 'Đã đặt lịch':
-                return 'badge-soft-info rounded text-info fw-medium fs-13';
-            default:
-                return 'badge-soft-success rounded text-success fw-medium fs-13';
-        }
-    };
-
     return (
         <div className="main-wrapper">
             <div className="settings-wrapper">
@@ -1013,11 +999,7 @@ const ListAppointments: React.FC = () => {
                                         </td>
                                         <td>{appointment.type}</td>
                                         <td>
-                                            <span
-                                                className={`badge ${getStatusBadgeClass(appointment.status)}`}
-                                            >
-                                                {appointment.status}
-                                            </span>
+                                            <StatusBadge status={appointment.status} />
                                         </td>
                                         <td className="action-item">
                                             <button

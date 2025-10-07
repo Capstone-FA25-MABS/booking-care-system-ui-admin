@@ -6,8 +6,11 @@ export const validateDoctorForm = (
     const errors: Partial<Record<keyof DoctorFormData, string>> = {};
 
     // Validate required fields
-    if (!formData.fullName.trim()) {
-        errors.fullName = 'Họ và tên là bắt buộc';
+    if (!formData.firstName.trim()) {
+        errors.firstName = 'Tên là bắt buộc';
+    }
+    if (!formData.lastName.trim()) {
+        errors.lastName = 'Họ là bắt buộc';
     }
 
     if (!formData.email.trim()) {
@@ -36,8 +39,8 @@ export const validateDoctorForm = (
         errors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
     }
 
-    if (formData.languages.length === 0) {
-        errors.languages = 'Vui lòng chọn ít nhất một ngôn ngữ';
+    if (formData.languageIds.length === 0) {
+        errors.languageIds = 'Vui lòng chọn ít nhất một ngôn ngữ';
     }
 
     if (formData.servicePrices.length === 0) {
@@ -49,8 +52,8 @@ export const validateDoctorForm = (
                 errors[`servicePrices_${index}_serviceTypeId` as keyof DoctorFormData] =
                     'Vui lòng chọn loại dịch vụ';
             }
-            if (!servicePrice.price || servicePrice.price <= 0) {
-                errors[`servicePrices_${index}_price` as keyof DoctorFormData] =
+            if (!servicePrice.amount || servicePrice.amount <= 0) {
+                errors[`servicePrices_${index}_amount` as keyof DoctorFormData] =
                     'Giá dịch vụ phải lớn hơn 0';
             }
         });

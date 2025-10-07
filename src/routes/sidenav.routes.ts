@@ -7,6 +7,11 @@ import {
     createMessagesMenuItem,
     createSimpleMenuItem,
 } from './menu.items';
+import {
+    DOCTORS_MENU_CONFIG,
+    APPOINTMENTS_MENU_CONFIG,
+    DASHBOARD_MENU_CONFIG,
+} from '@/constants/menu.constants';
 
 export const listGroupMenuItemHospital: Array<{
     title: string;
@@ -20,52 +25,8 @@ export const listGroupMenuItemHospital: Array<{
     {
         title: 'Hospital',
         items: [
-            {
-                label: 'Bác sĩ',
-                icon: 'ti ti-user-plus',
-                subItems: [
-                    {
-                        label: 'Danh sách bác sĩ',
-                        link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTORS.ROOT),
-                    },
-                    // { label: 'Doctor Details', link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.DETAILS) },
-                    {
-                        label: 'Thêm bác sĩ',
-                        link: buildPath(
-                            PATHS.HOSPITAL.ROOT,
-                            PATHS.HOSPITAL.DOCTORS.ROOT,
-                            PATHS.HOSPITAL.DOCTORS.ADD
-                        ),
-                    },
-                    // { label: 'Doctor Schedule', link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.SCHEDULE) },
-                ],
-            },
-            {
-                label: 'Lịch hẹn',
-                icon: 'ti ti-calendar-check',
-                subItems: [
-                    {
-                        label: 'Danh sách lịch hẹn',
-                        link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.APPOINTMENTS.ROOT),
-                    },
-                    {
-                        label: 'Thêm lịch hẹn',
-                        link: buildPath(
-                            PATHS.HOSPITAL.ROOT,
-                            PATHS.HOSPITAL.APPOINTMENTS.ROOT,
-                            PATHS.HOSPITAL.APPOINTMENTS.NEW
-                        ),
-                    },
-                    {
-                        label: 'Calendar',
-                        link: buildPath(
-                            PATHS.HOSPITAL.ROOT,
-                            PATHS.HOSPITAL.APPOINTMENTS.ROOT,
-                            PATHS.HOSPITAL.APPOINTMENTS.CALENDAR
-                        ),
-                    },
-                ],
-            },
+            DOCTORS_MENU_CONFIG,
+            APPOINTMENTS_MENU_CONFIG,
             {
                 label: 'Locations',
                 icon: 'ti ti-map-pin',
@@ -155,15 +116,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Main Menu',
         items: [
-            {
-                label: 'Dashboard',
-                icon: 'ti ti-layout-dashboard',
-                subItems: [
-                    { label: 'Admin Dashboard', link: '/admin/dashboard' },
-                    { label: 'Doctor Dashboard', link: '/doctor/dashboard' },
-                    { label: 'Patient Dashboard', link: '/patient/dashboard' },
-                ],
-            },
+            DASHBOARD_MENU_CONFIG,
             {
                 label: 'Applications',
                 icon: 'ti ti-apps',

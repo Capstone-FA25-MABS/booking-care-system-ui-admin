@@ -1,5 +1,6 @@
 import type { MenuItem } from '@/types/menu.types';
 import { buildPath, PATHS } from './paths';
+import { DASHBOARD_MENU_CONFIG } from '@/constants/menu.constants';
 
 /**
  * Shared menu item factories
@@ -98,15 +99,7 @@ export const createDoctorsMenuItem = (): MenuItem => ({
 /**
  * Create Dashboard menu item for Admin with multiple dashboards
  */
-export const createDashboardMenuItem = (): MenuItem => ({
-    label: 'Dashboard',
-    icon: 'ti ti-layout-dashboard',
-    subItems: [
-        { label: 'Admin Dashboard', link: '/admin/dashboard' },
-        { label: 'Doctor Dashboard', link: '/doctor/dashboard' },
-        { label: 'Patient Dashboard', link: '/patient/dashboard' },
-    ],
-});
+export const createDashboardMenuItem = (): MenuItem => DASHBOARD_MENU_CONFIG;
 
 /**
  * Create Account Settings menu item (shared across all roles)

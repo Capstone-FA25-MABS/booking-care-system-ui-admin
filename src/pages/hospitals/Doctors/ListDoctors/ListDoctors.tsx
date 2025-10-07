@@ -6,6 +6,7 @@ import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
 import SortDropdown from '@/components/SortDropdown';
 import ExportDropdown from '@/components/ExportDropdown';
+import StatusBadge from '@/components/StatusBadge';
 import styles from './ListDoctors.module.scss';
 
 // Import ảnh trực tiếp
@@ -838,17 +839,7 @@ const ListDoctors: React.FC = () => {
                                                 .join(', ')}
                                         </td>
                                         <td>
-                                            <span
-                                                className={`badge badge-soft-${
-                                                    doctor.status === 'ACTIVE'
-                                                        ? 'success'
-                                                        : 'danger'
-                                                } border border-${doctor.status === 'ACTIVE' ? 'success' : 'danger'}`}
-                                            >
-                                                {doctor.status === 'ACTIVE'
-                                                    ? 'Có mặt'
-                                                    : 'Không có mặt'}
-                                            </span>
+                                            <StatusBadge status={doctor.status} />
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
