@@ -30,7 +30,7 @@ export const useDoctorForm = (initialData: DoctorFormData) => {
         [errors]
     );
 
-    const handleLanguageToggle = useCallback((languageId: Guid) => {
+    const handleLanguageToggle = useCallback((languageId: string) => {
         setFormData((prev) => {
             const existingIndex = prev.languageIds.indexOf(languageId);
 
