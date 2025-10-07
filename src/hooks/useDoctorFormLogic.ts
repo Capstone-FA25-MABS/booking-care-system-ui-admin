@@ -83,11 +83,12 @@ export const useDoctorFormLogic = ({
         }));
     }, []);
 
-    const validateForm = useCallback((): boolean => {
-        const newErrors: Partial<
+    // Helper functions to reduce cognitive complexity
+    const validateRequiredFields = (
+        errors: Partial<
             Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
-        > = {};
-
+        >
+    ) => {
         const requiredFields = [
             'firstName',
             'lastName',
@@ -102,39 +103,75 @@ export const useDoctorFormLogic = ({
 
         for (const field of requiredFields) {
             if (!formData[field as keyof DoctorFormData]) {
-                newErrors[field as keyof typeof newErrors] = 'Trường này là bắt buộc';
+                errors[field as keyof typeof errors] = 'Trường này là bắt buộc';
             }
         }
+    };
 
+    const validateEmail = (
+        errors: Partial<
+            Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+        >
+    ) => {
         if (
             formData.email &&
             !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
         ) {
-            newErrors.email = isEdit ? 'Email không hợp lệ' : 'Định dạng email không hợp lệ';
+            errors.email = isEdit ? 'Email không hợp lệ' : 'Định dạng email không hợp lệ';
         }
+    };
 
+    const validateYearsOfExperience = (
+        errors: Partial<
+            Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+        >
+    ) => {
         if (formData.yearsOfExperience < 0) {
-            newErrors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
+            errors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
         }
+    };
 
+    const validateLanguages = (
+        errors: Partial<
+            Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+        >
+    ) => {
         if (formData.languageIds.length === 0) {
-            newErrors.languageIds = 'Vui lòng chọn ít nhất một ngôn ngữ';
+            errors.languageIds = 'Vui lòng chọn ít nhất một ngôn ngữ';
         }
+    };
 
+    const validateServicePrices = (
+        errors: Partial<
+            Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+        >
+    ) => {
         if (formData.servicePrices.length === 0) {
-            newErrors.servicePrices = isEdit
+            errors.servicePrices = isEdit
                 ? 'Vui lòng thêm ít nhất một dịch vụ'
                 : 'Vui lòng thêm ít nhất một loại dịch vụ';
         }
 
         for (const [index, price] of formData.servicePrices.entries()) {
             if (!price.serviceTypeId) {
-                newErrors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
+                errors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
             }
             if (price.amount <= 0) {
-                newErrors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
+                errors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
             }
         }
+    };
+
+    const validateForm = useCallback((): boolean => {
+        const newErrors: Partial<
+            Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
+        > = {};
+
+        validateRequiredFields(newErrors);
+        validateEmail(newErrors);
+        validateYearsOfExperience(newErrors);
+        validateLanguages(newErrors);
+        validateServicePrices(newErrors);
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
