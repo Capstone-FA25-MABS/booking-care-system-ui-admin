@@ -13,46 +13,50 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
         return null;
     }
 
-    // Tạo danh sách số trang để hiển thị
+    // Helper functions to reduce cognitive complexity
+    const addPageRange = (pages: (number | string)[], start: number, end: number) => {
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+    };
+
+    const addEllipsis = (pages: (number | string)[]) => {
+        pages.push('...');
+    };
+
+    const addFirstPages = (pages: (number | string)[]) => {
+        pages.push(1);
+        pages.push(2);
+    };
+
+    const addLastPages = (pages: (number | string)[]) => {
+        pages.push(totalPages - 1);
+        pages.push(totalPages);
+    };
+
     const getPageNumbers = () => {
         const pages: (number | string)[] = [];
-        const maxVisiblePages = 7; // Số trang tối đa hiển thị
+        const maxVisiblePages = 7;
 
         if (totalPages <= maxVisiblePages) {
-            // Nếu tổng số trang <= 7, hiển thị tất cả
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
+            addPageRange(pages, 1, totalPages);
+            return pages;
+        }
+
+        if (currentPage <= 4) {
+            addPageRange(pages, 1, 5);
+            addEllipsis(pages);
+            addLastPages(pages);
+        } else if (currentPage >= totalPages - 3) {
+            addFirstPages(pages);
+            addEllipsis(pages);
+            addPageRange(pages, totalPages - 4, totalPages);
         } else {
-            // Logic hiển thị trang với ellipsis
-            if (currentPage <= 4) {
-                // Trang hiện tại ở đầu
-                for (let i = 1; i <= 5; i++) {
-                    pages.push(i);
-                }
-                pages.push('...');
-                pages.push(totalPages - 1);
-                pages.push(totalPages);
-            } else if (currentPage >= totalPages - 3) {
-                // Trang hiện tại ở cuối
-                pages.push(1);
-                pages.push(2);
-                pages.push('...');
-                for (let i = totalPages - 4; i <= totalPages; i++) {
-                    pages.push(i);
-                }
-            } else {
-                // Trang hiện tại ở giữa
-                pages.push(1);
-                pages.push(2);
-                pages.push('...');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    pages.push(i);
-                }
-                pages.push('...');
-                pages.push(totalPages - 1);
-                pages.push(totalPages);
-            }
+            addFirstPages(pages);
+            addEllipsis(pages);
+            addPageRange(pages, currentPage - 1, currentPage + 1);
+            addEllipsis(pages);
+            addLastPages(pages);
         }
 
         return pages;
