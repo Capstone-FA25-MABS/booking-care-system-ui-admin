@@ -15,6 +15,22 @@ import {
 import { selectCustomStyles } from '@/constants/select.styles';
 import styles from './DoctorFormFields.module.scss';
 
+// Custom input component for NumericFormat (extracted to avoid inline component definition)
+const CustomNumericInput = React.forwardRef<
+    HTMLInputElement,
+    React.InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean }
+>((props, ref) => {
+    const { hasError, className, ...rest } = props;
+    return (
+        <input
+            {...rest}
+            ref={ref}
+            className={`form-control ${hasError ? 'is-invalid' : ''} ${className || ''}`}
+        />
+    );
+});
+CustomNumericInput.displayName = 'CustomNumericInput';
+
 // Sub-components to reduce cognitive complexity
 const AvatarSection: React.FC<{
     formData: DoctorFormData;
@@ -171,12 +187,8 @@ const BasicInfoFields: React.FC<{
                     <span className="text-danger">*</span>
                 </label>
                 <NumericFormat
-                    customInput={(inputProps: any) => (
-                        <input
-                            {...inputProps}
-                            className={`form-control ${errors.yearsOfExperience ? 'is-invalid' : ''}`}
-                        />
-                    )}
+                    customInput={CustomNumericInput}
+                    hasError={!!errors.yearsOfExperience}
                     value={formData.yearsOfExperience}
                     onValueChange={(values) => {
                         onInputChange({
@@ -352,8 +364,7 @@ const LanguagesSection: React.FC<{
     <div className="card mb-4">
         <div className={`card-body ${styles.sectionBorder}`}>
             <h5 className="card-title mb-4">
-                <i className="feather-globe me-2"></i>
-                Ngôn ngữ
+                <i className="feather-globe me-2"></i> Ngôn ngữ
             </h5>
             <div className="row">
                 <div className="col-12">
@@ -471,16 +482,8 @@ const ServicePriceItem: React.FC<{
                     </label>
                     <NumericFormat
                         id={`serviceAmount-${index}`}
-                        customInput={(inputProps: any) => (
-                            <input
-                                {...inputProps}
-                                className={`form-control ${
-                                    errors[`servicePrices_${index}_amount` as keyof DoctorFormData]
-                                        ? 'is-invalid'
-                                        : ''
-                                }`}
-                            />
-                        )}
+                        customInput={CustomNumericInput}
+                        hasError={!!errors[`servicePrices_${index}_amount` as keyof DoctorFormData]}
                         value={price.amount}
                         onValueChange={(values) =>
                             onServicePriceChange(index, 'amount', values.floatValue || 0)

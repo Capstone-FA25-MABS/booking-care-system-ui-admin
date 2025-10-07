@@ -79,29 +79,76 @@ export const useDoctorFormLogic = ({
         }));
     }, []);
 
+    // Helper function to validate required fields
+    const validateRequiredFields = useCallback(
+        (
+            errors: Partial<
+                Record<
+                    keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`,
+                    string
+                >
+            >
+        ) => {
+            const requiredFields = [
+                'firstName',
+                'lastName',
+                'email',
+                'address',
+                'gender',
+                'bio',
+                'positionId',
+                'specialtyId',
+                'hospitalId',
+            ];
+
+            for (const field of requiredFields) {
+                if (!formData[field as keyof DoctorFormData]) {
+                    errors[field as keyof typeof errors] = 'Trường này là bắt buộc';
+                }
+            }
+        },
+        [formData]
+    );
+
+    // Helper function to validate service prices
+    const validateServicePrices = useCallback(
+        (
+            errors: Partial<
+                Record<
+                    keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`,
+                    string
+                >
+            >
+        ) => {
+            if (formData.servicePrices.length === 0) {
+                errors.servicePrices = isEdit
+                    ? 'Vui lòng thêm ít nhất một dịch vụ'
+                    : 'Vui lòng thêm ít nhất một loại dịch vụ';
+                return;
+            }
+
+            for (let index = 0; index < formData.servicePrices.length; index++) {
+                const price = formData.servicePrices[index];
+                if (!price.serviceTypeId) {
+                    errors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
+                }
+                if (price.amount <= 0) {
+                    errors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
+                }
+            }
+        },
+        [formData.servicePrices, isEdit]
+    );
+
     const validateForm = useCallback((): boolean => {
         const newErrors: Partial<
             Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
         > = {};
 
-        const requiredFields = [
-            'firstName',
-            'lastName',
-            'email',
-            'address',
-            'gender',
-            'bio',
-            'positionId',
-            'specialtyId',
-            'hospitalId',
-        ];
+        // Validate required fields
+        validateRequiredFields(newErrors);
 
-        for (const field of requiredFields) {
-            if (!formData[field as keyof DoctorFormData]) {
-                newErrors[field as keyof typeof newErrors] = 'Trường này là bắt buộc';
-            }
-        }
-
+        // Validate email format
         if (
             formData.email &&
             !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
@@ -109,33 +156,22 @@ export const useDoctorFormLogic = ({
             newErrors.email = isEdit ? 'Email không hợp lệ' : 'Định dạng email không hợp lệ';
         }
 
+        // Validate years of experience
         if (formData.yearsOfExperience < 0) {
             newErrors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
         }
 
+        // Validate languages
         if (formData.languageIds.length === 0) {
             newErrors.languageIds = 'Vui lòng chọn ít nhất một ngôn ngữ';
         }
 
-        if (formData.servicePrices.length === 0) {
-            newErrors.servicePrices = isEdit
-                ? 'Vui lòng thêm ít nhất một dịch vụ'
-                : 'Vui lòng thêm ít nhất một loại dịch vụ';
-        }
-
-        for (let index = 0; index < formData.servicePrices.length; index++) {
-            const price = formData.servicePrices[index];
-            if (!price.serviceTypeId) {
-                newErrors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
-            }
-            if (price.amount <= 0) {
-                newErrors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
-            }
-        }
+        // Validate service prices
+        validateServicePrices(newErrors);
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData, isEdit]);
+    }, [formData, isEdit, validateRequiredFields, validateServicePrices]);
 
     const resetForm = useCallback(() => {
         const emptyFormData: DoctorFormData = {
