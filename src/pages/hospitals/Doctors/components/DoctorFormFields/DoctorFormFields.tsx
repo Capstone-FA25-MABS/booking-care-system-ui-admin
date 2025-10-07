@@ -2,6 +2,8 @@ import React from 'react';
 import Select from 'react-select';
 import { NumericFormat } from 'react-number-format';
 import Button from '@/components/Button';
+import Input from '@/components/Input';
+import Textarea from '@/components/Textarea';
 import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
 import {
     mockPositions,
@@ -78,57 +80,50 @@ const BasicInfoFields: React.FC<{
 }> = ({ formData, errors, onInputChange }) => (
     <div className="col-md-9">
         <div className="row">
+            <Input
+                wrapperClassName="col-md-6 mb-3"
+                label="Tên"
+                icon="user"
+                iconPrefix="feather"
+                required
+                name="firstName"
+                value={formData.firstName}
+                onChange={onInputChange}
+                placeholder="Nhập tên"
+                error={errors.firstName}
+            />
+            <Input
+                wrapperClassName="col-md-6 mb-3"
+                label="Họ"
+                icon="user"
+                iconPrefix="feather"
+                required
+                name="lastName"
+                value={formData.lastName}
+                onChange={onInputChange}
+                placeholder="Nhập họ"
+                error={errors.lastName}
+            />
+            <Input
+                wrapperClassName="col-md-6 mb-3"
+                label="Email"
+                icon="mail"
+                iconPrefix="feather"
+                required
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={onInputChange}
+                placeholder="Nhập email"
+                error={errors.email}
+            />
             <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-user me-1"></i>
-                    Tên <span className="text-danger">*</span>
-                </label>
-                <input
-                    type="text"
-                    className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={onInputChange}
-                    placeholder="Nhập tên"
-                />
-                {errors.firstName && <div className="invalid-feedback">{errors.firstName}</div>}
-            </div>
-            <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-user me-1"></i>
-                    Họ <span className="text-danger">*</span>
-                </label>
-                <input
-                    type="text"
-                    className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={onInputChange}
-                    placeholder="Nhập họ"
-                />
-                {errors.lastName && <div className="invalid-feedback">{errors.lastName}</div>}
-            </div>
-            <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-mail me-1"></i>
-                    Email <span className="text-danger">*</span>
-                </label>
-                <input
-                    type="email"
-                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                    name="email"
-                    value={formData.email}
-                    onChange={onInputChange}
-                    placeholder="Nhập email"
-                />
-                {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-            </div>
-            <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-users me-1"></i>
-                    Giới tính <span className="text-danger">*</span>
+                <label htmlFor="gender" className="form-label">
+                    <i className="feather-users me-1"></i> Giới tính{' '}
+                    <span className="text-danger">*</span>
                 </label>
                 <Select
+                    inputId="gender"
                     options={[
                         { value: 'MALE', label: 'Nam' },
                         { value: 'FEMALE', label: 'Nữ' },
@@ -157,25 +152,22 @@ const BasicInfoFields: React.FC<{
                 />
                 {errors.gender && <div className="text-danger mt-1">{errors.gender}</div>}
             </div>
+            <Input
+                wrapperClassName="col-md-6 mb-3"
+                label="Địa chỉ"
+                icon="map-pin"
+                iconPrefix="feather"
+                required
+                name="address"
+                value={formData.address}
+                onChange={onInputChange}
+                placeholder="Nhập địa chỉ"
+                error={errors.address}
+            />
             <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-map-pin me-1"></i>
-                    Địa chỉ <span className="text-danger">*</span>
-                </label>
-                <input
-                    type="text"
-                    className={`form-control ${errors.address ? 'is-invalid' : ''}`}
-                    name="address"
-                    value={formData.address}
-                    onChange={onInputChange}
-                    placeholder="Nhập địa chỉ"
-                />
-                {errors.address && <div className="invalid-feedback">{errors.address}</div>}
-            </div>
-            <div className="col-md-6 mb-3">
-                <label className="form-label">
-                    <i className="feather-award me-1"></i>
-                    Số năm kinh nghiệm <span className="text-danger">*</span>
+                <label htmlFor="yearsOfExperience" className="form-label">
+                    <i className="feather-award me-1"></i> Số năm kinh nghiệm{' '}
+                    <span className="text-danger">*</span>
                 </label>
                 <NumericFormat
                     customInput={(inputProps: any) => (
@@ -201,21 +193,19 @@ const BasicInfoFields: React.FC<{
                     <div className="invalid-feedback">{errors.yearsOfExperience}</div>
                 )}
             </div>
-            <div className="col-12 mb-3">
-                <label className="form-label">
-                    <i className="feather-file-text me-1"></i>
-                    Tiểu sử <span className="text-danger">*</span>
-                </label>
-                <textarea
-                    className={`form-control ${errors.bio ? 'is-invalid' : ''}`}
-                    name="bio"
-                    value={formData.bio}
-                    onChange={onInputChange}
-                    rows={4}
-                    placeholder="Mô tả về bác sĩ"
-                />
-                {errors.bio && <div className="invalid-feedback">{errors.bio}</div>}
-            </div>
+            <Textarea
+                wrapperClassName="col-12 mb-3"
+                label="Tiểu sử"
+                icon="file-text"
+                iconPrefix="feather"
+                required
+                name="bio"
+                value={formData.bio}
+                onChange={onInputChange}
+                rows={4}
+                placeholder="Mô tả về bác sĩ"
+                error={errors.bio}
+            />
         </div>
     </div>
 );
