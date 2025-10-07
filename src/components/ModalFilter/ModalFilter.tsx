@@ -48,6 +48,16 @@ export const ModalFilter: React.FC<ModalFilterProps> = ({
     const [showDateRangePicker, setShowDateRangePicker] = useState(false);
     const dateRangeAnchorRef = useRef<HTMLDivElement>(null);
 
+    const getDateRangeDisplayValue = (field: FilterField) => {
+        if (field.value?.start && field.value?.end) {
+            return `${field.value.start.toLocaleDateString('vi-VN')} - ${field.value.end.toLocaleDateString('vi-VN')}`;
+        }
+        if (field.value?.start) {
+            return `${field.value.start.toLocaleDateString('vi-VN')} - Chọn ngày kết thúc`;
+        }
+        return '';
+    };
+
     const renderField = (field: FilterField) => {
         switch (field.type) {
             case 'select':
@@ -115,13 +125,7 @@ export const ModalFilter: React.FC<ModalFilterProps> = ({
                             type="text"
                             className="form-control"
                             placeholder={field.placeholder || 'Chọn khoảng thời gian...'}
-                            value={
-                                field.value?.start && field.value?.end
-                                    ? `${field.value.start.toLocaleDateString('vi-VN')} - ${field.value.end.toLocaleDateString('vi-VN')}`
-                                    : field.value?.start
-                                      ? `${field.value.start.toLocaleDateString('vi-VN')} - Chọn ngày kết thúc`
-                                      : ''
-                            }
+                            value={getDateRangeDisplayValue(field)}
                             onClick={() => setShowDateRangePicker(true)}
                             readOnly
                         />
@@ -222,11 +226,10 @@ export const ModalFilter: React.FC<ModalFilterProps> = ({
                         >
                             {loading ? (
                                 <>
-                                    <span
+                                    <output
                                         className="spinner-border spinner-border-sm me-2"
-                                        role="status"
                                         aria-hidden="true"
-                                    ></span>
+                                    ></output>
                                     Đang áp dụng...
                                 </>
                             ) : (
