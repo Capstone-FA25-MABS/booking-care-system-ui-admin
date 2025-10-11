@@ -43,6 +43,9 @@ export const PATHS = {
             NEW: 'new',
             CALENDAR: 'calendar',
         },
+        REFUNDS: {
+            ROOT: 'refunds',
+        },
         MESSAGES: 'messages',
     },
 
