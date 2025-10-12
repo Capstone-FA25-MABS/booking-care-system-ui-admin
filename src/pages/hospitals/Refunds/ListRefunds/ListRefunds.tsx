@@ -224,6 +224,133 @@ const ListRefunds: React.FC = () => {
         });
     };
 
+    const renderTableBody = () => {
+        if (isLoading) {
+            return (
+                <>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <RefundTableSkeleton key={`skeleton-loading-${index}`} />
+                    ))}
+                </>
+            );
+        }
+
+        if (apiError) {
+            return (
+                <tr>
+                    <td colSpan={7} className="text-center py-5">
+                        <div className="text-danger">
+                            <i className="ti ti-alert-circle fs-1"></i>
+                            <p className="mt-2">{apiError}</p>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                onClick={() => globalThis.location.reload()}
+                            >
+                                Thử lại
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        if (refunds.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={7} className="text-center py-5">
+                        <i className="ti ti-receipt-off fs-1 text-muted"></i>
+                        <p className="mt-2 text-muted">Không có yêu cầu hoàn tiền nào</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return refunds.map((refund) => (
+            <tr key={refund.id}>
+                <td>
+                    <span className="fw-semibold">#{refund.id.substring(0, 8)}</span>
+                </td>
+                <td>{formatDate(refund.createdAt)}</td>
+                <td>
+                    <span className="fw-bold text-danger">
+                        {formatCurrency(refund.refundAmount)}
+                    </span>
+                </td>
+                <td>
+                    <span
+                        className="text-truncate d-inline-block"
+                        style={{ maxWidth: '200px' }}
+                        title={refund.refundReason}
+                    >
+                        {refund.refundReason || 'Hủy lịch hẹn'}
+                    </span>
+                </td>
+                <td>
+                    {refund.bankAccount ? (
+                        <div>
+                            <div className="fw-semibold">{refund.bankAccount.bankName}</div>
+                            <small className="text-muted">
+                                {refund.bankAccount.accountNumber} -{' '}
+                                {refund.bankAccount.accountName}
+                            </small>
+                        </div>
+                    ) : (
+                        <span className="text-warning">Chưa cập nhật</span>
+                    )}
+                </td>
+                <td>
+                    <span className={`badge ${getRefundStatusVariant(refund.status)}`}>
+                        {getRefundStatusText(refund.status)}
+                    </span>
+                </td>
+                <td className="action-item">
+                    <button type="button" className="btn btn-link p-0" data-bs-toggle="dropdown">
+                        <i className="ti ti-dots-vertical"></i>
+                    </button>
+                    <ul className="dropdown-menu p-2">
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                            >
+                                <i className="ti ti-eye me-2"></i> Xem chi tiết
+                            </button>
+                        </li>
+                        {refund.status === RefundStatus.PENDING && (
+                            <>
+                                <li>
+                                    <button
+                                        type="button"
+                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-success"
+                                        onClick={() => {
+                                            setSelectedRefund(refund);
+                                            setShowTransferModal(true);
+                                        }}
+                                    >
+                                        <i className="ti ti-check me-2"></i> Đánh dấu đã chuyển tiền
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-warning"
+                                        onClick={() => {
+                                            setSelectedRefund(refund);
+                                            setShowIssueModal(true);
+                                        }}
+                                    >
+                                        <i className="ti ti-alert-triangle me-2"></i> Báo cáo sự cố
+                                    </button>
+                                </li>
+                            </>
+                        )}
+                    </ul>
+                </td>
+            </tr>
+        ));
+    };
+
     return (
         <>
             <div className="content">
@@ -337,138 +464,7 @@ const ListRefunds: React.FC = () => {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {isLoading ? (
-                                <>
-                                    {/* Skeleton Loading */}
-                                    {Array.from({ length: itemsPerPage }, (_, index) => (
-                                        <RefundTableSkeleton key={`skeleton-loading-${index}`} />
-                                    ))}
-                                </>
-                            ) : apiError ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-5">
-                                        <div className="text-danger">
-                                            <i className="ti ti-alert-circle fs-1"></i>
-                                            <p className="mt-2">{apiError}</p>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-primary"
-                                                onClick={() => globalThis.location.reload()}
-                                            >
-                                                Thử lại
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : refunds.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-5">
-                                        <i className="ti ti-receipt-off fs-1 text-muted"></i>
-                                        <p className="mt-2 text-muted">
-                                            Không có yêu cầu hoàn tiền nào
-                                        </p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                refunds.map((refund) => (
-                                    <tr key={refund.id}>
-                                        <td>
-                                            <span className="fw-semibold">
-                                                #{refund.id.substring(0, 8)}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(refund.createdAt)}</td>
-                                        <td>
-                                            <span className="fw-bold text-danger">
-                                                {formatCurrency(refund.refundAmount)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span
-                                                className="text-truncate d-inline-block"
-                                                style={{ maxWidth: '200px' }}
-                                                title={refund.refundReason}
-                                            >
-                                                {refund.refundReason || 'Hủy lịch hẹn'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {refund.bankAccount ? (
-                                                <div>
-                                                    <div className="fw-semibold">
-                                                        {refund.bankAccount.bankName}
-                                                    </div>
-                                                    <small className="text-muted">
-                                                        {refund.bankAccount.accountNumber} -{' '}
-                                                        {refund.bankAccount.accountName}
-                                                    </small>
-                                                </div>
-                                            ) : (
-                                                <span className="text-warning">Chưa cập nhật</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`badge ${getRefundStatusVariant(refund.status)}`}
-                                            >
-                                                {getRefundStatusText(refund.status)}
-                                            </span>
-                                        </td>
-                                        <td className="action-item">
-                                            <button
-                                                type="button"
-                                                className="btn btn-link p-0"
-                                                data-bs-toggle="dropdown"
-                                            >
-                                                <i className="ti ti-dots-vertical"></i>
-                                            </button>
-                                            <ul className="dropdown-menu p-2">
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                    >
-                                                        <i className="ti ti-eye me-2"></i> Xem chi
-                                                        tiết
-                                                    </button>
-                                                </li>
-                                                {refund.status === RefundStatus.PENDING && (
-                                                    <>
-                                                        <li>
-                                                            <button
-                                                                type="button"
-                                                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-success"
-                                                                onClick={() => {
-                                                                    setSelectedRefund(refund);
-                                                                    setShowTransferModal(true);
-                                                                }}
-                                                            >
-                                                                <i className="ti ti-check me-2"></i>{' '}
-                                                                Đánh dấu đã chuyển tiền
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button
-                                                                type="button"
-                                                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-warning"
-                                                                onClick={() => {
-                                                                    setSelectedRefund(refund);
-                                                                    setShowIssueModal(true);
-                                                                }}
-                                                            >
-                                                                <i className="ti ti-alert-triangle me-2"></i>{' '}
-                                                                Báo cáo sự cố
-                                                            </button>
-                                                        </li>
-                                                    </>
-                                                )}
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
+                        <tbody>{renderTableBody()}</tbody>
                     </table>
                 </div>
                 {/* End Table */}
@@ -583,7 +579,6 @@ const ListRefunds: React.FC = () => {
                                         <>
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
-                                                role="status"
                                                 aria-hidden="true"
                                             ></span>{' '}
                                             Đang xử lý...
@@ -691,7 +686,6 @@ const ListRefunds: React.FC = () => {
                                         <>
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
-                                                role="status"
                                                 aria-hidden="true"
                                             ></span>{' '}
                                             Đang gửi...

@@ -162,19 +162,13 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
             </div>
             {/* Modal backdrop */}
             {show && (
-                <div
-                    className="modal-backdrop fade show"
+                <button
+                    type="button"
+                    className="modal-backdrop fade show border-0 p-0"
                     onClick={onHide}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                            onHide();
-                        }
-                    }}
-                    role="button"
-                    tabIndex={0}
                     aria-label="Close modal"
                     style={{ zIndex: 1040 }}
-                ></div>
+                ></button>
             )}
         </>
     );
