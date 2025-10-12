@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
-import ModalCancel from '@/components/ModalCancel';
+import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import ModalFilter from '@/components/ModalFilter';
 import FilterSortToolbar from '@/components/FilterSortToolbar';
 import ExportDropdown from '@/components/ExportDropdown';
@@ -149,11 +149,9 @@ const ListAppointments: React.FC = () => {
         // Check if required profile is loaded
         if (primaryRole === Role.DOCTOR && !doctorProfile) {
             console.warn('Doctor profile not loaded yet');
-            return;
         }
         if (primaryRole === Role.STAFF && !hospitalProfile) {
             console.warn('Hospital profile not loaded yet');
-            return;
         }
     }, [roles, doctorProfile, hospitalProfile]);
 
@@ -518,7 +516,7 @@ const ListAppointments: React.FC = () => {
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-primary"
-                                                onClick={() => window.location.reload()}
+                                                onClick={() => globalThis.location.reload()}
                                             >
                                                 Thử lại
                                             </button>

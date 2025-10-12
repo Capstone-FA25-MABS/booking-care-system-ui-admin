@@ -148,7 +148,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
                                                 aria-hidden="true"
-                                            ></span>
+                                            ></span>{' '}
                                             Đang xử lý...
                                         </>
                                     ) : (
@@ -165,6 +165,14 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                 <div
                     className="modal-backdrop fade show"
                     onClick={onHide}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            onHide();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Close modal"
                     style={{ zIndex: 1040 }}
                 ></div>
             )}

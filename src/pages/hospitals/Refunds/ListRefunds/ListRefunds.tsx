@@ -58,7 +58,6 @@ const ListRefunds: React.FC = () => {
 
         if (primaryRole === Role.STAFF && !hospitalProfile) {
             console.warn('Hospital profile not loaded yet');
-            return;
         }
     }, [roles, hospitalProfile]);
 
@@ -78,7 +77,7 @@ const ListRefunds: React.FC = () => {
             try {
                 const response = await RefundService.getRefundHistories({
                     hospitalId: hospitalProfile?.id,
-                    status: activeStatusTab !== 'all' ? activeStatusTab : undefined,
+                    status: activeStatusTab === 'all' ? undefined : activeStatusTab,
                     page: currentPage,
                     pageSize: itemsPerPage,
                     sortBy: 'CreatedAt',
@@ -141,7 +140,7 @@ const ListRefunds: React.FC = () => {
                 // Refresh refunds list with status counts
                 const fetchResponse = await RefundService.getRefundHistories({
                     hospitalId: hospitalProfile?.id,
-                    status: activeStatusTab !== 'all' ? activeStatusTab : undefined,
+                    status: activeStatusTab === 'all' ? undefined : activeStatusTab,
                     page: currentPage,
                     pageSize: itemsPerPage,
                     sortBy: 'CreatedAt',
@@ -355,7 +354,7 @@ const ListRefunds: React.FC = () => {
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-primary"
-                                                onClick={() => window.location.reload()}
+                                                onClick={() => globalThis.location.reload()}
                                             >
                                                 Thử lại
                                             </button>
@@ -430,8 +429,8 @@ const ListRefunds: React.FC = () => {
                                                         type="button"
                                                         className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                                     >
-                                                        <i className="ti ti-eye me-2"></i>
-                                                        Xem chi tiết
+                                                        <i className="ti ti-eye me-2"></i> Xem chi
+                                                        tiết
                                                     </button>
                                                 </li>
                                                 {refund.status === RefundStatus.PENDING && (
@@ -445,7 +444,7 @@ const ListRefunds: React.FC = () => {
                                                                     setShowTransferModal(true);
                                                                 }}
                                                             >
-                                                                <i className="ti ti-check me-2"></i>
+                                                                <i className="ti ti-check me-2"></i>{' '}
                                                                 Đánh dấu đã chuyển tiền
                                                             </button>
                                                         </li>
@@ -458,7 +457,7 @@ const ListRefunds: React.FC = () => {
                                                                     setShowIssueModal(true);
                                                                 }}
                                                             >
-                                                                <i className="ti ti-alert-triangle me-2"></i>
+                                                                <i className="ti ti-alert-triangle me-2"></i>{' '}
                                                                 Báo cáo sự cố
                                                             </button>
                                                         </li>
@@ -534,8 +533,11 @@ const ListRefunds: React.FC = () => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label">Ghi chú (không bắt buộc)</label>
+                                    <label htmlFor="transferNote" className="form-label">
+                                        Ghi chú (không bắt buộc)
+                                    </label>
                                     <textarea
+                                        id="transferNote"
                                         className="form-control"
                                         rows={3}
                                         placeholder="Nhập ghi chú về quá trình chuyển tiền..."
@@ -582,13 +584,14 @@ const ListRefunds: React.FC = () => {
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
                                                 role="status"
-                                            ></span>
+                                                aria-hidden="true"
+                                            ></span>{' '}
                                             Đang xử lý...
                                         </>
                                     ) : (
                                         <>
-                                            <i className="ti ti-check me-2"></i>
-                                            Xác nhận đã chuyển tiền
+                                            <i className="ti ti-check me-2"></i> Xác nhận đã chuyển
+                                            tiền
                                         </>
                                     )}
                                 </button>
@@ -641,10 +644,11 @@ const ListRefunds: React.FC = () => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label">
+                                    <label htmlFor="issueDescription" className="form-label">
                                         Mô tả sự cố <span className="text-danger">*</span>
                                     </label>
                                     <textarea
+                                        id="issueDescription"
                                         className="form-control"
                                         rows={4}
                                         placeholder="Ví dụ: Không tìm thấy tài khoản này trong hệ thống ngân hàng, số tài khoản có thể bị nhập sai..."
@@ -659,9 +663,9 @@ const ListRefunds: React.FC = () => {
                                 </div>
 
                                 <div className="alert alert-info mb-0">
-                                    <i className="ti ti-info-circle me-2"></i>
-                                    Sau khi gửi báo cáo, bệnh nhân sẽ nhận được thông báo để cập
-                                    nhật lại thông tin tài khoản ngân hàng chính xác.
+                                    <i className="ti ti-info-circle me-2"></i> Sau khi gửi báo cáo,
+                                    bệnh nhân sẽ nhận được thông báo để cập nhật lại thông tin tài
+                                    khoản ngân hàng chính xác.
                                 </div>
                             </div>
                             <div className="modal-footer border-0">
@@ -688,13 +692,13 @@ const ListRefunds: React.FC = () => {
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
                                                 role="status"
-                                            ></span>
+                                                aria-hidden="true"
+                                            ></span>{' '}
                                             Đang gửi...
                                         </>
                                     ) : (
                                         <>
-                                            <i className="ti ti-send me-2"></i>
-                                            Gửi báo cáo
+                                            <i className="ti ti-send me-2"></i> Gửi báo cáo
                                         </>
                                     )}
                                 </button>
