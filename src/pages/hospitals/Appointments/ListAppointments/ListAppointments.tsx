@@ -142,6 +142,49 @@ const ListAppointments: React.FC = () => {
         status: 'COMPLETED',
     });
 
+    // Helper: Validate user profile
+    const validateUserProfile = (primaryRole: string) => {
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not available, skipping appointment fetch');
+            return false;
+        }
+        if (primaryRole === Role.STAFF && !hospitalProfile) {
+            console.warn('Hospital profile not available, skipping appointment fetch');
+            return false;
+        }
+        return true;
+    };
+
+    // Helper: Build appointment query with role-based filters
+    const buildAppointmentQuery = (): AppointmentQueryRequest => {
+        const query: AppointmentQueryRequest = {
+            status: mapUITabToStatus(activeStatusTab),
+            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
+            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: 'CreatedAt',
+            sortDescending: true,
+            includeStatusCounts: true,
+        };
+
+        const primaryRole = roles[0]?.toUpperCase();
+
+        // Auto-fill doctorId or hospitalId based on user role
+        if (primaryRole === Role.DOCTOR && doctorProfile?.id) {
+            query.doctorId = doctorProfile.id;
+        } else if (primaryRole === Role.STAFF && hospitalProfile?.id) {
+            query.hospitalId = hospitalProfile.id;
+        }
+
+        // Add user-selected filters
+        if (selectedPatients.length > 0) query.patientId = selectedPatients[0];
+        if (selectedTypes.length > 0) query.appointmentType = selectedTypes[0];
+        if (selectedDoctors.length > 0) query.doctorId = selectedDoctors[0];
+
+        return query;
+    };
+
     // Validate user profile before fetching appointments
     useEffect(() => {
         const primaryRole = roles[0]?.toUpperCase();
@@ -158,56 +201,14 @@ const ListAppointments: React.FC = () => {
     // Fetch appointments from API
     useEffect(() => {
         const fetchAppointments = async () => {
-            // Validate that user has required profile
             const primaryRole = roles[0]?.toUpperCase();
-            if (primaryRole === Role.DOCTOR && !doctorProfile) {
-                console.warn('Doctor profile not available, skipping appointment fetch');
-                return;
-            }
-            if (primaryRole === Role.STAFF && !hospitalProfile) {
-                console.warn('Hospital profile not available, skipping appointment fetch');
-                return;
-            }
+            if (!validateUserProfile(primaryRole)) return;
 
             setIsLoading(true);
             setApiError(null);
 
             try {
-                // Build query request
-                const query: AppointmentQueryRequest = {
-                    status: mapUITabToStatus(activeStatusTab),
-                    fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
-                    toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
-                    pageNumber: currentPage,
-                    pageSize: itemsPerPage,
-                    sortBy: 'CreatedAt',
-                    sortDescending: true,
-                    includeStatusCounts: true,
-                };
-
-                // Auto-fill doctorId or hospitalId based on user role
-                const primaryRole = roles[0]?.toUpperCase();
-
-                if (primaryRole === Role.DOCTOR && doctorProfile?.id) {
-                    // Doctor can only see their own appointments
-                    query.doctorId = doctorProfile.id;
-                } else if (primaryRole === Role.STAFF && hospitalProfile?.id) {
-                    // Staff can see all appointments in their hospital
-                    query.hospitalId = hospitalProfile.id;
-                }
-                // ADMIN role: No filter, can see all appointments
-
-                // Add user-selected filters (these will override role-based filters if selected)
-                if (selectedPatients.length > 0) {
-                    query.patientId = selectedPatients[0];
-                }
-                if (selectedTypes.length > 0) {
-                    query.appointmentType = selectedTypes[0];
-                }
-                if (selectedDoctors.length > 0) {
-                    // User manually selected a doctor filter
-                    query.doctorId = selectedDoctors[0];
-                }
+                const query = buildAppointmentQuery();
 
                 // Call API for management
                 const response = await AppointmentService.getAppointmentsForManagement(query);
@@ -374,6 +375,16 @@ const ListAppointments: React.FC = () => {
 
     // Get appointment counts for tabs - using tabCounts state
     const appointmentCounts = tabCounts;
+
+    // Helper: Get button class names for status tabs
+    const getStatusTabClass = (tab: AppointmentUITab) => {
+        return `btn ${activeStatusTab === tab ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`;
+    };
+
+    // Helper: Get badge class names for status tabs
+    const getStatusBadgeClass = (tab: AppointmentUITab) => {
+        return `badge ${activeStatusTab === tab ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`;
+    };
 
     const renderTableBody = () => {
         if (isLoading) {
@@ -542,58 +553,50 @@ const ListAppointments: React.FC = () => {
                     {/* Status Tabs */}
                     <div className="d-flex gap-2">
                         <button
-                            className={`btn ${activeStatusTab === 'waiting' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('waiting')}
                             onClick={() => {
                                 setActiveStatusTab('waiting');
                                 setCurrentPage(1);
                             }}
                         >
                             Chờ xử lý{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'waiting' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
+                            <span className={getStatusBadgeClass('waiting')}>
                                 {appointmentCounts.waiting}
                             </span>
                         </button>
                         <button
-                            className={`btn ${activeStatusTab === 'upcoming' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('upcoming')}
                             onClick={() => {
                                 setActiveStatusTab('upcoming');
                                 setCurrentPage(1);
                             }}
                         >
                             Sắp Tới{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
+                            <span className={getStatusBadgeClass('upcoming')}>
                                 {appointmentCounts.upcoming}
                             </span>
                         </button>
                         <button
-                            className={`btn ${activeStatusTab === 'cancelled' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('cancelled')}
                             onClick={() => {
                                 setActiveStatusTab('cancelled');
                                 setCurrentPage(1);
                             }}
                         >
                             Đã Hủy{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
+                            <span className={getStatusBadgeClass('cancelled')}>
                                 {appointmentCounts.cancelled}
                             </span>
                         </button>
                         <button
-                            className={`btn ${activeStatusTab === 'completed' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('completed')}
                             onClick={() => {
                                 setActiveStatusTab('completed');
                                 setCurrentPage(1);
                             }}
                         >
                             Hoàn Thành{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
+                            <span className={getStatusBadgeClass('completed')}>
                                 {appointmentCounts.completed}
                             </span>
                         </button>

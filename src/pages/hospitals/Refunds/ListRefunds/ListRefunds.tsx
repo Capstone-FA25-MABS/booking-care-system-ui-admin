@@ -228,9 +228,11 @@ const ListRefunds: React.FC = () => {
         if (isLoading) {
             return (
                 <>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                        <RefundTableSkeleton key={`skeleton-loading-${index}`} />
-                    ))}
+                    {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map(
+                        (key) => (
+                            <RefundTableSkeleton key={key} />
+                        )
+                    )}
                 </>
             );
         }
