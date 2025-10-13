@@ -1,16 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
-import ModalDelete from '@/components/ModalDelete';
+import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import PatientDropdown from '@/components/PatientDropdown';
 import StatusDropdown from '@/components/StatusDropdown';
+import AppointmentTableSkeleton from '@/pages/hospitals/Appointments/AppointmentTableSkeleton';
+import { AppointmentService } from '@/services/appointment.service';
 import {
-    mockAppointments as importedMockAppointments,
+    AppointmentCardData,
+    AppointmentQueryRequest,
+    transformToCardData,
+    isNewAppointment,
+    mapUITabToStatus,
+    getAppointmentTypeText,
+    formatFullName,
+    AppointmentUITab,
+} from '@/types/appointment.types';
+import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
+import { Role } from '@/enums/common.enums';
+import { RootState } from '@/store';
+import {
     mockPatients as importedMockPatients,
     appointmentStatuses as importedAppointmentStatuses,
 } from '@/data/mockAppointments';
@@ -23,30 +39,6 @@ interface Patient {
     email?: string;
     phone?: string;
 }
-
-interface Appointment {
-    id: string;
-    appointmentId: string;
-    patient: Patient;
-    type: AppointmentType;
-    date: string;
-    time: string;
-    reason: string;
-    status: AppointmentStatus;
-    location?: string;
-    doctor?: {
-        id: string;
-        name: string;
-        specialty: string;
-        avatar: string;
-    };
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-type AppointmentType = 'Trực tiếp' | 'Trực tuyến';
-
-type AppointmentStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED' | 'SCHEDULED' | 'UPCOMING';
 
 interface AppointmentFormData {
     appointmentId: string;
@@ -66,8 +58,6 @@ import user04 from '@/assets/img/users/user-04.jpg';
 import user05 from '@/assets/img/users/user-05.jpg';
 import user06 from '@/assets/img/users/user-06.jpg';
 
-import avatar2 from '@/assets/img/users/avatar-2.jpg';
-
 // Use imported mock patients
 const mockPatients = importedMockPatients as unknown as Patient[];
 
@@ -81,47 +71,53 @@ const mockDoctors = [
     { id: '6', name: 'BS. Vũ Thị F', specialty: 'Da liễu', avatar: user06 },
 ];
 
-const appointmentTypes: AppointmentType[] = ['Trực tiếp', 'Trực tuyến'];
 // Use imported appointment statuses
 const appointmentStatuses = importedAppointmentStatuses;
 
-// Status mapping for tabs (keep local as it differs from imported version)
-const statusMapping = {
-    upcoming: 'UPCOMING',
-    completed: 'COMPLETED',
-    cancelled: 'CANCELLED',
-    pending: 'PENDING',
-};
-
-// Use imported mock data
-const mockAppointments = importedMockAppointments as unknown as Appointment[];
-// Use imported mock data
 const ListAppointments: React.FC = () => {
-    const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
-    const [originalAppointments] = useState<Appointment[]>(mockAppointments);
+    // Get auth and user profile from Redux
+    const { roles } = useSelector((state: RootState) => state.auth);
+    const { doctorProfile, hospitalProfile } = useSelector((state: RootState) => state.user);
+
+    // API data states
+    const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState<string | null>(null);
     const [showNewAppointment, setShowNewAppointment] = useState(false);
     const [showEditAppointment, setShowEditAppointment] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
-    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
+        null
+    );
     const [sortBy, setSortBy] = useState<string>('Gần đây');
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Filter states
     const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
-    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
     const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
     const [selectedDateRange, setSelectedDateRange] = useState<{
         start: Date | null;
         end: Date | null;
     }>({ start: null, end: null });
 
-    // Status tab state
-    const [activeStatusTab, setActiveStatusTab] = useState<string>('upcoming');
+    // Status tab state - now use AppointmentUITab type
+    const [activeStatusTab, setActiveStatusTab] = useState<AppointmentUITab>('waiting');
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Tab counts
+    const [tabCounts, setTabCounts] = useState({
+        waiting: 0,
+        upcoming: 0,
+        cancelled: 0,
+        completed: 0,
+    });
 
     // Form states for new appointment
     const [newAppointment, setNewAppointment] = useState<AppointmentFormData>({
@@ -145,6 +141,127 @@ const ListAppointments: React.FC = () => {
         status: 'COMPLETED',
     });
 
+    // Helper: Validate user profile
+    const validateUserProfile = (primaryRole: string) => {
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not available, skipping appointment fetch');
+            return false;
+        }
+        if (primaryRole === Role.STAFF && !hospitalProfile) {
+            console.warn('Hospital profile not available, skipping appointment fetch');
+            return false;
+        }
+        return true;
+    };
+
+    // Helper: Build appointment query with role-based filters
+    const buildAppointmentQuery = (): AppointmentQueryRequest => {
+        const query: AppointmentQueryRequest = {
+            status: mapUITabToStatus(activeStatusTab),
+            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
+            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: 'CreatedAt',
+            sortDescending: true,
+            includeStatusCounts: true,
+        };
+
+        const primaryRole = roles[0]?.toUpperCase();
+
+        // Auto-fill doctorId or hospitalId based on user role
+        if (primaryRole === Role.DOCTOR && doctorProfile?.id) {
+            query.doctorId = doctorProfile.id;
+        } else if (primaryRole === Role.STAFF && hospitalProfile?.id) {
+            query.hospitalId = hospitalProfile.id;
+        }
+
+        // Add user-selected filters
+        if (selectedPatients.length > 0) query.patientId = selectedPatients[0];
+        if (selectedTypes.length > 0) query.appointmentType = selectedTypes[0];
+        if (selectedDoctors.length > 0) query.doctorId = selectedDoctors[0];
+
+        return query;
+    };
+
+    // Validate user profile before fetching appointments
+    useEffect(() => {
+        const primaryRole = roles[0]?.toUpperCase();
+
+        // Check if required profile is loaded
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not loaded yet');
+        }
+        if (primaryRole === Role.STAFF && !hospitalProfile) {
+            console.warn('Hospital profile not loaded yet');
+        }
+    }, [roles, doctorProfile, hospitalProfile]);
+
+    // Fetch appointments from API
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            const primaryRole = roles[0]?.toUpperCase();
+            if (!validateUserProfile(primaryRole)) return;
+
+            setIsLoading(true);
+            setApiError(null);
+
+            try {
+                const query = buildAppointmentQuery();
+
+                // Call API for management
+                const response = await AppointmentService.getAppointmentsForManagement(query);
+
+                if (response.success && response.data) {
+                    // Transform API responses to UI-friendly format
+                    const transformedAppointments = response.data.appointments.map((apt) => {
+                        const cardData = transformToCardData(apt);
+                        cardData.isNew = isNewAppointment(apt.createdAt);
+                        return cardData;
+                    });
+
+                    setAppointments(transformedAppointments);
+                    setTotalCount(response.data.totalCount || 0);
+
+                    // Update counts from statusCounts if available
+                    if (response.data.statusCounts) {
+                        setTabCounts({
+                            waiting: response.data.statusCounts.pending || 0,
+                            upcoming: response.data.statusCounts.confirmed || 0,
+                            cancelled: response.data.statusCounts.cancelled || 0,
+                            completed: response.data.statusCounts.completed || 0,
+                        });
+                    }
+                } else {
+                    throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
+                }
+            } catch (error: any) {
+                console.error('Error fetching appointments:', error);
+                const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
+                setApiError(errorMessage);
+                setAppointments([]);
+                setTotalCount(0);
+                toast.error(errorMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAppointments();
+    }, [
+        activeStatusTab,
+        selectedDateRange.start,
+        selectedDateRange.end,
+        selectedPatients,
+        selectedTypes,
+        selectedDoctors,
+        currentPage,
+        itemsPerPage,
+        roles,
+        doctorProfile?.id,
+        hospitalProfile?.id,
+    ]);
+
     const handleNewAppointmentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('New appointment:', newAppointment);
@@ -157,80 +274,86 @@ const ListAppointments: React.FC = () => {
         setShowEditAppointment(false);
     };
 
-    const handleDeleteConfirm = () => {
-        if (selectedAppointment) {
-            setAppointments(appointments.filter((apt) => apt.id !== selectedAppointment.id));
+    const handleCancelConfirm = async (cancellationReason: string) => {
+        if (!selectedAppointment) return;
+
+        setIsCancelling(true);
+        try {
+            // Call API to cancel appointment
+            await AppointmentService.cancelAppointment(
+                selectedAppointment.appointmentId,
+                cancellationReason
+            );
+
+            // Update local state to reflect cancellation
+            setAppointments(
+                appointments.map((apt) =>
+                    apt.appointmentId === selectedAppointment.appointmentId
+                        ? { ...apt, status: AppointmentStatus.CANCELLED }
+                        : apt
+                )
+            );
+
+            // Update tab counts
+            setTabCounts((prev) => ({
+                ...prev,
+                waiting: prev.waiting > 0 ? prev.waiting - 1 : 0,
+                upcoming: prev.upcoming > 0 ? prev.upcoming - 1 : 0,
+                cancelled: prev.cancelled + 1,
+            }));
+
+            toast.success('Hủy lịch hẹn thành công. Quá trình hoàn tiền đã được khởi tạo.');
+
+            // Close modal and reset state
+            setShowCancelModal(false);
+            setSelectedAppointment(null);
+
+            // Optionally refresh the list
+            // await fetchAppointments();
+        } catch (error: any) {
+            console.error('Error cancelling appointment:', error);
+            toast.error(error.message || 'Không thể hủy lịch hẹn');
+        } finally {
+            setIsCancelling(false);
         }
-        setShowDeleteModal(false);
-        setSelectedAppointment(null);
     };
 
-    const handleEditClick = (appointment: Appointment) => {
+    const handleEditClick = (appointment: AppointmentCardData) => {
         setSelectedAppointment(appointment);
         setEditAppointment({
             appointmentId: appointment.appointmentId,
-            patient: appointment.patient.name,
-            type: appointment.type,
-            date: appointment.date,
-            time: appointment.time,
-            reason: appointment.reason,
+            patient: formatFullName(
+                appointment.patientInfo?.firstName,
+                appointment.patientInfo?.lastName
+            ),
+            type: getAppointmentTypeText(appointment.appointmentType),
+            date: new Date(appointment.appointmentDate).toLocaleDateString('vi-VN'),
+            time: appointment.appointmentTime,
+            reason: appointment.reason || '',
             status: appointment.status,
         });
         setShowEditAppointment(true);
     };
 
-    const handleViewClick = (appointment: Appointment) => {
+    const handleViewClick = (appointment: AppointmentCardData) => {
         setSelectedAppointment(appointment);
         setShowViewDetails(true);
     };
 
-    const handleDeleteClick = (appointment: Appointment) => {
+    const handleCancelClick = (appointment: AppointmentCardData) => {
+        // Only allow cancellation of PENDING or CONFIRMED appointments
+        if (appointment.status !== 'PENDING' && appointment.status !== 'CONFIRMED') {
+            toast.warning('Chỉ có thể hủy lịch hẹn ở trạng thái Chờ xử lý hoặc Sắp tới');
+            return;
+        }
+
         setSelectedAppointment(appointment);
-        setShowDeleteModal(true);
-    };
-
-    // Helper functions for filtering
-    const filterByPatients = (appointments: Appointment[]) => {
-        if (selectedPatients.length === 0) return appointments;
-        return appointments.filter((appointment) =>
-            selectedPatients.includes(appointment.patient.id)
-        );
-    };
-
-    const filterByTypes = (appointments: Appointment[]) => {
-        if (selectedTypes.length === 0) return appointments;
-        return appointments.filter((appointment) => selectedTypes.includes(appointment.type));
-    };
-
-    const filterByDoctors = (appointments: Appointment[]) => {
-        if (selectedDoctors.length === 0) return appointments;
-        return appointments.filter((appointment) =>
-            selectedDoctors.includes(appointment.doctor?.id || '')
-        );
-    };
-
-    const filterByDateRange = (appointments: Appointment[]) => {
-        if (!selectedDateRange.start || !selectedDateRange.end) return appointments;
-        return appointments.filter((appointment) => {
-            const appointmentDate = new Date(appointment.date.split('/').reverse().join('-'));
-            return (
-                appointmentDate >= selectedDateRange.start! &&
-                appointmentDate <= selectedDateRange.end!
-            );
-        });
+        setShowCancelModal(true);
     };
 
     const handleFilterSubmit = () => {
-        let filteredAppointments = [...originalAppointments];
-
-        // Apply all filters sequentially
-        filteredAppointments = filterByPatients(filteredAppointments);
-        filteredAppointments = filterByTypes(filteredAppointments);
-        filteredAppointments = filterByDoctors(filteredAppointments);
-        filteredAppointments = filterByDateRange(filteredAppointments);
-
-        setAppointments(filteredAppointments);
-        setCurrentPage(1); // Reset về trang 1 khi filter
+        // Filters are now applied via API, so just close modal and reset to page 1
+        setCurrentPage(1);
         setShowFilterModal(false);
     };
 
@@ -239,45 +362,152 @@ const ListAppointments: React.FC = () => {
         setSelectedTypes([]);
         setSelectedDoctors([]);
         setSelectedDateRange({ start: null, end: null });
-        setAppointments(originalAppointments);
-        setCurrentPage(1); // Reset về trang 1 khi clear filter
+        setCurrentPage(1);
     };
-
-    // Filter appointments by status tab
-    const getFilteredAppointments = () => {
-        let filtered = appointments;
-
-        // Filter by status tab
-        if (activeStatusTab !== 'all') {
-            const statusToFilter = statusMapping[activeStatusTab as keyof typeof statusMapping];
-            filtered = filtered.filter((appointment) => appointment.status === statusToFilter);
-        }
-
-        return filtered;
-    };
-
-    // Pagination logic
-    const paginatedAppointments = useMemo(() => {
-        const filtered = getFilteredAppointments();
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return filtered.slice(startIndex, endIndex);
-    }, [appointments, activeStatusTab, currentPage, itemsPerPage]);
-
-    const totalPages = Math.ceil(getFilteredAppointments().length / itemsPerPage);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    // Get count for each status tab
-    const getStatusCounts = () => {
-        return {
-            upcoming: appointments.filter((apt) => apt.status === 'SCHEDULED').length,
-            completed: appointments.filter((apt) => apt.status === 'COMPLETED').length,
-            cancelled: appointments.filter((apt) => apt.status === 'CANCELLED').length,
-            pending: appointments.filter((apt) => apt.status === 'PENDING').length,
-        };
+    // Calculate total pages based on API response
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Get appointment counts for tabs - using tabCounts state
+    const appointmentCounts = tabCounts;
+
+    // Helper: Get button class names for status tabs
+    const getStatusTabClass = (tab: AppointmentUITab) => {
+        return `btn ${activeStatusTab === tab ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`;
+    };
+
+    // Helper: Get badge class names for status tabs
+    const getStatusBadgeClass = (tab: AppointmentUITab) => {
+        return `badge ${activeStatusTab === tab ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`;
+    };
+
+    const renderTableBody = () => {
+        if (isLoading) {
+            return <AppointmentTableSkeleton rows={itemsPerPage} />;
+        }
+
+        if (apiError) {
+            return (
+                <tr>
+                    <td colSpan={6} className="text-center py-5">
+                        <div className="text-danger">
+                            <i className="ti ti-alert-circle fs-1"></i>
+                            <p className="mt-2">{apiError}</p>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                onClick={() => globalThis.location.reload()}
+                            >
+                                Thử lại
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        if (appointments.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={6} className="text-center py-5">
+                        <i className="ti ti-calendar-off fs-1 text-muted"></i>
+                        <p className="mt-2 text-muted">Không có lịch hẹn nào</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return appointments.map((appointment) => (
+            <tr key={appointment.appointmentId}>
+                <td>
+                    {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')}
+                    {' | '}
+                    {appointment.appointmentTime}
+                </td>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <Link to="/doctors-patient-details" className="avatar avatar-md me-2">
+                            <img
+                                src={appointment.patientInfo?.avatarUrl}
+                                alt="patient"
+                                className="rounded-circle"
+                            />
+                        </Link>
+                        <Link to="/doctors-patient-details" className="fw-semibold">
+                            {formatFullName(
+                                appointment.patientInfo?.firstName,
+                                appointment.patientInfo?.lastName
+                            )}
+                            <span className="text-body fs-13 fw-normal d-block">
+                                {appointment.patientInfo?.phone || appointment.patientInfo?.email}
+                            </span>
+                        </Link>
+                    </div>
+                </td>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <Link to="/doctors-profile" className="avatar avatar-md me-2">
+                            <img
+                                src={appointment.doctorInfo?.avatarUrl || user01}
+                                alt="doctor"
+                                className="rounded-circle"
+                            />
+                        </Link>
+                        <Link to="/doctors-profile" className="fw-semibold">
+                            {appointment.doctorInfo?.fullName || 'Chưa phân công'}
+                            <span className="text-body fs-13 fw-normal d-block">
+                                {appointment.doctorInfo?.specialtyName || ''}
+                            </span>
+                        </Link>
+                    </div>
+                </td>
+                <td>{getAppointmentTypeText(appointment.appointmentType)}</td>
+                <td>
+                    <StatusBadge status={appointment.status} />
+                </td>
+                <td className="action-item">
+                    <button type="button" className="btn btn-link p-0" data-bs-toggle="dropdown">
+                        <i className="ti ti-dots-vertical"></i>
+                    </button>
+                    <ul className="dropdown-menu p-2">
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => handleEditClick(appointment)}
+                            >
+                                Sửa
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => handleViewClick(appointment)}
+                            >
+                                Xem
+                            </button>
+                        </li>
+                        {(appointment.status === 'PENDING' ||
+                            appointment.status === 'CONFIRMED') && (
+                            <li>
+                                <button
+                                    type="button"
+                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                    onClick={() => handleCancelClick(appointment)}
+                                >
+                                    Hủy lịch hẹn
+                                </button>
+                            </li>
+                        )}
+                    </ul>
+                </td>
+            </tr>
+        ));
     };
 
     return (
@@ -323,59 +553,51 @@ const ListAppointments: React.FC = () => {
                     {/* Status Tabs */}
                     <div className="d-flex gap-2">
                         <button
-                            className={`btn ${activeStatusTab === 'upcoming' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('waiting')}
+                            onClick={() => {
+                                setActiveStatusTab('waiting');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Chờ xử lý{' '}
+                            <span className={getStatusBadgeClass('waiting')}>
+                                {appointmentCounts.waiting}
+                            </span>
+                        </button>
+                        <button
+                            className={getStatusTabClass('upcoming')}
                             onClick={() => {
                                 setActiveStatusTab('upcoming');
                                 setCurrentPage(1);
                             }}
                         >
                             Sắp Tới{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {getStatusCounts().upcoming}
+                            <span className={getStatusBadgeClass('upcoming')}>
+                                {appointmentCounts.upcoming}
                             </span>
                         </button>
                         <button
-                            className={`btn ${activeStatusTab === 'cancelled' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('cancelled')}
                             onClick={() => {
                                 setActiveStatusTab('cancelled');
                                 setCurrentPage(1);
                             }}
                         >
                             Đã Hủy{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {getStatusCounts().cancelled}
+                            <span className={getStatusBadgeClass('cancelled')}>
+                                {appointmentCounts.cancelled}
                             </span>
                         </button>
                         <button
-                            className={`btn ${activeStatusTab === 'completed' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
+                            className={getStatusTabClass('completed')}
                             onClick={() => {
                                 setActiveStatusTab('completed');
                                 setCurrentPage(1);
                             }}
                         >
                             Hoàn Thành{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {getStatusCounts().completed}
-                            </span>
-                        </button>
-                        <button
-                            className={`btn ${activeStatusTab === 'pending' ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`}
-                            onClick={() => {
-                                setActiveStatusTab('pending');
-                                setCurrentPage(1);
-                            }}
-                        >
-                            Đang Khám{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'pending' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {getStatusCounts().pending}
+                            <span className={getStatusBadgeClass('completed')}>
+                                {appointmentCounts.completed}
                             </span>
                         </button>
                     </div>
@@ -420,100 +642,7 @@ const ListAppointments: React.FC = () => {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {paginatedAppointments.map((appointment) => (
-                                <tr key={appointment.id}>
-                                    <td>
-                                        {appointment.date} - {appointment.time}
-                                    </td>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <Link
-                                                to="/doctors-patient-details"
-                                                className="avatar avatar-md me-2"
-                                            >
-                                                <img
-                                                    src={appointment.patient.avatar}
-                                                    alt="product"
-                                                    className="rounded-circle"
-                                                />
-                                            </Link>
-                                            <Link
-                                                to="/doctors-patient-details"
-                                                className="fw-semibold"
-                                            >
-                                                {appointment.patient.name}
-                                                <span className="text-body fs-13 fw-normal d-block">
-                                                    {appointment.patient.phone}
-                                                </span>
-                                            </Link>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <Link
-                                                to="/doctors-profile"
-                                                className="avatar avatar-md me-2"
-                                            >
-                                                <img
-                                                    src={appointment.doctor?.avatar || user01}
-                                                    alt="doctor"
-                                                    className="rounded-circle"
-                                                />
-                                            </Link>
-                                            <Link to="/doctors-profile" className="fw-semibold">
-                                                {appointment.doctor?.name || 'Chưa phân công'}
-                                                <span className="text-body fs-13 fw-normal d-block">
-                                                    {appointment.doctor?.specialty || ''}
-                                                </span>
-                                            </Link>
-                                        </div>
-                                    </td>
-                                    <td>{appointment.type}</td>
-                                    <td>
-                                        <StatusBadge status={appointment.status} />
-                                    </td>
-                                    <td className="action-item">
-                                        <button
-                                            type="button"
-                                            className="btn btn-link p-0"
-                                            data-bs-toggle="dropdown"
-                                        >
-                                            <i className="ti ti-dots-vertical"></i>
-                                        </button>
-                                        <ul className="dropdown-menu p-2">
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                    onClick={() => handleEditClick(appointment)}
-                                                >
-                                                    Sửa
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                    onClick={() => handleViewClick(appointment)}
-                                                >
-                                                    Xem
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                    onClick={() => handleDeleteClick(appointment)}
-                                                >
-                                                    Xóa
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                        <tbody>{renderTableBody()}</tbody>
                     </table>
                 </div>
                 {/* End Table */}
@@ -564,12 +693,19 @@ const ListAppointments: React.FC = () => {
                         name: 'types',
                         label: 'Loại Khám',
                         type: 'multiselect',
-                        value: selectedTypes,
-                        onChange: (value) => setSelectedTypes(value as string[]),
-                        options: appointmentTypes.map((type) => ({
-                            value: type,
-                            label: type,
-                        })),
+                        value: selectedTypes.map((t) => t.toString()),
+                        onChange: (value) => {
+                            const types = (value as string[]).map((v) =>
+                                v === 'TELEHEALTH'
+                                    ? AppointmentType.TELEHEALTH
+                                    : AppointmentType.IN_PERSON
+                            );
+                            setSelectedTypes(types);
+                        },
+                        options: [
+                            { value: AppointmentType.TELEHEALTH.toString(), label: 'Trực tuyến' },
+                            { value: AppointmentType.IN_PERSON.toString(), label: 'Trực tiếp' },
+                        ],
                         placeholder: 'Chọn loại khám...',
                         resetValue: [],
                     },
@@ -712,29 +848,48 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-3 list-style-none">
-                                                {appointmentTypes.map((type, index) => (
-                                                    <li key={`type-${type}-${index}`}>
-                                                        <label
-                                                            htmlFor={`type-${index}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`type-${index}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="type"
-                                                                value={type}
-                                                                onChange={(e) =>
-                                                                    setNewAppointment({
-                                                                        ...newAppointment,
-                                                                        type: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            {type}
-                                                        </label>
-                                                    </li>
-                                                ))}
+                                                <li>
+                                                    <label
+                                                        htmlFor="type-telehealth"
+                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                    >
+                                                        <input
+                                                            id="type-telehealth"
+                                                            className="form-check-input m-0 me-2"
+                                                            type="radio"
+                                                            name="type"
+                                                            value="Trực tuyến"
+                                                            onChange={(e) =>
+                                                                setNewAppointment({
+                                                                    ...newAppointment,
+                                                                    type: e.target.value,
+                                                                })
+                                                            }
+                                                        />{' '}
+                                                        Trực tuyến
+                                                    </label>
+                                                </li>
+                                                <li>
+                                                    <label
+                                                        htmlFor="type-inperson"
+                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                    >
+                                                        <input
+                                                            id="type-inperson"
+                                                            className="form-check-input m-0 me-2"
+                                                            type="radio"
+                                                            name="type"
+                                                            value="Trực tiếp"
+                                                            onChange={(e) =>
+                                                                setNewAppointment({
+                                                                    ...newAppointment,
+                                                                    type: e.target.value,
+                                                                })
+                                                            }
+                                                        />{' '}
+                                                        Trực tiếp
+                                                    </label>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -1001,32 +1156,55 @@ const ListAppointments: React.FC = () => {
                                                 </div>
                                             </div>
                                             <ul className="mb-0 list-style-none">
-                                                {appointmentTypes.map((type, index) => (
-                                                    <li key={`edit-type-${type}-${index}`}>
-                                                        <label
-                                                            htmlFor={`edit-type-${index}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`edit-type-${index}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="editType"
-                                                                value={type}
-                                                                checked={
-                                                                    type === editAppointment.type
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setEditAppointment({
-                                                                        ...editAppointment,
-                                                                        type: e.target.value,
-                                                                    })
-                                                                }
-                                                            />
-                                                            {type}
-                                                        </label>
-                                                    </li>
-                                                ))}
+                                                <li>
+                                                    <label
+                                                        htmlFor="edit-type-telehealth"
+                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                    >
+                                                        <input
+                                                            id="edit-type-telehealth"
+                                                            className="form-check-input m-0 me-2"
+                                                            type="radio"
+                                                            name="editType"
+                                                            value="Trực tuyến"
+                                                            checked={
+                                                                editAppointment.type ===
+                                                                'Trực tuyến'
+                                                            }
+                                                            onChange={(e) =>
+                                                                setEditAppointment({
+                                                                    ...editAppointment,
+                                                                    type: e.target.value,
+                                                                })
+                                                            }
+                                                        />{' '}
+                                                        Trực tuyến
+                                                    </label>
+                                                </li>
+                                                <li>
+                                                    <label
+                                                        htmlFor="edit-type-inperson"
+                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
+                                                    >
+                                                        <input
+                                                            id="edit-type-inperson"
+                                                            className="form-check-input m-0 me-2"
+                                                            type="radio"
+                                                            name="editType"
+                                                            value="Trực tiếp"
+                                                            checked={
+                                                                editAppointment.type === 'Trực tiếp'
+                                                            }
+                                                            onChange={(e) =>
+                                                                setEditAppointment({
+                                                                    ...editAppointment,
+                                                                    type: e.target.value,
+                                                                })
+                                                            }
+                                                        />{' '}
+                                                        Trực tiếp
+                                                    </label>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -1185,7 +1363,7 @@ const ListAppointments: React.FC = () => {
                         <h5 className="offcanvas-title fs-18 fw-bold">
                             Chi Tiết Lịch Hẹn{' '}
                             <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2">
-                                #{selectedAppointment?.appointmentId || 'AP544658'}
+                                #{selectedAppointment?.appointmentId?.substring(0, 8) || 'AP544658'}
                             </span>
                         </h5>
                         <button
@@ -1203,24 +1381,34 @@ const ListAppointments: React.FC = () => {
                             Ngày Khám{' '}
                             <span className="text-body fw-normal">
                                 {' '}
-                                {selectedAppointment?.date}{' '}
+                                {selectedAppointment
+                                    ? new Date(
+                                          selectedAppointment.appointmentDate
+                                      ).toLocaleDateString('vi-VN')
+                                    : ''}{' '}
                             </span>
                         </p>
                         <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
                             Giờ{' '}
                             <span className="text-body fw-normal">
                                 {' '}
-                                {selectedAppointment?.time}{' '}
+                                {selectedAppointment?.appointmentTime}{' '}
                             </span>
                         </p>
                         <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Địa Điểm <span className="text-body fw-normal">Hà Nội, Việt Nam </span>
+                            Địa Điểm{' '}
+                            <span className="text-body fw-normal">
+                                {selectedAppointment?.hospitalInfo?.address ||
+                                    'Hà Nội, Việt Nam'}{' '}
+                            </span>
                         </p>
                         <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
                             Loại Khám{' '}
                             <span className="text-body fw-normal">
                                 {' '}
-                                {selectedAppointment?.type}{' '}
+                                {selectedAppointment
+                                    ? getAppointmentTypeText(selectedAppointment.appointmentType)
+                                    : ''}{' '}
                             </span>
                         </p>
                         <div className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
@@ -1228,12 +1416,15 @@ const ListAppointments: React.FC = () => {
                             <div className="text-body fw-normal d-flex align-items-center">
                                 <span className="avatar avatar-sm">
                                     <img
-                                        src={selectedAppointment?.patient.avatar || avatar2}
+                                        src={selectedAppointment?.patientInfo?.avatarUrl}
                                         alt=""
                                         className="rounded-circle me-1"
                                     />
                                 </span>
-                                {selectedAppointment?.patient.name || 'James Adrian'}
+                                {formatFullName(
+                                    selectedAppointment?.patientInfo?.firstName,
+                                    selectedAppointment?.patientInfo?.lastName
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1326,14 +1517,25 @@ const ListAppointments: React.FC = () => {
             </div>
             {/* End Add New Appointment*/}
 
-            {/* Delete Modal */}
-            <ModalDelete
-                show={showDeleteModal}
-                onHide={() => setShowDeleteModal(false)}
-                onConfirm={handleDeleteConfirm}
-                title="Xác Nhận Xóa"
-                message="Bạn có chắc chắn muốn xóa lịch hẹn này không?"
-                itemName={selectedAppointment?.appointmentId}
+            {/* Cancel Modal */}
+            <ModalCancel
+                show={showCancelModal}
+                onHide={() => {
+                    if (!isCancelling) {
+                        setShowCancelModal(false);
+                        setSelectedAppointment(null);
+                    }
+                }}
+                onConfirm={handleCancelConfirm}
+                title="Xác Nhận Hủy Lịch Hẹn"
+                message="Bạn có chắc chắn muốn hủy lịch hẹn"
+                confirmText="Xác nhận hủy"
+                cancelText="Đóng"
+                loading={isCancelling}
+                itemName={selectedAppointment?.appointmentId?.substring(0, 8)}
+                reasonLabel="Lý do hủy"
+                reasonPlaceholder="Vui lòng nhập lý do hủy lịch hẹn (tối thiểu 10 ký tự)..."
+                minReasonLength={10}
             />
         </>
     );

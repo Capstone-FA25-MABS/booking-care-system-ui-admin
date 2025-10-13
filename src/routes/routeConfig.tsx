@@ -6,6 +6,7 @@ import DoctorDashboard from '@/pages/doctors/Dashboard';
 import NotFoundError from '@/pages/errors/NotFoundError';
 import ListDoctors from '@/pages/hospitals/Doctors/ListDoctors';
 import ListAppointments from '@/pages/hospitals/Appointments/ListAppointments';
+import ListRefunds from '@/pages/hospitals/Refunds/ListRefunds';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
 import AddDoctor from '@/pages/hospitals/Doctors/AddDoctor/AddDoctor';
@@ -107,6 +108,7 @@ const routes: RouteObject[] = [
                     { path: PATHS.HOSPITAL.APPOINTMENTS.NEW, element: <NewAppointment /> },
                 ],
             },
+            { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
         ],
     },
