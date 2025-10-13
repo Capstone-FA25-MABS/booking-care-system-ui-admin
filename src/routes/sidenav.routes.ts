@@ -15,6 +15,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
         items: [
             createDoctorsMenuItem(),
             createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem(
+                'Hoàn tiền',
+                'ti ti-receipt-refund',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
+            ),
             createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
             createSimpleMenuItem('Services', 'ti ti-user-cog', '/hospital/services'),
             createSimpleMenuItem(

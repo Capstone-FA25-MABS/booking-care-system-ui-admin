@@ -146,7 +146,9 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = (props) => {
                     aria-expanded={isOpen}
                 >
                     <span className="me-1">{placeholder}</span>{' '}
-                    {selectedOption ? selectedOption.label : 'Mới Thêm Gần Đây'}
+                    {selectedOption
+                        ? selectedOption.label
+                        : options.find((option) => option.value === 'recent')?.label}
                     {selectedOption?.direction && (
                         <i
                             className={`ti ti-arrow-${selectedOption.direction === 'asc' ? 'up' : 'down'} ms-2`}

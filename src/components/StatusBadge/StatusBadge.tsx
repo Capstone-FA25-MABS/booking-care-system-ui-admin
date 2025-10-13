@@ -12,7 +12,7 @@ type StatusKey =
     | 'COMPLETED'
     | 'CANCELLED'
     | 'SCHEDULED'
-    | 'UPCOMING';
+    | 'CONFIRMED';
 
 interface StatusConfig {
     className: string;
@@ -44,9 +44,9 @@ const STATUS_CONFIG: Record<StatusKey, StatusConfig> = {
         className: 'badge-soft-info text-info',
         text: 'Đã đặt lịch',
     },
-    UPCOMING: {
-        className: 'badge-soft-secondary text-secondary',
-        text: 'Sắp tới',
+    CONFIRMED: {
+        className: 'badge-soft-success text-success',
+        text: 'Đã xác nhận',
     },
 };
 

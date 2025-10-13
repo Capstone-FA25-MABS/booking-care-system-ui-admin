@@ -1,5 +1,5 @@
 import { Role } from '../enums/common.enums';
-
+import { PATHS } from '@/routes/paths';
 /**
  * Re-export Role for backward compatibility
  * @deprecated Use Role from common.enums instead
@@ -22,17 +22,17 @@ export interface RoleConfig {
 export const ROLE_CONFIGS: Record<Exclude<Role, Role.PATIENT>, RoleConfig> = {
     [Role.ADMIN]: {
         role: Role.ADMIN,
-        defaultPath: '/admin/dashboard',
+        defaultPath: PATHS.ADMIN.ROOT,
         layoutType: 'admin',
     },
     [Role.DOCTOR]: {
         role: Role.DOCTOR,
-        defaultPath: '/doctor/dashboard',
+        defaultPath: PATHS.DOCTOR.ROOT,
         layoutType: 'doctor',
     },
     [Role.STAFF]: {
         role: Role.STAFF,
-        defaultPath: '/clinic/dashboard',
+        defaultPath: PATHS.HOSPITAL.ROOT,
         layoutType: 'staff',
     },
 };
