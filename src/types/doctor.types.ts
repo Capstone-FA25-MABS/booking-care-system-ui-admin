@@ -1,41 +1,4 @@
-// Shared types for Doctor forms
-
-export interface Position {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Specialty {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Language {
-    id: string;
-    name: string;
-    flag: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface ServiceType {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Hospital {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface DoctorPrice {
-    serviceTypeId: string;
-    amount: number;
-    note: string;
-}
+import { DoctorPrice } from './service.types';
 
 export interface DoctorLanguage {
     languageId: string;

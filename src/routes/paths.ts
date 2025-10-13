@@ -27,6 +27,9 @@ export const PATHS = {
         DASHBOARD: 'dashboard',
         USERS: 'users',
         SETTINGS: 'settings',
+        POSITIONS: {
+            ROOT: 'positions',
+        },
     },
 
     // Hospital paths
