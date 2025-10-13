@@ -7,8 +7,7 @@ import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import ModalFilter from '@/components/ModalFilter';
-import FilterSortToolbar from '@/components/FilterSortToolbar';
-import ExportDropdown from '@/components/ExportDropdown';
+import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import PatientDropdown from '@/components/PatientDropdown';
 import StatusDropdown from '@/components/StatusDropdown';
@@ -520,7 +519,8 @@ const ListAppointments: React.FC = () => {
                         <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
                     </div>
                     <div className="text-end d-flex">
-                        <ExportDropdown
+                        <ActionDropdown
+                            type="export"
                             options={[
                                 { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
                                 {
@@ -603,17 +603,27 @@ const ListAppointments: React.FC = () => {
                     </div>
 
                     <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
-                        <FilterSortToolbar
-                            onFilterClick={() => setShowFilterModal(true)}
-                            sortOptions={[
+                        <Button
+                            variant="white"
+                            size="md"
+                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                            icon="ti ti-filter text-gray-5"
+                            onClick={() => setShowFilterModal(true)}
+                        >
+                            Lọc
+                        </Button>
+                        <ActionDropdown
+                            type="sort"
+                            options={[
                                 { value: 'recent', label: 'Gần đây' },
                                 { value: 'asc', label: 'Tăng dần' },
                                 { value: 'desc', label: 'Giảm dần' },
                                 { value: 'last-month', label: 'Tháng trước' },
                                 { value: 'last-7-days', label: '7 ngày qua' },
                             ]}
-                            selectedSort={sortBy}
-                            onSortChange={setSortBy}
+                            selectedValue={sortBy}
+                            onSelect={setSortBy}
+                            placeholder="Sắp xếp theo:"
                         />
                     </div>
                 </div>
