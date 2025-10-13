@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
-import ExportDropdown from '@/components/ExportDropdown';
-import FilterSortToolbar from '@/components/FilterSortToolbar';
+import ActionDropdown from '@/components/ActionDropdown';
 import RefundTableSkeleton from '@/pages/hospitals/Refunds/RefundTableSkeleton/RefundTableSkeleton';
 import { RefundService } from '@/services/refund.service';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@/types/refund.types';
 import { RootState } from '@/store';
 import { Role } from '@/enums/common.enums';
+import Button from '@/components/Button';
 
 const ListRefunds: React.FC = () => {
     // Get auth and user profile from Redux
@@ -362,7 +362,8 @@ const ListRefunds: React.FC = () => {
                         <h4 className="fw-semibold mb-0">Danh Sách Hoàn Tiền</h4>
                     </div>
                     <div className="text-end d-flex">
-                        <ExportDropdown
+                        <ActionDropdown
+                            type="export"
                             options={[
                                 { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
                                 { value: 'excel', label: 'Tải xuống dạng Excel', format: 'excel' },
@@ -438,15 +439,25 @@ const ListRefunds: React.FC = () => {
                     </div>
 
                     <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
-                        <FilterSortToolbar
-                            onFilterClick={() => {}}
-                            sortOptions={[
+                        <Button
+                            variant="white"
+                            size="md"
+                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                            icon="ti ti-filter text-gray-5"
+                            onClick={() => {}}
+                        >
+                            Lọc
+                        </Button>
+                        <ActionDropdown
+                            type="sort"
+                            options={[
                                 { value: 'recent', label: 'Gần đây' },
                                 { value: 'amount-desc', label: 'Số tiền giảm dần' },
                                 { value: 'amount-asc', label: 'Số tiền tăng dần' },
                             ]}
-                            selectedSort={sortBy}
-                            onSortChange={setSortBy}
+                            selectedValue={sortBy}
+                            onSelect={setSortBy}
+                            placeholder="Sắp xếp theo:"
                         />
                     </div>
                 </div>
