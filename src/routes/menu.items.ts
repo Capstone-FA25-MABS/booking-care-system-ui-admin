@@ -9,30 +9,30 @@ import { buildPath, PATHS } from './paths';
 /**
  * Create Appointments menu item for different roles
  */
-export const createAppointmentsMenuItem = (role: 'clinic' | 'doctor'): MenuItem => {
-    if (role === 'clinic') {
+export const createAppointmentsMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
+    if (role === 'staff') {
         return {
-            label: 'Appointments',
+            label: 'Lịch hẹn',
             icon: 'ti ti-calendar-check',
             subItems: [
                 {
-                    label: 'Appointments',
-                    link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.APPOINTMENTS.ROOT),
+                    label: 'Danh sách lịch hẹn',
+                    link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.APPOINTMENTS.ROOT),
                 },
                 {
-                    label: 'New Appointment',
+                    label: 'Thêm lịch hẹn',
                     link: buildPath(
-                        PATHS.CLINIC.ROOT,
-                        PATHS.CLINIC.APPOINTMENTS.ROOT,
-                        PATHS.CLINIC.APPOINTMENTS.NEW
+                        PATHS.HOSPITAL.ROOT,
+                        PATHS.HOSPITAL.APPOINTMENTS.ROOT,
+                        PATHS.HOSPITAL.APPOINTMENTS.NEW
                     ),
                 },
                 {
                     label: 'Calendar',
                     link: buildPath(
-                        PATHS.CLINIC.ROOT,
-                        PATHS.CLINIC.APPOINTMENTS.ROOT,
-                        PATHS.CLINIC.APPOINTMENTS.CALENDAR
+                        PATHS.HOSPITAL.ROOT,
+                        PATHS.HOSPITAL.APPOINTMENTS.ROOT,
+                        PATHS.HOSPITAL.APPOINTMENTS.CALENDAR
                     ),
                 },
             ],
@@ -63,8 +63,8 @@ export const createAppointmentsMenuItem = (role: 'clinic' | 'doctor'): MenuItem 
 /**
  * Create Messages menu item for different roles
  */
-export const createMessagesMenuItem = (role: 'clinic' | 'doctor'): MenuItem => {
-    const basePath = role === 'clinic' ? PATHS.CLINIC : PATHS.DOCTOR;
+export const createMessagesMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
+    const basePath = role === 'staff' ? PATHS.HOSPITAL : PATHS.DOCTOR;
 
     return {
         label: 'Messages',
@@ -74,19 +74,23 @@ export const createMessagesMenuItem = (role: 'clinic' | 'doctor'): MenuItem => {
 };
 
 /**
- * Create Doctors menu item (Clinic only)
+ * Create Doctors menu item (Hospital only)
  */
 export const createDoctorsMenuItem = (): MenuItem => ({
-    label: 'Doctors',
+    label: 'Bác sĩ',
     icon: 'ti ti-user-plus',
     subItems: [
         {
-            label: 'Doctors',
-            link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.ROOT),
+            label: 'Danh sách bác sĩ',
+            link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTORS.ROOT),
         },
         {
-            label: 'Add Doctor',
-            link: buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DOCTORS.ROOT, PATHS.CLINIC.DOCTORS.ADD),
+            label: 'Thêm bác sĩ',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.DOCTORS.ROOT,
+                PATHS.HOSPITAL.DOCTORS.ADD
+            ),
         },
     ],
 });

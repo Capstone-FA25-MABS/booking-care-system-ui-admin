@@ -16,7 +16,7 @@ const NotFoundError: React.FC = () => {
         //     path = buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.DASHBOARD);
         //     break;
         case 'clinic':
-            path = buildPath(PATHS.CLINIC.ROOT, PATHS.CLINIC.DASHBOARD);
+            path = buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DASHBOARD);
             break;
         default:
             path = PATHS.HOME;

@@ -54,6 +54,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
                         <li key={index}>
                             <NavLink
                                 to={item.link}
+                                end
                                 className={({ isActive }) => (isActive ? 'active' : '')}
                             >
                                 {item.label}

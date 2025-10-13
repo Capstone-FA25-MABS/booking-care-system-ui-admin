@@ -1,28 +1,30 @@
-import { buildPath, PATHS } from './paths';
 import type { MenuConfig } from '@/types/menu.types';
+import { buildPath, PATHS } from './paths';
 import {
     createAccountSettingsMenuItem,
     createAppointmentsMenuItem,
+    createDashboardMenuItem,
     createDoctorsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
 } from './menu.items';
 
-/**
- * Clinic menu configuration
- */
-export const listGroupMenuItemClinic: MenuConfig = [
+export const listGroupMenuItemHospital: MenuConfig = [
     {
-        title: 'Clinic',
+        title: 'Hospital',
         items: [
             createDoctorsMenuItem(),
-            createAppointmentsMenuItem('clinic'),
-            createSimpleMenuItem('Locations', 'ti ti-map-pin', '/clinic/locations'),
-            createSimpleMenuItem('Services', 'ti ti-user-cog', '/clinic/services'),
-            createSimpleMenuItem('Specializations', 'ti ti-user-shield', '/clinic/specializations'),
-            createSimpleMenuItem('Assets', 'ti ti-asset', '/clinic/assets'),
-            createSimpleMenuItem('Activities', 'ti ti-activity', '/clinic/activities'),
-            createMessagesMenuItem('clinic'),
+            createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
+            createSimpleMenuItem('Services', 'ti ti-user-cog', '/hospital/services'),
+            createSimpleMenuItem(
+                'Specializations',
+                'ti ti-user-shield',
+                '/hospital/specializations'
+            ),
+            createSimpleMenuItem('Assets', 'ti ti-asset', '/hospital/assets'),
+            createSimpleMenuItem('Activities', 'ti ti-activity', '/hospital/activities'),
+            createMessagesMenuItem('staff'),
         ],
     },
     {
@@ -70,15 +72,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Main Menu',
         items: [
-            {
-                label: 'Dashboard',
-                icon: 'ti ti-layout-dashboard',
-                subItems: [
-                    { label: 'Admin Dashboard', link: '/admin/dashboard' },
-                    { label: 'Doctor Dashboard', link: '/doctor/dashboard' },
-                    { label: 'Patient Dashboard', link: '/patient/dashboard' },
-                ],
-            },
+            createDashboardMenuItem(),
             {
                 label: 'Applications',
                 icon: 'ti ti-apps',

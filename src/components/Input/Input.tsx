@@ -7,12 +7,14 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     placeholder?: string;
     icon?: string;
+    iconPrefix?: 'ti' | 'feather';
     showPasswordToggle?: boolean;
     showPassword?: boolean;
     onTogglePassword?: () => void;
     error?: string;
     disabled?: boolean;
     required?: boolean;
+    wrapperClassName?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -23,6 +25,7 @@ const Input: React.FC<InputProps> = ({
     onChange,
     placeholder,
     icon,
+    iconPrefix = 'ti',
     showPasswordToggle = false,
     showPassword = false,
     onTogglePassword,
@@ -30,6 +33,7 @@ const Input: React.FC<InputProps> = ({
     disabled = false,
     className = '',
     required = false,
+    wrapperClassName = '',
     ...props
 }) => {
     const handleTogglePassword = () => {
@@ -38,10 +42,25 @@ const Input: React.FC<InputProps> = ({
         }
     };
 
+    const inputId = props.id || name;
+
+    const getIconClass = () => {
+        if (!icon) return '';
+        if (iconPrefix === 'feather') {
+            return icon.startsWith('feather-') ? icon : `feather-${icon}`;
+        }
+        return icon.startsWith('ti-') ? `ti ${icon}` : `ti ti-${icon}`;
+    };
+
     return (
-        <div className="mb-3">
+        <div className={wrapperClassName || 'mb-3'}>
             {label && (
-                <label className="form-label">
+                <label htmlFor={inputId} className="form-label">
+                    {icon && iconPrefix === 'feather' && (
+                        <>
+                            <i className={`${getIconClass()} me-1`}></i>{' '}
+                        </>
+                    )}
                     {label}
                     {required && <span className="text-danger ms-1">*</span>}
                 </label>
@@ -51,9 +70,9 @@ const Input: React.FC<InputProps> = ({
                 <div
                     className={`input-group ${type === 'password' && showPasswordToggle ? 'border rounded' : ''} ${error ? 'border-danger' : ''}`}
                 >
-                    {icon && (
+                    {icon && iconPrefix === 'ti' && (
                         <span className="input-group-text border-end-0 bg-white">
-                            <i className={`ti ti-${icon} fs-14 text-dark`} />
+                            <i className={`${getIconClass()} fs-14 text-dark`} />
                         </span>
                     )}
 
@@ -64,12 +83,13 @@ const Input: React.FC<InputProps> = ({
                             }
                             return type;
                         })()}
+                        id={inputId}
                         name={name}
                         value={value}
                         onChange={onChange}
                         placeholder={placeholder}
                         disabled={disabled}
-                        className={`form-control ${icon ? 'border-start-0 ps-0' : ''} ${showPasswordToggle ? 'border-0' : ''} ${error ? 'is-invalid' : ''} ${className}`}
+                        className={`form-control ${icon && iconPrefix === 'ti' ? 'border-start-0 ps-0' : ''} ${showPasswordToggle ? 'border-0' : ''} ${error ? 'is-invalid' : ''} ${className}`}
                         {...props}
                     />
 

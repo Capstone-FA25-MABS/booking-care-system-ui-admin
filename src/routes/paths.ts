@@ -29,22 +29,9 @@ export const PATHS = {
         SETTINGS: 'settings',
     },
 
-    // Doctor paths
-    DOCTOR: {
-        ROOT: '/doctor',
-        DASHBOARD: 'dashboard',
-        APPOINTMENTS: {
-            ROOT: 'appointments',
-            CALENDAR: 'calendar',
-        },
-        SCHEDULE: 'schedule',
-        PATIENTS: 'patients',
-        MESSAGES: 'messages',
-    },
-
-    // Clinic/Staff paths
-    CLINIC: {
-        ROOT: '/clinic',
+    // Hospital paths
+    HOSPITAL: {
+        ROOT: '/hospitals',
         DASHBOARD: 'dashboard',
         DOCTORS: {
             ROOT: 'doctors',
@@ -56,6 +43,19 @@ export const PATHS = {
             NEW: 'new',
             CALENDAR: 'calendar',
         },
+        MESSAGES: 'messages',
+    },
+
+    // Doctor paths
+    DOCTOR: {
+        ROOT: '/doctors',
+        DASHBOARD: 'dashboard',
+        APPOINTMENTS: {
+            ROOT: 'appointments',
+            CALENDAR: 'calendar',
+        },
+        SCHEDULE: 'schedule',
+        PATIENTS: 'patients',
         MESSAGES: 'messages',
     },
 

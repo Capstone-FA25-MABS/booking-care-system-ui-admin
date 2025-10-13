@@ -1,0 +1,134 @@
+// Modal styles
+.modalContent {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    position: relative;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #111827;
+    margin: 0;
+}
+
+.clearAll {
+    background: none;
+    border: none;
+    color: #dc2626;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+        color: #b91c1c;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+    }
+}
+
+.modalBody {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #374151;
+    margin: 0;
+}
+
+.resetLink {
+    background: none;
+    border: none;
+    color: #2e37a4;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+        color: #4f46e5;
+        text-decoration: underline;
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+}
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    position: relative;
+    z-index: 0;
+}
+
+.btn {
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+// Select dropdown z-index fix
+:global(.select2__menu) {
+    z-index: 99999 !important;
+}
+
+:global(.select2__menu-portal) {
+    z-index: 99999 !important;
+}
+
+:global(.react-select__menu) {
+    z-index: 99999 !important;
+    position: absolute !important;
+}
+
+:global(.react-select__menu-portal) {
+    z-index: 99999 !important;
+}
+
+:global(.react-select__menu-list) {
+    z-index: 99999 !important;
+}
+
+// Modal backdrop z-index
+:global(.modal-backdrop) {
+    z-index: 1040 !important;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+    .modalBody {
+        max-height: 50vh;
+    }
+}
