@@ -485,14 +485,12 @@ const ListDoctors: React.FC = () => {
                     className="d-flex justify-content-center align-items-center"
                     style={{ minHeight: '400px' }}
                 >
-                    <div
-                        className="spinner-border text-primary"
-                        role="status"
-                        aria-label="Đang tải..."
-                    >
+                    <div className="spinner-border text-primary">
                         <span className="visually-hidden">Đang tải...</span>
                     </div>
-                    <span className="ms-2">Đang tải thông tin bệnh viện...</span>
+                    <output className="ms-2" aria-live="polite">
+                        Đang tải thông tin bệnh viện...
+                    </output>
                 </div>
             </div>
         );
