@@ -10,7 +10,8 @@ import { useDoctor } from '@/hooks/useDoctor';
 import { useDoctorFilterOptions } from '@/hooks/useDoctorFilterOptions';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { DoctorOptimizedResponse, DoctorSearchParams } from '@/types/doctor.types';
-import DoctorTableSkeleton from '../DoctorTableSkeleton';
+import TableSkeleton from '@/components/TableSkeleton';
+import { doctorTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import styles from './ListDoctors.module.scss';
 
 const ListDoctors: React.FC = () => {
@@ -528,7 +529,7 @@ const ListDoctors: React.FC = () => {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <DoctorTableSkeleton rows={itemsPerPage} />
+                                <TableSkeleton rows={itemsPerPage} columns={doctorTableColumns} />
                             ) : error ? (
                                 <tr>
                                     <td colSpan={7} className="text-center py-4">
