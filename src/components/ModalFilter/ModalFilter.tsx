@@ -165,7 +165,7 @@ export const ModalFilter: React.FC<ModalFilterProps> = ({
             <div className="modal-dialog modal-dialog-centered">
                 <div className={`modal-content ${styles.modalContent}`}>
                     <div className={`modal-header ${styles.modalHeader}`}>
-                        <h4 className={styles.modalTitle}>{title}</h4>
+                        <h6 className={styles.modalTitle}>{title}</h6>
                         <div className="d-flex align-items-center">
                             <button
                                 className={styles.clearAll}
