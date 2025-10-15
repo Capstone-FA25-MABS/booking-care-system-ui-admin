@@ -2,9 +2,11 @@ export interface Position {
     id: string;
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
-    createdAt?: string;
-    updatedAt?: string;
-    description?: string;
+}
+
+export interface PositionBasicInfo {
+    id: string;
+    name: string;
 }
 
 export interface PositionFormData {

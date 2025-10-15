@@ -5,7 +5,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Textarea from '@/components/Textarea';
 import { DoctorFormData } from '@/types/doctor.types';
-import { DoctorPrice } from '@/types/service.types';
+import { DoctorPrice } from '@/types/serviceType.types';
 import {
     mockPositions,
     mockSpecialties,

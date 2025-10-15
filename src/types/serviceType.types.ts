@@ -5,7 +5,13 @@ export interface ServiceType {
 }
 
 export interface DoctorPrice {
+    id: string;
     serviceTypeId: string;
     amount: number;
-    note: string;
+}
+
+export interface DoctorPriceBasicInfo {
+    id: string;
+    serviceTypeName: string;
+    amount: number;
 }

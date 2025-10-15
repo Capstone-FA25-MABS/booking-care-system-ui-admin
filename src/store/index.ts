@@ -17,6 +17,7 @@ import authReducer from './slices/authSlice';
 import userReducer from './slices/userSlice';
 import discountReducer from './slices/discount.slice';
 import uiReducer from './slices/uiSlice';
+import doctorReducer from './slices/doctorSlice';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
     user: userReducer,
     discount: discountReducer,
     ui: uiReducer,
+    doctor: doctorReducer,
 });
 
 // Redux persist configuration
