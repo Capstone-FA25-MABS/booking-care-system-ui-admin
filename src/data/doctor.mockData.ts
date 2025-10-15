@@ -86,14 +86,14 @@ export const mockDoctorData: DoctorFormData = {
     languageIds: ['550e8400-e29b-41d4-a716-446655440021', '550e8400-e29b-41d4-a716-446655440022'],
     servicePrices: [
         {
+            id: 'price-1',
             serviceTypeId: '550e8400-e29b-41d4-a716-446655440031',
             amount: 200000,
-            note: 'Khám cơ bản',
         },
         {
+            id: 'price-2',
             serviceTypeId: '550e8400-e29b-41d4-a716-446655440032',
             amount: 500000,
-            note: 'Khám chuyên sâu',
         },
     ],
 };
