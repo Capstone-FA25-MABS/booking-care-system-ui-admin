@@ -74,9 +74,14 @@ export interface DoctorSearchListResponse {
 export interface DoctorSearchParams {
     searchTerm?: string;
     specialtyId?: string;
+    specialtyIds?: string[];
     hospitalId?: string;
     positionId?: string;
+    positionIds?: string[];
     status?: 'ACTIVE' | 'INACTIVE';
+    statuses?: ('ACTIVE' | 'INACTIVE')[];
+    serviceTypes?: string[];
+    languages?: string[];
     pageNumber?: number;
     pageSize?: number;
     sortBy?: string;

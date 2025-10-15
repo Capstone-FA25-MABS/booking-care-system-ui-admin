@@ -21,7 +21,7 @@ const TableSkeleton: React.FC<TableSkeletonProps> = ({ rows = 5, columns }) => {
         // Helper function to get numeric width
         const getNumericWidth = (w: number | string | undefined, defaultWidth: number): number => {
             if (typeof w === 'number') return w;
-            if (typeof w === 'string') return parseInt(w) || defaultWidth;
+            if (typeof w === 'string') return Number.parseInt(w, 10) || defaultWidth;
             return defaultWidth;
         };
 

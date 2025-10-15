@@ -34,6 +34,7 @@ const ListDoctors: React.FC = () => {
         serviceTypes: filterServiceTypes,
         languages: filterLanguages,
     } = useDoctorFilterOptions();
+
     // Get hospital ID from hospital profile
     const hospitalId = hospitalProfile?.id || null;
     const [originalDoctors, setOriginalDoctors] = useState<DoctorOptimizedResponse[]>([]);
@@ -101,71 +102,92 @@ const ListDoctors: React.FC = () => {
 
     const totalPages = pagination.totalPages;
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-
-        // Check if any filters are applied
-        const hasActiveFilters =
+    // Helper function to check if any filters are applied
+    const hasActiveFilters = () => {
+        return (
             appliedSelectedSpecialties.length > 0 ||
             appliedSelectedPositions.length > 0 ||
             appliedSelectedServiceTypes.length > 0 ||
             appliedSelectedPrices.length > 0 ||
             appliedSelectedLanguages.length > 0 ||
             appliedSelectedStatuses.length > 0 ||
-            searchTerm.trim();
+            searchTerm.trim()
+        );
+    };
 
-        if (hasActiveFilters) {
-            // If filters are active, call filterDoctors with new page
-            const filterParams: DoctorSearchParams = {
-                hospitalId: hospitalId || undefined,
-                pageNumber: page,
-                pageSize: itemsPerPage,
-            };
+    // Helper function to get specialty ID from name
+    const getSpecialtyId = (specialtyName: string): string | undefined => {
+        const specialty = filterSpecialties.find((s) => s.name === specialtyName);
+        return specialty?.id;
+    };
 
-            // Add search term if exists
-            if (searchTerm.trim()) {
-                filterParams.searchTerm = searchTerm.trim();
+    // Helper function to get position ID from name
+    const getPositionId = (positionName: string): string | undefined => {
+        const position = filterPositions.find((p) => p.name === positionName);
+        return position?.id;
+    };
+
+    // Helper function to build filter parameters
+    const buildFilterParams = (page: number): DoctorSearchParams => {
+        const filterParams: DoctorSearchParams = {
+            hospitalId: hospitalId || undefined,
+            pageNumber: page,
+            pageSize: itemsPerPage,
+        };
+
+        // Add search term if exists
+        if (searchTerm.trim()) {
+            filterParams.searchTerm = searchTerm.trim();
+        }
+
+        // Add specialty filter
+        if (appliedSelectedSpecialties.length > 0) {
+            const specialtyIds = appliedSelectedSpecialties
+                .map(getSpecialtyId)
+                .filter(Boolean) as string[];
+
+            if (specialtyIds.length > 0) {
+                filterParams.specialtyIds = specialtyIds;
             }
+        }
 
-            // Add specialty filter
-            if (appliedSelectedSpecialties.length > 0) {
-                const specialtyIds = appliedSelectedSpecialties
-                    .map((specialtyName) => {
-                        const specialty = filterSpecialties.find((s) => s.name === specialtyName);
-                        return specialty?.id;
-                    })
-                    .filter(Boolean) as string[];
+        // Add position filter
+        if (appliedSelectedPositions.length > 0) {
+            const positionIds = appliedSelectedPositions
+                .map(getPositionId)
+                .filter(Boolean) as string[];
 
-                if (specialtyIds.length > 0) {
-                    filterParams.specialtyId = specialtyIds[0];
-                }
+            if (positionIds.length > 0) {
+                filterParams.positionIds = positionIds;
             }
+        }
 
-            // Add position filter
-            if (appliedSelectedPositions.length > 0) {
-                const positionIds = appliedSelectedPositions
-                    .map((positionName) => {
-                        const position = filterPositions.find((p) => p.name === positionName);
-                        return position?.id;
-                    })
-                    .filter(Boolean) as string[];
+        // Add status filter
+        if (appliedSelectedStatuses.length > 0) {
+            filterParams.statuses = appliedSelectedStatuses as ('ACTIVE' | 'INACTIVE')[];
+        }
 
-                if (positionIds.length > 0) {
-                    filterParams.positionId = positionIds[0];
-                }
-            }
+        // Add service types filter
+        if (appliedSelectedServiceTypes.length > 0) {
+            filterParams.serviceTypes = appliedSelectedServiceTypes;
+        }
 
-            // Add status filter
-            if (appliedSelectedStatuses.length > 0) {
-                filterParams.status = appliedSelectedStatuses[0] as 'ACTIVE' | 'INACTIVE';
-            }
+        // Add languages filter
+        if (appliedSelectedLanguages.length > 0) {
+            filterParams.languages = appliedSelectedLanguages;
+        }
 
+        return filterParams;
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+
+        if (hasActiveFilters()) {
+            const filterParams = buildFilterParams(page);
             filterDoctors(filterParams);
-        } else {
-            // If no filters, just fetch doctors by hospital
-            if (hospitalId) {
-                fetchDoctorsByHospital(hospitalId, page, itemsPerPage);
-            }
+        } else if (hospitalId) {
+            fetchDoctorsByHospital(hospitalId, page, itemsPerPage);
         }
     };
 
@@ -222,6 +244,138 @@ const ListDoctors: React.FC = () => {
         setDoctorToDelete(null);
     };
 
+    // Render table body content based on loading, error, and data states
+    const renderTableBody = () => {
+        if (isLoading) {
+            return <TableSkeleton rows={itemsPerPage} columns={doctorTableColumns} />;
+        }
+
+        if (error) {
+            return (
+                <tr>
+                    <td colSpan={7} className="text-center py-4">
+                        <div className="alert alert-danger" role="alert">
+                            <strong>Lỗi:</strong> {error}
+                            <button
+                                type="button"
+                                className="btn-close ms-2"
+                                onClick={clearError}
+                                aria-label="Close"
+                            ></button>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        if (sortedDoctors.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={7} className="text-center py-4">
+                        <p className="text-muted">Không có bác sĩ nào được tìm thấy.</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return sortedDoctors.map((doctor) => (
+            <tr key={doctor.id}>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <Link to={`/clinic/doctor-details/${doctor.id}`} className="avatar me-2">
+                            <img src={doctor.avatarUrl} alt="Bác sĩ" className="rounded-circle" />
+                        </Link>
+                        <div>
+                            <h6 className="mb-1 fs-14 fw-semibold">
+                                <Link to={`/clinic/doctor-details/${doctor.id}`}>
+                                    {doctor.firstName} {doctor.lastName}
+                                </Link>
+                            </h6>
+                            <span className="fs-13 d-block">{doctor.position?.name || 'N/A'}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <StatusBadge
+                        status="ACTIVE"
+                        variant="primary"
+                        customText={doctor.specialty?.name || 'N/A'}
+                    />
+                </td>
+                <td>
+                    <StatusBadge
+                        status="ACTIVE"
+                        variant="warning"
+                        customText={`${doctor.yearsOfExperience} năm`}
+                    />
+                </td>
+                <td>
+                    <div className="d-flex flex-column gap-1 align-items-start">
+                        {doctor.prices.map((price) => (
+                            <StatusBadge
+                                key={`${doctor.id}-price-${price.serviceTypeName}-${price.amount}`}
+                                status="ACTIVE"
+                                variant="info"
+                                customText={`${price.serviceTypeName} - ${price.amount.toLocaleString('vi-VN')} VNĐ`}
+                            />
+                        ))}
+                    </div>
+                </td>
+                <td>
+                    <div className="d-flex flex-column gap-1 align-items-start">
+                        {doctor.languages.map((language) => (
+                            <StatusBadge
+                                key={`${doctor.id}-language-${language.name}`}
+                                status="ACTIVE"
+                                variant="secondary"
+                                customText={language.name}
+                            />
+                        ))}
+                    </div>
+                </td>
+                <td>
+                    <StatusBadge status={doctor.status || 'ACTIVE'} />
+                </td>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <div className="action-item me-2">
+                            <Link to="/clinic/appointment-calendar">
+                                <i className="ti ti-calendar-cog"></i>
+                            </Link>
+                        </div>
+                        <div className="action-item">
+                            <button
+                                className={styles.dotsButton}
+                                data-bs-toggle="dropdown"
+                                type="button"
+                            >
+                                <i className="ti ti-dots-vertical"></i>
+                            </button>
+                            <ul className="dropdown-menu">
+                                <li>
+                                    <Link
+                                        to={`/hospitals/doctors/edit/${doctor.id}`}
+                                        className="dropdown-item d-flex align-items-center"
+                                    >
+                                        Sửa
+                                    </Link>
+                                </li>
+                                <li>
+                                    <button
+                                        className="dropdown-item d-flex align-items-center"
+                                        onClick={() => handleDeleteDoctor(doctor)}
+                                    >
+                                        Xóa
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        ));
+    };
+
     const handleFilterSubmit = () => {
         // Apply temp filters to actual filters
         setAppliedSelectedDoctors(tempSelectedDoctors);
@@ -256,7 +410,7 @@ const ListDoctors: React.FC = () => {
                 .filter(Boolean) as string[];
 
             if (specialtyIds.length > 0) {
-                filterParams.specialtyId = specialtyIds[0]; // API might only support single specialty
+                filterParams.specialtyIds = specialtyIds;
             }
         }
 
@@ -271,13 +425,23 @@ const ListDoctors: React.FC = () => {
                 .filter(Boolean) as string[];
 
             if (positionIds.length > 0) {
-                filterParams.positionId = positionIds[0]; // API might only support single position
+                filterParams.positionIds = positionIds;
             }
         }
 
         // Add status filter
         if (tempSelectedStatuses.length > 0) {
-            filterParams.status = tempSelectedStatuses[0] as 'ACTIVE' | 'INACTIVE';
+            filterParams.statuses = tempSelectedStatuses as ('ACTIVE' | 'INACTIVE')[];
+        }
+
+        // Add service types filter
+        if (tempSelectedServiceTypes.length > 0) {
+            filterParams.serviceTypes = tempSelectedServiceTypes;
+        }
+
+        // Add languages filter
+        if (tempSelectedLanguages.length > 0) {
+            filterParams.languages = tempSelectedLanguages;
         }
 
         // Reset to first page
@@ -321,7 +485,11 @@ const ListDoctors: React.FC = () => {
                     className="d-flex justify-content-center align-items-center"
                     style={{ minHeight: '400px' }}
                 >
-                    <div className="spinner-border text-primary" role="status">
+                    <div
+                        className="spinner-border text-primary"
+                        role="status"
+                        aria-label="Đang tải..."
+                    >
                         <span className="visually-hidden">Đang tải...</span>
                     </div>
                     <span className="ms-2">Đang tải thông tin bệnh viện...</span>
@@ -368,15 +536,13 @@ const ListDoctors: React.FC = () => {
 
                             <div className="d-flex gap-2 justify-content-center">
                                 <Link to="/" className="btn btn-primary fs-13">
-                                    <i className="ti ti-home me-1"></i>
-                                    Về trang chủ
+                                    <i className="ti ti-home me-1"></i> Về trang chủ
                                 </Link>
                                 <button
                                     className="btn btn-outline-secondary fs-13"
                                     onClick={() => window.location.reload()}
                                 >
-                                    <i className="ti ti-refresh me-1"></i>
-                                    Tải lại
+                                    <i className="ti ti-refresh me-1"></i> Tải lại
                                 </button>
                             </div>
                         </div>
@@ -527,143 +693,7 @@ const ListDoctors: React.FC = () => {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {isLoading ? (
-                                <TableSkeleton rows={itemsPerPage} columns={doctorTableColumns} />
-                            ) : error ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-4">
-                                        <div className="alert alert-danger" role="alert">
-                                            <strong>Lỗi:</strong> {error}
-                                            <button
-                                                type="button"
-                                                className="btn-close ms-2"
-                                                onClick={clearError}
-                                                aria-label="Close"
-                                            ></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : sortedDoctors.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-4">
-                                        <p className="text-muted">
-                                            Không có bác sĩ nào được tìm thấy.
-                                        </p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                sortedDoctors.map((doctor) => (
-                                    <tr key={doctor.id}>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <Link
-                                                    to={`/clinic/doctor-details/${doctor.id}`}
-                                                    className="avatar me-2"
-                                                >
-                                                    <img
-                                                        src={doctor.avatarUrl}
-                                                        alt="Bác sĩ"
-                                                        className="rounded-circle"
-                                                    />
-                                                </Link>
-                                                <div>
-                                                    <h6 className="mb-1 fs-14 fw-semibold">
-                                                        <Link
-                                                            to={`/clinic/doctor-details/${doctor.id}`}
-                                                        >
-                                                            {doctor.firstName} {doctor.lastName}
-                                                        </Link>
-                                                    </h6>
-                                                    <span className="fs-13 d-block">
-                                                        {doctor.position?.name || 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <StatusBadge
-                                                status="ACTIVE"
-                                                variant="primary"
-                                                customText={doctor.specialty?.name || 'N/A'}
-                                            />
-                                        </td>
-                                        <td>
-                                            <StatusBadge
-                                                status="ACTIVE"
-                                                variant="warning"
-                                                customText={`${doctor.yearsOfExperience} năm`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <div className="d-flex flex-column gap-1 align-items-start">
-                                                {doctor.prices.map((price, index) => (
-                                                    <StatusBadge
-                                                        key={index}
-                                                        status="ACTIVE"
-                                                        variant="info"
-                                                        customText={`${price.serviceTypeName} - ${price.amount.toLocaleString('vi-VN')} VNĐ`}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="d-flex flex-column gap-1 align-items-start">
-                                                {doctor.languages.map((language, index) => (
-                                                    <StatusBadge
-                                                        key={index}
-                                                        status="ACTIVE"
-                                                        variant="secondary"
-                                                        customText={language.name}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <StatusBadge status={doctor.status || 'ACTIVE'} />
-                                        </td>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <div className="action-item me-2">
-                                                    <Link to="/clinic/appointment-calendar">
-                                                        <i className="ti ti-calendar-cog"></i>
-                                                    </Link>
-                                                </div>
-                                                <div className="action-item">
-                                                    <button
-                                                        className={styles.dotsButton}
-                                                        data-bs-toggle="dropdown"
-                                                        type="button"
-                                                    >
-                                                        <i className="ti ti-dots-vertical"></i>
-                                                    </button>
-                                                    <ul className="dropdown-menu">
-                                                        <li>
-                                                            <Link
-                                                                to={`/hospitals/doctors/edit/${doctor.id}`}
-                                                                className="dropdown-item d-flex align-items-center"
-                                                            >
-                                                                Sửa
-                                                            </Link>
-                                                        </li>
-                                                        <li>
-                                                            <button
-                                                                className="dropdown-item d-flex align-items-center"
-                                                                onClick={() =>
-                                                                    handleDeleteDoctor(doctor)
-                                                                }
-                                                            >
-                                                                Xóa
-                                                            </button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
+                        <tbody>{renderTableBody()}</tbody>
                     </table>
                 </div>
 
