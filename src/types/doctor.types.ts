@@ -1,46 +1,12 @@
 // Shared types for Doctor forms
+import { Position } from './position.types';
+import { Specialty } from './specialty.types';
+import { Language, DoctorLanguage } from './language.types';
+import { ServiceType, DoctorPrice } from './serviceType.types';
+import { Hospital } from './hospital.types';
 
-export interface Position {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Specialty {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Language {
-    id: string;
-    name: string;
-    flag: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface ServiceType {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface Hospital {
-    id: string;
-    name: string;
-    status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface DoctorPrice {
-    serviceTypeId: string;
-    amount: number;
-    note: string;
-}
-
-export interface DoctorLanguage {
-    languageId: string;
-    proficiency: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'NATIVE';
-}
+// Re-export types for backward compatibility
+export type { Position, Specialty, Language, ServiceType, Hospital, DoctorPrice, DoctorLanguage };
 
 export interface DoctorFormData {
     firstName: string;
@@ -58,4 +24,66 @@ export interface DoctorFormData {
     hospitalId: string;
     languageIds: string[];
     servicePrices: DoctorPrice[];
+}
+
+// API Response Types (matching backend)
+import { PositionBasicInfo } from './position.types';
+import { SpecialtyBasicInfo } from './specialty.types';
+import { LanguageBasicInfo } from './language.types';
+import { DoctorPriceBasicInfo } from './serviceType.types';
+import { HospitalBasicInfo } from './hospital.types';
+
+// Re-export types for backward compatibility
+export type {
+    PositionBasicInfo,
+    SpecialtyBasicInfo,
+    LanguageBasicInfo,
+    DoctorPriceBasicInfo,
+    HospitalBasicInfo,
+};
+
+export interface DoctorReviewStatisticsBasic {
+    averageRating: number;
+    totalReviews: number;
+}
+
+export interface DoctorOptimizedResponse {
+    id: string;
+    firstName: string;
+    lastName: string;
+    yearsOfExperience: number;
+    avatarUrl: string;
+    position?: PositionBasicInfo;
+    specialty?: SpecialtyBasicInfo;
+    prices: DoctorPriceBasicInfo[];
+    languages: LanguageBasicInfo[];
+    hospital?: HospitalBasicInfo;
+    reviewStatistics?: DoctorReviewStatisticsBasic;
+    isFavorited: boolean;
+    status?: 'ACTIVE' | 'INACTIVE'; // Add status for admin UI
+}
+
+export interface DoctorSearchListResponse {
+    doctors: DoctorOptimizedResponse[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface DoctorSearchParams {
+    searchTerm?: string;
+    specialtyId?: string;
+    specialtyIds?: string[];
+    hospitalId?: string;
+    positionId?: string;
+    positionIds?: string[];
+    status?: 'ACTIVE' | 'INACTIVE';
+    statuses?: ('ACTIVE' | 'INACTIVE')[];
+    serviceTypes?: string[];
+    languages?: string[];
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
 }
