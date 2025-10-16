@@ -132,7 +132,18 @@ const ListPositions: React.FC = () => {
         };
     }, [validationErrors.status, handleSelectChange]);
 
-    // Custom Input Component
+    // Custom Input Component - refactored to reduce nesting
+    const handleInputChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+            onChange(e.target.value);
+            // Clear validation error when user starts typing
+            if (validationErrors.name) {
+                setValidationErrors((prev) => ({ ...prev, name: undefined }));
+            }
+        },
+        [validationErrors.name]
+    );
+
     const CustomInputComponent = useMemo(() => {
         return ({
             value,
@@ -145,20 +156,12 @@ const ListPositions: React.FC = () => {
             placeholder?: string;
             required?: boolean;
         }) => {
-            const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                onChange(e.target.value);
-                // Clear validation error when user starts typing
-                if (validationErrors.name) {
-                    setValidationErrors((prev) => ({ ...prev, name: undefined }));
-                }
-            };
-
             return (
                 <div>
                     <Input
                         name="name"
                         value={value}
-                        onChange={handleInputChange}
+                        onChange={(e) => handleInputChange(e, onChange)}
                         placeholder={placeholder}
                         required={required}
                         maxLength={255}
@@ -170,7 +173,7 @@ const ListPositions: React.FC = () => {
                 </div>
             );
         };
-    }, [validationErrors.name]);
+    }, [validationErrors.name, handleInputChange]);
 
     const handleAddClick = useCallback(() => {
         setModalMode('add');
