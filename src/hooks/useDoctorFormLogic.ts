@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
+import { DoctorFormData } from '@/types/doctor.types';
+import { DoctorPrice } from '@/types/serviceType.types';
 
 export interface UseDoctorFormLogicProps {
     initialData: DoctorFormData;

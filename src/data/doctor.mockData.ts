@@ -1,11 +1,9 @@
-import {
-    Position,
-    Specialty,
-    Language,
-    ServiceType,
-    Hospital,
-    DoctorFormData,
-} from '../types/doctor.types';
+import { DoctorFormData } from '../types/doctor.types';
+import { Position } from '../types/position.types';
+import { Specialty } from '../types/specialty.types';
+import { Language } from '../types/language.types';
+import { ServiceType } from '../types/serviceType.types';
+import { Hospital } from '../types/hospital.types';
 
 export const mockPositions: Position[] = [
     { id: '550e8400-e29b-41d4-a716-446655440001', name: 'Bác sĩ chính', status: 'ACTIVE' },

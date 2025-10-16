@@ -1,15 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import styles from './TableActions.module.scss';
 
 export interface TableActionsProps {
     id: string;
     onEdit: (id: string) => void;
-    onDelete: (id: string) => void;
+    onDelete?: (id: string) => void;
+    onHide?: (id: string) => void;
     onView?: (id: string) => void;
     editLink?: string;
     viewLink?: string;
     showEdit?: boolean;
     showDelete?: boolean;
+    showHide?: boolean;
     showView?: boolean;
 }
 
@@ -17,71 +20,98 @@ const TableActions: React.FC<TableActionsProps> = ({
     id,
     onEdit,
     onDelete,
+    onHide,
     onView,
     editLink,
     viewLink,
     showEdit = true,
     showDelete = true,
+    showHide = false,
     showView = false,
 }) => {
     return (
-        <div className="d-flex gap-2">
-            {showView && (
-                <>
-                    {viewLink ? (
-                        <Link
-                            to={viewLink}
-                            className="btn btn-sm btn-outline-primary"
-                            title="Xem chi tiết"
-                        >
-                            <i className="ti ti-eye"></i>
-                        </Link>
-                    ) : (
+        <div className={styles.tableActions}>
+            <button
+                type="button"
+                className={styles.moreButton}
+                data-bs-toggle="dropdown"
+                title="Thao tác"
+            >
+                <i className="ti ti-dots-vertical"></i>
+            </button>
+            <ul className="dropdown-menu p-2">
+                {showView && (
+                    <li>
+                        {viewLink ? (
+                            <Link
+                                to={viewLink}
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                            >
+                                <i className="ti ti-eye me-2"></i> Xem
+                            </Link>
+                        ) : (
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => onView?.(id)}
+                            >
+                                <i className="ti ti-eye me-2"></i> Xem
+                            </button>
+                        )}
+                    </li>
+                )}
+
+                {showView && (showEdit || showDelete) && (
+                    <li>
+                        <hr className="dropdown-divider" />
+                    </li>
+                )}
+
+                {showEdit && (
+                    <li>
+                        {editLink ? (
+                            <Link
+                                to={editLink}
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                            >
+                                <i className="ti ti-edit me-2"></i> Sửa
+                            </Link>
+                        ) : (
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => onEdit(id)}
+                            >
+                                <i className="ti ti-edit me-2"></i> Sửa
+                            </button>
+                        )}
+                    </li>
+                )}
+
+                {showDelete && (
+                    <li>
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => onView?.(id)}
-                            title="Xem chi tiết"
+                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
+                            onClick={() => onDelete?.(id)}
                         >
-                            <i className="ti ti-eye"></i>
+                            <i className="ti ti-trash me-2"></i> Xóa
                         </button>
-                    )}
-                </>
-            )}
+                    </li>
+                )}
 
-            {showEdit && (
-                <>
-                    {editLink ? (
-                        <Link
-                            to={editLink}
-                            className="btn btn-sm btn-outline-warning"
-                            title="Chỉnh sửa"
-                        >
-                            <i className="ti ti-edit"></i>
-                        </Link>
-                    ) : (
+                {showHide && (
+                    <li>
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline-warning"
-                            onClick={() => onEdit(id)}
-                            title="Chỉnh sửa"
+                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                            onClick={() => onHide?.(id)}
                         >
-                            <i className="ti ti-edit"></i>
+                            <i className="ti ti-eye-off me-2"></i> Ẩn
                         </button>
-                    )}
-                </>
-            )}
-
-            {showDelete && (
-                <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => onDelete(id)}
-                    title="Xóa"
-                >
-                    <i className="ti ti-trash"></i>
-                </button>
-            )}
+                    </li>
+                )}
+            </ul>
         </div>
     );
 };

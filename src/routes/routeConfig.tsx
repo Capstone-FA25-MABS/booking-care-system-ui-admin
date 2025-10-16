@@ -27,6 +27,7 @@ import NotificationsSettings from '@/pages/settings/NotificationsSettings';
 import IntegrationsSettings from '@/pages/settings/IntegrationsSettings';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Role } from '@/enums/common.enums';
+import ListPositions from '@/pages/admins/Positions/ListPositions';
 
 const routes: RouteObject[] = [
     {
@@ -55,6 +56,10 @@ const routes: RouteObject[] = [
             { index: true, element: <Navigate to={PATHS.ADMIN.DASHBOARD} replace /> },
             { path: PATHS.ADMIN.DASHBOARD, element: <AdminDashboard /> },
             { path: PATHS.ADMIN.SETTINGS, element: <h1>Setting</h1> },
+            {
+                path: PATHS.ADMIN.POSITIONS.ROOT,
+                children: [{ index: true, element: <ListPositions /> }],
+            },
         ],
     },
     // Doctor routes - Only accessible by DOCTOR role
