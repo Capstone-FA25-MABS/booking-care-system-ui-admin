@@ -357,18 +357,30 @@ const ListPositions: React.FC = () => {
     const handleDeleteConfirm = async () => {
         if (positionToDelete) {
             try {
-                await deletePosition(positionToDelete.id);
+                const result = await deletePosition(positionToDelete.id);
 
-                // Close modal
-                setShowDeleteModal(false);
-                setPositionToDelete(null);
+                // Check if the operation was successful
+                if ((result as any).type.endsWith('/fulfilled')) {
+                    // Success - show toast and close modal
+                    setShowDeleteModal(false);
+                    setPositionToDelete(null);
+                    toast.success(`Đã xóa học vị "${positionToDelete.name}" thành công!`);
 
-                // Show success message
-                toast.success(`Đã xóa học vị "${positionToDelete.name}" thành công!`);
-
-                // Refresh the positions list
-                const sortParams = getSortParams(sortBy);
-                fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+                    // Refresh the positions list
+                    const sortParams = getSortParams(sortBy);
+                    fetchPositions(
+                        currentPage,
+                        itemsPerPage,
+                        sortParams.sortBy,
+                        sortParams.sortOrder
+                    );
+                } else if ((result as any).type.endsWith('/rejected')) {
+                    // Error - show error message
+                    const errorMessage =
+                        ((result as any).payload as string) ||
+                        'Có lỗi xảy ra khi xóa học vị. Vui lòng thử lại.';
+                    toast.error(errorMessage);
+                }
             } catch (error: any) {
                 console.error('Error deleting position:', error);
 
@@ -395,10 +407,10 @@ const ListPositions: React.FC = () => {
         setIsSubmitting(true);
 
         try {
+            let result;
             if (modalMode === 'add') {
                 // Create new position
-                await createPosition(formData);
-                toast.success('Tạo học vị thành công!');
+                result = await createPosition(formData);
             } else {
                 // Update position
                 if (!positionToEdit) {
@@ -412,22 +424,36 @@ const ListPositions: React.FC = () => {
                     positionToEdit: positionToEdit,
                 });
 
-                await updatePosition(positionToEdit.id, formData);
-                toast.success('Cập nhật học vị thành công!');
+                result = await updatePosition(positionToEdit.id, formData);
             }
 
-            // Close modal and refresh data
-            setShowModal(false);
-            setPositionToEdit(null);
-            setFormData({
-                name: '',
-                status: 'ACTIVE',
-            });
-            setValidationErrors({});
+            // Check if the operation was successful
+            if ((result as any).type.endsWith('/fulfilled')) {
+                // Success - show toast and close modal
+                if (modalMode === 'add') {
+                    toast.success('Tạo học vị thành công!');
+                } else {
+                    toast.success('Cập nhật học vị thành công!');
+                }
 
-            // Refresh the positions list
-            const sortParams = getSortParams(sortBy);
-            fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+                // Close modal and refresh data
+                setShowModal(false);
+                setPositionToEdit(null);
+                setFormData({
+                    name: '',
+                    status: 'ACTIVE',
+                });
+                setValidationErrors({});
+
+                // Refresh the positions list
+                const sortParams = getSortParams(sortBy);
+                fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            } else if ((result as any).type.endsWith('/rejected')) {
+                // Error - show error message
+                const errorMessage =
+                    ((result as any).payload as string) || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                toast.error(errorMessage);
+            }
         } catch (error: any) {
             console.error('Error saving position:', error);
 

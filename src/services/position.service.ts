@@ -21,18 +21,87 @@ const POSITION_ENDPOINTS = {
 
 export class PositionService {
     /**
+     * Helper method to format API response consistently
+     */
+    private static formatResponse(response: any, defaultMessage: string): ApiResponse {
+        return {
+            success: response.success ?? true,
+            data: response.data || response,
+            message: response.message || defaultMessage,
+        };
+    }
+
+    /**
+     * Helper method to handle common error cases
+     */
+    private static handleError(
+        error: any,
+        defaultMessage: string = 'Không thể kết nối đến máy chủ!'
+    ): never {
+        console.error('PositionService Error:', error);
+
+        if (error.response?.status === 400) {
+            const errorData = error.response.data;
+            console.error('400 Error Data:', errorData);
+            if (
+                errorData?.errors &&
+                Array.isArray(errorData.errors) &&
+                errorData.errors.length > 0
+            ) {
+                throw new Error(errorData.errors[0]);
+            }
+            throw new Error(errorData?.message || 'Dữ liệu không hợp lệ');
+        } else if (error.response?.status === 404) {
+            throw new Error('Không tìm thấy chức vụ');
+        } else if (error.response?.status === 409) {
+            console.error('409 Conflict Error:', error.response.data);
+            throw new Error('Tên chức vụ đã tồn tại');
+        } else if (error.response?.status === 500) {
+            throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
+        }
+        throw new Error(error.message || defaultMessage);
+    }
+
+    /**
+     * Helper method to validate position form data
+     */
+    private static validatePositionData(positionData: PositionFormData): void {
+        if (!positionData.name || positionData.name.trim().length === 0) {
+            throw new Error('Tên chức vụ không được để trống');
+        }
+
+        const trimmedName = positionData.name.trim();
+        if (trimmedName.length < 2) {
+            throw new Error('Tên chức vụ phải có ít nhất 2 ký tự');
+        }
+
+        if (trimmedName.length > 255) {
+            throw new Error('Tên chức vụ không được vượt quá 255 ký tự');
+        }
+
+        if (!positionData.status || !['ACTIVE', 'INACTIVE'].includes(positionData.status)) {
+            throw new Error('Trạng thái không hợp lệ');
+        }
+    }
+
+    /**
+     * Helper method to validate position ID
+     */
+    private static validatePositionId(id: string): void {
+        if (!id || id.trim().length === 0) {
+            throw new Error('ID chức vụ không hợp lệ');
+        }
+    }
+
+    /**
      * Health check for position service
      */
     static async healthCheck(): Promise<ApiResponse> {
         try {
             const response: any = await axiosInstance.get(POSITION_ENDPOINTS.HEALTH);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Position service is healthy',
-            };
+            return this.formatResponse(response, 'Position service is healthy');
         } catch (error: any) {
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            this.handleError(error);
         }
     }
 
@@ -61,14 +130,9 @@ export class PositionService {
                 params,
             });
 
-            // Backend returns PositionListResponse directly
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Positions retrieved successfully',
-            };
+            return this.formatResponse(response, 'Positions retrieved successfully');
         } catch (error: any) {
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            this.handleError(error);
         }
     }
 
@@ -77,14 +141,11 @@ export class PositionService {
      */
     static async getPositionById(id: string): Promise<ApiResponse<Position>> {
         try {
+            this.validatePositionId(id);
             const response: any = await axiosInstance.get(POSITION_ENDPOINTS.GET_POSITION(id));
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Position retrieved successfully',
-            };
+            return this.formatResponse(response, 'Position retrieved successfully');
         } catch (error: any) {
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            this.handleError(error);
         }
     }
 
@@ -94,53 +155,24 @@ export class PositionService {
     static async createPosition(positionData: PositionFormData): Promise<ApiResponse<Position>> {
         try {
             // Validate input data
-            if (!positionData.name || positionData.name.trim().length === 0) {
-                throw new Error('Tên chức vụ không được để trống');
-            }
+            this.validatePositionData(positionData);
 
-            const trimmedName = positionData.name.trim();
-            if (trimmedName.length < 2) {
-                throw new Error('Tên chức vụ phải có ít nhất 2 ký tự');
-            }
-
-            if (trimmedName.length > 255) {
-                throw new Error('Tên chức vụ không được vượt quá 255 ký tự');
-            }
-
-            if (!positionData.status || !['ACTIVE', 'INACTIVE'].includes(positionData.status)) {
-                throw new Error('Trạng thái không hợp lệ');
-            }
-
-            const response: any = await axiosInstance.post(POSITION_ENDPOINTS.CREATE_POSITION, {
-                name: trimmedName,
+            console.log('Creating position with data:', {
+                name: positionData.name.trim(),
                 status: positionData.status,
             });
 
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Tạo chức vụ thành công',
-            };
+            const response: any = await axiosInstance.post(POSITION_ENDPOINTS.CREATE_POSITION, {
+                name: positionData.name.trim(),
+                status: positionData.status,
+            });
+
+            console.log('Create position response:', response);
+
+            return this.formatResponse(response, 'Tạo chức vụ thành công');
         } catch (error: any) {
-            // Handle specific error cases
-            if (error.response?.status === 400) {
-                // Handle validation errors from backend
-                const errorData = error.response.data;
-                if (
-                    errorData?.errors &&
-                    Array.isArray(errorData.errors) &&
-                    errorData.errors.length > 0
-                ) {
-                    // Show the first validation error
-                    throw new Error(errorData.errors[0]);
-                }
-                throw new Error(errorData?.message || 'Dữ liệu không hợp lệ');
-            } else if (error.response?.status === 409) {
-                throw new Error('Tên chức vụ đã tồn tại');
-            } else if (error.response?.status === 500) {
-                throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
-            }
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            console.error('Create position error:', error);
+            this.handleError(error);
         }
     }
 
@@ -153,30 +185,12 @@ export class PositionService {
     ): Promise<ApiResponse<Position>> {
         try {
             // Validate input data
-            if (!id || id.trim().length === 0) {
-                throw new Error('ID chức vụ không hợp lệ');
-            }
-
-            if (!positionData.name || positionData.name.trim().length === 0) {
-                throw new Error('Tên chức vụ không được để trống');
-            }
-
-            const trimmedName = positionData.name.trim();
-            if (trimmedName.length < 2) {
-                throw new Error('Tên chức vụ phải có ít nhất 2 ký tự');
-            }
-
-            if (trimmedName.length > 255) {
-                throw new Error('Tên chức vụ không được vượt quá 255 ký tự');
-            }
-
-            if (!positionData.status || !['ACTIVE', 'INACTIVE'].includes(positionData.status)) {
-                throw new Error('Trạng thái không hợp lệ');
-            }
+            this.validatePositionId(id);
+            this.validatePositionData(positionData);
 
             const payload = {
                 id: id,
-                name: trimmedName,
+                name: positionData.name.trim(),
                 status: positionData.status,
             };
 
@@ -190,33 +204,12 @@ export class PositionService {
                 payload
             );
 
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Cập nhật chức vụ thành công',
-            };
+            console.log('Update position response:', response);
+
+            return this.formatResponse(response, 'Cập nhật chức vụ thành công');
         } catch (error: any) {
-            // Handle specific error cases
-            if (error.response?.status === 400) {
-                // Handle validation errors from backend
-                const errorData = error.response.data;
-                if (
-                    errorData?.errors &&
-                    Array.isArray(errorData.errors) &&
-                    errorData.errors.length > 0
-                ) {
-                    // Show the first validation error
-                    throw new Error(errorData.errors[0]);
-                }
-                throw new Error(errorData?.message || 'Dữ liệu không hợp lệ');
-            } else if (error.response?.status === 404) {
-                throw new Error('Không tìm thấy chức vụ');
-            } else if (error.response?.status === 409) {
-                throw new Error('Tên chức vụ đã tồn tại');
-            } else if (error.response?.status === 500) {
-                throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
-            }
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            console.error('Update position error:', error);
+            this.handleError(error);
         }
     }
 
@@ -226,29 +219,15 @@ export class PositionService {
     static async deletePosition(id: string): Promise<ApiResponse<void>> {
         try {
             // Validate input data
-            if (!id || id.trim().length === 0) {
-                throw new Error('ID chức vụ không hợp lệ');
-            }
+            this.validatePositionId(id);
 
             const response: any = await axiosInstance.delete(
                 POSITION_ENDPOINTS.DELETE_POSITION(id)
             );
 
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Xóa chức vụ thành công',
-            };
+            return this.formatResponse(response, 'Xóa chức vụ thành công');
         } catch (error: any) {
-            // Handle specific error cases
-            if (error.response?.status === 404) {
-                throw new Error('Không tìm thấy chức vụ cần xóa');
-            } else if (error.response?.status === 409) {
-                throw new Error('Không thể xóa chức vụ này vì đang được sử dụng');
-            } else if (error.response?.status === 500) {
-                throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
-            }
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            this.handleError(error);
         }
     }
 
@@ -263,14 +242,9 @@ export class PositionService {
                 params,
             });
 
-            // Backend returns PositionListResponse directly
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Positions filtered successfully',
-            };
+            return this.formatResponse(response, 'Positions filtered successfully');
         } catch (error: any) {
-            throw new Error(error.message || 'Không thể kết nối đến máy chủ!');
+            this.handleError(error);
         }
     }
 }

@@ -121,21 +121,21 @@ export const usePosition = (): UsePositionReturn => {
 
     const handleCreatePosition = useCallback(
         (positionData: PositionFormData) => {
-            dispatch(createPosition(positionData));
+            return dispatch(createPosition(positionData)) as any;
         },
         [dispatch]
     );
 
     const handleUpdatePosition = useCallback(
         (id: string, positionData: PositionFormData) => {
-            dispatch(updatePosition({ id, positionData }));
+            return dispatch(updatePosition({ id, positionData })) as any;
         },
         [dispatch]
     );
 
     const handleDeletePosition = useCallback(
         (id: string) => {
-            dispatch(deletePosition(id));
+            return dispatch(deletePosition(id)) as any;
         },
         [dispatch]
     );

@@ -48,9 +48,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.ADMIN.ROOT,
         element: (
-            // <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            // </ProtectedRoute>
+            <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.ADMIN.DASHBOARD} replace /> },
