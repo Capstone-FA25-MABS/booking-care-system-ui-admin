@@ -68,6 +68,15 @@
             }
         }
 
+        &.text-warning {
+            color: #fd7e14 !important;
+
+            &:hover {
+                background-color: #fff3cd;
+                color: #856404 !important;
+            }
+        }
+
         i {
             width: 16px;
             text-align: center;

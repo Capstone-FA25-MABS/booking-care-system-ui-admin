@@ -5,12 +5,14 @@ import styles from './TableActions.module.scss';
 export interface TableActionsProps {
     id: string;
     onEdit: (id: string) => void;
-    onDelete: (id: string) => void;
+    onDelete?: (id: string) => void;
+    onHide?: (id: string) => void;
     onView?: (id: string) => void;
     editLink?: string;
     viewLink?: string;
     showEdit?: boolean;
     showDelete?: boolean;
+    showHide?: boolean;
     showView?: boolean;
 }
 
@@ -18,11 +20,13 @@ const TableActions: React.FC<TableActionsProps> = ({
     id,
     onEdit,
     onDelete,
+    onHide,
     onView,
     editLink,
     viewLink,
     showEdit = true,
     showDelete = true,
+    showHide = false,
     showView = false,
 }) => {
     return (
@@ -84,20 +88,26 @@ const TableActions: React.FC<TableActionsProps> = ({
                     </li>
                 )}
 
-                {showEdit && showDelete && (
-                    <li>
-                        <hr className="dropdown-divider" />
-                    </li>
-                )}
-
                 {showDelete && (
                     <li>
                         <button
                             type="button"
                             className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
-                            onClick={() => onDelete(id)}
+                            onClick={() => onDelete?.(id)}
                         >
                             <i className="ti ti-trash me-2"></i> Xóa
+                        </button>
+                    </li>
+                )}
+
+                {showHide && (
+                    <li>
+                        <button
+                            type="button"
+                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                            onClick={() => onHide?.(id)}
+                        >
+                            <i className="ti ti-eye-off me-2"></i> Ẩn
                         </button>
                     </li>
                 )}

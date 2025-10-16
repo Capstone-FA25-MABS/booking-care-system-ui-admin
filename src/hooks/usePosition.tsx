@@ -66,9 +66,9 @@ interface UsePositionReturn {
         sortOrder?: 'asc' | 'desc'
     ) => void;
     fetchPositionById: (id: string) => void;
-    createPosition: (positionData: PositionFormData) => void;
-    updatePosition: (id: string, positionData: PositionFormData) => void;
-    deletePosition: (id: string) => void;
+    createPosition: (positionData: PositionFormData) => Promise<any>;
+    updatePosition: (id: string, positionData: PositionFormData) => Promise<any>;
+    deletePosition: (id: string) => Promise<any>;
     filterPositions: (params: PositionSearchParams) => void;
     clearError: () => void;
     clearCurrentPosition: () => void;
@@ -121,21 +121,21 @@ export const usePosition = (): UsePositionReturn => {
 
     const handleCreatePosition = useCallback(
         (positionData: PositionFormData) => {
-            return dispatch(createPosition(positionData)) as any;
+            return dispatch(createPosition(positionData));
         },
         [dispatch]
     );
 
     const handleUpdatePosition = useCallback(
         (id: string, positionData: PositionFormData) => {
-            return dispatch(updatePosition({ id, positionData })) as any;
+            return dispatch(updatePosition({ id, positionData }));
         },
         [dispatch]
     );
 
     const handleDeletePosition = useCallback(
         (id: string) => {
-            return dispatch(deletePosition(id)) as any;
+            return dispatch(deletePosition(id));
         },
         [dispatch]
     );

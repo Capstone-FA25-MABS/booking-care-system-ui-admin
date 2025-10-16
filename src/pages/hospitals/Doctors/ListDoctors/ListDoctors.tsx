@@ -255,7 +255,7 @@ const ListDoctors: React.FC = () => {
                 <tr>
                     <td colSpan={7} className="text-center py-4">
                         <div className="alert alert-danger" role="alert">
-                            <strong>Lỗi:</strong> Không thể kết nối đến máy chủ!
+                            <strong>Lỗi:</strong> Không thể kết nối đến máy chủ!{' '}
                             <button
                                 type="button"
                                 className="btn-close ms-2"

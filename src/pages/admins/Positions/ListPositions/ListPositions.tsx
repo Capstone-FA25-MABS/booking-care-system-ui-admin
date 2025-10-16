@@ -100,23 +100,26 @@ const ListPositions: React.FC = () => {
         { value: 'INACTIVE', label: 'Không hoạt động' },
     ];
 
-    // Custom React Select Component
+    // Custom React Select Component - refactored to reduce nesting
+    const handleSelectChange = useCallback(
+        (selectedOption: any, onChange: (value: any) => void) => {
+            onChange(selectedOption?.value);
+            // Clear validation error when user selects an option
+            if (validationErrors.status) {
+                setValidationErrors((prev) => ({ ...prev, status: undefined }));
+            }
+        },
+        [validationErrors.status]
+    );
+
     const ReactSelectComponent = useMemo(() => {
         return ({ value, onChange }: { value: any; onChange: (value: any) => void }) => {
-            const handleSelectChange = (selectedOption: any) => {
-                onChange(selectedOption?.value);
-                // Clear validation error when user selects an option
-                if (validationErrors.status) {
-                    setValidationErrors((prev) => ({ ...prev, status: undefined }));
-                }
-            };
-
             return (
                 <div className={validationErrors.status ? styles.reactSelectInvalid : ''}>
                     <Select
                         options={statusOptions}
                         value={statusOptions.find((option) => option.value === value)}
-                        onChange={handleSelectChange}
+                        onChange={(selectedOption) => handleSelectChange(selectedOption, onChange)}
                         placeholder="Chọn trạng thái"
                         isSearchable={false}
                         styles={selectCustomStyles}
@@ -127,7 +130,7 @@ const ListPositions: React.FC = () => {
                 </div>
             );
         };
-    }, [validationErrors.status]);
+    }, [validationErrors.status, handleSelectChange]);
 
     // Custom Input Component
     const CustomInputComponent = useMemo(() => {
@@ -348,8 +351,8 @@ const ListPositions: React.FC = () => {
         }
     };
 
-    // Delete functions
-    const handleDeleteClick = (position: Position) => {
+    // Hide functions
+    const handleHideClick = (position: Position) => {
         setPositionToDelete(position);
         setShowDeleteModal(true);
     };
@@ -364,7 +367,7 @@ const ListPositions: React.FC = () => {
                     // Success - show toast and close modal
                     setShowDeleteModal(false);
                     setPositionToDelete(null);
-                    toast.success(`Đã xóa học vị "${positionToDelete.name}" thành công!`);
+                    toast.success(`Đã ẩn học vị "${positionToDelete.name}" thành công!`);
 
                     // Refresh the positions list
                     const sortParams = getSortParams(sortBy);
@@ -378,15 +381,15 @@ const ListPositions: React.FC = () => {
                     // Error - show error message
                     const errorMessage =
                         ((result as any).payload as string) ||
-                        'Có lỗi xảy ra khi xóa học vị. Vui lòng thử lại.';
+                        'Có lỗi xảy ra khi ẩn học vị. Vui lòng thử lại.';
                     toast.error(errorMessage);
                 }
             } catch (error: any) {
-                console.error('Error deleting position:', error);
+                console.error('Error hiding position:', error);
 
                 // Show specific error message
                 const errorMessage =
-                    error.message || 'Có lỗi xảy ra khi xóa học vị. Vui lòng thử lại.';
+                    error.message || 'Có lỗi xảy ra khi ẩn học vị. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         }
@@ -546,9 +549,10 @@ const ListPositions: React.FC = () => {
                     <TableActions
                         id={position.id}
                         onEdit={() => handleEditClickWithPosition(position)}
-                        onDelete={() => handleDeleteClick(position)}
+                        onHide={() => handleHideClick(position)}
                         showEdit={true}
-                        showDelete={true}
+                        showDelete={false}
+                        showHide={true}
                         showView={false}
                     />
                 </td>
@@ -840,12 +844,13 @@ const ListPositions: React.FC = () => {
                                         <>
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
-                                                role="status"
                                                 aria-hidden="true"
                                             ></span>
-                                            {modalMode === 'add'
-                                                ? 'Đang tạo...'
-                                                : 'Đang cập nhật...'}
+                                            <output>
+                                                {modalMode === 'add'
+                                                    ? 'Đang tạo...'
+                                                    : 'Đang cập nhật...'}
+                                            </output>
                                         </>
                                     ) : (
                                         <>
@@ -862,13 +867,13 @@ const ListPositions: React.FC = () => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
+            {/* Hide Confirmation Modal */}
             <ModalDelete
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xóa học vị"
-                message={`Bạn có chắc chắn muốn xóa học vị "${positionToDelete?.name}"? Hành động này không thể hoàn tác.`}
+                title="Ẩn học vị"
+                message={`Bạn có chắc chắn muốn ẩn học vị "${positionToDelete?.name}"? Học vị này sẽ không hiển thị trong danh sách.`}
             />
 
             {/* Filter Modal */}
