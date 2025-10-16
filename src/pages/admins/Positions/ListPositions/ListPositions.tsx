@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
@@ -7,8 +7,8 @@ import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
-import GenericModal from '@/components/GenericModal';
 import TableSkeleton from '@/components/TableSkeleton';
+import TableActions from '@/components/TableActions';
 import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Position, PositionFormData } from '@/types/position.types';
 import usePosition from '@/hooks/usePosition';
@@ -101,96 +101,75 @@ const ListPositions: React.FC = () => {
     ];
 
     // Custom React Select Component
-    const ReactSelectComponent = ({
-        value,
-        onChange,
-    }: {
-        value: any;
-        onChange: (value: any) => void;
-    }) => (
-        <div className={validationErrors.status ? styles.reactSelectInvalid : ''}>
-            <Select
-                options={statusOptions}
-                value={statusOptions.find((option) => option.value === value)}
-                onChange={(selectedOption) => {
-                    onChange(selectedOption?.value);
-                    // Clear validation error when user selects an option
-                    if (validationErrors.status) {
-                        setValidationErrors((prev) => ({ ...prev, status: undefined }));
-                    }
-                }}
-                placeholder="Chọn trạng thái"
-                isSearchable={false}
-                styles={selectCustomStyles}
-            />
-            {validationErrors.status && (
-                <div className={styles.invalidFeedback}>{validationErrors.status}</div>
-            )}
-        </div>
-    );
+    const ReactSelectComponent = useMemo(() => {
+        return ({ value, onChange }: { value: any; onChange: (value: any) => void }) => {
+            const handleSelectChange = (selectedOption: any) => {
+                onChange(selectedOption?.value);
+                // Clear validation error when user selects an option
+                if (validationErrors.status) {
+                    setValidationErrors((prev) => ({ ...prev, status: undefined }));
+                }
+            };
+
+            return (
+                <div className={validationErrors.status ? styles.reactSelectInvalid : ''}>
+                    <Select
+                        options={statusOptions}
+                        value={statusOptions.find((option) => option.value === value)}
+                        onChange={handleSelectChange}
+                        placeholder="Chọn trạng thái"
+                        isSearchable={false}
+                        styles={selectCustomStyles}
+                    />
+                    {validationErrors.status && (
+                        <div className={styles.invalidFeedback}>{validationErrors.status}</div>
+                    )}
+                </div>
+            );
+        };
+    }, [validationErrors.status]);
 
     // Custom Input Component
-    const CustomInputComponent = ({
-        value,
-        onChange,
-        placeholder,
-        required,
-    }: {
-        value: string;
-        onChange: (value: string) => void;
-        placeholder?: string;
-        required?: boolean;
-    }) => (
-        <div>
-            <Input
-                name="name"
-                value={value}
-                onChange={(e) => {
-                    onChange(e.target.value);
-                    // Clear validation error when user starts typing
-                    if (validationErrors.name) {
-                        setValidationErrors((prev) => ({ ...prev, name: undefined }));
-                    }
-                }}
-                placeholder={placeholder}
-                required={required}
-                maxLength={255}
-                className={validationErrors.name ? 'is-invalid' : ''}
-            />
-            {validationErrors.name && (
-                <div className={styles.invalidFeedback}>{validationErrors.name}</div>
-            )}
-        </div>
-    );
+    const CustomInputComponent = useMemo(() => {
+        return ({
+            value,
+            onChange,
+            placeholder,
+            required,
+        }: {
+            value: string;
+            onChange: (value: string) => void;
+            placeholder?: string;
+            required?: boolean;
+        }) => {
+            const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                onChange(e.target.value);
+                // Clear validation error when user starts typing
+                if (validationErrors.name) {
+                    setValidationErrors((prev) => ({ ...prev, name: undefined }));
+                }
+            };
 
-    const fields = [
-        {
-            type: 'custom' as const,
-            name: 'name',
-            label: 'Tên Học Vị',
-            placeholder: 'Nhập tên học vị (2-255 ký tự)',
-            required: true,
-            value: formData.name,
-            onChange: (value: string) => setFormData((prev) => ({ ...prev, name: value })),
-            component: CustomInputComponent,
-            componentProps: {
-                placeholder: 'Nhập tên học vị (2-255 ký tự)',
-                required: true,
-            },
-        },
-        {
-            type: 'custom' as const,
-            name: 'status',
-            label: 'Trạng Thái',
-            required: true,
-            value: formData.status,
-            onChange: (value: 'ACTIVE' | 'INACTIVE') =>
-                setFormData((prev) => ({ ...prev, status: value })),
-            component: ReactSelectComponent,
-        },
-    ];
+            return (
+                <div>
+                    <Input
+                        name="name"
+                        value={value}
+                        onChange={handleInputChange}
+                        placeholder={placeholder}
+                        required={required}
+                        maxLength={255}
+                        className={validationErrors.name ? 'is-invalid' : ''}
+                    />
+                    {validationErrors.name && (
+                        <div className={styles.invalidFeedback}>{validationErrors.name}</div>
+                    )}
+                </div>
+            );
+        };
+    }, [validationErrors.name]);
 
-    const handleAddClick = () => {
+    const handleAddClick = useCallback(() => {
         setModalMode('add');
         setFormData({
             name: '',
@@ -198,9 +177,9 @@ const ListPositions: React.FC = () => {
         });
         setValidationErrors({});
         setShowModal(true);
-    };
+    }, []);
 
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         setShowModal(false);
         setPositionToEdit(null);
         setFormData({
@@ -208,9 +187,18 @@ const ListPositions: React.FC = () => {
             status: 'ACTIVE',
         });
         setValidationErrors({});
-    };
+    }, []);
 
     const title = modalMode === 'add' ? 'Thêm Học Vị Mới' : 'Sửa Học Vị';
+
+    // Form data change handlers
+    const handleNameChange = (value: string) => {
+        setFormData((prev) => ({ ...prev, name: value }));
+    };
+
+    const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
+        setFormData((prev) => ({ ...prev, status: value }));
+    };
 
     // Validation function
     const validateForm = (): boolean => {
@@ -529,32 +517,14 @@ const ListPositions: React.FC = () => {
                     <StatusBadge status={position.status} />
                 </td>
                 <td className="action-item">
-                    <button type="button" className="btn btn-link p-0" data-bs-toggle="dropdown">
-                        <i className="ti ti-dots-vertical"></i>
-                    </button>
-                    <ul className="dropdown-menu p-2">
-                        <li>
-                            <button
-                                type="button"
-                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                onClick={() => handleEditClickWithPosition(position)}
-                            >
-                                <i className="ti ti-edit me-2"></i> Sửa
-                            </button>
-                        </li>
-                        <li>
-                            <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                            <button
-                                type="button"
-                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
-                                onClick={() => handleDeleteClick(position)}
-                            >
-                                <i className="ti ti-trash me-2"></i> Xóa
-                            </button>
-                        </li>
-                    </ul>
+                    <TableActions
+                        id={position.id}
+                        onEdit={() => handleEditClickWithPosition(position)}
+                        onDelete={() => handleDeleteClick(position)}
+                        showEdit={true}
+                        showDelete={true}
+                        showView={false}
+                    />
                 </td>
             </tr>
         ));
@@ -627,7 +597,7 @@ const ListPositions: React.FC = () => {
                                             id="positionSearch"
                                             type="search"
                                             className="form-control form-control-sm"
-                                            placeholder="Search"
+                                            placeholder="Tìm kiếm"
                                             aria-controls="DataTables_Table_0"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -763,16 +733,108 @@ const ListPositions: React.FC = () => {
             </div>
 
             {/* Position Modal */}
-            <GenericModal
-                show={showModal}
-                mode={modalMode}
-                title={title}
-                fields={fields}
-                onSubmit={handlePositionSubmit}
-                onCancel={handleCancel}
-                isSubmitting={isSubmitting}
-                submitButtonText={modalMode === 'add' ? 'Tạo Học Vị' : 'Cập Nhật Học Vị'}
-            />
+            {showModal && (
+                <div
+                    className={`modal fade show d-block ${styles.modal}`}
+                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className={`modal-content ${styles['modal-content']}`}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title fw-bold text-dark fs-18">{title}</h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={handleCancel}
+                                    aria-label="Close"
+                                ></button>
+                            </div>
+                            <div className="modal-body pt-0">
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        handlePositionSubmit();
+                                    }}
+                                >
+                                    <div className="row">
+                                        {/* Name Field */}
+                                        <div className="col-12">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="position-name"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Tên Học Vị{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <CustomInputComponent
+                                                    value={formData.name}
+                                                    onChange={handleNameChange}
+                                                    placeholder="Nhập tên học vị (2-255 ký tự)"
+                                                    required={true}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Status Field */}
+                                        <div className="col-12">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="position-status"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Trạng Thái{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <ReactSelectComponent
+                                                    value={formData.status}
+                                                    onChange={handleStatusChange}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div className="modal-footer border-0 pt-0">
+                                <button
+                                    type="button"
+                                    className="btn btn-light btn-lg px-4 rounded-3"
+                                    onClick={handleCancel}
+                                    disabled={isSubmitting}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary btn-lg px-4 rounded-3"
+                                    onClick={handlePositionSubmit}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <span
+                                                className="spinner-border spinner-border-sm me-2"
+                                                role="status"
+                                                aria-hidden="true"
+                                            ></span>
+                                            {modalMode === 'add'
+                                                ? 'Đang tạo...'
+                                                : 'Đang cập nhật...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i
+                                                className={`${modalMode === 'add' ? 'ti ti-plus' : 'ti ti-edit'} me-2`}
+                                            ></i>
+                                            {modalMode === 'add' ? 'Tạo Học Vị' : 'Cập Nhật Học Vị'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Delete Confirmation Modal */}
             <ModalDelete

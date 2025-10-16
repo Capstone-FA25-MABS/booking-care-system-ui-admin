@@ -6,13 +6,13 @@ import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
+import TableActions from '@/components/TableActions';
 import { useDoctor } from '@/hooks/useDoctor';
 import { useDoctorFilterOptions } from '@/hooks/useDoctorFilterOptions';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { DoctorOptimizedResponse, DoctorSearchParams } from '@/types/doctor.types';
 import TableSkeleton from '@/components/TableSkeleton';
 import { doctorTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
-import styles from './ListDoctors.module.scss';
 
 const ListDoctors: React.FC = () => {
     const {
@@ -344,31 +344,15 @@ const ListDoctors: React.FC = () => {
                             </Link>
                         </div>
                         <div className="action-item">
-                            <button
-                                className={styles.dotsButton}
-                                data-bs-toggle="dropdown"
-                                type="button"
-                            >
-                                <i className="ti ti-dots-vertical"></i>
-                            </button>
-                            <ul className="dropdown-menu">
-                                <li>
-                                    <Link
-                                        to={`/hospitals/doctors/edit/${doctor.id}`}
-                                        className="dropdown-item d-flex align-items-center"
-                                    >
-                                        Sửa
-                                    </Link>
-                                </li>
-                                <li>
-                                    <button
-                                        className="dropdown-item d-flex align-items-center"
-                                        onClick={() => handleDeleteDoctor(doctor)}
-                                    >
-                                        Xóa
-                                    </button>
-                                </li>
-                            </ul>
+                            <TableActions
+                                id={doctor.id}
+                                onEdit={() => {}}
+                                onDelete={() => handleDeleteDoctor(doctor)}
+                                editLink={`/hospitals/doctors/edit/${doctor.id}`}
+                                showEdit={true}
+                                showDelete={true}
+                                showView={false}
+                            />
                         </div>
                     </div>
                 </td>
