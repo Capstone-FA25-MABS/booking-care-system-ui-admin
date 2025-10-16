@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalDelete from '@/components/ModalDelete';
@@ -88,6 +89,10 @@ const ListPositions: React.FC = () => {
         name: '',
         status: 'ACTIVE',
     });
+    const [validationErrors, setValidationErrors] = useState<{
+        name?: string;
+        status?: string;
+    }>({});
 
     // Status options for react-select
     const statusOptions = [
@@ -103,14 +108,25 @@ const ListPositions: React.FC = () => {
         value: any;
         onChange: (value: any) => void;
     }) => (
-        <Select
-            options={statusOptions}
-            value={statusOptions.find((option) => option.value === value)}
-            onChange={(selectedOption) => onChange(selectedOption?.value)}
-            placeholder="Chọn trạng thái"
-            isSearchable={false}
-            styles={selectCustomStyles}
-        />
+        <div className={validationErrors.status ? styles.reactSelectInvalid : ''}>
+            <Select
+                options={statusOptions}
+                value={statusOptions.find((option) => option.value === value)}
+                onChange={(selectedOption) => {
+                    onChange(selectedOption?.value);
+                    // Clear validation error when user selects an option
+                    if (validationErrors.status) {
+                        setValidationErrors((prev) => ({ ...prev, status: undefined }));
+                    }
+                }}
+                placeholder="Chọn trạng thái"
+                isSearchable={false}
+                styles={selectCustomStyles}
+            />
+            {validationErrors.status && (
+                <div className={styles.invalidFeedback}>{validationErrors.status}</div>
+            )}
+        </div>
     );
 
     // Custom Input Component
@@ -125,27 +141,40 @@ const ListPositions: React.FC = () => {
         placeholder?: string;
         required?: boolean;
     }) => (
-        <Input
-            name="name"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            required={required}
-        />
+        <div>
+            <Input
+                name="name"
+                value={value}
+                onChange={(e) => {
+                    onChange(e.target.value);
+                    // Clear validation error when user starts typing
+                    if (validationErrors.name) {
+                        setValidationErrors((prev) => ({ ...prev, name: undefined }));
+                    }
+                }}
+                placeholder={placeholder}
+                required={required}
+                maxLength={255}
+                className={validationErrors.name ? 'is-invalid' : ''}
+            />
+            {validationErrors.name && (
+                <div className={styles.invalidFeedback}>{validationErrors.name}</div>
+            )}
+        </div>
     );
 
     const fields = [
         {
             type: 'custom' as const,
             name: 'name',
-            label: 'Tên Chức Vụ',
-            placeholder: 'Nhập tên chức vụ',
+            label: 'Tên Học Vị',
+            placeholder: 'Nhập tên học vị (2-255 ký tự)',
             required: true,
             value: formData.name,
             onChange: (value: string) => setFormData((prev) => ({ ...prev, name: value })),
             component: CustomInputComponent,
             componentProps: {
-                placeholder: 'Nhập tên chức vụ',
+                placeholder: 'Nhập tên học vị (2-255 ký tự)',
                 required: true,
             },
         },
@@ -167,23 +196,46 @@ const ListPositions: React.FC = () => {
             name: '',
             status: 'ACTIVE',
         });
-        setShowModal(true);
-    };
-
-    const handleEditClick = (position: { name: string; status: 'ACTIVE' | 'INACTIVE' }) => {
-        setModalMode('edit');
-        setFormData({
-            name: position.name,
-            status: position.status,
-        });
+        setValidationErrors({});
         setShowModal(true);
     };
 
     const handleCancel = () => {
         setShowModal(false);
+        setPositionToEdit(null);
+        setFormData({
+            name: '',
+            status: 'ACTIVE',
+        });
+        setValidationErrors({});
     };
 
-    const title = modalMode === 'add' ? 'Thêm Chức Vụ Mới' : 'Sửa Chức Vụ';
+    const title = modalMode === 'add' ? 'Thêm Học Vị Mới' : 'Sửa Học Vị';
+
+    // Validation function
+    const validateForm = (): boolean => {
+        const errors: { name?: string; status?: string } = {};
+
+        // Validate name
+        if (!formData.name.trim()) {
+            errors.name = 'Tên học vị không được để trống';
+        } else {
+            const trimmedName = formData.name.trim();
+            if (trimmedName.length < 2) {
+                errors.name = 'Tên học vị phải có ít nhất 2 ký tự';
+            } else if (trimmedName.length > 255) {
+                errors.name = 'Tên học vị không được vượt quá 255 ký tự';
+            }
+        }
+
+        // Validate status
+        if (!formData.status) {
+            errors.status = 'Vui lòng chọn trạng thái';
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
@@ -324,10 +376,18 @@ const ListPositions: React.FC = () => {
                 setPositionToDelete(null);
 
                 // Show success message
-                alert(`Đã xóa chức vụ ${positionToDelete.name} thành công!`);
-            } catch (error) {
+                toast.success(`Đã xóa học vị "${positionToDelete.name}" thành công!`);
+
+                // Refresh the positions list
+                const sortParams = getSortParams(sortBy);
+                fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            } catch (error: any) {
                 console.error('Error deleting position:', error);
-                alert('Có lỗi xảy ra khi xóa chức vụ. Vui lòng thử lại.');
+
+                // Show specific error message
+                const errorMessage =
+                    error.message || 'Có lỗi xảy ra khi xóa học vị. Vui lòng thử lại.';
+                toast.error(errorMessage);
             }
         }
     };
@@ -339,25 +399,53 @@ const ListPositions: React.FC = () => {
 
     // Position modal functions
     const handlePositionSubmit = async () => {
+        // Client-side validation
+        if (!validateForm()) {
+            return; // Stop if validation fails
+        }
+
         setIsSubmitting(true);
 
         try {
             if (modalMode === 'add') {
                 // Create new position
                 await createPosition(formData);
-                alert('Tạo chức vụ thành công!');
+                toast.success('Tạo học vị thành công!');
             } else {
                 // Update position
-                if (!positionToEdit) return;
+                if (!positionToEdit) {
+                    toast.error('Không tìm thấy thông tin học vị cần cập nhật');
+                    return;
+                }
+
+                console.log('Updating position:', {
+                    id: positionToEdit.id,
+                    formData: formData,
+                    positionToEdit: positionToEdit,
+                });
+
                 await updatePosition(positionToEdit.id, formData);
-                alert('Cập nhật chức vụ thành công!');
+                toast.success('Cập nhật học vị thành công!');
             }
 
-            // Close modal
-            handleCancel();
-        } catch (error) {
+            // Close modal and refresh data
+            setShowModal(false);
+            setPositionToEdit(null);
+            setFormData({
+                name: '',
+                status: 'ACTIVE',
+            });
+            setValidationErrors({});
+
+            // Refresh the positions list
+            const sortParams = getSortParams(sortBy);
+            fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        } catch (error: any) {
             console.error('Error saving position:', error);
-            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+
+            // Show specific error message
+            const errorMessage = error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -365,10 +453,13 @@ const ListPositions: React.FC = () => {
 
     const handleEditClickWithPosition = (position: Position) => {
         setPositionToEdit(position);
-        handleEditClick({
+        setModalMode('edit');
+        setFormData({
             name: position.name,
             status: position.status,
         });
+        setValidationErrors({});
+        setShowModal(true);
     };
 
     // Render table body content based on loading, error, and data states
@@ -399,7 +490,7 @@ const ListPositions: React.FC = () => {
             return (
                 <tr>
                     <td colSpan={5} className="text-center py-4">
-                        <p className="text-muted">Không có chức vụ nào được tìm thấy.</p>
+                        <p className="text-muted">Không có học vị nào được tìm thấy.</p>
                     </td>
                 </tr>
             );
@@ -475,9 +566,9 @@ const ListPositions: React.FC = () => {
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Chức Vụ{' '}
+                            Danh Sách Học Vị{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Chức Vụ:{' '}
+                                Tổng Học Vị:{' '}
                                 {appliedPositions.length > 0
                                     ? filteredPositions.length
                                     : pagination?.totalCount || 0}
@@ -521,7 +612,7 @@ const ListPositions: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={handleAddClick}
                         >
-                            Thêm Chức Vụ
+                            Thêm Học Vị
                         </Button>
                     </div>
                 </div>
@@ -648,7 +739,7 @@ const ListPositions: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên Chức Vụ</th>
+                                <th>Tên Học Vị</th>
                                 <th>Ngày Tạo</th>
                                 <th>Ngày Cập Nhật</th>
                                 <th>Trạng Thái</th>
@@ -680,7 +771,7 @@ const ListPositions: React.FC = () => {
                 onSubmit={handlePositionSubmit}
                 onCancel={handleCancel}
                 isSubmitting={isSubmitting}
-                submitButtonText={modalMode === 'add' ? 'Tạo Chức Vụ' : 'Cập Nhật Chức Vụ'}
+                submitButtonText={modalMode === 'add' ? 'Tạo Học Vị' : 'Cập Nhật Học Vị'}
             />
 
             {/* Delete Confirmation Modal */}
@@ -688,8 +779,8 @@ const ListPositions: React.FC = () => {
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xóa chức vụ"
-                message={`Bạn có chắc chắn muốn xóa chức vụ "${positionToDelete?.name}"? Hành động này không thể hoàn tác.`}
+                title="Xóa học vị"
+                message={`Bạn có chắc chắn muốn xóa học vị "${positionToDelete?.name}"? Hành động này không thể hoàn tác.`}
             />
 
             {/* Filter Modal */}
@@ -698,11 +789,11 @@ const ListPositions: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Bộ lọc chức vụ"
+                title="Bộ lọc học vị"
                 fields={[
                     {
                         name: 'positions',
-                        label: 'Chức Vụ',
+                        label: 'Học Vị',
                         type: 'multiselect',
                         options: (positions || []).map((position) => ({
                             value: position.id,
