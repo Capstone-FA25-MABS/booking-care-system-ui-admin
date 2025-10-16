@@ -255,7 +255,7 @@ const ListDoctors: React.FC = () => {
                 <tr>
                     <td colSpan={7} className="text-center py-4">
                         <div className="alert alert-danger" role="alert">
-                            <strong>Lỗi:</strong> {error}
+                            <strong>Lỗi:</strong> Không thể kết nối đến máy chủ!
                             <button
                                 type="button"
                                 className="btn-close ms-2"
@@ -664,19 +664,6 @@ const ListDoctors: React.FC = () => {
                         />
                     </div>
                 </div>
-
-                {/* Error State */}
-                {error && (
-                    <div className="alert alert-danger" role="alert">
-                        <strong>Lỗi:</strong> {error}
-                        <button
-                            type="button"
-                            className="btn-close ms-2"
-                            onClick={clearError}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                )}
 
                 <div className="table-responsive">
                     <table className="table table-nowrap datatable">

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
@@ -7,23 +7,78 @@ import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import GenericModal from '@/components/GenericModal';
+import TableSkeleton from '@/components/TableSkeleton';
+import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Position, PositionFormData } from '@/types/position.types';
-import { mockPositions } from '@/data/doctor.mockData';
+import usePosition from '@/hooks/usePosition';
 import Select from 'react-select';
 import { selectCustomStyles } from '@/constants/select.styles';
+import styles from './ListPositions.module.scss';
 import Input from '@/components/Input';
-import Textarea from '@/components/Textarea';
 
 const ListPositions: React.FC = () => {
-    const [positions, setPositions] = useState<Position[]>(mockPositions);
-    const [originalPositions, setOriginalPositions] = useState<Position[]>(mockPositions);
+    // Use Redux state management
+    const {
+        positions,
+        pagination,
+        isLoading,
+        error,
+        fetchPositions,
+        createPosition,
+        updatePosition,
+        deletePosition,
+        filterPositions,
+        clearError,
+    } = usePosition();
+
+    // Local state for UI
     const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+
+    // Applied filters (after clicking "Lọc" button)
+    const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
+    const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [positionToDelete, setPositionToDelete] = useState<Position | null>(null);
     const [positionToEdit, setPositionToEdit] = useState<Position | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Fetch positions on component mount
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+    }, [fetchPositions, currentPage, itemsPerPage, sortBy]);
+
+    // Handle search term changes with debounce
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchTerm.trim()) {
+                const sortParams = getSortParams(sortBy);
+                const filterParams = {
+                    pageNumber: 1,
+                    pageSize: itemsPerPage,
+                    searchTerm: searchTerm.trim(),
+                    sortBy: sortParams.sortBy,
+                    sortOrder: sortParams.sortOrder,
+                };
+                setCurrentPage(1);
+                filterPositions(filterParams);
+            } else {
+                // If search is cleared, fetch all positions with current sort
+                setCurrentPage(1);
+                const sortParams = getSortParams(sortBy);
+                fetchPositions(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, itemsPerPage, filterPositions, fetchPositions]);
 
     // Position Modal States
     const [showModal, setShowModal] = useState(false);
@@ -32,7 +87,6 @@ const ListPositions: React.FC = () => {
     const [formData, setFormData] = useState<PositionFormData>({
         name: '',
         status: 'ACTIVE',
-        description: '',
     });
 
     // Status options for react-select
@@ -80,27 +134,6 @@ const ListPositions: React.FC = () => {
         />
     );
 
-    // Custom Textarea Component
-    const CustomTextareaComponent = ({
-        value,
-        onChange,
-        placeholder,
-        rows,
-    }: {
-        value: string;
-        onChange: (value: string) => void;
-        placeholder?: string;
-        rows?: number;
-    }) => (
-        <Textarea
-            name="description"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            rows={rows}
-        />
-    );
-
     const fields = [
         {
             type: 'custom' as const,
@@ -126,19 +159,6 @@ const ListPositions: React.FC = () => {
                 setFormData((prev) => ({ ...prev, status: value })),
             component: ReactSelectComponent,
         },
-        {
-            type: 'custom' as const,
-            name: 'description',
-            label: 'Mô Tả',
-            placeholder: 'Nhập mô tả cho chức vụ...',
-            value: formData.description,
-            onChange: (value: string) => setFormData((prev) => ({ ...prev, description: value })),
-            component: CustomTextareaComponent,
-            componentProps: {
-                placeholder: 'Nhập mô tả cho chức vụ...',
-                rows: 4,
-            },
-        },
     ];
 
     const handleAddClick = () => {
@@ -146,21 +166,15 @@ const ListPositions: React.FC = () => {
         setFormData({
             name: '',
             status: 'ACTIVE',
-            description: '',
         });
         setShowModal(true);
     };
 
-    const handleEditClick = (position: {
-        name: string;
-        status: 'ACTIVE' | 'INACTIVE';
-        description: string;
-    }) => {
+    const handleEditClick = (position: { name: string; status: 'ACTIVE' | 'INACTIVE' }) => {
         setModalMode('edit');
         setFormData({
             name: position.name,
             status: position.status,
-            description: position.description || '',
         });
         setShowModal(true);
     };
@@ -171,50 +185,114 @@ const ListPositions: React.FC = () => {
 
     const title = modalMode === 'add' ? 'Thêm Chức Vụ Mới' : 'Sửa Chức Vụ';
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    // Use pagination from Redux state
+    const totalPages = pagination?.totalPages || 0;
 
-    // Pagination logic
-    const paginatedPositions = useMemo(() => {
+    // Helper function to map frontend sort options to backend parameters
+    const getSortParams = (sortOption: string) => {
+        switch (sortOption) {
+            case 'Tên A-Z':
+                return { sortBy: 'name', sortOrder: 'asc' as const };
+            case 'Tên Z-A':
+                return { sortBy: 'name', sortOrder: 'desc' as const };
+            case 'Ngày Tạo (Mới Nhất)':
+                return { sortBy: 'createdat', sortOrder: 'desc' as const };
+            case 'Ngày Tạo (Cũ Nhất)':
+                return { sortBy: 'createdat', sortOrder: 'asc' as const };
+            case 'Ngày Sửa (Mới Nhất)':
+                return { sortBy: 'updatedat', sortOrder: 'desc' as const };
+            case 'Ngày Sửa (Cũ Nhất)':
+                return { sortBy: 'updatedat', sortOrder: 'asc' as const };
+            case 'Mới Thêm Gần Đây':
+            default:
+                return { sortBy: 'createdat', sortOrder: 'desc' as const };
+        }
+    };
+
+    // Client-side filtering for positions (sorting is handled by backend)
+    const filteredPositions = useMemo(() => {
+        let filtered = positions || [];
+
+        // Filter by applied positions (not selected positions)
+        if (appliedPositions.length > 0) {
+            filtered = filtered.filter((position) => appliedPositions.includes(position.id));
+        }
+
+        return filtered;
+    }, [positions, appliedPositions]);
+
+    // Paginate filtered positions for client-side filtering
+    const paginatedFilteredPositions = useMemo(() => {
+        if (appliedPositions.length === 0) {
+            // No position filter, use server-side pagination
+            return filteredPositions;
+        }
+
+        // Client-side pagination for filtered results
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        return positions.slice(startIndex, endIndex);
-    }, [positions, currentPage, itemsPerPage]);
+        return filteredPositions.slice(startIndex, endIndex);
+    }, [filteredPositions, currentPage, itemsPerPage, appliedPositions.length]);
 
-    const totalPages = Math.ceil(positions.length / itemsPerPage);
+    // Calculate total pages for client-side filtering
+    const effectiveTotalPages = useMemo(() => {
+        if (appliedPositions.length === 0) {
+            // No position filter, use server-side pagination
+            return totalPages;
+        }
+
+        // Client-side pagination
+        return Math.ceil(filteredPositions.length / itemsPerPage);
+    }, [totalPages, filteredPositions.length, itemsPerPage, appliedPositions.length]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
+
+        // Only fetch from server if no position filter
+        if (appliedPositions.length === 0) {
+            const sortParams = getSortParams(sortBy);
+            fetchPositions(page, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // For position filters, pagination is handled client-side
     };
 
     const handleFilterSubmit = () => {
-        let filteredPositions = [...originalPositions];
+        // Apply the selected filters
+        setAppliedPositions([...selectedPositions]);
+        setAppliedStatuses([...selectedStatuses]);
 
-        // Lọc theo chức vụ
+        // If we have position filters, we need to fetch all positions first
         if (selectedPositions.length > 0) {
-            filteredPositions = filteredPositions.filter((position) =>
-                selectedPositions.includes(position.id)
-            );
+            // Fetch all positions without pagination for client-side filtering
+            fetchPositions(1, 100); // Large page size to get all positions
+        } else {
+            // Only status filter, can use backend filtering with sorting
+            const sortParams = getSortParams(sortBy);
+            const filterParams = {
+                pageNumber: 1,
+                pageSize: itemsPerPage,
+                status:
+                    selectedStatuses.length === 1
+                        ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
+                        : undefined,
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            };
+            filterPositions(filterParams);
         }
 
-        // Lọc theo trạng thái
-        if (selectedStatuses.length > 0) {
-            filteredPositions = filteredPositions.filter((position) =>
-                selectedStatuses.includes(position.status)
-            );
-        }
-
-        setPositions(filteredPositions);
-        setCurrentPage(1); // Reset về trang 1 khi filter
+        setCurrentPage(1);
         setShowFilterModal(false);
     };
 
     const handleClearFilters = () => {
         setSelectedPositions([]);
         setSelectedStatuses([]);
-        setPositions(originalPositions);
-        setCurrentPage(1); // Reset về trang 1 khi clear filter
+        setAppliedPositions([]);
+        setAppliedStatuses([]);
+        setCurrentPage(1);
+        const sortParams = getSortParams(sortBy);
+        fetchPositions(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder); // Reset to normal pagination with current sort
     };
 
     const handleResetFilter = (type: string) => {
@@ -236,20 +314,21 @@ const ListPositions: React.FC = () => {
         setShowDeleteModal(true);
     };
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (positionToDelete) {
-            // Remove position from list
-            setPositions((prev) => prev.filter((position) => position.id !== positionToDelete.id));
-            setOriginalPositions((prev: Position[]) =>
-                prev.filter((position: Position) => position.id !== positionToDelete.id)
-            );
+            try {
+                await deletePosition(positionToDelete.id);
 
-            // Close modal
-            setShowDeleteModal(false);
-            setPositionToDelete(null);
+                // Close modal
+                setShowDeleteModal(false);
+                setPositionToDelete(null);
 
-            // Show success message
-            alert(`Đã xóa chức vụ ${positionToDelete.name} thành công!`);
+                // Show success message
+                alert(`Đã xóa chức vụ ${positionToDelete.name} thành công!`);
+            } catch (error) {
+                console.error('Error deleting position:', error);
+                alert('Có lỗi xảy ra khi xóa chức vụ. Vui lòng thử lại.');
+            }
         }
     };
 
@@ -265,42 +344,12 @@ const ListPositions: React.FC = () => {
         try {
             if (modalMode === 'add') {
                 // Create new position
-                const newPositionData: Position = {
-                    id: `pos-${Date.now()}`,
-                    name: formData.name,
-                    status: formData.status,
-                    description: formData.description,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                };
-
-                // Add to positions list
-                setPositions((prev) => [newPositionData, ...prev]);
-                setOriginalPositions((prev) => [newPositionData, ...prev]);
-
-                // Show success message
+                await createPosition(formData);
                 alert('Tạo chức vụ thành công!');
             } else {
                 // Update position
                 if (!positionToEdit) return;
-
-                const updatedPosition: Position = {
-                    ...positionToEdit,
-                    name: formData.name,
-                    status: formData.status,
-                    description: formData.description,
-                    updatedAt: new Date().toISOString(),
-                };
-
-                // Update in positions list
-                setPositions((prev) =>
-                    prev.map((p) => (p.id === positionToEdit.id ? updatedPosition : p))
-                );
-                setOriginalPositions((prev) =>
-                    prev.map((p) => (p.id === positionToEdit.id ? updatedPosition : p))
-                );
-
-                // Show success message
+                await updatePosition(positionToEdit.id, formData);
                 alert('Cập nhật chức vụ thành công!');
             }
 
@@ -319,8 +368,105 @@ const ListPositions: React.FC = () => {
         handleEditClick({
             name: position.name,
             status: position.status,
-            description: position.description || '',
         });
+    };
+
+    // Render table body content based on loading, error, and data states
+    const renderTableBody = () => {
+        if (isLoading) {
+            return <TableSkeleton rows={itemsPerPage} columns={positionTableColumns} />;
+        }
+
+        if (error) {
+            return (
+                <tr>
+                    <td colSpan={5} className="text-center py-4">
+                        <div className="alert alert-danger" role="alert">
+                            <strong>Lỗi:</strong> {error}
+                            <button
+                                type="button"
+                                className="btn-close ms-2"
+                                onClick={clearError}
+                                aria-label="Close"
+                            ></button>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        if (!paginatedFilteredPositions || paginatedFilteredPositions.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={5} className="text-center py-4">
+                        <p className="text-muted">Không có chức vụ nào được tìm thấy.</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return paginatedFilteredPositions.map((position) => (
+            <tr key={position.id}>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <div className="avatar me-2">
+                            <div className="avatar-title bg-primary-subtle text-primary rounded">
+                                <i className="ti ti-briefcase"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h6 className="mb-1 fs-14 fw-semibold">{position.name}</h6>
+                            <span className="text-muted fs-13">ID: {position.id}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span className="text-muted fs-14">
+                        {position.createdAt
+                            ? new Date(position.createdAt).toLocaleDateString('vi-VN')
+                            : 'N/A'}
+                    </span>
+                </td>
+                <td>
+                    <span className="text-muted fs-14">
+                        {position.updatedAt
+                            ? new Date(position.updatedAt).toLocaleDateString('vi-VN')
+                            : 'N/A'}
+                    </span>
+                </td>
+                <td>
+                    <StatusBadge status={position.status} />
+                </td>
+                <td className="action-item">
+                    <button type="button" className="btn btn-link p-0" data-bs-toggle="dropdown">
+                        <i className="ti ti-dots-vertical"></i>
+                    </button>
+                    <ul className="dropdown-menu p-2">
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => handleEditClickWithPosition(position)}
+                            >
+                                <i className="ti ti-edit me-2"></i> Sửa
+                            </button>
+                        </li>
+                        <li>
+                            <hr className="dropdown-divider" />
+                        </li>
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
+                                onClick={() => handleDeleteClick(position)}
+                            >
+                                <i className="ti ti-trash me-2"></i> Xóa
+                            </button>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        ));
     };
 
     return (
@@ -331,7 +477,10 @@ const ListPositions: React.FC = () => {
                         <h4 className="fw-bold mb-0">
                             Danh Sách Chức Vụ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Chức Vụ: {positions.length}
+                                Tổng Chức Vụ:{' '}
+                                {appliedPositions.length > 0
+                                    ? filteredPositions.length
+                                    : pagination?.totalCount || 0}
                             </span>
                         </h4>
                     </div>
@@ -389,6 +538,8 @@ const ListPositions: React.FC = () => {
                                             className="form-control form-control-sm"
                                             placeholder="Search"
                                             aria-controls="DataTables_Table_0"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
                                         ></input>
                                     </label>
                                 </div>
@@ -401,25 +552,97 @@ const ListPositions: React.FC = () => {
                             size="md"
                             className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
                             icon="ti ti-filter text-gray-5"
-                            onClick={() => setShowFilterModal(true)}
+                            onClick={() => {
+                                // Sync selected filters with applied filters when opening modal
+                                setSelectedPositions([...appliedPositions]);
+                                setSelectedStatuses([...appliedStatuses]);
+                                setShowFilterModal(true);
+                            }}
                         >
                             Lọc
                         </Button>
                         <ActionDropdown
                             type="sort"
                             options={[
-                                { value: 'recent', label: 'Mới Thêm Gần Đây' },
-                                { value: 'asc', label: 'Tăng Dần' },
-                                { value: 'desc', label: 'Giảm Dần' },
-                                { value: 'last-month', label: 'Tháng Trước' },
-                                { value: 'last-7-days', label: '7 Ngày Qua' },
+                                { value: 'Mới Thêm Gần Đây', label: 'Mới Thêm Gần Đây' },
+                                { value: 'Tên A-Z', label: 'Tên A-Z' },
+                                { value: 'Tên Z-A', label: 'Tên Z-A' },
+                                { value: 'Ngày Tạo (Mới Nhất)', label: 'Ngày Tạo (Mới Nhất)' },
+                                { value: 'Ngày Tạo (Cũ Nhất)', label: 'Ngày Tạo (Cũ Nhất)' },
+                                { value: 'Ngày Sửa (Mới Nhất)', label: 'Ngày Sửa (Mới Nhất)' },
+                                { value: 'Ngày Sửa (Cũ Nhất)', label: 'Ngày Sửa (Cũ Nhất)' },
                             ]}
                             selectedValue={sortBy}
-                            onSelect={setSortBy}
+                            onSelect={(newSortBy) => {
+                                setSortBy(newSortBy);
+                                setCurrentPage(1);
+
+                                // Fetch positions with new sort parameters
+                                if (appliedPositions.length === 0) {
+                                    const sortParams = getSortParams(newSortBy);
+                                    fetchPositions(
+                                        1,
+                                        itemsPerPage,
+                                        sortParams.sortBy,
+                                        sortParams.sortOrder
+                                    );
+                                }
+                            }}
                             placeholder="Sắp xếp theo:"
                         />
                     </div>
                 </div>
+
+                {/* Applied Filters */}
+                {(appliedPositions.length > 0 || appliedStatuses.length > 0) && (
+                    <div className={styles.appliedFiltersContainer}>
+                        <span className={styles.appliedFiltersLabel}>Bộ lọc đang áp dụng:</span>
+                        {appliedPositions.map((positionId) => {
+                            const position = positions?.find((p) => p.id === positionId);
+                            return position ? (
+                                <span key={positionId} className="badge badge-soft-primary fs-12">
+                                    {position.name}
+                                    <button
+                                        type="button"
+                                        className={`btn-close ms-1 ${styles.filterBadgeClose}`}
+                                        onClick={() => {
+                                            const newAppliedPositions = appliedPositions.filter(
+                                                (id) => id !== positionId
+                                            );
+                                            setAppliedPositions(newAppliedPositions);
+                                            setSelectedPositions(newAppliedPositions);
+                                        }}
+                                        aria-label="Remove filter"
+                                    ></button>
+                                </span>
+                            ) : null;
+                        })}
+                        {appliedStatuses.map((status) => (
+                            <span key={status} className="badge badge-soft-info fs-12">
+                                {status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
+                                <button
+                                    type="button"
+                                    className={`btn-close ms-1 ${styles.filterBadgeClose}`}
+                                    onClick={() => {
+                                        const newAppliedStatuses = appliedStatuses.filter(
+                                            (s) => s !== status
+                                        );
+                                        setAppliedStatuses(newAppliedStatuses);
+                                        setSelectedStatuses(newAppliedStatuses);
+                                    }}
+                                    aria-label="Remove filter"
+                                ></button>
+                            </span>
+                        ))}
+                        <button
+                            type="button"
+                            className={`btn btn-sm btn-outline-secondary fs-12 ${styles.clearAllButton}`}
+                            onClick={handleClearFilters}
+                        >
+                            Xóa tất cả
+                        </button>
+                    </div>
+                )}
 
                 <div className="table-responsive">
                     <table className="table table-nowrap datatable">
@@ -432,95 +655,16 @@ const ListPositions: React.FC = () => {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {paginatedPositions.map((position) => (
-                                <tr key={position.id}>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <div className="avatar me-2">
-                                                <div className="avatar-title bg-primary-subtle text-primary rounded">
-                                                    <i className="ti ti-briefcase"></i>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 className="mb-1 fs-14 fw-semibold">
-                                                    {position.name}
-                                                </h6>
-                                                <span className="text-muted fs-13">
-                                                    ID: {position.id}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className="text-muted fs-14">
-                                            {position.createdAt
-                                                ? new Date(position.createdAt).toLocaleDateString(
-                                                      'vi-VN'
-                                                  )
-                                                : 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className="text-muted fs-14">
-                                            {position.updatedAt
-                                                ? new Date(position.updatedAt).toLocaleDateString(
-                                                      'vi-VN'
-                                                  )
-                                                : 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <StatusBadge status={position.status} />
-                                    </td>
-                                    <td className="action-item">
-                                        <button
-                                            type="button"
-                                            className="btn btn-link p-0"
-                                            data-bs-toggle="dropdown"
-                                        >
-                                            <i className="ti ti-dots-vertical"></i>
-                                        </button>
-                                        <ul className="dropdown-menu p-2">
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                    onClick={() =>
-                                                        handleEditClickWithPosition(position)
-                                                    }
-                                                >
-                                                    <i className="ti ti-edit me-2"></i>
-                                                    Sửa
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <hr className="dropdown-divider" />
-                                            </li>
-                                            <li>
-                                                <button
-                                                    type="button"
-                                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
-                                                    onClick={() => handleDeleteClick(position)}
-                                                >
-                                                    <i className="ti ti-trash me-2"></i>
-                                                    Xóa
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                        <tbody>{renderTableBody()}</tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {effectiveTotalPages > 1 && (
                     <div className="d-flex justify-content-center mt-3">
                         <Pagination
                             currentPage={currentPage}
-                            totalPages={totalPages}
+                            totalPages={effectiveTotalPages}
                             onPageChange={handlePageChange}
                         />
                     </div>
@@ -560,7 +704,7 @@ const ListPositions: React.FC = () => {
                         name: 'positions',
                         label: 'Chức Vụ',
                         type: 'multiselect',
-                        options: originalPositions.map((position) => ({
+                        options: (positions || []).map((position) => ({
                             value: position.id,
                             label: position.name,
                         })),
