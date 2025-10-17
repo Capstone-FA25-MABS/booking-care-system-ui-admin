@@ -282,7 +282,8 @@ const ListAppointments: React.FC = () => {
             // Call API to cancel appointment
             await AppointmentService.cancelAppointment(
                 selectedAppointment.appointmentId,
-                cancellationReason
+                cancellationReason,
+                hospitalProfile?.id
             );
 
             // Update local state to reflect cancellation
