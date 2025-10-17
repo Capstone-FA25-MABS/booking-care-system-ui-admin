@@ -86,5 +86,15 @@ export const positionTableColumns: SkeletonColumn[] = [
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
+// Configuration for Language Table Skeleton
+// Columns: Tên Ngôn Ngữ | Ngày Tạo | Ngày Cập Nhật | Trạng Thái | Actions
+export const languageTableColumns: SkeletonColumn[] = [
+    COMMON_COLUMNS.avatar.medium, // Tên Ngôn Ngữ (with flag)
+    COMMON_COLUMNS.text.large, // Ngày Tạo
+    COMMON_COLUMNS.text.large, // Ngày Cập Nhật
+    COMMON_COLUMNS.badge.medium, // Trạng Thái
+    COMMON_COLUMNS.actions.single, // Actions
+];
+
 // Export common columns for custom configurations
 export { COMMON_COLUMNS };
