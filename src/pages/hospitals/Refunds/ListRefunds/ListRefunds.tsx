@@ -4,7 +4,8 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import ActionDropdown from '@/components/ActionDropdown';
-import RefundTableSkeleton from '@/pages/hospitals/Refunds/RefundTableSkeleton/RefundTableSkeleton';
+import TableSkeleton from '@/components/TableSkeleton';
+import { refundTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { RefundService } from '@/services/refund.service';
 import {
     RefundHistoryResponse,
@@ -230,7 +231,7 @@ const ListRefunds: React.FC = () => {
                 <>
                     {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map(
                         (key) => (
-                            <RefundTableSkeleton key={key} />
+                            <TableSkeleton key={key} rows={1} columns={refundTableColumns} />
                         )
                     )}
                 </>

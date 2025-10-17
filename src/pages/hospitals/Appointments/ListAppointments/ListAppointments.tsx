@@ -11,7 +11,8 @@ import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import PatientDropdown from '@/components/PatientDropdown';
 import StatusDropdown from '@/components/StatusDropdown';
-import AppointmentTableSkeleton from '@/pages/hospitals/Appointments/AppointmentTableSkeleton';
+import TableSkeleton from '@/components/TableSkeleton';
+import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { AppointmentService } from '@/services/appointment.service';
 import {
     AppointmentCardData,
@@ -388,7 +389,7 @@ const ListAppointments: React.FC = () => {
 
     const renderTableBody = () => {
         if (isLoading) {
-            return <AppointmentTableSkeleton rows={itemsPerPage} />;
+            return <TableSkeleton rows={itemsPerPage} columns={appointmentTableColumns} />;
         }
 
         if (apiError) {

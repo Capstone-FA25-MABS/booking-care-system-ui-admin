@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { DoctorFormData, DoctorPrice } from '@/types/doctor.types';
+import { DoctorFormData } from '@/types/doctor.types';
+import { DoctorPrice } from '@/types/serviceType.types';
 
 export interface UseDoctorFormLogicProps {
     initialData: DoctorFormData;
@@ -60,7 +61,14 @@ export const useDoctorFormLogic = ({
     const addServicePrice = useCallback(() => {
         setFormData((prev) => ({
             ...prev,
-            servicePrices: [...prev.servicePrices, { serviceTypeId: '', amount: 0, note: '' }],
+            servicePrices: [
+                ...prev.servicePrices,
+                {
+                    id: `temp-${Date.now()}`,
+                    serviceTypeId: '',
+                    amount: 0,
+                },
+            ],
         }));
     }, []);
 
@@ -216,9 +224,9 @@ export const useDoctorFormLogic = ({
         }));
 
         const doctorPrices: DoctorPrice[] = formData.servicePrices.map((price) => ({
+            id: price.id,
             serviceTypeId: price.serviceTypeId,
             amount: price.amount,
-            note: price.note,
         }));
 
         return { doctorData, doctorLanguages, doctorPrices };

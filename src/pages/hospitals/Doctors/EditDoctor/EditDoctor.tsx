@@ -27,8 +27,16 @@ const EditDoctor: React.FC = () => {
             '550e8400-e29b-41d4-a716-446655440022',
         ],
         servicePrices: [
-            { serviceTypeId: '550e8400-e29b-41d4-a716-446655440031', amount: 200000, note: '' },
-            { serviceTypeId: '550e8400-e29b-41d4-a716-446655440032', amount: 500000, note: '' },
+            {
+                id: 'price-1',
+                serviceTypeId: '550e8400-e29b-41d4-a716-446655440031',
+                amount: 200000,
+            },
+            {
+                id: 'price-2',
+                serviceTypeId: '550e8400-e29b-41d4-a716-446655440032',
+                amount: 500000,
+            },
         ],
     };
 
