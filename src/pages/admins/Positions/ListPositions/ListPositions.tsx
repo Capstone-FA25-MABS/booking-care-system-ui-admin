@@ -12,6 +12,7 @@ import TableActions from '@/components/TableActions';
 import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Position, PositionFormData } from '@/types/position.types';
 import usePosition from '@/hooks/usePosition';
+import { PositionService } from '@/services/position.service';
 import Select from 'react-select';
 import { selectCustomStyles } from '@/constants/select.styles';
 import styles from './ListPositions.module.scss';
@@ -45,6 +46,9 @@ const ListPositions: React.FC = () => {
     const [positionToDelete, setPositionToDelete] = useState<Position | null>(null);
     const [positionToEdit, setPositionToEdit] = useState<Position | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
+
+    // State for all positions (for filter modal)
+    const [allPositions, setAllPositions] = useState<Position[]>([]);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -482,6 +486,17 @@ const ListPositions: React.FC = () => {
         setShowModal(true);
     };
 
+    // Function to fetch all positions for filter modal
+    const fetchAllPositionsForFilter = async () => {
+        try {
+            const response = await PositionService.getAllPositions(1, 100); // Large page size to get all
+            setAllPositions(response.data.positions);
+        } catch (error) {
+            console.error('Error fetching all positions for filter:', error);
+            setAllPositions([]);
+        }
+    };
+
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
         if (isLoading) {
@@ -646,10 +661,12 @@ const ListPositions: React.FC = () => {
                             size="md"
                             className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
                             icon="ti ti-filter text-gray-5"
-                            onClick={() => {
+                            onClick={async () => {
                                 // Sync selected filters with applied filters when opening modal
                                 setSelectedPositions([...appliedPositions]);
                                 setSelectedStatuses([...appliedStatuses]);
+                                // Fetch all positions for filter modal
+                                await fetchAllPositionsForFilter();
                                 setShowFilterModal(true);
                             }}
                         >
@@ -891,7 +908,7 @@ const ListPositions: React.FC = () => {
                         name: 'positions',
                         label: 'Học Vị',
                         type: 'multiselect',
-                        options: (positions || []).map((position) => ({
+                        options: (allPositions || []).map((position) => ({
                             value: position.id,
                             label: position.name,
                         })),
