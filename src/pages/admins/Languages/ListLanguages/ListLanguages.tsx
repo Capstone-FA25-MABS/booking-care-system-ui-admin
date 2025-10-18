@@ -12,6 +12,7 @@ import TableActions from '@/components/TableActions';
 import { languageTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Language, LanguageFormData } from '@/types/language.types';
 import useLanguage from '@/hooks/useLanguage';
+import { LanguageService } from '@/services/language.service';
 import Select from 'react-select';
 import { selectCustomStyles } from '@/constants/select.styles';
 import styles from './ListLanguages.module.scss';
@@ -45,6 +46,9 @@ const ListLanguages: React.FC = () => {
     const [languageToDelete, setLanguageToDelete] = useState<Language | null>(null);
     const [languageToEdit, setLanguageToEdit] = useState<Language | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
+
+    // State for all languages (for filter modal)
+    const [allLanguages, setAllLanguages] = useState<Language[]>([]);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -198,12 +202,13 @@ const ListLanguages: React.FC = () => {
     const title = modalMode === 'add' ? 'Thêm Ngôn Ngữ Mới' : 'Sửa Ngôn Ngữ';
 
     // Form data change handlers
-    const handleFormDataChange = useCallback((field: keyof LanguageFormData, value: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    }, []);
+    const handleNameChange = (value: string) => {
+        setFormData((prev) => ({ ...prev, name: value }));
+    };
+
+    const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
+        setFormData((prev) => ({ ...prev, status: value }));
+    };
 
     // Helper function to get sort parameters
     const getSortParams = (sortValue: string) => {
@@ -227,28 +232,27 @@ const ListLanguages: React.FC = () => {
         }
     };
 
-    // Clear error when component unmounts or when error changes
-    useEffect(() => {
-        if (error) {
-            toast.error(error);
-            clearError();
-        }
-    }, [error, clearError]);
+    // Note: Error handling is done in individual functions to avoid duplicate messages
 
     // Validation function
     const validateForm = (): boolean => {
         const errors: { name?: string; status?: string } = {};
 
+        // Validate name
         if (!formData.name.trim()) {
-            errors.name = 'Tên ngôn ngữ không được để trống!';
-        } else if (formData.name.trim().length < 2) {
-            errors.name = 'Tên ngôn ngữ phải có ít nhất 2 ký tự!';
-        } else if (formData.name.trim().length > 100) {
-            errors.name = 'Tên ngôn ngữ không được vượt quá 100 ký tự!';
+            errors.name = 'Tên ngôn ngữ không được để trống';
+        } else {
+            const trimmedName = formData.name.trim();
+            if (trimmedName.length < 2) {
+                errors.name = 'Tên ngôn ngữ phải có ít nhất 2 ký tự';
+            } else if (trimmedName.length > 255) {
+                errors.name = 'Tên ngôn ngữ không được vượt quá 255 ký tự';
+            }
         }
 
+        // Validate status
         if (!formData.status) {
-            errors.status = 'Vui lòng chọn trạng thái!';
+            errors.status = 'Vui lòng chọn trạng thái';
         }
 
         setValidationErrors(errors);
@@ -270,7 +274,7 @@ const ListLanguages: React.FC = () => {
 
             // Check if the operation was successful
             if ((result as any).type.endsWith('/fulfilled')) {
-                toast.success('Xóa ngôn ngữ thành công!');
+                toast.success(`Đã ẩn ngôn ngữ "${languageToDelete.name}" thành công!`);
                 setShowDeleteModal(false);
                 setLanguageToDelete(null);
 
@@ -280,12 +284,14 @@ const ListLanguages: React.FC = () => {
             } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
                 const errorMessage =
-                    ((result as any).payload as string) || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                    ((result as any).payload as string) ||
+                    'Có lỗi xảy ra khi ẩn ngôn ngữ. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {
             console.error('Error deleting language:', error);
-            const errorMessage = error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+            const errorMessage =
+                error.message || 'Có lỗi xảy ra khi ẩn ngôn ngữ. Vui lòng thử lại.';
             toast.error(errorMessage);
         }
     };
@@ -375,22 +381,10 @@ const ListLanguages: React.FC = () => {
         setShowModal(true);
     };
 
-    // Handle hide/show language (toggle status)
+    // Hide functions
     const handleHideClick = (language: Language) => {
-        const newStatus = language.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-
-        updateLanguage(language.id, {
-            name: language.name,
-            status: newStatus,
-        }).then((result) => {
-            if ((result as any).type.endsWith('/fulfilled')) {
-                toast.success(
-                    newStatus === 'ACTIVE'
-                        ? 'Hiển thị ngôn ngữ thành công!'
-                        : 'Ẩn ngôn ngữ thành công!'
-                );
-            }
-        });
+        setLanguageToDelete(language);
+        setShowDeleteModal(true);
     };
 
     // Filter and search logic
@@ -422,14 +416,32 @@ const ListLanguages: React.FC = () => {
         return filtered;
     }, [languages, searchTerm, appliedStatuses, appliedLanguages]);
 
-    // Pagination logic
+    // Use pagination from Redux state
+    const totalPages = pagination?.totalPages || 0;
+
+    // Paginate filtered languages for client-side filtering
     const paginatedFilteredLanguages = useMemo(() => {
+        if (appliedLanguages.length === 0) {
+            // No language filter, use server-side pagination
+            return filteredLanguages;
+        }
+
+        // Client-side pagination for filtered results
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         return filteredLanguages.slice(startIndex, endIndex);
-    }, [filteredLanguages, currentPage, itemsPerPage]);
+    }, [filteredLanguages, currentPage, itemsPerPage, appliedLanguages.length]);
 
-    const effectiveTotalPages = Math.ceil(filteredLanguages.length / itemsPerPage);
+    // Calculate total pages for client-side filtering
+    const effectiveTotalPages = useMemo(() => {
+        if (appliedLanguages.length === 0) {
+            // No language filter, use server-side pagination
+            return totalPages;
+        }
+
+        // Client-side pagination
+        return Math.ceil(filteredLanguages.length / itemsPerPage);
+    }, [totalPages, filteredLanguages.length, itemsPerPage, appliedLanguages.length]);
 
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
@@ -512,12 +524,33 @@ const ListLanguages: React.FC = () => {
         ));
     };
 
+    // Function to fetch all languages for filter modal
+    const fetchAllLanguagesForFilter = async () => {
+        try {
+            const response = await LanguageService.getAllLanguages(1, 1000); // Large page size to get all
+            setAllLanguages(response.data.languages);
+        } catch (error) {
+            console.error('Error fetching all languages for filter:', error);
+            setAllLanguages([]);
+        }
+    };
+
     // Filter functions
     const handleFilterSubmit = () => {
         setAppliedLanguages(selectedLanguages);
         setAppliedStatuses(selectedStatuses);
         setShowFilterModal(false);
         setCurrentPage(1);
+
+        // If we have language filters, we need to fetch all languages first
+        if (selectedLanguages.length > 0) {
+            // Fetch all languages without pagination for client-side filtering
+            fetchLanguages(1, 100); // Large page size to get all languages
+        } else {
+            // Only status filter, can use backend filtering with sorting
+            const sortParams = getSortParams(sortBy);
+            fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
     };
 
     const handleClearFilters = () => {
@@ -527,6 +560,8 @@ const ListLanguages: React.FC = () => {
         setAppliedStatuses([]);
         setShowFilterModal(false);
         setCurrentPage(1);
+        const sortParams = getSortParams(sortBy);
+        fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder); // Reset to normal pagination with current sort
     };
 
     const handleResetFilter = (filterType: string) => {
@@ -542,9 +577,15 @@ const ListLanguages: React.FC = () => {
         }
     };
 
-    // Handle pagination
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
+
+        // If no language filters, use server-side pagination
+        if (appliedLanguages.length === 0) {
+            const sortParams = getSortParams(sortBy);
+            fetchLanguages(page, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // For language filters, pagination is handled client-side
     };
 
     return (
@@ -630,10 +671,12 @@ const ListLanguages: React.FC = () => {
                             size="md"
                             className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
                             icon="ti ti-filter text-gray-5"
-                            onClick={() => {
+                            onClick={async () => {
                                 // Sync selected filters with applied filters when opening modal
                                 setSelectedLanguages([...appliedLanguages]);
                                 setSelectedStatuses([...appliedStatuses]);
+                                // Fetch all languages for filter modal
+                                await fetchAllLanguagesForFilter();
                                 setShowFilterModal(true);
                             }}
                         >
@@ -786,11 +829,9 @@ const ListLanguages: React.FC = () => {
                                                 </label>
                                                 <CustomInputComponent
                                                     value={formData.name}
-                                                    onChange={(value) =>
-                                                        handleFormDataChange('name', value)
-                                                    }
-                                                    placeholder="Nhập tên ngôn ngữ"
-                                                    required
+                                                    onChange={handleNameChange}
+                                                    placeholder="Nhập tên ngôn ngữ (2-255 ký tự)"
+                                                    required={true}
                                                 />
                                             </div>
                                         </div>
@@ -798,15 +839,16 @@ const ListLanguages: React.FC = () => {
                                         {/* Status Field */}
                                         <div className="col-12">
                                             <div className="mb-4">
-                                                <label className="form-label fw-semibold text-dark mb-2">
+                                                <label
+                                                    htmlFor="language-status"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
                                                     Trạng Thái{' '}
                                                     <span className="text-danger">*</span>
                                                 </label>
                                                 <ReactSelectComponent
                                                     value={formData.status}
-                                                    onChange={(value) =>
-                                                        handleFormDataChange('status', value)
-                                                    }
+                                                    onChange={handleStatusChange}
                                                 />
                                             </div>
                                         </div>
@@ -814,18 +856,17 @@ const ListLanguages: React.FC = () => {
                                 </form>
                             </div>
                             <div className="modal-footer border-0 pt-0">
-                                <Button
-                                    variant="light"
-                                    size="md"
-                                    className="fs-14"
+                                <button
+                                    type="button"
+                                    className="btn btn-light btn-lg px-4 rounded-3"
                                     onClick={handleCancel}
+                                    disabled={isSubmitting}
                                 >
                                     Hủy
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="md"
-                                    className="fs-14"
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary btn-lg px-4 rounded-3"
                                     onClick={handleLanguageSubmit}
                                     disabled={isSubmitting}
                                 >
@@ -833,17 +874,25 @@ const ListLanguages: React.FC = () => {
                                         <>
                                             <span
                                                 className="spinner-border spinner-border-sm me-2"
-                                                role="status"
                                                 aria-hidden="true"
                                             ></span>
-                                            Đang xử lý...
+                                            <output>
+                                                {modalMode === 'add'
+                                                    ? 'Đang tạo...'
+                                                    : 'Đang cập nhật...'}
+                                            </output>
                                         </>
-                                    ) : modalMode === 'add' ? (
-                                        'Thêm Ngôn Ngữ'
                                     ) : (
-                                        'Cập Nhật Ngôn Ngữ'
+                                        <>
+                                            <i
+                                                className={`${modalMode === 'add' ? 'ti ti-plus' : 'ti ti-edit'} me-2`}
+                                            ></i>
+                                            {modalMode === 'add'
+                                                ? 'Tạo Ngôn Ngữ'
+                                                : 'Cập Nhật Ngôn Ngữ'}
+                                        </>
                                     )}
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -862,7 +911,7 @@ const ListLanguages: React.FC = () => {
                         name: 'languages',
                         label: 'Ngôn Ngữ',
                         type: 'multiselect',
-                        options: (languages || []).map((language) => ({
+                        options: (allLanguages || []).map((language) => ({
                             value: language.id,
                             label: language.name,
                         })),
@@ -885,14 +934,13 @@ const ListLanguages: React.FC = () => {
                 ]}
             />
 
-            {/* Delete Modal */}
+            {/* Hide Confirmation Modal */}
             <ModalDelete
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xác Nhận Xóa"
-                message="Bạn có chắc chắn muốn xóa ngôn ngữ này không?"
-                itemName={languageToDelete ? languageToDelete.name : ''}
+                title="Ẩn ngôn ngữ"
+                message={`Bạn có chắc chắn muốn ẩn ngôn ngữ "${languageToDelete?.name}"? Ngôn ngữ này sẽ không hiển thị trong danh sách.`}
             />
         </>
     );

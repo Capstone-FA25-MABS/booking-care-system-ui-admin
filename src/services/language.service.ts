@@ -193,6 +193,7 @@ export class LanguageService {
             });
 
             const response: any = await axiosInstance.put(LANGUAGE_ENDPOINTS.UPDATE_LANGUAGE(id), {
+                id: id,
                 name: languageData.name.trim(),
                 status: languageData.status,
             });
