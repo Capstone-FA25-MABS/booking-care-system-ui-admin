@@ -169,7 +169,6 @@ export const useLanguage = (): UseLanguageReturn => {
             return languages.filter(
                 (language) =>
                     language.name.toLowerCase().includes(term) ||
-                    language.flag.toLowerCase().includes(term) ||
                     language.id.toLowerCase().includes(term)
             );
         },

@@ -71,7 +71,6 @@ export const selectLanguagesBySearchTerm = createSelector(
         return languages.filter(
             (language) =>
                 language.name.toLowerCase().includes(term) ||
-                language.flag.toLowerCase().includes(term) ||
                 language.id.toLowerCase().includes(term)
         );
     }
