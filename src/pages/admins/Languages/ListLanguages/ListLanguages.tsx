@@ -13,10 +13,11 @@ import { languageTableColumns } from '@/components/TableSkeleton/skeletonConfigs
 import { Language, LanguageFormData } from '@/types/language.types';
 import useLanguage from '@/hooks/useLanguage';
 import { LanguageService } from '@/services/language.service';
-import Select from 'react-select';
-import { selectCustomStyles } from '@/constants/select.styles';
+import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import EntityModal from '@/components/Modal/EntityModal';
+import AppliedFilters from '@/components/AppliedFilters/AppliedFilters';
 import styles from './ListLanguages.module.scss';
-import Input from '@/components/Input';
 
 const ListLanguages: React.FC = () => {
     // Use Redux state management
@@ -93,91 +94,10 @@ const ListLanguages: React.FC = () => {
         name: '',
         status: 'ACTIVE',
     });
-    const [validationErrors, setValidationErrors] = useState<{
-        name?: string;
-        status?: string;
-    }>({});
 
-    // Status options for react-select
-    const statusOptions = [
-        { value: 'ACTIVE', label: 'Hoạt động' },
-        { value: 'INACTIVE', label: 'Không hoạt động' },
-    ];
-
-    // Custom React Select Component - refactored to reduce nesting
-    const handleSelectChange = useCallback(
-        (selectedOption: any, onChange: (value: any) => void) => {
-            onChange(selectedOption?.value);
-            // Clear validation error when user selects an option
-            if (validationErrors.status) {
-                setValidationErrors((prev) => ({ ...prev, status: undefined }));
-            }
-        },
-        [validationErrors.status]
-    );
-
-    const ReactSelectComponent = useMemo(() => {
-        return ({ value, onChange }: { value: any; onChange: (value: any) => void }) => {
-            return (
-                <div className={validationErrors.status ? styles.reactSelectInvalid : ''}>
-                    <Select
-                        options={statusOptions}
-                        value={statusOptions.find((option) => option.value === value)}
-                        onChange={(selectedOption) => handleSelectChange(selectedOption, onChange)}
-                        placeholder="Chọn trạng thái"
-                        isSearchable={false}
-                        styles={selectCustomStyles}
-                    />
-                    {validationErrors.status && (
-                        <div className={styles.invalidFeedback}>{validationErrors.status}</div>
-                    )}
-                </div>
-            );
-        };
-    }, [validationErrors.status, handleSelectChange]);
-
-    // Custom Input Component - refactored to reduce nesting
-    const handleInputChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
-            onChange(e.target.value);
-            // Clear validation error when user starts typing
-            if (validationErrors.name) {
-                setValidationErrors((prev) => ({ ...prev, name: undefined }));
-            }
-        },
-        [validationErrors.name]
-    );
-
-    const CustomInputComponent = useMemo(() => {
-        return ({
-            value,
-            onChange,
-            placeholder,
-            required,
-        }: {
-            value: string;
-            onChange: (value: string) => void;
-            placeholder?: string;
-            required?: boolean;
-        }) => {
-            return (
-                <div>
-                    <Input
-                        name="name"
-                        value={value}
-                        onChange={(e) => handleInputChange(e, onChange)}
-                        placeholder={placeholder}
-                        required={required}
-                        maxLength={255}
-                        className={validationErrors.name ? 'is-invalid' : ''}
-                    />
-                    {validationErrors.name && (
-                        <div className={styles.invalidFeedback}>{validationErrors.name}</div>
-                    )}
-                </div>
-            );
-        };
-    }, [validationErrors.name, handleInputChange]);
+    // Use shared form validation hook
+    const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
+        useFormValidation({ entityName: 'ngôn ngữ' });
 
     const handleAddClick = useCallback(() => {
         setModalMode('add');
@@ -185,9 +105,9 @@ const ListLanguages: React.FC = () => {
             name: '',
             status: 'ACTIVE',
         });
-        setValidationErrors({});
+        clearAllValidationErrors();
         setShowModal(true);
-    }, []);
+    }, [clearAllValidationErrors]);
 
     const handleCancel = useCallback(() => {
         setShowModal(false);
@@ -196,68 +116,23 @@ const ListLanguages: React.FC = () => {
             name: '',
             status: 'ACTIVE',
         });
-        setValidationErrors({});
-    }, []);
+        clearAllValidationErrors();
+    }, [clearAllValidationErrors]);
 
     const title = modalMode === 'add' ? 'Thêm Ngôn Ngữ Mới' : 'Sửa Ngôn Ngữ';
 
     // Form data change handlers
     const handleNameChange = (value: string) => {
         setFormData((prev) => ({ ...prev, name: value }));
+        clearValidationError('name');
     };
 
     const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
         setFormData((prev) => ({ ...prev, status: value }));
-    };
-
-    // Helper function to get sort parameters
-    const getSortParams = (sortValue: string) => {
-        switch (sortValue) {
-            case 'Mới Thêm Gần Đây':
-                return { sortBy: 'createdAt', sortOrder: 'desc' as const };
-            case 'Tên A-Z':
-                return { sortBy: 'name', sortOrder: 'asc' as const };
-            case 'Tên Z-A':
-                return { sortBy: 'name', sortOrder: 'desc' as const };
-            case 'Ngày Tạo (Mới Nhất)':
-                return { sortBy: 'createdAt', sortOrder: 'desc' as const };
-            case 'Ngày Tạo (Cũ Nhất)':
-                return { sortBy: 'createdAt', sortOrder: 'asc' as const };
-            case 'Ngày Sửa (Mới Nhất)':
-                return { sortBy: 'updatedAt', sortOrder: 'desc' as const };
-            case 'Ngày Sửa (Cũ Nhất)':
-                return { sortBy: 'updatedAt', sortOrder: 'asc' as const };
-            default:
-                return { sortBy: 'createdAt', sortOrder: 'desc' as const };
-        }
+        clearValidationError('status');
     };
 
     // Note: Error handling is done in individual functions to avoid duplicate messages
-
-    // Validation function
-    const validateForm = (): boolean => {
-        const errors: { name?: string; status?: string } = {};
-
-        // Validate name
-        if (!formData.name.trim()) {
-            errors.name = 'Tên ngôn ngữ không được để trống';
-        } else {
-            const trimmedName = formData.name.trim();
-            if (trimmedName.length < 2) {
-                errors.name = 'Tên ngôn ngữ phải có ít nhất 2 ký tự';
-            } else if (trimmedName.length > 255) {
-                errors.name = 'Tên ngôn ngữ không được vượt quá 255 ký tự';
-            }
-        }
-
-        // Validate status
-        if (!formData.status) {
-            errors.status = 'Vui lòng chọn trạng thái';
-        }
-
-        setValidationErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
 
     // Handle delete language (not used in current implementation)
     // const handleDeleteClick = (language: Language) => {
@@ -265,8 +140,8 @@ const ListLanguages: React.FC = () => {
     //     setShowDeleteModal(true);
     // };
 
-    // Handle delete confirmation
-    const handleDeleteConfirm = async () => {
+    // Handle hide confirmation
+    const handleHideConfirm = async () => {
         if (!languageToDelete) return;
 
         try {
@@ -274,7 +149,7 @@ const ListLanguages: React.FC = () => {
 
             // Check if the operation was successful
             if ((result as any).type.endsWith('/fulfilled')) {
-                toast.success(`Đã ẩn ngôn ngữ "${languageToDelete.name}" thành công!`);
+                toast.success(`Đã ngừng hiển thị ngôn ngữ "${languageToDelete.name}" thành công!`);
                 setShowDeleteModal(false);
                 setLanguageToDelete(null);
 
@@ -285,19 +160,19 @@ const ListLanguages: React.FC = () => {
                 // Error - show error message
                 const errorMessage =
                     ((result as any).payload as string) ||
-                    'Có lỗi xảy ra khi ẩn ngôn ngữ. Vui lòng thử lại.';
+                    'Có lỗi xảy ra khi ngừng hiển thị ngôn ngữ. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {
             console.error('Error deleting language:', error);
             const errorMessage =
-                error.message || 'Có lỗi xảy ra khi ẩn ngôn ngữ. Vui lòng thử lại.';
+                error.message || 'Có lỗi xảy ra khi ngừng hiển thị ngôn ngữ. Vui lòng thử lại.';
             toast.error(errorMessage);
         }
     };
 
-    // Handle delete cancel
-    const handleDeleteCancel = () => {
+    // Handle hide cancel
+    const handleHideCancel = () => {
         setShowDeleteModal(false);
         setLanguageToDelete(null);
     };
@@ -305,7 +180,7 @@ const ListLanguages: React.FC = () => {
     // Language modal functions
     const handleLanguageSubmit = async () => {
         // Client-side validation
-        if (!validateForm()) {
+        if (!validateForm(formData)) {
             return; // Stop if validation fails
         }
 
@@ -348,7 +223,7 @@ const ListLanguages: React.FC = () => {
                     name: '',
                     status: 'ACTIVE',
                 });
-                setValidationErrors({});
+                clearAllValidationErrors();
 
                 // Refresh the languages list
                 const sortParams = getSortParams(sortBy);
@@ -377,11 +252,11 @@ const ListLanguages: React.FC = () => {
             name: language.name,
             status: language.status,
         });
-        setValidationErrors({});
+        clearAllValidationErrors();
         setShowModal(true);
     };
 
-    // Hide functions
+    // Stop displaying functions
     const handleHideClick = (language: Language) => {
         setLanguageToDelete(language);
         setShowDeleteModal(true);
@@ -684,15 +559,7 @@ const ListLanguages: React.FC = () => {
                         </Button>
                         <ActionDropdown
                             type="sort"
-                            options={[
-                                { value: 'Mới Thêm Gần Đây', label: 'Mới Thêm Gần Đây' },
-                                { value: 'Tên A-Z', label: 'Tên A-Z' },
-                                { value: 'Tên Z-A', label: 'Tên Z-A' },
-                                { value: 'Ngày Tạo (Mới Nhất)', label: 'Ngày Tạo (Mới Nhất)' },
-                                { value: 'Ngày Tạo (Cũ Nhất)', label: 'Ngày Tạo (Cũ Nhất)' },
-                                { value: 'Ngày Sửa (Mới Nhất)', label: 'Ngày Sửa (Mới Nhất)' },
-                                { value: 'Ngày Sửa (Cũ Nhất)', label: 'Ngày Sửa (Cũ Nhất)' },
-                            ]}
+                            options={SORT_OPTIONS}
                             selectedValue={sortBy}
                             onSelect={(newSortBy) => {
                                 setSortBy(newSortBy);
@@ -715,55 +582,30 @@ const ListLanguages: React.FC = () => {
                 </div>
 
                 {/* Applied Filters */}
-                {(appliedLanguages.length > 0 || appliedStatuses.length > 0) && (
-                    <div className={styles.appliedFiltersContainer}>
-                        <span className={styles.appliedFiltersLabel}>Bộ lọc đang áp dụng:</span>
-                        {appliedLanguages.map((languageId) => {
-                            const language = languages?.find((l) => l.id === languageId);
-                            return language ? (
-                                <span key={languageId} className="badge badge-soft-primary fs-12">
-                                    {language.name}
-                                    <button
-                                        type="button"
-                                        className={`btn-close ms-1 ${styles.filterBadgeClose}`}
-                                        onClick={() => {
-                                            const newAppliedLanguages = appliedLanguages.filter(
-                                                (id) => id !== languageId
-                                            );
-                                            setAppliedLanguages(newAppliedLanguages);
-                                            setSelectedLanguages(newAppliedLanguages);
-                                        }}
-                                        aria-label="Remove filter"
-                                    ></button>
-                                </span>
-                            ) : null;
-                        })}
-                        {appliedStatuses.map((status) => (
-                            <span key={status} className="badge badge-soft-info fs-12">
-                                {status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
-                                <button
-                                    type="button"
-                                    className={`btn-close ms-1 ${styles.filterBadgeClose}`}
-                                    onClick={() => {
-                                        const newAppliedStatuses = appliedStatuses.filter(
-                                            (s) => s !== status
-                                        );
-                                        setAppliedStatuses(newAppliedStatuses);
-                                        setSelectedStatuses(newAppliedStatuses);
-                                    }}
-                                    aria-label="Remove filter"
-                                ></button>
-                            </span>
-                        ))}
-                        <button
-                            type="button"
-                            className={`btn btn-sm btn-outline-secondary fs-12 ${styles.clearAllButton}`}
-                            onClick={handleClearFilters}
-                        >
-                            Xóa tất cả
-                        </button>
-                    </div>
-                )}
+                <AppliedFilters
+                    appliedItems={appliedLanguages}
+                    appliedStatuses={appliedStatuses}
+                    items={languages || []}
+                    onRemoveItem={(languageId) => {
+                        const newAppliedLanguages = appliedLanguages.filter(
+                            (id) => id !== languageId
+                        );
+                        setAppliedLanguages(newAppliedLanguages);
+                        setSelectedLanguages(newAppliedLanguages);
+                    }}
+                    onRemoveStatus={(status) => {
+                        const newAppliedStatuses = appliedStatuses.filter((s) => s !== status);
+                        setAppliedStatuses(newAppliedStatuses);
+                        setSelectedStatuses(newAppliedStatuses);
+                    }}
+                    onClearAll={handleClearFilters}
+                    styles={{
+                        appliedFiltersContainer: styles.appliedFiltersContainer,
+                        appliedFiltersLabel: styles.appliedFiltersLabel,
+                        filterBadgeClose: styles.filterBadgeClose,
+                        clearAllButton: styles.clearAllButton,
+                    }}
+                />
 
                 <div className="table-responsive">
                     <table className="table table-nowrap datatable">
@@ -793,111 +635,25 @@ const ListLanguages: React.FC = () => {
             </div>
 
             {/* Language Modal */}
-            {showModal && (
-                <div
-                    className={`modal fade show d-block ${styles.modal}`}
-                    style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-                >
-                    <div className="modal-dialog modal-lg modal-dialog-centered">
-                        <div className={`modal-content ${styles['modal-content']}`}>
-                            <div className="modal-header border-0 pb-0">
-                                <h5 className="modal-title fw-bold text-dark fs-18">{title}</h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={handleCancel}
-                                    aria-label="Close"
-                                ></button>
-                            </div>
-                            <div className="modal-body pt-0">
-                                <form
-                                    onSubmit={(e) => {
-                                        e.preventDefault();
-                                        handleLanguageSubmit();
-                                    }}
-                                >
-                                    <div className="row">
-                                        {/* Name Field */}
-                                        <div className="col-12">
-                                            <div className="mb-4">
-                                                <label
-                                                    htmlFor="language-name"
-                                                    className="form-label fw-semibold text-dark mb-2"
-                                                >
-                                                    Tên Ngôn Ngữ{' '}
-                                                    <span className="text-danger">*</span>
-                                                </label>
-                                                <CustomInputComponent
-                                                    value={formData.name}
-                                                    onChange={handleNameChange}
-                                                    placeholder="Nhập tên ngôn ngữ (2-255 ký tự)"
-                                                    required={true}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Status Field */}
-                                        <div className="col-12">
-                                            <div className="mb-4">
-                                                <label
-                                                    htmlFor="language-status"
-                                                    className="form-label fw-semibold text-dark mb-2"
-                                                >
-                                                    Trạng Thái{' '}
-                                                    <span className="text-danger">*</span>
-                                                </label>
-                                                <ReactSelectComponent
-                                                    value={formData.status}
-                                                    onChange={handleStatusChange}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                            <div className="modal-footer border-0 pt-0">
-                                <button
-                                    type="button"
-                                    className="btn btn-light btn-lg px-4 rounded-3"
-                                    onClick={handleCancel}
-                                    disabled={isSubmitting}
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-primary btn-lg px-4 rounded-3"
-                                    onClick={handleLanguageSubmit}
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <span
-                                                className="spinner-border spinner-border-sm me-2"
-                                                aria-hidden="true"
-                                            ></span>
-                                            <output>
-                                                {modalMode === 'add'
-                                                    ? 'Đang tạo...'
-                                                    : 'Đang cập nhật...'}
-                                            </output>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i
-                                                className={`${modalMode === 'add' ? 'ti ti-plus' : 'ti ti-edit'} me-2`}
-                                            ></i>
-                                            {modalMode === 'add'
-                                                ? 'Tạo Ngôn Ngữ'
-                                                : 'Cập Nhật Ngôn Ngữ'}
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <EntityModal
+                show={showModal}
+                title={title}
+                formData={formData}
+                validationErrors={validationErrors}
+                isSubmitting={isSubmitting}
+                modalMode={modalMode}
+                onCancel={handleCancel}
+                onSubmit={handleLanguageSubmit}
+                onNameChange={handleNameChange}
+                onStatusChange={handleStatusChange}
+                entityName="Ngôn Ngữ"
+                styles={{
+                    modal: styles.modal,
+                    'modal-content': styles['modal-content'],
+                    invalidFeedback: styles.invalidFeedback,
+                    reactSelectInvalid: styles.reactSelectInvalid,
+                }}
+            />
 
             {/* Filter Modal */}
             <ModalFilter
@@ -934,13 +690,14 @@ const ListLanguages: React.FC = () => {
                 ]}
             />
 
-            {/* Hide Confirmation Modal */}
+            {/* Stop Displaying Confirmation Modal */}
             <ModalDelete
                 show={showDeleteModal}
-                onHide={handleDeleteCancel}
-                onConfirm={handleDeleteConfirm}
-                title="Ẩn ngôn ngữ"
-                message={`Bạn có chắc chắn muốn ẩn ngôn ngữ "${languageToDelete?.name}"? Ngôn ngữ này sẽ không hiển thị trong danh sách.`}
+                onHide={handleHideCancel}
+                onConfirm={handleHideConfirm}
+                title="Ngừng hiển thị ngôn ngữ"
+                message={`Bạn có chắc chắn muốn ngừng hiển thị ngôn ngữ "${languageToDelete?.name}"? Ngôn ngữ này sẽ không hiển thị trong danh sách.`}
+                confirmText="Có, Ngừng hiển thị"
             />
         </>
     );

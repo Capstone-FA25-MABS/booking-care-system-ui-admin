@@ -107,7 +107,7 @@ const TableActions: React.FC<TableActionsProps> = ({
                             className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                             onClick={() => onHide?.(id)}
                         >
-                            <i className="ti ti-eye-off me-2"></i> Ẩn
+                            <i className="ti ti-eye-off me-2"></i> Ngừng hiển thị
                         </button>
                     </li>
                 )}
