@@ -14,63 +14,31 @@ interface Feature {
 const SubscriptionPlan = () => {
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
 
+    // Pricing configuration to reduce code duplication
+    const pricingConfig = {
+        basic: {
+            yearly: '11 triệu VNĐ',
+            quarterly: '3 triệu VNĐ',
+            monthly: '1.2 triệu VNĐ',
+        },
+        advanced: {
+            yearly: '36 triệu VNĐ',
+            quarterly: '10 triệu VNĐ',
+            monthly: '3.8 triệu VNĐ',
+        },
+        professional: {
+            yearly: '72 triệu VNĐ',
+            quarterly: '20 triệu VNĐ',
+            monthly: '7.5 triệu VNĐ',
+        },
+    };
+
     // Helper functions to reduce cognitive complexity
-    const getBasicPrice = (period: BillingPeriod): string => {
-        switch (period) {
-            case 'yearly':
-                return '11 triệu VNĐ';
-            case 'quarterly':
-                return '3 triệu VNĐ';
-            default:
-                return '1.2 triệu VNĐ';
-        }
+    const getPrice = (planType: keyof typeof pricingConfig, period: BillingPeriod): string => {
+        return pricingConfig[planType][period];
     };
 
-    const getBasicPriceSubtext = (period: BillingPeriod): string => {
-        switch (period) {
-            case 'yearly':
-                return '/năm';
-            case 'quarterly':
-                return '/quý';
-            default:
-                return '/tháng';
-        }
-    };
-
-    const getAdvancedPrice = (period: BillingPeriod): string => {
-        switch (period) {
-            case 'yearly':
-                return '36 triệu VNĐ';
-            case 'quarterly':
-                return '10 triệu VNĐ';
-            default:
-                return '3.8 triệu VNĐ';
-        }
-    };
-
-    const getAdvancedPriceSubtext = (period: BillingPeriod): string => {
-        switch (period) {
-            case 'yearly':
-                return '/năm';
-            case 'quarterly':
-                return '/quý';
-            default:
-                return '/tháng';
-        }
-    };
-
-    const getProfessionalPrice = (period: BillingPeriod): string => {
-        switch (period) {
-            case 'yearly':
-                return '72 triệu VNĐ';
-            case 'quarterly':
-                return '20 triệu VNĐ';
-            default:
-                return '7.5 triệu VNĐ';
-        }
-    };
-
-    const getProfessionalPriceSubtext = (period: BillingPeriod): string => {
+    const getPriceSubtext = (period: BillingPeriod): string => {
         switch (period) {
             case 'yearly':
                 return '/năm';
@@ -177,8 +145,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Cơ bản"
-                            price={getBasicPrice(billingPeriod)}
-                            priceSubtext={getBasicPriceSubtext(billingPeriod)}
+                            price={getPrice('basic', billingPeriod)}
+                            priceSubtext={getPriceSubtext(billingPeriod)}
                             buttonText="Gói hiện tại"
                             buttonVariant="secondary"
                             features={basicFeatures}
@@ -189,8 +157,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Nâng cao"
-                            price={getAdvancedPrice(billingPeriod)}
-                            priceSubtext={getAdvancedPriceSubtext(billingPeriod)}
+                            price={getPrice('advanced', billingPeriod)}
+                            priceSubtext={getPriceSubtext(billingPeriod)}
                             buttonText="Nâng cấp gói Nâng cao"
                             buttonVariant="primary"
                             features={advancedFeatures}
@@ -202,8 +170,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Chuyên nghiệp"
-                            price={getProfessionalPrice(billingPeriod)}
-                            priceSubtext={getProfessionalPriceSubtext(billingPeriod)}
+                            price={getPrice('professional', billingPeriod)}
+                            priceSubtext={getPriceSubtext(billingPeriod)}
                             buttonText="Nâng cấp gói Chuyên nghiệp"
                             buttonVariant="primary"
                             features={professionalFeatures}
