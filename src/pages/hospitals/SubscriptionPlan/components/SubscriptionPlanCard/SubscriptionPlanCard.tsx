@@ -60,7 +60,7 @@ const SubscriptionPlanCard = ({
 
             <ul className={styles.featuresList}>
                 {features.map((feature, index) => (
-                    <li key={index} className={styles.featureItem}>
+                    <li key={`${feature.text}-${index}`} className={styles.featureItem}>
                         <span className={styles.featureIcon}>{feature.icon}</span>
                         <div className={styles.featureContent}>
                             <p className={styles.featureText}>{feature.text}</p>

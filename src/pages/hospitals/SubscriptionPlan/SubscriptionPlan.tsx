@@ -14,6 +14,73 @@ interface Feature {
 const SubscriptionPlan = () => {
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
 
+    // Helper functions to reduce cognitive complexity
+    const getBasicPrice = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '11 triệu VNĐ';
+            case 'quarterly':
+                return '3 triệu VNĐ';
+            default:
+                return '1.2 triệu VNĐ';
+        }
+    };
+
+    const getBasicPriceSubtext = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '/năm';
+            case 'quarterly':
+                return '/quý';
+            default:
+                return '/tháng';
+        }
+    };
+
+    const getAdvancedPrice = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '36 triệu VNĐ';
+            case 'quarterly':
+                return '10 triệu VNĐ';
+            default:
+                return '3.8 triệu VNĐ';
+        }
+    };
+
+    const getAdvancedPriceSubtext = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '/năm';
+            case 'quarterly':
+                return '/quý';
+            default:
+                return '/tháng';
+        }
+    };
+
+    const getProfessionalPrice = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '72 triệu VNĐ';
+            case 'quarterly':
+                return '20 triệu VNĐ';
+            default:
+                return '7.5 triệu VNĐ';
+        }
+    };
+
+    const getProfessionalPriceSubtext = (period: BillingPeriod): string => {
+        switch (period) {
+            case 'yearly':
+                return '/năm';
+            case 'quarterly':
+                return '/quý';
+            default:
+                return '/tháng';
+        }
+    };
+
     const basicFeatures: Feature[] = [
         {
             icon: <Check size={16} />,
@@ -110,20 +177,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Cơ bản"
-                            price={
-                                billingPeriod === 'yearly'
-                                    ? '11 triệu VNĐ'
-                                    : billingPeriod === 'quarterly'
-                                      ? '3 triệu VNĐ'
-                                      : '1.2 triệu VNĐ'
-                            }
-                            priceSubtext={
-                                billingPeriod === 'yearly'
-                                    ? '/năm'
-                                    : billingPeriod === 'quarterly'
-                                      ? '/quý'
-                                      : '/tháng'
-                            }
+                            price={getBasicPrice(billingPeriod)}
+                            priceSubtext={getBasicPriceSubtext(billingPeriod)}
                             buttonText="Gói hiện tại"
                             buttonVariant="secondary"
                             features={basicFeatures}
@@ -134,20 +189,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Nâng cao"
-                            price={
-                                billingPeriod === 'yearly'
-                                    ? '36 triệu VNĐ'
-                                    : billingPeriod === 'quarterly'
-                                      ? '10 triệu VNĐ'
-                                      : '3.8 triệu VNĐ'
-                            }
-                            priceSubtext={
-                                billingPeriod === 'yearly'
-                                    ? '/năm'
-                                    : billingPeriod === 'quarterly'
-                                      ? '/quý'
-                                      : '/tháng'
-                            }
+                            price={getAdvancedPrice(billingPeriod)}
+                            priceSubtext={getAdvancedPriceSubtext(billingPeriod)}
                             buttonText="Nâng cấp gói Nâng cao"
                             buttonVariant="primary"
                             features={advancedFeatures}
@@ -159,20 +202,8 @@ const SubscriptionPlan = () => {
                     <div className={styles.planColumn}>
                         <SubscriptionPlanCard
                             title="Gói Chuyên nghiệp"
-                            price={
-                                billingPeriod === 'yearly'
-                                    ? '72 triệu VNĐ'
-                                    : billingPeriod === 'quarterly'
-                                      ? '20 triệu VNĐ'
-                                      : '7.5 triệu VNĐ'
-                            }
-                            priceSubtext={
-                                billingPeriod === 'yearly'
-                                    ? '/năm'
-                                    : billingPeriod === 'quarterly'
-                                      ? '/quý'
-                                      : '/tháng'
-                            }
+                            price={getProfessionalPrice(billingPeriod)}
+                            priceSubtext={getProfessionalPriceSubtext(billingPeriod)}
                             buttonText="Nâng cấp gói Chuyên nghiệp"
                             buttonVariant="primary"
                             features={professionalFeatures}
