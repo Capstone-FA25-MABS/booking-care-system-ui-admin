@@ -29,6 +29,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Role } from '@/enums/common.enums';
 import ListPositions from '@/pages/admins/Positions/ListPositions';
 import ListLanguages from '@/pages/admins/Languages/ListLanguages';
+import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 
 const routes: RouteObject[] = [
     {
@@ -115,6 +116,7 @@ const routes: RouteObject[] = [
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
+            { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlan /> },
         ],
     },
     // Shared Account Settings - Accessible by all authenticated users

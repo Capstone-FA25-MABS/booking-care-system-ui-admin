@@ -53,6 +53,7 @@ export const PATHS = {
             ROOT: 'refunds',
         },
         MESSAGES: 'messages',
+        SUBSCRIPTION_PLAN: 'subscription-plan',
     },
 
     // Doctor paths
