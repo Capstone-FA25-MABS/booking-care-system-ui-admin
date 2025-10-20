@@ -9,57 +9,57 @@ import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
 import TableActions from '@/components/TableActions';
-import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
-import { Position, PositionFormData } from '@/types/position.types';
-import usePosition from '@/hooks/usePosition';
-import { PositionService } from '@/services/position.service';
+import { languageTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
+import { Language, LanguageFormData } from '@/types/language.types';
+import useLanguage from '@/hooks/useLanguage';
+import { LanguageService } from '@/services/language.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import EntityModal from '@/components/Modal/EntityModal';
 import AppliedFilters from '@/components/AppliedFilters/AppliedFilters';
-import styles from './ListPositions.module.scss';
+import styles from './ListLanguages.module.scss';
 
-const ListPositions: React.FC = () => {
+const ListLanguages: React.FC = () => {
     // Use Redux state management
     const {
-        positions,
+        languages,
         pagination,
         isLoading,
         error,
-        fetchPositions,
-        createPosition,
-        updatePosition,
-        deletePosition,
-        filterPositions,
+        fetchLanguages,
+        createLanguage,
+        updateLanguage,
+        deleteLanguage,
+        filterLanguages,
         clearError,
-    } = usePosition();
+    } = useLanguage();
 
     // Local state for UI
-    const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+    const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
     // Applied filters (after clicking "Lọc" button)
-    const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
+    const [appliedLanguages, setAppliedLanguages] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [positionToDelete, setPositionToDelete] = useState<Position | null>(null);
-    const [positionToEdit, setPositionToEdit] = useState<Position | null>(null);
+    const [languageToDelete, setLanguageToDelete] = useState<Language | null>(null);
+    const [languageToEdit, setLanguageToEdit] = useState<Language | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    // State for all positions (for filter modal)
-    const [allPositions, setAllPositions] = useState<Position[]>([]);
+    // State for all languages (for filter modal)
+    const [allLanguages, setAllLanguages] = useState<Language[]>([]);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Fetch positions on component mount
+    // Fetch languages on component mount
     useEffect(() => {
         const sortParams = getSortParams(sortBy);
-        fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    }, [fetchPositions, currentPage, itemsPerPage, sortBy]);
+        fetchLanguages(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+    }, [fetchLanguages, currentPage, itemsPerPage, sortBy]);
 
     // Handle search term changes with debounce
     useEffect(() => {
@@ -74,30 +74,30 @@ const ListPositions: React.FC = () => {
                     sortOrder: sortParams.sortOrder,
                 };
                 setCurrentPage(1);
-                filterPositions(filterParams);
+                filterLanguages(filterParams);
             } else {
-                // If search is cleared, fetch all positions with current sort
+                // If search is cleared, fetch all languages with current sort
                 setCurrentPage(1);
                 const sortParams = getSortParams(sortBy);
-                fetchPositions(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+                fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
             }
         }, 500); // 500ms debounce
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterPositions, fetchPositions]);
+    }, [searchTerm, itemsPerPage, filterLanguages, fetchLanguages]);
 
-    // Position Modal States
+    // Language Modal States
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState<PositionFormData>({
+    const [formData, setFormData] = useState<LanguageFormData>({
         name: '',
         status: 'ACTIVE',
     });
 
     // Use shared form validation hook
     const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
-        useFormValidation({ entityName: 'học vị' });
+        useFormValidation({ entityName: 'ngôn ngữ' });
 
     const handleAddClick = useCallback(() => {
         setModalMode('add');
@@ -111,7 +111,7 @@ const ListPositions: React.FC = () => {
 
     const handleCancel = useCallback(() => {
         setShowModal(false);
-        setPositionToEdit(null);
+        setLanguageToEdit(null);
         setFormData({
             name: '',
             status: 'ACTIVE',
@@ -119,7 +119,7 @@ const ListPositions: React.FC = () => {
         clearAllValidationErrors();
     }, [clearAllValidationErrors]);
 
-    const title = modalMode === 'add' ? 'Thêm Học Vị Mới' : 'Sửa Học Vị';
+    const title = modalMode === 'add' ? 'Thêm Ngôn Ngữ Mới' : 'Sửa Ngôn Ngữ';
 
     // Form data change handlers
     const handleNameChange = (value: string) => {
@@ -132,161 +132,53 @@ const ListPositions: React.FC = () => {
         clearValidationError('status');
     };
 
-    // Use pagination from Redux state
-    const totalPages = pagination?.totalPages || 0;
+    // Note: Error handling is done in individual functions to avoid duplicate messages
 
-    // Client-side filtering for positions (sorting is handled by backend)
-    const filteredPositions = useMemo(() => {
-        let filtered = positions || [];
+    // Handle delete language (not used in current implementation)
+    // const handleDeleteClick = (language: Language) => {
+    //     setLanguageToDelete(language);
+    //     setShowDeleteModal(true);
+    // };
 
-        // Filter by applied positions (not selected positions)
-        if (appliedPositions.length > 0) {
-            filtered = filtered.filter((position) => appliedPositions.includes(position.id));
-        }
-
-        return filtered;
-    }, [positions, appliedPositions]);
-
-    // Paginate filtered positions for client-side filtering
-    const paginatedFilteredPositions = useMemo(() => {
-        if (appliedPositions.length === 0) {
-            // No position filter, use server-side pagination
-            return filteredPositions;
-        }
-
-        // Client-side pagination for filtered results
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return filteredPositions.slice(startIndex, endIndex);
-    }, [filteredPositions, currentPage, itemsPerPage, appliedPositions.length]);
-
-    // Calculate total pages for client-side filtering
-    const effectiveTotalPages = useMemo(() => {
-        if (appliedPositions.length === 0) {
-            // No position filter, use server-side pagination
-            return totalPages;
-        }
-
-        // Client-side pagination
-        return Math.ceil(filteredPositions.length / itemsPerPage);
-    }, [totalPages, filteredPositions.length, itemsPerPage, appliedPositions.length]);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-
-        // Only fetch from server if no position filter
-        if (appliedPositions.length === 0) {
-            const sortParams = getSortParams(sortBy);
-            fetchPositions(page, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-        }
-        // For position filters, pagination is handled client-side
-    };
-
-    const handleFilterSubmit = () => {
-        // Apply the selected filters
-        setAppliedPositions([...selectedPositions]);
-        setAppliedStatuses([...selectedStatuses]);
-
-        // If we have position filters, we need to fetch all positions first
-        if (selectedPositions.length > 0) {
-            // Fetch all positions without pagination for client-side filtering
-            fetchPositions(1, 100); // Large page size to get all positions
-        } else {
-            // Only status filter, can use backend filtering with sorting
-            const sortParams = getSortParams(sortBy);
-            const filterParams = {
-                pageNumber: 1,
-                pageSize: itemsPerPage,
-                status:
-                    selectedStatuses.length === 1
-                        ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
-                        : undefined,
-                sortBy: sortParams.sortBy,
-                sortOrder: sortParams.sortOrder,
-            };
-            filterPositions(filterParams);
-        }
-
-        setCurrentPage(1);
-        setShowFilterModal(false);
-    };
-
-    const handleClearFilters = () => {
-        setSelectedPositions([]);
-        setSelectedStatuses([]);
-        setAppliedPositions([]);
-        setAppliedStatuses([]);
-        setCurrentPage(1);
-        const sortParams = getSortParams(sortBy);
-        fetchPositions(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder); // Reset to normal pagination with current sort
-    };
-
-    const handleResetFilter = (type: string) => {
-        switch (type) {
-            case 'positions':
-                setSelectedPositions([]);
-                break;
-            case 'statuses':
-                setSelectedStatuses([]);
-                break;
-            default:
-                break;
-        }
-    };
-
-    // Stop displaying functions
-    const handleHideClick = (position: Position) => {
-        setPositionToDelete(position);
-        setShowDeleteModal(true);
-    };
-
+    // Handle hide confirmation
     const handleHideConfirm = async () => {
-        if (positionToDelete) {
-            try {
-                const result = await deletePosition(positionToDelete.id);
+        if (!languageToDelete) return;
 
-                // Check if the operation was successful
-                if ((result as any).type.endsWith('/fulfilled')) {
-                    // Success - show toast and close modal
-                    setShowDeleteModal(false);
-                    setPositionToDelete(null);
-                    toast.success(
-                        `Đã ngừng hiển thị học vị "${positionToDelete.name}" thành công!`
-                    );
+        try {
+            const result = await deleteLanguage(languageToDelete.id);
 
-                    // Refresh the positions list
-                    const sortParams = getSortParams(sortBy);
-                    fetchPositions(
-                        currentPage,
-                        itemsPerPage,
-                        sortParams.sortBy,
-                        sortParams.sortOrder
-                    );
-                } else if ((result as any).type.endsWith('/rejected')) {
-                    // Error - show error message
-                    const errorMessage =
-                        ((result as any).payload as string) ||
-                        'Có lỗi xảy ra khi ngừng hiển thị học vị. Vui lòng thử lại.';
-                    toast.error(errorMessage);
-                }
-            } catch (error: any) {
-                console.error('Error hiding position:', error);
+            // Check if the operation was successful
+            if ((result as any).type.endsWith('/fulfilled')) {
+                toast.success(`Đã ngừng hiển thị ngôn ngữ "${languageToDelete.name}" thành công!`);
+                setShowDeleteModal(false);
+                setLanguageToDelete(null);
 
-                // Show specific error message
+                // Refresh the languages list
+                const sortParams = getSortParams(sortBy);
+                fetchLanguages(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            } else if ((result as any).type.endsWith('/rejected')) {
+                // Error - show error message
                 const errorMessage =
-                    error.message || 'Có lỗi xảy ra khi ngừng hiển thị học vị. Vui lòng thử lại.';
+                    ((result as any).payload as string) ||
+                    'Có lỗi xảy ra khi ngừng hiển thị ngôn ngữ. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
+        } catch (error: any) {
+            console.error('Error deleting language:', error);
+            const errorMessage =
+                error.message || 'Có lỗi xảy ra khi ngừng hiển thị ngôn ngữ. Vui lòng thử lại.';
+            toast.error(errorMessage);
         }
     };
 
+    // Handle hide cancel
     const handleHideCancel = () => {
         setShowDeleteModal(false);
-        setPositionToDelete(null);
+        setLanguageToDelete(null);
     };
 
-    // Position modal functions
-    const handlePositionSubmit = async () => {
+    // Language modal functions
+    const handleLanguageSubmit = async () => {
         // Client-side validation
         if (!validateForm(formData)) {
             return; // Stop if validation fails
@@ -297,45 +189,45 @@ const ListPositions: React.FC = () => {
         try {
             let result;
             if (modalMode === 'add') {
-                // Create new position
-                result = await createPosition(formData);
+                // Create new language
+                result = await createLanguage(formData);
             } else {
-                // Update position
-                if (!positionToEdit) {
-                    toast.error('Không tìm thấy thông tin học vị cần cập nhật');
+                // Update language
+                if (!languageToEdit) {
+                    toast.error('Không tìm thấy thông tin ngôn ngữ cần cập nhật');
                     return;
                 }
 
-                console.log('Updating position:', {
-                    id: positionToEdit.id,
+                console.log('Updating language:', {
+                    id: languageToEdit.id,
                     formData: formData,
-                    positionToEdit: positionToEdit,
+                    languageToEdit: languageToEdit,
                 });
 
-                result = await updatePosition(positionToEdit.id, formData);
+                result = await updateLanguage(languageToEdit.id, formData);
             }
 
             // Check if the operation was successful
             if ((result as any).type.endsWith('/fulfilled')) {
                 // Success - show toast and close modal
                 if (modalMode === 'add') {
-                    toast.success('Tạo học vị thành công!');
+                    toast.success('Tạo ngôn ngữ thành công!');
                 } else {
-                    toast.success('Cập nhật học vị thành công!');
+                    toast.success('Cập nhật ngôn ngữ thành công!');
                 }
 
                 // Close modal and refresh data
                 setShowModal(false);
-                setPositionToEdit(null);
+                setLanguageToEdit(null);
                 setFormData({
                     name: '',
                     status: 'ACTIVE',
                 });
                 clearAllValidationErrors();
 
-                // Refresh the positions list
+                // Refresh the languages list
                 const sortParams = getSortParams(sortBy);
-                fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+                fetchLanguages(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
             } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
                 const errorMessage =
@@ -343,7 +235,7 @@ const ListPositions: React.FC = () => {
                 toast.error(errorMessage);
             }
         } catch (error: any) {
-            console.error('Error saving position:', error);
+            console.error('Error saving language:', error);
 
             // Show specific error message
             const errorMessage = error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
@@ -353,32 +245,83 @@ const ListPositions: React.FC = () => {
         }
     };
 
-    const handleEditClickWithPosition = (position: Position) => {
-        setPositionToEdit(position);
+    const handleEditClickWithLanguage = (language: Language) => {
+        setLanguageToEdit(language);
         setModalMode('edit');
         setFormData({
-            name: position.name,
-            status: position.status,
+            name: language.name,
+            status: language.status,
         });
         clearAllValidationErrors();
         setShowModal(true);
     };
 
-    // Function to fetch all positions for filter modal
-    const fetchAllPositionsForFilter = async () => {
-        try {
-            const response = await PositionService.getAllPositions(1, 100); // Large page size to get all
-            setAllPositions(response.data.positions);
-        } catch (error) {
-            console.error('Error fetching all positions for filter:', error);
-            setAllPositions([]);
-        }
+    // Stop displaying functions
+    const handleHideClick = (language: Language) => {
+        setLanguageToDelete(language);
+        setShowDeleteModal(true);
     };
+
+    // Filter and search logic
+    const filteredLanguages = useMemo(() => {
+        if (!languages) return [];
+
+        let filtered = languages;
+
+        // Apply search filter
+        if (searchTerm.trim()) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(
+                (language) =>
+                    language.name.toLowerCase().includes(term) ||
+                    language.id.toLowerCase().includes(term)
+            );
+        }
+
+        // Apply status filter
+        if (appliedStatuses.length > 0) {
+            filtered = filtered.filter((language) => appliedStatuses.includes(language.status));
+        }
+
+        // Apply language filter
+        if (appliedLanguages.length > 0) {
+            filtered = filtered.filter((language) => appliedLanguages.includes(language.id));
+        }
+
+        return filtered;
+    }, [languages, searchTerm, appliedStatuses, appliedLanguages]);
+
+    // Use pagination from Redux state
+    const totalPages = pagination?.totalPages || 0;
+
+    // Paginate filtered languages for client-side filtering
+    const paginatedFilteredLanguages = useMemo(() => {
+        if (appliedLanguages.length === 0) {
+            // No language filter, use server-side pagination
+            return filteredLanguages;
+        }
+
+        // Client-side pagination for filtered results
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredLanguages.slice(startIndex, endIndex);
+    }, [filteredLanguages, currentPage, itemsPerPage, appliedLanguages.length]);
+
+    // Calculate total pages for client-side filtering
+    const effectiveTotalPages = useMemo(() => {
+        if (appliedLanguages.length === 0) {
+            // No language filter, use server-side pagination
+            return totalPages;
+        }
+
+        // Client-side pagination
+        return Math.ceil(filteredLanguages.length / itemsPerPage);
+    }, [totalPages, filteredLanguages.length, itemsPerPage, appliedLanguages.length]);
 
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
         if (isLoading) {
-            return <TableSkeleton rows={itemsPerPage} columns={positionTableColumns} />;
+            return <TableSkeleton rows={itemsPerPage} columns={languageTableColumns} />;
         }
 
         if (error) {
@@ -399,53 +342,53 @@ const ListPositions: React.FC = () => {
             );
         }
 
-        if (!paginatedFilteredPositions || paginatedFilteredPositions.length === 0) {
+        if (!paginatedFilteredLanguages || paginatedFilteredLanguages.length === 0) {
             return (
                 <tr>
                     <td colSpan={5} className="text-center py-4">
-                        <p className="text-muted">Không có học vị nào được tìm thấy.</p>
+                        <p className="text-muted">Không có ngôn ngữ nào được tìm thấy.</p>
                     </td>
                 </tr>
             );
         }
 
-        return paginatedFilteredPositions.map((position) => (
-            <tr key={position.id}>
+        return paginatedFilteredLanguages.map((language) => (
+            <tr key={language.id}>
                 <td>
                     <div className="d-flex align-items-center">
                         <div className="avatar me-2">
                             <div className="avatar-title bg-primary-subtle text-primary rounded">
-                                <i className="ti ti-briefcase"></i>
+                                <i className="ti ti-language"></i>
                             </div>
                         </div>
                         <div>
-                            <h6 className="mb-1 fs-14 fw-semibold">{position.name}</h6>
-                            <span className="text-muted fs-13">ID: {position.id}</span>
+                            <h6 className="mb-1 fs-14 fw-semibold">{language.name}</h6>
+                            <span className="text-muted fs-13">ID: {language.id}</span>
                         </div>
                     </div>
                 </td>
                 <td>
                     <span className="text-muted fs-14">
-                        {position.createdAt
-                            ? new Date(position.createdAt).toLocaleDateString('vi-VN')
+                        {language.createdAt
+                            ? new Date(language.createdAt).toLocaleDateString('vi-VN')
                             : 'N/A'}
                     </span>
                 </td>
                 <td>
                     <span className="text-muted fs-14">
-                        {position.updatedAt
-                            ? new Date(position.updatedAt).toLocaleDateString('vi-VN')
+                        {language.updatedAt
+                            ? new Date(language.updatedAt).toLocaleDateString('vi-VN')
                             : 'N/A'}
                     </span>
                 </td>
                 <td>
-                    <StatusBadge status={position.status} />
+                    <StatusBadge status={language.status} />
                 </td>
                 <td className="action-item">
                     <TableActions
-                        id={position.id}
-                        onEdit={() => handleEditClickWithPosition(position)}
-                        onHide={() => handleHideClick(position)}
+                        id={language.id}
+                        onEdit={() => handleEditClickWithLanguage(language)}
+                        onHide={() => handleHideClick(language)}
                         showEdit={true}
                         showDelete={false}
                         showHide={true}
@@ -456,17 +399,81 @@ const ListPositions: React.FC = () => {
         ));
     };
 
+    // Function to fetch all languages for filter modal
+    const fetchAllLanguagesForFilter = async () => {
+        try {
+            const response = await LanguageService.getAllLanguages(1, 1000); // Large page size to get all
+            setAllLanguages(response.data.languages);
+        } catch (error) {
+            console.error('Error fetching all languages for filter:', error);
+            setAllLanguages([]);
+        }
+    };
+
+    // Filter functions
+    const handleFilterSubmit = () => {
+        setAppliedLanguages(selectedLanguages);
+        setAppliedStatuses(selectedStatuses);
+        setShowFilterModal(false);
+        setCurrentPage(1);
+
+        // If we have language filters, we need to fetch all languages first
+        if (selectedLanguages.length > 0) {
+            // Fetch all languages without pagination for client-side filtering
+            fetchLanguages(1, 100); // Large page size to get all languages
+        } else {
+            // Only status filter, can use backend filtering with sorting
+            const sortParams = getSortParams(sortBy);
+            fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+    };
+
+    const handleClearFilters = () => {
+        setSelectedLanguages([]);
+        setSelectedStatuses([]);
+        setAppliedLanguages([]);
+        setAppliedStatuses([]);
+        setShowFilterModal(false);
+        setCurrentPage(1);
+        const sortParams = getSortParams(sortBy);
+        fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder); // Reset to normal pagination with current sort
+    };
+
+    const handleResetFilter = (filterType: string) => {
+        switch (filterType) {
+            case 'languages':
+                setSelectedLanguages([]);
+                break;
+            case 'statuses':
+                setSelectedStatuses([]);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+
+        // If no language filters, use server-side pagination
+        if (appliedLanguages.length === 0) {
+            const sortParams = getSortParams(sortBy);
+            fetchLanguages(page, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // For language filters, pagination is handled client-side
+    };
+
     return (
         <>
             <div className="content">
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Học Vị{' '}
+                            Danh Sách Ngôn Ngữ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Học Vị:{' '}
-                                {appliedPositions.length > 0
-                                    ? filteredPositions.length
+                                Tổng Ngôn Ngữ:{' '}
+                                {appliedLanguages.length > 0
+                                    ? filteredLanguages.length
                                     : pagination?.totalCount || 0}
                             </span>
                         </h4>
@@ -489,13 +496,13 @@ const ListPositions: React.FC = () => {
                         />
                         <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
                             <Link
-                                to="/admins/positions"
+                                to="/admins/languages"
                                 className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
                             >
                                 <i className="ti ti-list fs-14 text-body"></i>
                             </Link>
                             <Link
-                                to="/admins/positions"
+                                to="/admins/languages"
                                 className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
                             >
                                 <i className="ti ti-layout-grid fs-14 text-body"></i>
@@ -508,7 +515,7 @@ const ListPositions: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={handleAddClick}
                         >
-                            Thêm Học Vị
+                            Thêm Ngôn Ngữ
                         </Button>
                     </div>
                 </div>
@@ -518,12 +525,12 @@ const ListPositions: React.FC = () => {
                         <div className="d-flex align-items-center flex-wrap gap-2">
                             <div className="table-search d-flex align-items-center mb-0">
                                 <div className="search-input">
-                                    <label htmlFor="positionSearch" aria-label="Search positions">
+                                    <label htmlFor="languageSearch" aria-label="Search languages">
                                         <input
-                                            id="positionSearch"
+                                            id="languageSearch"
                                             type="search"
                                             className="form-control form-control-sm"
-                                            placeholder="Tìm kiếm"
+                                            placeholder="Tìm kiếm theo tên ngôn ngữ"
                                             aria-controls="DataTables_Table_0"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -541,10 +548,10 @@ const ListPositions: React.FC = () => {
                             icon="ti ti-filter text-gray-5"
                             onClick={async () => {
                                 // Sync selected filters with applied filters when opening modal
-                                setSelectedPositions([...appliedPositions]);
+                                setSelectedLanguages([...appliedLanguages]);
                                 setSelectedStatuses([...appliedStatuses]);
-                                // Fetch all positions for filter modal
-                                await fetchAllPositionsForFilter();
+                                // Fetch all languages for filter modal
+                                await fetchAllLanguagesForFilter();
                                 setShowFilterModal(true);
                             }}
                         >
@@ -558,10 +565,10 @@ const ListPositions: React.FC = () => {
                                 setSortBy(newSortBy);
                                 setCurrentPage(1);
 
-                                // Fetch positions with new sort parameters
-                                if (appliedPositions.length === 0) {
+                                // Fetch languages with new sort parameters
+                                if (appliedLanguages.length === 0) {
                                     const sortParams = getSortParams(newSortBy);
-                                    fetchPositions(
+                                    fetchLanguages(
                                         1,
                                         itemsPerPage,
                                         sortParams.sortBy,
@@ -576,15 +583,15 @@ const ListPositions: React.FC = () => {
 
                 {/* Applied Filters */}
                 <AppliedFilters
-                    appliedItems={appliedPositions}
+                    appliedItems={appliedLanguages}
                     appliedStatuses={appliedStatuses}
-                    items={positions || []}
-                    onRemoveItem={(positionId) => {
-                        const newAppliedPositions = appliedPositions.filter(
-                            (id) => id !== positionId
+                    items={languages || []}
+                    onRemoveItem={(languageId) => {
+                        const newAppliedLanguages = appliedLanguages.filter(
+                            (id) => id !== languageId
                         );
-                        setAppliedPositions(newAppliedPositions);
-                        setSelectedPositions(newAppliedPositions);
+                        setAppliedLanguages(newAppliedLanguages);
+                        setSelectedLanguages(newAppliedLanguages);
                     }}
                     onRemoveStatus={(status) => {
                         const newAppliedStatuses = appliedStatuses.filter((s) => s !== status);
@@ -604,7 +611,7 @@ const ListPositions: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên Học Vị</th>
+                                <th>Tên Ngôn Ngữ</th>
                                 <th>Ngày Tạo</th>
                                 <th>Ngày Cập Nhật</th>
                                 <th>Trạng Thái</th>
@@ -627,7 +634,7 @@ const ListPositions: React.FC = () => {
                 )}
             </div>
 
-            {/* Position Modal */}
+            {/* Language Modal */}
             <EntityModal
                 show={showModal}
                 title={title}
@@ -636,10 +643,10 @@ const ListPositions: React.FC = () => {
                 isSubmitting={isSubmitting}
                 modalMode={modalMode}
                 onCancel={handleCancel}
-                onSubmit={handlePositionSubmit}
+                onSubmit={handleLanguageSubmit}
                 onNameChange={handleNameChange}
                 onStatusChange={handleStatusChange}
-                entityName="Học Vị"
+                entityName="Ngôn Ngữ"
                 styles={{
                     modal: styles.modal,
                     'modal-content': styles['modal-content'],
@@ -648,35 +655,25 @@ const ListPositions: React.FC = () => {
                 }}
             />
 
-            {/* Stop Displaying Confirmation Modal */}
-            <ModalDelete
-                show={showDeleteModal}
-                onHide={handleHideCancel}
-                onConfirm={handleHideConfirm}
-                title="Ngừng hiển thị học vị"
-                message={`Bạn có chắc chắn muốn ngừng hiển thị học vị "${positionToDelete?.name}"? Học vị này sẽ không hiển thị trong danh sách.`}
-                confirmText="Có, Ngừng hiển thị"
-            />
-
             {/* Filter Modal */}
             <ModalFilter
                 show={showFilterModal}
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Bộ lọc học vị"
+                title="Bộ lọc ngôn ngữ"
                 fields={[
                     {
-                        name: 'positions',
-                        label: 'Học Vị',
+                        name: 'languages',
+                        label: 'Ngôn Ngữ',
                         type: 'multiselect',
-                        options: (allPositions || []).map((position) => ({
-                            value: position.id,
-                            label: position.name,
+                        options: (allLanguages || []).map((language) => ({
+                            value: language.id,
+                            label: language.name,
                         })),
-                        value: selectedPositions,
-                        onChange: setSelectedPositions,
-                        resetValue: () => handleResetFilter('positions'),
+                        value: selectedLanguages,
+                        onChange: setSelectedLanguages,
+                        resetValue: () => handleResetFilter('languages'),
                     },
                     {
                         name: 'statuses',
@@ -692,8 +689,18 @@ const ListPositions: React.FC = () => {
                     },
                 ]}
             />
+
+            {/* Stop Displaying Confirmation Modal */}
+            <ModalDelete
+                show={showDeleteModal}
+                onHide={handleHideCancel}
+                onConfirm={handleHideConfirm}
+                title="Ngừng hiển thị ngôn ngữ"
+                message={`Bạn có chắc chắn muốn ngừng hiển thị ngôn ngữ "${languageToDelete?.name}"? Ngôn ngữ này sẽ không hiển thị trong danh sách.`}
+                confirmText="Có, Ngừng hiển thị"
+            />
         </>
     );
 };
 
-export default ListPositions;
+export default ListLanguages;

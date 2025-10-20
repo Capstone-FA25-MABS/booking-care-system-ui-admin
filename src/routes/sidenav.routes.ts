@@ -92,6 +92,21 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         ],
     },
     {
+        title: 'Management',
+        items: [
+            createSimpleMenuItem(
+                'Học vị',
+                'ti ti-certificate',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.POSITIONS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Ngôn ngữ',
+                'ti ti-language',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
+            ),
+        ],
+    },
+    {
         title: 'Settings',
         items: [createAccountSettingsMenuItem()],
     },

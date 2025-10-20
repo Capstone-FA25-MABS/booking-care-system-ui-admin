@@ -24,31 +24,26 @@ export const mockLanguages: Language[] = [
     {
         id: '550e8400-e29b-41d4-a716-446655440021',
         name: 'Tiếng Việt',
-        flag: '/flags/vietnam.png',
         status: 'ACTIVE',
     },
     {
         id: '550e8400-e29b-41d4-a716-446655440022',
         name: 'Tiếng Anh',
-        flag: '/flags/uk.png',
         status: 'ACTIVE',
     },
     {
         id: '550e8400-e29b-41d4-a716-446655440023',
         name: 'Tiếng Pháp',
-        flag: '/flags/france.png',
         status: 'ACTIVE',
     },
     {
         id: '550e8400-e29b-41d4-a716-446655440024',
         name: 'Tiếng Nhật',
-        flag: '/flags/japan.png',
         status: 'ACTIVE',
     },
     {
         id: '550e8400-e29b-41d4-a716-446655440025',
         name: 'Tiếng Hàn',
-        flag: '/flags/korea.png',
         status: 'ACTIVE',
     },
 ];

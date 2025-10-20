@@ -232,6 +232,18 @@ export class PositionService {
     }
 
     /**
+     * Get all positions (no pagination) - Optimized for performance
+     */
+    static async getAllPositionsSimple(): Promise<ApiResponse<Position[]>> {
+        try {
+            const response: any = await axiosInstance.get(POSITION_ENDPOINTS.GET_ALL_POSITIONS);
+            return this.formatResponse(response, 'All positions retrieved successfully');
+        } catch (error: any) {
+            this.handleError(error);
+        }
+    }
+
+    /**
      * Filter positions with search and pagination
      */
     static async filterPositions(
@@ -253,6 +265,7 @@ export class PositionService {
 export const {
     healthCheck,
     getAllPositions,
+    getAllPositionsSimple,
     getPositionById,
     createPosition,
     updatePosition,

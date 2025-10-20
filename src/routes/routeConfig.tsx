@@ -28,6 +28,7 @@ import IntegrationsSettings from '@/pages/settings/IntegrationsSettings';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Role } from '@/enums/common.enums';
 import ListPositions from '@/pages/admins/Positions/ListPositions';
+import ListLanguages from '@/pages/admins/Languages/ListLanguages';
 
 const routes: RouteObject[] = [
     {
@@ -48,9 +49,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.ADMIN.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            // </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.ADMIN.DASHBOARD} replace /> },
@@ -59,6 +60,10 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.POSITIONS.ROOT,
                 children: [{ index: true, element: <ListPositions /> }],
+            },
+            {
+                path: PATHS.ADMIN.LANGUAGES.ROOT,
+                children: [{ index: true, element: <ListLanguages /> }],
             },
         ],
     },
