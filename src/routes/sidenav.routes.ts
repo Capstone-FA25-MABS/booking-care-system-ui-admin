@@ -29,6 +29,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
             ),
             createSimpleMenuItem('Assets', 'ti ti-asset', '/hospital/assets'),
             createSimpleMenuItem('Activities', 'ti ti-activity', '/hospital/activities'),
+            createSimpleMenuItem(
+                'Gói dịch vụ',
+                'ti ti-package',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_PLAN)
+            ),
             createMessagesMenuItem('staff'),
         ],
     },
