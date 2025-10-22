@@ -26,7 +26,9 @@ import {
     AppointmentUITab,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
 import { AppFooter } from '@/components/AppFooter';
+import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
@@ -664,26 +666,7 @@ const ListAppointments: React.FC = () => {
                         placeholder: 'Chọn bệnh nhân...',
                         resetValue: [],
                     },
-                    {
-                        name: 'types',
-                        label: 'Loại Khám',
-                        type: 'multiselect',
-                        value: selectedTypes.map((t) => t.toString()),
-                        onChange: (value) => {
-                            const types = (value as string[]).map((v) =>
-                                v === 'TELEHEALTH'
-                                    ? AppointmentType.TELEHEALTH
-                                    : AppointmentType.IN_PERSON
-                            );
-                            setSelectedTypes(types);
-                        },
-                        options: [
-                            { value: AppointmentType.TELEHEALTH.toString(), label: 'Trực tuyến' },
-                            { value: AppointmentType.IN_PERSON.toString(), label: 'Trực tiếp' },
-                        ],
-                        placeholder: 'Chọn loại khám...',
-                        resetValue: [],
-                    },
+                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
                     {
                         name: 'doctors',
                         label: 'Bác Sĩ',
@@ -1327,82 +1310,18 @@ const ListAppointments: React.FC = () => {
             {/* End Edit New Appointment*/}
 
             {/* Start View Details */}
+            <AppointmentDetailsOffcanvas
+                show={showViewDetails}
+                onClose={() => setShowViewDetails(false)}
+                appointment={selectedAppointment}
+            />
             <div
                 className={`offcanvas offcanvas-offset offcanvas-end ${showViewDetails ? 'show' : ''}`}
                 tabIndex={-1}
-                id="view_details"
+                id="view_details_extended"
                 style={{ display: showViewDetails ? 'block' : 'none' }}
             >
-                <div className="offcanvas-header d-block pb-0 px-0">
-                    <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold">
-                            Chi Tiết Lịch Hẹn{' '}
-                            <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2">
-                                #{selectedAppointment?.appointmentId?.substring(0, 8) || 'AP544658'}
-                            </span>
-                        </h5>
-                        <button
-                            type="button"
-                            className="btn-close opacity-100"
-                            onClick={() => setShowViewDetails(false)}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                </div>
                 <div className="offcanvas-body pt-0 px-0">
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Khi Nào & Ở Đâu </h6>
-                    <div className="px-3 my-4">
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Ngày Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? new Date(
-                                          selectedAppointment.appointmentDate
-                                      ).toLocaleDateString('vi-VN')
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Giờ{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment?.appointmentTime}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Địa Điểm{' '}
-                            <span className="text-body fw-normal">
-                                {selectedAppointment?.hospitalInfo?.address ||
-                                    'Hà Nội, Việt Nam'}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Loại Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? getAppointmentTypeText(selectedAppointment.appointmentType)
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <div className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Thông Tin Bệnh Nhân
-                            <div className="text-body fw-normal d-flex align-items-center">
-                                <span className="avatar avatar-sm">
-                                    <img
-                                        src={selectedAppointment?.patientInfo?.avatarUrl}
-                                        alt=""
-                                        className="rounded-circle me-1"
-                                    />
-                                </span>
-                                {formatFullName(
-                                    selectedAppointment?.patientInfo?.firstName,
-                                    selectedAppointment?.patientInfo?.lastName
-                                )}
-                            </div>
-                        </div>
-                    </div>
                     <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Chi Tiết Lịch Hẹn </h6>
                     <div className="px-3 my-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">

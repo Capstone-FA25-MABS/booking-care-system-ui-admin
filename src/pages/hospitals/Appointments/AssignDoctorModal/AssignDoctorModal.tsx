@@ -39,6 +39,62 @@ const convertSlotToAppointmentTime = (slot: AvailableSlot): AppointmentTime | nu
     return null;
 };
 
+// Helper function to get doctor select placeholder text
+const getDoctorSelectPlaceholder = (
+    isFetchingDoctors: boolean,
+    availableDoctors: Doctor[]
+): string => {
+    if (isFetchingDoctors) {
+        return '-- Đang tải...';
+    }
+    if (availableDoctors.length === 0) {
+        return '-- Không có bác sĩ khả dụng --';
+    }
+    return '-- Chọn bác sĩ --';
+};
+
+// Helper function to get doctor select helper text
+const getDoctorSelectHelperText = (
+    isFetchingDoctors: boolean,
+    timeOption: 'keep' | 'change',
+    availableDoctorsCount: number
+): string => {
+    if (isFetchingDoctors) {
+        return 'Đang tải danh sách bác sĩ...';
+    }
+    if (timeOption === 'keep') {
+        return `Chỉ hiển thị ${availableDoctorsCount} bác sĩ khả dụng ở khung giờ cũ`;
+    }
+    return `Hiển thị ${availableDoctorsCount} bác sĩ cùng chuyên khoa/bệnh viện`;
+};
+
+// Helper function to get date input helper text
+const getDateInputHelperText = (selectedDoctorId: string): string => {
+    return selectedDoctorId ? 'Chỉ có thể chọn ngày trong tương lai' : 'Vui lòng chọn bác sĩ trước';
+};
+
+// Helper function to get time select helper text
+const getTimeSelectHelperText = (
+    selectedDoctorId: string,
+    newAppointmentDate: string,
+    isFetchingSlots: boolean,
+    availableSlots: AvailableSlot[] | null
+): string => {
+    if (!selectedDoctorId) {
+        return 'Vui lòng chọn bác sĩ trước';
+    }
+    if (!newAppointmentDate) {
+        return 'Vui lòng chọn ngày trước';
+    }
+    if (isFetchingSlots) {
+        return 'Đang tải giờ khả dụng...';
+    }
+    if (!availableSlots || availableSlots.length === 0) {
+        return 'Không có giờ khả dụng cho ngày này';
+    }
+    return `Có ${availableSlots.length} giờ khả dụng`;
+};
+
 interface AssignDoctorModalProps {
     show: boolean;
     onHide: () => void;
@@ -476,11 +532,10 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                 disabled={isAssigning || isFetchingDoctors}
                                             >
                                                 <option value="">
-                                                    {isFetchingDoctors
-                                                        ? '-- Đang tải...'
-                                                        : availableDoctors.length === 0
-                                                          ? '-- Không có bác sĩ khả dụng --'
-                                                          : '-- Chọn bác sĩ --'}
+                                                    {getDoctorSelectPlaceholder(
+                                                        isFetchingDoctors,
+                                                        availableDoctors
+                                                    )}
                                                 </option>
                                                 {availableDoctors.map((doctor) => (
                                                     <option key={doctor.id} value={doctor.id}>
@@ -493,11 +548,11 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                 ))}
                                             </select>
                                             <small className="text-muted">
-                                                {isFetchingDoctors
-                                                    ? 'Đang tải danh sách bác sĩ...'
-                                                    : timeOption === 'keep'
-                                                      ? `Chỉ hiển thị ${availableDoctors.length} bác sĩ khả dụng ở khung giờ cũ`
-                                                      : `Hiển thị ${availableDoctors.length} bác sĩ cùng chuyên khoa/bệnh viện`}
+                                                {getDoctorSelectHelperText(
+                                                    isFetchingDoctors,
+                                                    timeOption,
+                                                    availableDoctors.length
+                                                )}
                                             </small>
                                         </div>
 
@@ -521,9 +576,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                         required
                                                     />
                                                     <small className="text-muted">
-                                                        {!selectedDoctorId
-                                                            ? 'Vui lòng chọn bác sĩ trước'
-                                                            : 'Chỉ có thể chọn ngày trong tương lai'}
+                                                        {getDateInputHelperText(selectedDoctorId)}
                                                     </small>
                                                 </div>
 
@@ -574,16 +627,12 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                         })}
                                                     </select>
                                                     <small className="text-muted">
-                                                        {!selectedDoctorId
-                                                            ? 'Vui lòng chọn bác sĩ trước'
-                                                            : !newAppointmentDate
-                                                              ? 'Vui lòng chọn ngày trước'
-                                                              : isFetchingSlots
-                                                                ? 'Đang tải giờ khả dụng...'
-                                                                : !availableSlots ||
-                                                                    availableSlots.length === 0
-                                                                  ? 'Không có giờ khả dụng cho ngày này'
-                                                                  : `Có ${availableSlots?.length || 0} giờ khả dụng`}
+                                                        {getTimeSelectHelperText(
+                                                            selectedDoctorId,
+                                                            newAppointmentDate,
+                                                            isFetchingSlots,
+                                                            availableSlots
+                                                        )}
                                                     </small>
                                                 </div>
                                             </div>
@@ -620,10 +669,14 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                         )}
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">
+                                            <label
+                                                htmlFor="staff-note"
+                                                className="form-label fw-semibold"
+                                            >
                                                 Ghi chú cho bệnh nhân (tuỳ chọn)
                                             </label>
                                             <textarea
+                                                id="staff-note"
                                                 className="form-control"
                                                 rows={3}
                                                 value={staffNote}

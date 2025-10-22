@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { Skeleton, Stack } from '@mui/material';
 import Pagination from '@/components/Pagination';
 import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
-import StatusBadge from '@/components/StatusBadge';
 import {
     AppointmentCardData,
     AppointmentQueryRequest,
     transformToCardData,
     isNewAppointment,
     mapUITabToStatus,
-    getAppointmentTypeText,
-    formatFullName,
     AppointmentUITab,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
 import { AppFooter } from '@/components/AppFooter';
+import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
+import { StatusTabButton } from './MyAppointments/components/StatusTabButton';
+import { AppointmentTableBody } from './MyAppointments/components/AppointmentTableBody';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
-
-// Import images
-import user01 from '@/assets/img/users/user-01.jpg';
 
 // Table Skeleton Component
 const AppointmentTableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
@@ -276,66 +273,42 @@ const MyAppointments: React.FC = () => {
                 <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
                     {/* Status Tabs */}
                     <div className="d-flex gap-2">
-                        <button
-                            type="button"
-                            className={`btn ${activeStatusTab === 'waiting' ? 'btn-primary' : 'btn-light'}`}
+                        <StatusTabButton
+                            label="Chờ xử lý"
+                            count={appointmentCounts.waiting}
+                            isActive={activeStatusTab === 'waiting'}
                             onClick={() => {
                                 setActiveStatusTab('waiting');
                                 setCurrentPage(1);
                             }}
-                        >
-                            Chờ xử lý{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'waiting' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {appointmentCounts.waiting}
-                            </span>
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn ${activeStatusTab === 'upcoming' ? 'btn-primary' : 'btn-light'}`}
+                        />
+                        <StatusTabButton
+                            label="Sắp Tới"
+                            count={appointmentCounts.upcoming}
+                            isActive={activeStatusTab === 'upcoming'}
                             onClick={() => {
                                 setActiveStatusTab('upcoming');
                                 setCurrentPage(1);
                             }}
-                        >
-                            Sắp Tới{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'upcoming' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {appointmentCounts.upcoming}
-                            </span>
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn ${activeStatusTab === 'cancelled' ? 'btn-primary' : 'btn-light'}`}
+                        />
+                        <StatusTabButton
+                            label="Đã Hủy"
+                            count={appointmentCounts.cancelled}
+                            isActive={activeStatusTab === 'cancelled'}
                             onClick={() => {
                                 setActiveStatusTab('cancelled');
                                 setCurrentPage(1);
                             }}
-                        >
-                            Đã Hủy{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'cancelled' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {appointmentCounts.cancelled}
-                            </span>
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn ${activeStatusTab === 'completed' ? 'btn-primary' : 'btn-light'}`}
+                        />
+                        <StatusTabButton
+                            label="Hoàn Thành"
+                            count={appointmentCounts.completed}
+                            isActive={activeStatusTab === 'completed'}
                             onClick={() => {
                                 setActiveStatusTab('completed');
                                 setCurrentPage(1);
                             }}
-                        >
-                            Hoàn Thành{' '}
-                            <span
-                                className={`badge ${activeStatusTab === 'completed' ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`}
-                            >
-                                {appointmentCounts.completed}
-                            </span>
-                        </button>
+                        />
                     </div>
                 </div>
                 {/* End Filter */}
@@ -353,119 +326,16 @@ const MyAppointments: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {isLoading ? (
-                                <AppointmentTableSkeleton rows={itemsPerPage} />
-                            ) : apiError ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-5">
-                                        <div className="text-danger">
-                                            <i
-                                                className="ti ti-alert-circle fs-1"
-                                                aria-hidden="true"
-                                            ></i>
-                                            <p className="mt-2">{apiError}</p>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-primary"
-                                                onClick={() => globalThis.location.reload()}
-                                            >
-                                                Thử lại
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : appointments.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-5">
-                                        <i
-                                            className="ti ti-calendar-off fs-1 text-muted"
-                                            aria-hidden="true"
-                                        ></i>
-                                        <p className="mt-2 text-muted">{NO_APPOINTMENTS_MESSAGE}</p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                appointments.map((appointment) => (
-                                    <tr key={appointment.appointmentId}>
-                                        <td>
-                                            {new Date(
-                                                appointment.appointmentDate
-                                            ).toLocaleDateString('vi-VN')}{' '}
-                                            | {appointment.appointmentTime}
-                                        </td>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <Link
-                                                    to={PATIENT_DETAILS_PATH}
-                                                    className="avatar avatar-md me-2"
-                                                >
-                                                    <img
-                                                        src={
-                                                            appointment.patientInfo?.avatarUrl ||
-                                                            user01
-                                                        }
-                                                        alt="patient"
-                                                        className="rounded-circle"
-                                                    />
-                                                </Link>
-                                                <Link
-                                                    to={PATIENT_DETAILS_PATH}
-                                                    className="fw-semibold"
-                                                >
-                                                    {formatFullName(
-                                                        appointment.patientInfo?.firstName,
-                                                        appointment.patientInfo?.lastName
-                                                    )}
-                                                    <span className="text-body fs-13 fw-normal d-block">
-                                                        {appointment.patientInfo?.phone ||
-                                                            appointment.patientInfo?.email}
-                                                    </span>
-                                                </Link>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {getAppointmentTypeText(appointment.appointmentType)}
-                                        </td>
-                                        <td>
-                                            <StatusBadge status={appointment.status} />
-                                        </td>
-                                        <td className="action-item">
-                                            <button
-                                                type="button"
-                                                className="btn btn-link p-0"
-                                                data-bs-toggle="dropdown"
-                                            >
-                                                <i
-                                                    className="ti ti-dots-vertical"
-                                                    aria-hidden="true"
-                                                ></i>
-                                            </button>
-                                            <ul className="dropdown-menu p-2">
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                        onClick={() => handleViewClick(appointment)}
-                                                    >
-                                                        Xem Chi Tiết
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button
-                                                        type="button"
-                                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                                        onClick={() =>
-                                                            handleDeleteClick(appointment)
-                                                        }
-                                                    >
-                                                        Hủy Lịch
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            <AppointmentTableBody
+                                isLoading={isLoading}
+                                apiError={apiError}
+                                appointments={appointments}
+                                noAppointmentsMessage={NO_APPOINTMENTS_MESSAGE}
+                                patientDetailsPath={PATIENT_DETAILS_PATH}
+                                onViewClick={handleViewClick}
+                                onDeleteClick={handleDeleteClick}
+                                skeletonComponent={<AppointmentTableSkeleton rows={itemsPerPage} />}
+                            />
                         </tbody>
                     </table>
                 </div>
@@ -492,26 +362,7 @@ const MyAppointments: React.FC = () => {
                 onReset={handleClearFilters}
                 title="Lọc Lịch Hẹn"
                 fields={[
-                    {
-                        name: 'types',
-                        label: 'Loại Khám',
-                        type: 'multiselect',
-                        value: selectedTypes.map((t) => t.toString()),
-                        onChange: (value) => {
-                            const types = (value as string[]).map((v) =>
-                                v === 'TELEHEALTH'
-                                    ? AppointmentType.TELEHEALTH
-                                    : AppointmentType.IN_PERSON
-                            );
-                            setSelectedTypes(types);
-                        },
-                        options: [
-                            { value: AppointmentType.TELEHEALTH.toString(), label: 'Trực tuyến' },
-                            { value: AppointmentType.IN_PERSON.toString(), label: 'Trực tiếp' },
-                        ],
-                        placeholder: 'Chọn loại khám...',
-                        resetValue: [],
-                    },
+                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
                     {
                         name: 'dateRange',
                         label: 'Khoảng thời gian',
@@ -524,90 +375,11 @@ const MyAppointments: React.FC = () => {
             />
 
             {/* Start View Details */}
-            <div
-                className={`offcanvas offcanvas-offset offcanvas-end ${showViewDetails ? 'show' : ''}`}
-                tabIndex={-1}
-                id="view_details"
-                style={{ display: showViewDetails ? 'block' : 'none' }}
-            >
-                <div className="offcanvas-header d-block pb-0 px-0">
-                    <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold">
-                            Chi Tiết Lịch Hẹn{' '}
-                            <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2">
-                                #{selectedAppointment?.appointmentId?.substring(0, 8) || 'AP544658'}
-                            </span>
-                        </h5>
-                        <button
-                            type="button"
-                            className="btn-close opacity-100"
-                            onClick={() => setShowViewDetails(false)}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                </div>
-                <div className="offcanvas-body pt-0 px-0">
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Khi Nào & Ở Đâu </h6>
-                    <div className="px-3 my-4">
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Ngày Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? new Date(
-                                          selectedAppointment.appointmentDate
-                                      ).toLocaleDateString('vi-VN')
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Giờ{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment?.appointmentTime}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Địa Điểm{' '}
-                            <span className="text-body fw-normal">
-                                {selectedAppointment?.hospitalInfo?.address ||
-                                    'Hà Nội, Việt Nam'}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Loại Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? getAppointmentTypeText(selectedAppointment.appointmentType)
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <div className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Thông Tin Bệnh Nhân
-                            <div className="text-body fw-normal d-flex align-items-center">
-                                <span className="avatar avatar-sm">
-                                    <img
-                                        src={selectedAppointment?.patientInfo?.avatarUrl || user01}
-                                        alt=""
-                                        className="rounded-circle me-1"
-                                    />
-                                </span>
-                                {formatFullName(
-                                    selectedAppointment?.patientInfo?.firstName,
-                                    selectedAppointment?.patientInfo?.lastName
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Lý Do Khám </h6>
-                    <div className="px-3 my-4">
-                        <p className="text-body">
-                            {selectedAppointment?.reason || 'Không có lý do cụ thể'}
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <AppointmentDetailsOffcanvas
+                show={showViewDetails}
+                onClose={() => setShowViewDetails(false)}
+                appointment={selectedAppointment}
+            />
             {/* End View Details */}
 
             {/* Delete Modal */}
