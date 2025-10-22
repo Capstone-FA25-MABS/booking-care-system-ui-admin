@@ -30,6 +30,9 @@ export const PATHS = {
         POSITIONS: {
             ROOT: 'positions',
         },
+        LANGUAGES: {
+            ROOT: 'languages',
+        },
     },
 
     // Hospital paths
@@ -50,6 +53,7 @@ export const PATHS = {
             ROOT: 'refunds',
         },
         MESSAGES: 'messages',
+        SUBSCRIPTION_PLAN: 'subscription-plan',
     },
 
     // Doctor paths

@@ -29,6 +29,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
             ),
             createSimpleMenuItem('Assets', 'ti ti-asset', '/hospital/assets'),
             createSimpleMenuItem('Activities', 'ti ti-activity', '/hospital/activities'),
+            createSimpleMenuItem(
+                'Gói dịch vụ',
+                'ti ti-package',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_PLAN)
+            ),
             createMessagesMenuItem('staff'),
         ],
     },
@@ -89,6 +94,21 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                     { label: 'Invoices', link: '/apps/invoices' },
                 ],
             },
+        ],
+    },
+    {
+        title: 'Management',
+        items: [
+            createSimpleMenuItem(
+                'Học vị',
+                'ti ti-certificate',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.POSITIONS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Ngôn ngữ',
+                'ti ti-language',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
+            ),
         ],
     },
     {

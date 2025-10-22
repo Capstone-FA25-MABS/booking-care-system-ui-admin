@@ -19,6 +19,7 @@ import discountReducer from './slices/discount.slice';
 import uiReducer from './slices/uiSlice';
 import doctorReducer from './slices/doctorSlice';
 import positionReducer from './slices/positionSlice';
+import languageReducer from './slices/languageSlice';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
     ui: uiReducer,
     doctor: doctorReducer,
     position: positionReducer,
+    language: languageReducer,
 });
 
 // Redux persist configuration
