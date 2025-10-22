@@ -25,6 +25,8 @@ import {
     formatFullName,
     AppointmentUITab,
 } from '@/types/appointment.types';
+import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { AppFooter } from '@/components/AppFooter';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
@@ -208,45 +210,16 @@ const ListAppointments: React.FC = () => {
         setIsLoading(true);
         setApiError(null);
 
-        try {
-            const query = buildAppointmentQuery();
+        const query = buildAppointmentQuery();
 
-            // Call API for management
-            const response = await AppointmentService.getAppointmentsForManagement(query);
-
-            if (response.success && response.data) {
-                // Transform API responses to UI-friendly format
-                const transformedAppointments = response.data.appointments.map((apt) => {
-                    const cardData = transformToCardData(apt);
-                    cardData.isNew = isNewAppointment(apt.createdAt);
-                    return cardData;
-                });
-
-                setAppointments(transformedAppointments);
-                setTotalCount(response.data.totalCount || 0);
-
-                // Update counts from statusCounts if available
-                if (response.data.statusCounts) {
-                    setTabCounts({
-                        waiting: response.data.statusCounts.pending || 0,
-                        upcoming: response.data.statusCounts.confirmed || 0,
-                        cancelled: response.data.statusCounts.cancelled || 0,
-                        completed: response.data.statusCounts.completed || 0,
-                    });
-                }
-            } else {
-                throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
-            }
-        } catch (error: any) {
-            console.error('Error fetching appointments:', error);
-            const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
-            setApiError(errorMessage);
-            setAppointments([]);
-            setTotalCount(0);
-            toast.error(errorMessage);
-        } finally {
-            setIsLoading(false);
-        }
+        // Call API for management
+        await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
+            setAppointments,
+            setTotalCount,
+            setTabCounts,
+            setApiError,
+            setIsLoading,
+        });
     };
 
     useEffect(() => {
@@ -283,7 +256,7 @@ const ListAppointments: React.FC = () => {
         setIsCancelling(true);
         try {
             // Determine if reschedule options should be enabled (staff cancellation only)
-            const enableReschedule = rescheduleOptions ? true : false;
+            const enableReschedule = !!rescheduleOptions;
 
             // Call API to cancel appointment (with reschedule options for staff)
             await AppointmentService.cancelAppointment(
@@ -667,15 +640,7 @@ const ListAppointments: React.FC = () => {
             />
 
             {/* Footer Start */}
-            <div className="footer text-center bg-white p-2 border-top">
-                <p className="text-dark mb-0">
-                    2025 &copy;{' '}
-                    <Link to="/" className="link-primary">
-                        Preclinic
-                    </Link>
-                    , Tất Cả Quyền Được Bảo Lưu
-                </p>
-            </div>
+            <AppFooter />
             {/* Footer End */}
 
             {/* Filter Modal */}

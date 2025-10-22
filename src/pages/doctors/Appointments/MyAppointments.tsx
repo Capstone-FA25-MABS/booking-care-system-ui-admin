@@ -7,7 +7,6 @@ import Pagination from '@/components/Pagination';
 import ModalDelete from '@/components/ModalDelete';
 import ModalFilter from '@/components/ModalFilter';
 import StatusBadge from '@/components/StatusBadge';
-import { AppointmentService } from '@/services/appointment.service';
 import {
     AppointmentCardData,
     AppointmentQueryRequest,
@@ -18,6 +17,8 @@ import {
     formatFullName,
     AppointmentUITab,
 } from '@/types/appointment.types';
+import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { AppFooter } from '@/components/AppFooter';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
@@ -80,6 +81,10 @@ const AppointmentTableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => 
     );
 };
 
+// Constants
+const NO_APPOINTMENTS_MESSAGE = 'Không có lịch hẹn nào';
+const PATIENT_DETAILS_PATH = '/doctors-patient-details';
+
 const MyAppointments: React.FC = () => {
     // Get auth and doctor profile from Redux
     const { roles } = useSelector((state: RootState) => state.auth);
@@ -126,84 +131,63 @@ const MyAppointments: React.FC = () => {
         // Check if doctor profile is loaded
         if (primaryRole === Role.DOCTOR && !doctorProfile) {
             console.warn('Doctor profile not loaded yet');
-            return;
         }
     }, [roles, doctorProfile]);
+
+    // Helper function to validate doctor profile
+    const validateDoctorProfile = () => {
+        const primaryRole = roles[0]?.toUpperCase();
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not available, skipping appointment fetch');
+            return false;
+        }
+        if (!doctorProfile?.id) {
+            console.warn('Doctor ID not available');
+            toast.warning('Không tìm thấy thông tin bác sĩ');
+            return false;
+        }
+        return true;
+    };
+
+    // Helper function to build query request
+    const buildQueryRequest = (): AppointmentQueryRequest => {
+        const query: AppointmentQueryRequest = {
+            doctorId: doctorProfile!.id,
+            status: mapUITabToStatus(activeStatusTab),
+            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
+            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: 'CreatedAt',
+            sortDescending: true,
+            includeStatusCounts: true,
+        };
+
+        if (selectedTypes.length > 0) {
+            query.appointmentType = selectedTypes[0];
+        }
+
+        return query;
+    };
 
     // Fetch appointments from API
     useEffect(() => {
         const fetchAppointments = async () => {
-            // Validate that doctor has profile
-            const primaryRole = roles[0]?.toUpperCase();
-            if (primaryRole === Role.DOCTOR && !doctorProfile) {
-                console.warn('Doctor profile not available, skipping appointment fetch');
-                return;
-            }
-
-            if (!doctorProfile?.id) {
-                console.warn('Doctor ID not available');
-                toast.warning('Không tìm thấy thông tin bác sĩ');
-                return;
-            }
+            if (!validateDoctorProfile()) return;
 
             setIsLoading(true);
             setApiError(null);
 
-            try {
-                // Build query request
-                const query: AppointmentQueryRequest = {
-                    doctorId: doctorProfile.id, // Auto-fill doctorId for current doctor
-                    status: mapUITabToStatus(activeStatusTab),
-                    fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
-                    toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
-                    pageNumber: currentPage,
-                    pageSize: itemsPerPage,
-                    sortBy: 'CreatedAt',
-                    sortDescending: true,
-                    includeStatusCounts: true,
-                };
+            const query = buildQueryRequest();
 
-                // Add user-selected filters
-                if (selectedTypes.length > 0) {
-                    query.appointmentType = selectedTypes[0];
-                }
-
-                // Call API for management
-                const response = await AppointmentService.getAppointmentsForManagement(query);
-
-                if (response.success && response.data) {
-                    // Transform API responses to UI-friendly format
-                    const transformedAppointments = response.data.appointments.map((apt) => {
-                        const cardData = transformToCardData(apt);
-                        cardData.isNew = isNewAppointment(apt.createdAt);
-                        return cardData;
-                    });
-
-                    setAppointments(transformedAppointments);
-                    setTotalCount(response.data.totalCount || 0);
-
-                    // Update counts from statusCounts if available
-                    if (response.data.statusCounts) {
-                        setTabCounts({
-                            waiting: response.data.statusCounts.pending || 0,
-                            upcoming: response.data.statusCounts.confirmed || 0,
-                            cancelled: response.data.statusCounts.cancelled || 0,
-                            completed: response.data.statusCounts.completed || 0,
-                        });
-                    }
-                } else {
-                    throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
-                }
-            } catch (error: any) {
-                console.error('Error fetching appointments:', error);
-                const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
-                setApiError(errorMessage);
-                setAppointments([]);
-                setTotalCount(0);
-                toast.error(errorMessage);
-            } finally {
-                setIsLoading(false);
-            }
+            // Call API for management
+            await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
+                setAppointments,
+                setTotalCount,
+                setTabCounts,
+                setApiError,
+                setIsLoading,
+            });
         };
 
         fetchAppointments();
@@ -282,8 +266,7 @@ const MyAppointments: React.FC = () => {
                             className="btn btn-outline-primary btn-sm"
                             onClick={() => setShowFilterModal(true)}
                         >
-                            <i className="ti ti-filter me-1"></i>
-                            Lọc
+                            <i className="ti ti-filter me-1" aria-hidden="true"></i> Lọc
                         </button>
                     </div>
                 </div>
@@ -376,12 +359,15 @@ const MyAppointments: React.FC = () => {
                                 <tr>
                                     <td colSpan={5} className="text-center py-5">
                                         <div className="text-danger">
-                                            <i className="ti ti-alert-circle fs-1"></i>
+                                            <i
+                                                className="ti ti-alert-circle fs-1"
+                                                aria-hidden="true"
+                                            ></i>
                                             <p className="mt-2">{apiError}</p>
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-primary"
-                                                onClick={() => window.location.reload()}
+                                                onClick={() => globalThis.location.reload()}
                                             >
                                                 Thử lại
                                             </button>
@@ -391,8 +377,11 @@ const MyAppointments: React.FC = () => {
                             ) : appointments.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="text-center py-5">
-                                        <i className="ti ti-calendar-off fs-1 text-muted"></i>
-                                        <p className="mt-2 text-muted">Không có lịch hẹn nào</p>
+                                        <i
+                                            className="ti ti-calendar-off fs-1 text-muted"
+                                            aria-hidden="true"
+                                        ></i>
+                                        <p className="mt-2 text-muted">{NO_APPOINTMENTS_MESSAGE}</p>
                                     </td>
                                 </tr>
                             ) : (
@@ -407,7 +396,7 @@ const MyAppointments: React.FC = () => {
                                         <td>
                                             <div className="d-flex align-items-center">
                                                 <Link
-                                                    to="/doctors-patient-details"
+                                                    to={PATIENT_DETAILS_PATH}
                                                     className="avatar avatar-md me-2"
                                                 >
                                                     <img
@@ -420,7 +409,7 @@ const MyAppointments: React.FC = () => {
                                                     />
                                                 </Link>
                                                 <Link
-                                                    to="/doctors-patient-details"
+                                                    to={PATIENT_DETAILS_PATH}
                                                     className="fw-semibold"
                                                 >
                                                     {formatFullName(
@@ -446,7 +435,10 @@ const MyAppointments: React.FC = () => {
                                                 className="btn btn-link p-0"
                                                 data-bs-toggle="dropdown"
                                             >
-                                                <i className="ti ti-dots-vertical"></i>
+                                                <i
+                                                    className="ti ti-dots-vertical"
+                                                    aria-hidden="true"
+                                                ></i>
                                             </button>
                                             <ul className="dropdown-menu p-2">
                                                 <li>
@@ -489,15 +481,7 @@ const MyAppointments: React.FC = () => {
             />
 
             {/* Footer Start */}
-            <div className="footer text-center bg-white p-2 border-top">
-                <p className="text-dark mb-0">
-                    2025 &copy;{' '}
-                    <Link to="/" className="link-primary">
-                        Preclinic
-                    </Link>
-                    , Tất Cả Quyền Được Bảo Lưu
-                </p>
-            </div>
+            <AppFooter />
             {/* Footer End */}
 
             {/* Filter Modal */}

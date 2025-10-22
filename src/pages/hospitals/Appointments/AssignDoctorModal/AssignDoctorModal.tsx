@@ -202,42 +202,54 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
         }
     }, [selectedDoctorId, newAppointmentDate, timeOption]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    // Helper function to validate form data
+    const validateFormData = (): string | null => {
         if (!selectedDoctorId) {
-            toast.error('Vui lòng chọn bác sĩ');
-            return;
+            return 'Vui lòng chọn bác sĩ';
         }
 
         if (!appointment?.appointmentId) {
-            toast.error('Không tìm thấy thông tin lịch hẹn');
-            return;
+            return 'Không tìm thấy thông tin lịch hẹn';
         }
 
         // Validate cancellation reason (required if appointment is not yet cancelled)
         if (appointment.status !== 'CANCELLED' && !cancellationReason.trim()) {
-            toast.error('Vui lòng nhập lý do hủy lịch hẹn');
-            return;
+            return 'Vui lòng nhập lý do hủy lịch hẹn';
         }
 
         if (cancellationReason.trim() && cancellationReason.length < 10) {
-            toast.error('Lý do hủy phải có ít nhất 10 ký tự');
+            return 'Lý do hủy phải có ít nhất 10 ký tự';
+        }
+
+        return null;
+    };
+
+    // Helper function to call assign new doctor API
+    const callAssignNewDoctorAPI = async () => {
+        return await AppointmentService.assignNewDoctor(
+            appointment!.appointmentId,
+            selectedDoctorId,
+            staffId,
+            newAppointmentDate ?? undefined,
+            newAppointmentTimeId ? String(newAppointmentTimeId) : undefined,
+            cancellationReason.trim() || undefined,
+            staffNote ?? undefined
+        );
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const validationError = validateFormData();
+        if (validationError) {
+            toast.error(validationError);
             return;
         }
 
         setIsAssigning(true);
 
         try {
-            const response = await AppointmentService.assignNewDoctor(
-                appointment.appointmentId,
-                selectedDoctorId,
-                staffId,
-                newAppointmentDate || undefined,
-                newAppointmentTimeId ? String(newAppointmentTimeId) : undefined,
-                cancellationReason.trim() || undefined,
-                staffNote || undefined
-            );
+            const response = await callAssignNewDoctorAPI();
 
             if (response.success && response.data) {
                 setConfirmationUrl(response.data.confirmationUrl);
@@ -292,7 +304,10 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                             <>
                                 <div className="modal-body">
                                     <div className="alert alert-success d-flex align-items-center">
-                                        <i className="ti ti-circle-check fs-3 me-2"></i>
+                                        <i
+                                            className="ti ti-circle-check fs-3 me-2"
+                                            aria-hidden="true"
+                                        ></i>
                                         <div>
                                             <strong>Thành công!</strong> Đã gán bác sĩ mới cho lịch
                                             hẹn.
@@ -302,11 +317,15 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold">
+                                        <label
+                                            htmlFor="confirmation-url"
+                                            className="form-label fw-semibold"
+                                        >
                                             Link xác nhận cho bệnh nhân:
                                         </label>
                                         <div className="input-group">
                                             <input
+                                                id="confirmation-url"
                                                 type="text"
                                                 className="form-control"
                                                 value={confirmationUrl}
@@ -317,7 +336,10 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                 className="btn btn-primary"
                                                 onClick={handleCopyUrl}
                                             >
-                                                <i className="ti ti-copy me-1"></i>
+                                                <i
+                                                    className="ti ti-copy me-1"
+                                                    aria-hidden="true"
+                                                ></i>{' '}
                                                 Sao chép
                                             </button>
                                         </div>
@@ -327,7 +349,10 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                     </div>
 
                                     <div className="alert alert-info">
-                                        <i className="ti ti-info-circle me-2"></i>
+                                        <i
+                                            className="ti ti-info-circle me-2"
+                                            aria-hidden="true"
+                                        ></i>
                                         <strong>Lưu ý:</strong> Lịch hẹn của bác sĩ đã được khóa tạm
                                         thời (soft lock) trong 48 giờ. Nếu bệnh nhân không xác nhận,
                                         slot sẽ tự động được giải phóng.
@@ -378,7 +403,10 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                         {/* Time Option Selection */}
                                         <div className="mb-4 p-3 border rounded bg-light">
                                             <h6 className="fw-bold mb-3">
-                                                <i className="ti ti-clock me-2"></i>
+                                                <i
+                                                    className="ti ti-clock me-2"
+                                                    aria-hidden="true"
+                                                ></i>{' '}
                                                 Lựa chọn khung giờ
                                             </h6>
                                             <div className="form-check mb-2">
@@ -430,11 +458,15 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">
+                                            <label
+                                                htmlFor="doctor-select"
+                                                className="form-label fw-semibold"
+                                            >
                                                 Chọn bác sĩ mới{' '}
                                                 <span className="text-danger">*</span>
                                             </label>
                                             <select
+                                                id="doctor-select"
                                                 className="form-select"
                                                 value={selectedDoctorId}
                                                 onChange={(e) =>
@@ -560,11 +592,15 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                         {/* Cancellation Reason - Required if appointment not yet cancelled */}
                                         {appointment?.status !== 'CANCELLED' && (
                                             <div className="mb-3">
-                                                <label className="form-label fw-semibold">
+                                                <label
+                                                    htmlFor="cancellation-reason"
+                                                    className="form-label fw-semibold"
+                                                >
                                                     Lý do hủy lịch hẹn cũ{' '}
                                                     <span className="text-danger">*</span>
                                                 </label>
                                                 <textarea
+                                                    id="cancellation-reason"
                                                     className="form-control"
                                                     rows={3}
                                                     value={cancellationReason}
@@ -618,15 +654,18 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                     >
                                         {isAssigning ? (
                                             <>
-                                                <span
+                                                <output
                                                     className="spinner-border spinner-border-sm me-2"
-                                                    role="status"
-                                                ></span>
+                                                    aria-label="Đang xử lý"
+                                                ></output>
                                                 Đang xử lý...
                                             </>
                                         ) : (
                                             <>
-                                                <i className="ti ti-user-check me-1"></i>
+                                                <i
+                                                    className="ti ti-user-check me-1"
+                                                    aria-hidden="true"
+                                                ></i>{' '}
                                                 Xác nhận gán
                                             </>
                                         )}

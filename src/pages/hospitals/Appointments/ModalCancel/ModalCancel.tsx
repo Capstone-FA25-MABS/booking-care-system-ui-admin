@@ -178,7 +178,10 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                             {showRescheduleOptions && (
                                 <div className="text-start mb-3 p-3 border rounded bg-light">
                                     <h6 className="fw-bold mb-3">
-                                        <i className="ti ti-calendar-event me-2"></i>
+                                        <i
+                                            className="ti ti-calendar-event me-2"
+                                            aria-hidden="true"
+                                        ></i>{' '}
                                         Tùy chọn đổi lịch cho bệnh nhân
                                     </h6>
                                     <div className="form-check mb-2">
@@ -205,7 +208,10 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                                 <>
                                                     <br />
                                                     <small className="text-danger">
-                                                        <i className="ti ti-alert-circle me-1"></i>
+                                                        <i
+                                                            className="ti ti-alert-circle me-1"
+                                                            aria-hidden="true"
+                                                        ></i>{' '}
                                                         Không áp dụng cho lịch hẹn dịch vụ (không có
                                                         bác sĩ)
                                                     </small>
@@ -237,7 +243,10 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                                 <>
                                                     <br />
                                                     <small className="text-danger">
-                                                        <i className="ti ti-alert-circle me-1"></i>
+                                                        <i
+                                                            className="ti ti-alert-circle me-1"
+                                                            aria-hidden="true"
+                                                        ></i>{' '}
                                                         Không áp dụng cho lịch hẹn dịch vụ (không có
                                                         bác sĩ)
                                                     </small>
@@ -321,7 +330,10 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                             onClick={onAssignDoctor}
                                             disabled={loading}
                                         >
-                                            <i className="ti ti-user-check me-1"></i>
+                                            <i
+                                                className="ti ti-user-check me-1"
+                                                aria-hidden="true"
+                                            ></i>{' '}
                                             Gán bác sĩ mới
                                         </button>
                                     )}
