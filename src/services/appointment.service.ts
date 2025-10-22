@@ -14,6 +14,14 @@ const APPOINTMENT_ENDPOINTS = {
     STATUS: (id: string) => `/appointments/status/${id}`,
     CANCEL: (id: string) => `/appointments/cancel/${id}`,
     BY_ID: (id: string) => `/appointments/${id}`,
+    ASSIGN_NEW_DOCTOR: (id: string) => `/appointments/${id}/assign-new-doctor`,
+    AVAILABLE_DOCTORS: '/appointments/available-doctors', // Now uses query params
+} as const;
+
+// Schedule Service endpoints
+const SCHEDULE_ENDPOINTS = {
+    AVAILABLE_SLOTS: (doctorId: string, date: string) =>
+        `/schedules/doctor-schedule/${doctorId}/available-slots?date=${date}`,
 } as const;
 
 /**
@@ -108,13 +116,22 @@ export class AppointmentService {
     static async cancelAppointment(
         appointmentId: string,
         cancellationReason: string,
-        cancelledByStaffId?: string
+        cancelledByStaffId?: string,
+        enableRescheduleOptions?: boolean,
+        rescheduleOptions?: {
+            enableSameDoctorReschedule: boolean;
+            enableNewDoctorAssignment: boolean;
+            enableDoctorSelection: boolean;
+            enableRefundRequest: boolean;
+        }
     ): Promise<ApiResponse<void>> {
         try {
             const request = {
                 appointmentId,
                 cancellationReason,
                 cancelledByStaffId,
+                enableRescheduleOptions,
+                rescheduleOptions,
             };
             const response: any = await axiosInstance.post(
                 APPOINTMENT_ENDPOINTS.CANCEL(appointmentId),
@@ -131,6 +148,128 @@ export class AppointmentService {
             throw new Error(error.message || 'Failed to cancel appointment');
         }
     }
+
+    /**
+     * Staff assigns new doctor to cancelled appointment (Option 2)
+     * Creates soft reservation for patient confirmation
+     */
+    static async assignNewDoctor(
+        appointmentId: string,
+        newDoctorId: string,
+        assignedByStaffId: string,
+        newAppointmentDate?: string,
+        newAppointmentTimeId?: string,
+        cancellationReason?: string,
+        staffNote?: string
+    ): Promise<ApiResponse<{ confirmationUrl: string }>> {
+        try {
+            const request = {
+                appointmentId,
+                newDoctorId,
+                assignedByStaffId,
+                newAppointmentDate,
+                newAppointmentTimeId,
+                cancellationReason,
+                staffNote,
+            };
+            const response: any = await axiosInstance.post(
+                APPOINTMENT_ENDPOINTS.ASSIGN_NEW_DOCTOR(appointmentId),
+                request
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Doctor assigned successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to assign new doctor');
+        }
+    }
+
+    /**
+     * Get available doctors for staff to assign (Option 2)
+     * Returns doctors from same hospital + specialty
+     * @param checkAvailability - If true, only return doctors available at specified date/time. If false, return all doctors.
+     */
+    static async getAvailableDoctors(
+        hospitalId: string,
+        specialtyId: string,
+        appointmentDate?: string,
+        appointmentTimeId?: string,
+        checkAvailability: boolean = true
+    ): Promise<
+        ApiResponse<{
+            doctors: Array<{
+                id: string;
+                email: string;
+                firstName: string;
+                lastName: string;
+                fullName: string;
+                avatarUrl?: string;
+                positionName?: string;
+                specialtyName?: string;
+                yearsOfExperience: number;
+            }>;
+            totalCount: number;
+        }>
+    > {
+        try {
+            const params = new URLSearchParams({
+                hospitalId,
+                specialtyId,
+                checkAvailability: String(checkAvailability),
+            });
+
+            // Add optional params if provided
+            if (appointmentDate) {
+                params.append('appointmentDate', appointmentDate);
+            }
+            if (appointmentTimeId) {
+                params.append('appointmentTimeId', appointmentTimeId);
+            }
+
+            const response: any = await axiosInstance.get(
+                `${APPOINTMENT_ENDPOINTS.AVAILABLE_DOCTORS}?${params.toString()}`
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Doctors retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch doctors');
+        }
+    }
+
+    /**
+     * Get available slots for a doctor on a specific date
+     * Calls Schedule Service API
+     */
+    static async getAvailableSlots(
+        doctorId: string,
+        date: string
+    ): Promise<
+        ApiResponse<
+            Array<{
+                id: string;
+                startTime: string;
+                endTime: string;
+            }>
+        >
+    > {
+        try {
+            const response: any = await axiosInstance.get(
+                SCHEDULE_ENDPOINTS.AVAILABLE_SLOTS(doctorId, date)
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Available slots retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch available slots');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -140,6 +279,9 @@ export const {
     getAppointmentsForManagement,
     updateAppointmentStatus,
     cancelAppointment,
+    assignNewDoctor,
+    getAvailableDoctors,
+    getAvailableSlots,
 } = AppointmentService;
 
 // Default export
