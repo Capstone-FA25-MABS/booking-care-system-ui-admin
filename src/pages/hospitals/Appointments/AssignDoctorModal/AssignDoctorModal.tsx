@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { AppointmentService } from '@/services/appointment.service';
 import { AppointmentCardData } from '@/types/appointment.types';
+import { AppointmentTime } from '@/enums/appointment.enums';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 
@@ -19,6 +20,24 @@ interface AvailableSlot {
     startTime: string;
     endTime: string;
 }
+
+// Helper function to convert AvailableSlot to AppointmentTime enum
+const convertSlotToAppointmentTime = (slot: AvailableSlot): AppointmentTime | null => {
+    const { startTime, endTime } = slot;
+
+    // Format: "08:00" -> "08_00"
+    const formatTime = (time: string) => time.replace(':', '_');
+
+    // Create the AppointmentTime enum value
+    const appointmentTimeId = `AT_${formatTime(startTime)}_${formatTime(endTime)}`;
+
+    // Check if this enum value exists
+    if (Object.values(AppointmentTime).includes(appointmentTimeId as AppointmentTime)) {
+        return appointmentTimeId as AppointmentTime;
+    }
+
+    return null;
+};
 
 interface AssignDoctorModalProps {
     show: boolean;
@@ -39,7 +58,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
     const [availableDoctors, setAvailableDoctors] = useState<Doctor[]>([]);
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
     const [newAppointmentDate, setNewAppointmentDate] = useState<string>('');
-    const [newAppointmentTimeId, setNewAppointmentTimeId] = useState<string>('');
+    const [newAppointmentTimeId, setNewAppointmentTimeId] = useState<AppointmentTime | ''>('');
     const [cancellationReason, setCancellationReason] = useState<string>('');
     const [staffNote, setStaffNote] = useState<string>('');
     const [isAssigning, setIsAssigning] = useState(false);
@@ -72,8 +91,19 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
         try {
             const response = await AppointmentService.getAvailableSlots(doctorId, date);
             if (response.success && response.data) {
-                // API returns array directly
-                setAvailableSlots(response.data);
+                // Convert API slots to AvailableSlot format and filter valid AppointmentTime
+                const validSlots = response.data
+                    .map((slot: any) => ({
+                        id: slot.id,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                    }))
+                    .filter((slot: AvailableSlot) => {
+                        // Only keep slots that can be converted to valid AppointmentTime
+                        return convertSlotToAppointmentTime(slot) !== null;
+                    });
+
+                setAvailableSlots(validSlots);
             } else {
                 throw new Error(response.message || 'Không thể tải giờ khả dụng');
             }
@@ -204,7 +234,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                 selectedDoctorId,
                 staffId,
                 newAppointmentDate || undefined,
-                newAppointmentTimeId || undefined,
+                newAppointmentTimeId ? String(newAppointmentTimeId) : undefined,
                 cancellationReason.trim() || undefined,
                 staffNote || undefined
             );
@@ -473,9 +503,18 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                     <select
                                                         className="form-select"
                                                         value={newAppointmentTimeId}
-                                                        onChange={(e) =>
-                                                            setNewAppointmentTimeId(e.target.value)
-                                                        }
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            // Convert string value to AppointmentTime enum
+                                                            const appointmentTime = Object.values(
+                                                                AppointmentTime
+                                                            ).includes(value as AppointmentTime)
+                                                                ? (value as AppointmentTime)
+                                                                : '';
+                                                            setNewAppointmentTimeId(
+                                                                appointmentTime
+                                                            );
+                                                        }}
                                                         disabled={
                                                             isAssigning ||
                                                             !selectedDoctorId ||
@@ -486,11 +525,21 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                         <option value="">
                                                             -- Chọn giờ khám --
                                                         </option>
-                                                        {availableSlots?.map((slot) => (
-                                                            <option key={slot.id} value={slot.id}>
-                                                                {slot.startTime} - {slot.endTime}
-                                                            </option>
-                                                        ))}
+                                                        {availableSlots?.map((slot) => {
+                                                            const appointmentTime =
+                                                                convertSlotToAppointmentTime(slot);
+                                                            return (
+                                                                <option
+                                                                    key={slot.id}
+                                                                    value={
+                                                                        appointmentTime || slot.id
+                                                                    }
+                                                                >
+                                                                    {slot.startTime} -{' '}
+                                                                    {slot.endTime}
+                                                                </option>
+                                                            );
+                                                        })}
                                                     </select>
                                                     <small className="text-muted">
                                                         {!selectedDoctorId
