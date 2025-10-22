@@ -6,6 +6,7 @@ import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
+import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
@@ -24,7 +25,7 @@ import {
     formatFullName,
     AppointmentUITab,
 } from '@/types/appointment.types';
-import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
+import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import {
@@ -89,6 +90,7 @@ const ListAppointments: React.FC = () => {
     const [showEditAppointment, setShowEditAppointment] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showAssignDoctorModal, setShowAssignDoctorModal] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
         null
@@ -199,55 +201,55 @@ const ListAppointments: React.FC = () => {
     }, [roles, doctorProfile, hospitalProfile]);
 
     // Fetch appointments from API
-    useEffect(() => {
-        const fetchAppointments = async () => {
-            const primaryRole = roles[0]?.toUpperCase();
-            if (!validateUserProfile(primaryRole)) return;
+    const fetchAppointments = async () => {
+        const primaryRole = roles[0]?.toUpperCase();
+        if (!validateUserProfile(primaryRole)) return;
 
-            setIsLoading(true);
-            setApiError(null);
+        setIsLoading(true);
+        setApiError(null);
 
-            try {
-                const query = buildAppointmentQuery();
+        try {
+            const query = buildAppointmentQuery();
 
-                // Call API for management
-                const response = await AppointmentService.getAppointmentsForManagement(query);
+            // Call API for management
+            const response = await AppointmentService.getAppointmentsForManagement(query);
 
-                if (response.success && response.data) {
-                    // Transform API responses to UI-friendly format
-                    const transformedAppointments = response.data.appointments.map((apt) => {
-                        const cardData = transformToCardData(apt);
-                        cardData.isNew = isNewAppointment(apt.createdAt);
-                        return cardData;
+            if (response.success && response.data) {
+                // Transform API responses to UI-friendly format
+                const transformedAppointments = response.data.appointments.map((apt) => {
+                    const cardData = transformToCardData(apt);
+                    cardData.isNew = isNewAppointment(apt.createdAt);
+                    return cardData;
+                });
+
+                setAppointments(transformedAppointments);
+                setTotalCount(response.data.totalCount || 0);
+
+                // Update counts from statusCounts if available
+                if (response.data.statusCounts) {
+                    setTabCounts({
+                        waiting: response.data.statusCounts.pending || 0,
+                        upcoming: response.data.statusCounts.confirmed || 0,
+                        cancelled: response.data.statusCounts.cancelled || 0,
+                        completed: response.data.statusCounts.completed || 0,
                     });
-
-                    setAppointments(transformedAppointments);
-                    setTotalCount(response.data.totalCount || 0);
-
-                    // Update counts from statusCounts if available
-                    if (response.data.statusCounts) {
-                        setTabCounts({
-                            waiting: response.data.statusCounts.pending || 0,
-                            upcoming: response.data.statusCounts.confirmed || 0,
-                            cancelled: response.data.statusCounts.cancelled || 0,
-                            completed: response.data.statusCounts.completed || 0,
-                        });
-                    }
-                } else {
-                    throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
                 }
-            } catch (error: any) {
-                console.error('Error fetching appointments:', error);
-                const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
-                setApiError(errorMessage);
-                setAppointments([]);
-                setTotalCount(0);
-                toast.error(errorMessage);
-            } finally {
-                setIsLoading(false);
+            } else {
+                throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
             }
-        };
+        } catch (error: any) {
+            console.error('Error fetching appointments:', error);
+            const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
+            setApiError(errorMessage);
+            setAppointments([]);
+            setTotalCount(0);
+            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchAppointments();
     }, [
         activeStatusTab,
@@ -275,34 +277,22 @@ const ListAppointments: React.FC = () => {
         setShowEditAppointment(false);
     };
 
-    const handleCancelConfirm = async (cancellationReason: string) => {
+    const handleCancelConfirm = async (cancellationReason: string, rescheduleOptions?: any) => {
         if (!selectedAppointment) return;
 
         setIsCancelling(true);
         try {
-            // Call API to cancel appointment
+            // Determine if reschedule options should be enabled (staff cancellation only)
+            const enableReschedule = rescheduleOptions ? true : false;
+
+            // Call API to cancel appointment (with reschedule options for staff)
             await AppointmentService.cancelAppointment(
                 selectedAppointment.appointmentId,
                 cancellationReason,
-                hospitalProfile?.id
+                hospitalProfile?.id, // cancelledByStaffId
+                enableReschedule,
+                rescheduleOptions // Pass selected options to backend
             );
-
-            // Update local state to reflect cancellation
-            setAppointments(
-                appointments.map((apt) =>
-                    apt.appointmentId === selectedAppointment.appointmentId
-                        ? { ...apt, status: AppointmentStatus.CANCELLED }
-                        : apt
-                )
-            );
-
-            // Update tab counts
-            setTabCounts((prev) => ({
-                ...prev,
-                waiting: prev.waiting > 0 ? prev.waiting - 1 : 0,
-                upcoming: prev.upcoming > 0 ? prev.upcoming - 1 : 0,
-                cancelled: prev.cancelled + 1,
-            }));
 
             toast.success('Hủy lịch hẹn thành công. Quá trình hoàn tiền đã được khởi tạo.');
 
@@ -310,8 +300,8 @@ const ListAppointments: React.FC = () => {
             setShowCancelModal(false);
             setSelectedAppointment(null);
 
-            // Optionally refresh the list
-            // await fetchAppointments();
+            // Refresh the list to get updated status and counts from server
+            await fetchAppointments();
         } catch (error: any) {
             console.error('Error cancelling appointment:', error);
             toast.error(error.message || 'Không thể hủy lịch hẹn');
@@ -351,6 +341,24 @@ const ListAppointments: React.FC = () => {
 
         setSelectedAppointment(appointment);
         setShowCancelModal(true);
+    };
+
+    // New handler for assign doctor from cancel modal
+    // Note: Appointment will be cancelled AFTER successful doctor assignment
+    // This prevents the case where staff cancels but doesn't assign a new doctor
+    const handleAssignDoctorFromCancel = () => {
+        if (!selectedAppointment) return;
+
+        // Close cancel modal and open assign doctor modal
+        // The actual cancellation will happen in AssignNewDoctor API
+        setShowCancelModal(false);
+        setShowAssignDoctorModal(true);
+    };
+
+    // Handler for successful doctor assignment - refresh appointment list
+    const handleAssignSuccess = async () => {
+        // Refresh the appointment list after successful assignment and cancellation
+        await fetchAppointments();
     };
 
     const handleFilterSubmit = () => {
@@ -1529,6 +1537,7 @@ const ListAppointments: React.FC = () => {
                     }
                 }}
                 onConfirm={handleCancelConfirm}
+                onAssignDoctor={handleAssignDoctorFromCancel}
                 title="Xác Nhận Hủy Lịch Hẹn"
                 message="Bạn có chắc chắn muốn hủy lịch hẹn"
                 confirmText="Xác nhận hủy"
@@ -1538,6 +1547,21 @@ const ListAppointments: React.FC = () => {
                 reasonLabel="Lý do hủy"
                 reasonPlaceholder="Vui lòng nhập lý do hủy lịch hẹn (tối thiểu 10 ký tự)..."
                 minReasonLength={10}
+                showRescheduleOptions={true}
+                hasDoctorAssigned={!!selectedAppointment?.doctorInfo?.id}
+                consultationFees={selectedAppointment?.consultationFees}
+            />
+
+            {/* Assign Doctor Modal */}
+            <AssignDoctorModal
+                show={showAssignDoctorModal}
+                onHide={() => {
+                    setShowAssignDoctorModal(false);
+                    setSelectedAppointment(null);
+                }}
+                appointment={selectedAppointment}
+                staffId={hospitalProfile?.id || ''}
+                onSuccess={handleAssignSuccess}
             />
         </>
     );
