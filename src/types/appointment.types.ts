@@ -49,6 +49,7 @@ export interface HospitalInfo {
 // Appointment Response from API
 export interface AppointmentResponse {
     id: string;
+    specialtyId: string;
     appointmentDate: string;
     appointmentTimeId: AppointmentTime;
     appointmentType: AppointmentType;
@@ -57,6 +58,7 @@ export interface AppointmentResponse {
     result?: string;
     createdAt: string;
     updatedAt: string;
+    consultationFees?: number; // From backend for refund option check
     patientInfo?: PatientInfo;
     doctorInfo?: DoctorInfo;
     serviceInfo?: ServiceInfo;
@@ -128,6 +130,8 @@ export interface AppointmentCardData {
     result?: string;
     isNew?: boolean;
     hasReview?: boolean;
+    specialtyId?: string; // For fetching available doctors
+    consultationFees?: number; // For checking if refund option should be shown
     // Separate info sections - use priority: Doctor > Service > Hospital in components
     patientInfo?: PatientInfo;
     doctorInfo?: DoctorInfo;
@@ -316,9 +320,11 @@ export const transformToCardData = (apiResponse: AppointmentResponse): Appointme
         appointmentTime: getAppointmentTimeText(apiResponse.appointmentTimeId),
         appointmentTimeId: apiResponse.appointmentTimeId,
         appointmentType: apiResponse.appointmentType,
+        specialtyId: apiResponse.specialtyId,
         status: apiResponse.status,
         reason: apiResponse.reason,
         result: apiResponse.result,
+        consultationFees: apiResponse.consultationFees, // For refund option check
         isNew: false, // Can be calculated based on createdAt
         hasReview: false, // Needs review data from another endpoint
         // Map info sections directly from API response
