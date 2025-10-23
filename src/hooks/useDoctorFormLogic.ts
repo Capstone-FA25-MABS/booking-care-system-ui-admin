@@ -139,15 +139,15 @@ export const useDoctorFormLogic = ({
             const serviceTypeIds = formData.servicePrices
                 .map((price) => price.serviceTypeId)
                 .filter((id) => id); // Filter out empty IDs
-            const duplicateServiceTypes = serviceTypeIds.filter(
-                (id, index) => serviceTypeIds.indexOf(id) !== index
+            const duplicateServiceTypes = new Set(
+                serviceTypeIds.filter((id, index) => serviceTypeIds.indexOf(id) !== index)
             );
 
             for (let index = 0; index < formData.servicePrices.length; index++) {
                 const price = formData.servicePrices[index];
                 if (!price.serviceTypeId) {
                     errors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
-                } else if (duplicateServiceTypes.includes(price.serviceTypeId)) {
+                } else if (duplicateServiceTypes.has(price.serviceTypeId)) {
                     errors[`servicePrices_${index}_amount`] =
                         'Loại dịch vụ này đã được chọn. Mỗi bác sĩ chỉ được có một giá cho mỗi loại dịch vụ';
                 }
