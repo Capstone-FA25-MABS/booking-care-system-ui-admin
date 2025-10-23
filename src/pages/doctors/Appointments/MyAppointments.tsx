@@ -1,0 +1,398 @@
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { Skeleton, Stack } from '@mui/material';
+import Pagination from '@/components/Pagination';
+import ModalDelete from '@/components/ModalDelete';
+import ModalFilter from '@/components/ModalFilter';
+import {
+    AppointmentCardData,
+    AppointmentQueryRequest,
+    transformToCardData,
+    isNewAppointment,
+    mapUITabToStatus,
+    AppointmentUITab,
+} from '@/types/appointment.types';
+import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
+import { AppFooter } from '@/components/AppFooter';
+import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
+import { StatusTabButton } from './MyAppointments/components/StatusTabButton';
+import { AppointmentTableBody } from './MyAppointments/components/AppointmentTableBody';
+import { AppointmentType } from '@/enums/appointment.enums';
+import { Role } from '@/enums/common.enums';
+import { RootState } from '@/store';
+
+// Table Skeleton Component
+const AppointmentTableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
+    return (
+        <>
+            {Array.from({ length: rows }, (_, index) => (
+                <tr key={`skeleton-row-${index}`}>
+                    {/* Date & Time Column */}
+                    <td>
+                        <Stack spacing={0.5}>
+                            <Skeleton variant="text" width={100} height={16} />
+                            <Skeleton variant="text" width={80} height={14} />
+                        </Stack>
+                    </td>
+
+                    {/* Patient Column */}
+                    <td>
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                            <Skeleton
+                                variant="circular"
+                                width={40}
+                                height={40}
+                                sx={{ borderRadius: '50%' }}
+                            />
+                            <Stack spacing={0.5}>
+                                <Skeleton variant="text" width={120} height={16} />
+                                <Skeleton variant="text" width={100} height={14} />
+                            </Stack>
+                        </Stack>
+                    </td>
+
+                    {/* Type Column */}
+                    <td>
+                        <Skeleton variant="text" width={80} height={16} />
+                    </td>
+
+                    {/* Status Column */}
+                    <td>
+                        <Skeleton
+                            variant="rectangular"
+                            width={90}
+                            height={24}
+                            sx={{ borderRadius: '12px' }}
+                        />
+                    </td>
+
+                    {/* Actions Column */}
+                    <td className="action-item">
+                        <Skeleton variant="circular" width={24} height={24} />
+                    </td>
+                </tr>
+            ))}
+        </>
+    );
+};
+
+// Constants
+const NO_APPOINTMENTS_MESSAGE = 'Không có lịch hẹn nào';
+const PATIENT_DETAILS_PATH = '/doctors-patient-details';
+
+const MyAppointments: React.FC = () => {
+    // Get auth and doctor profile from Redux
+    const { roles } = useSelector((state: RootState) => state.auth);
+    const { doctorProfile } = useSelector((state: RootState) => state.user);
+
+    // API data states
+    const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState<string | null>(null);
+    const [showViewDetails, setShowViewDetails] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
+        null
+    );
+
+    // Filter states
+    const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
+    const [selectedDateRange, setSelectedDateRange] = useState<{
+        start: Date | null;
+        end: Date | null;
+    }>({ start: null, end: null });
+
+    // Status tab state
+    const [activeStatusTab, setActiveStatusTab] = useState<AppointmentUITab>('waiting');
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // Tab counts
+    const [tabCounts, setTabCounts] = useState({
+        waiting: 0,
+        upcoming: 0,
+        cancelled: 0,
+        completed: 0,
+    });
+
+    // Validate doctor profile before fetching appointments
+    useEffect(() => {
+        const primaryRole = roles[0]?.toUpperCase();
+
+        // Check if doctor profile is loaded
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not loaded yet');
+        }
+    }, [roles, doctorProfile]);
+
+    // Helper function to validate doctor profile
+    const validateDoctorProfile = () => {
+        const primaryRole = roles[0]?.toUpperCase();
+        if (primaryRole === Role.DOCTOR && !doctorProfile) {
+            console.warn('Doctor profile not available, skipping appointment fetch');
+            return false;
+        }
+        if (!doctorProfile?.id) {
+            console.warn('Doctor ID not available');
+            toast.warning('Không tìm thấy thông tin bác sĩ');
+            return false;
+        }
+        return true;
+    };
+
+    // Helper function to build query request
+    const buildQueryRequest = (): AppointmentQueryRequest => {
+        const query: AppointmentQueryRequest = {
+            doctorId: doctorProfile!.id,
+            status: mapUITabToStatus(activeStatusTab),
+            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
+            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: 'CreatedAt',
+            sortDescending: true,
+            includeStatusCounts: true,
+        };
+
+        if (selectedTypes.length > 0) {
+            query.appointmentType = selectedTypes[0];
+        }
+
+        return query;
+    };
+
+    // Fetch appointments from API
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            if (!validateDoctorProfile()) return;
+
+            setIsLoading(true);
+            setApiError(null);
+
+            const query = buildQueryRequest();
+
+            // Call API for management
+            await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
+                setAppointments,
+                setTotalCount,
+                setTabCounts,
+                setApiError,
+                setIsLoading,
+            });
+        };
+
+        fetchAppointments();
+    }, [
+        activeStatusTab,
+        selectedDateRange.start,
+        selectedDateRange.end,
+        selectedTypes,
+        currentPage,
+        itemsPerPage,
+        roles,
+        doctorProfile?.id,
+    ]);
+
+    const handleDeleteConfirm = () => {
+        if (selectedAppointment) {
+            setAppointments(
+                appointments.filter(
+                    (apt) => apt.appointmentId !== selectedAppointment.appointmentId
+                )
+            );
+            toast.success('Xóa lịch hẹn thành công');
+        }
+        setShowDeleteModal(false);
+        setSelectedAppointment(null);
+    };
+
+    const handleViewClick = (appointment: AppointmentCardData) => {
+        setSelectedAppointment(appointment);
+        setShowViewDetails(true);
+    };
+
+    const handleDeleteClick = (appointment: AppointmentCardData) => {
+        setSelectedAppointment(appointment);
+        setShowDeleteModal(true);
+    };
+
+    const handleFilterSubmit = () => {
+        // Filters are now applied via API, so just close modal and reset to page 1
+        setCurrentPage(1);
+        setShowFilterModal(false);
+    };
+
+    const handleClearFilters = () => {
+        setSelectedTypes([]);
+        setSelectedDateRange({ start: null, end: null });
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    // Calculate total pages based on API response
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Get appointment counts for tabs - using tabCounts state
+    const appointmentCounts = tabCounts;
+
+    return (
+        <>
+            <div className="content">
+                {/* Start Page Header */}
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-semibold mb-0">Lịch Hẹn Của Tôi</h4>
+                        {doctorProfile && (
+                            <p className="text-muted mb-0">
+                                BS. {doctorProfile.firstName} {doctorProfile.lastName}
+                            </p>
+                        )}
+                    </div>
+                    <div className="text-end d-flex">
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => setShowFilterModal(true)}
+                        >
+                            <i className="ti ti-filter me-1" aria-hidden="true"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+                {/* End Page Header */}
+
+                {/* Start Filter */}
+                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+                    {/* Status Tabs */}
+                    <div className="d-flex gap-2">
+                        <StatusTabButton
+                            label="Chờ xử lý"
+                            count={appointmentCounts.waiting}
+                            isActive={activeStatusTab === 'waiting'}
+                            onClick={() => {
+                                setActiveStatusTab('waiting');
+                                setCurrentPage(1);
+                            }}
+                        />
+                        <StatusTabButton
+                            label="Sắp Tới"
+                            count={appointmentCounts.upcoming}
+                            isActive={activeStatusTab === 'upcoming'}
+                            onClick={() => {
+                                setActiveStatusTab('upcoming');
+                                setCurrentPage(1);
+                            }}
+                        />
+                        <StatusTabButton
+                            label="Đã Hủy"
+                            count={appointmentCounts.cancelled}
+                            isActive={activeStatusTab === 'cancelled'}
+                            onClick={() => {
+                                setActiveStatusTab('cancelled');
+                                setCurrentPage(1);
+                            }}
+                        />
+                        <StatusTabButton
+                            label="Hoàn Thành"
+                            count={appointmentCounts.completed}
+                            isActive={activeStatusTab === 'completed'}
+                            onClick={() => {
+                                setActiveStatusTab('completed');
+                                setCurrentPage(1);
+                            }}
+                        />
+                    </div>
+                </div>
+                {/* End Filter */}
+
+                {/* Start Table */}
+                <div className="table-responsive">
+                    <table className="table datatable table-nowrap">
+                        <thead>
+                            <tr>
+                                <th className="no-sort">Ngày & Giờ</th>
+                                <th>Bệnh Nhân</th>
+                                <th>Hình Thức</th>
+                                <th>Trạng Thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <AppointmentTableBody
+                                isLoading={isLoading}
+                                apiError={apiError}
+                                appointments={appointments}
+                                noAppointmentsMessage={NO_APPOINTMENTS_MESSAGE}
+                                patientDetailsPath={PATIENT_DETAILS_PATH}
+                                onViewClick={handleViewClick}
+                                onDeleteClick={handleDeleteClick}
+                                skeletonComponent={<AppointmentTableSkeleton rows={itemsPerPage} />}
+                            />
+                        </tbody>
+                    </table>
+                </div>
+                {/* End Table */}
+            </div>
+            {/* End Content */}
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+
+            {/* Footer Start */}
+            <AppFooter />
+            {/* Footer End */}
+
+            {/* Filter Modal */}
+            <ModalFilter
+                show={showFilterModal}
+                onHide={() => setShowFilterModal(false)}
+                onApply={handleFilterSubmit}
+                onReset={handleClearFilters}
+                title="Lọc Lịch Hẹn"
+                fields={[
+                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
+                    {
+                        name: 'dateRange',
+                        label: 'Khoảng thời gian',
+                        type: 'daterange',
+                        value: selectedDateRange,
+                        onChange: (value) => setSelectedDateRange(value),
+                        resetValue: { start: null, end: null },
+                    },
+                ]}
+            />
+
+            {/* Start View Details */}
+            <AppointmentDetailsOffcanvas
+                show={showViewDetails}
+                onClose={() => setShowViewDetails(false)}
+                appointment={selectedAppointment}
+            />
+            {/* End View Details */}
+
+            {/* Delete Modal */}
+            <ModalDelete
+                show={showDeleteModal}
+                onHide={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Xác Nhận Hủy Lịch Hẹn"
+                message="Bạn có chắc chắn muốn hủy lịch hẹn này không?"
+                itemName={selectedAppointment?.appointmentId?.substring(0, 8)}
+            />
+        </>
+    );
+};
+
+export default MyAppointments;
