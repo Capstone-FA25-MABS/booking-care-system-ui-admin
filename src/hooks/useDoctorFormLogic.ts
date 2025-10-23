@@ -235,6 +235,8 @@ export const useDoctorFormLogic = ({
     return {
         formData,
         errors,
+        setFormData,
+        setErrors,
         handleInputChange,
         handleLanguageToggle,
         handleServicePriceChange,

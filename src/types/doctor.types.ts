@@ -63,6 +63,27 @@ export interface DoctorOptimizedResponse {
     status?: 'ACTIVE' | 'INACTIVE'; // Add status for admin UI
 }
 
+// Detailed response for GetDoctorById (matches backend DoctorByIdResponse)
+export interface DoctorByIdResponse {
+    id: string;
+    accountId: string;
+    firstName: string;
+    lastName: string;
+    gender?: 'MALE' | 'FEMALE' | 'OTHER';
+    bio?: string;
+    address?: string;
+    email: string;
+    yearsOfExperience: number;
+    avatarUrl: string;
+    hospital?: HospitalBasicInfo & { avatarUrl?: string };
+    position?: PositionBasicInfo;
+    specialty?: SpecialtyBasicInfo;
+    prices: DoctorPriceBasicInfo[];
+    languages: LanguageBasicInfo[];
+    isFavorited: boolean;
+    reviewStatistics?: DoctorReviewStatisticsBasic;
+}
+
 export interface DoctorSearchListResponse {
     doctors: DoctorOptimizedResponse[];
     totalCount: number;
