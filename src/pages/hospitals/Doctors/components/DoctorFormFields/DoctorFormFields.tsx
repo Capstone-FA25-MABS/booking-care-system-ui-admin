@@ -119,6 +119,7 @@ const AvatarSection: React.FC<{
             <div className="text-center">
                 <div className="position-relative d-inline-block">
                     <div
+                        role="presentation"
                         className={`bg-light rounded-circle d-flex align-items-center justify-content-center ${styles.avatarContainer} ${isDragOver ? styles.dragOver : ''}`}
                         style={{ width: '140px', height: '140px' }}
                         onDragOver={handleDragOver}
@@ -161,7 +162,6 @@ const AvatarSection: React.FC<{
                         htmlFor="profileImage"
                         className={`position-absolute top-0 start-0 w-100 h-100 ${styles.uploadLabel}`}
                         aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
-                        tabIndex={0}
                     ></label>
                 </div>
 
