@@ -201,11 +201,11 @@ const ListDoctors: React.FC = () => {
         switch (sortBy) {
             case 'Tên A-Z':
                 return sorted.sort((a, b) =>
-                    `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+                    `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
                 );
             case 'Tên Z-A':
                 return sorted.sort((a, b) =>
-                    `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`)
+                    `${b.lastName} ${b.firstName}`.localeCompare(`${a.lastName} ${a.firstName}`)
                 );
             case 'Kinh nghiệm (Cao-Thấp)':
                 return sorted.sort((a, b) => b.yearsOfExperience - a.yearsOfExperience);
@@ -288,7 +288,7 @@ const ListDoctors: React.FC = () => {
                         <div>
                             <h6 className="mb-1 fs-14 fw-semibold">
                                 <Link to={`/clinic/doctor-details/${doctor.id}`}>
-                                    {doctor.firstName} {doctor.lastName}
+                                    {doctor.lastName} {doctor.firstName}
                                 </Link>
                             </h6>
                             <span className="fs-13 d-block">{doctor.position?.name || 'N/A'}</span>
@@ -700,7 +700,7 @@ const ListDoctors: React.FC = () => {
                         type: 'multiselect',
                         options: originalDoctors.map((doctor) => ({
                             value: doctor.id,
-                            label: `${doctor.firstName} ${doctor.lastName}`,
+                            label: `${doctor.lastName} ${doctor.firstName}`,
                             key: doctor.id,
                         })),
                         value: tempSelectedDoctors,
@@ -803,7 +803,7 @@ const ListDoctors: React.FC = () => {
                 title="Xác Nhận Xóa"
                 message="Bạn có chắc chắn muốn xóa bác sĩ này không?"
                 itemName={
-                    doctorToDelete ? `${doctorToDelete.firstName} ${doctorToDelete.lastName}` : ''
+                    doctorToDelete ? `${doctorToDelete.lastName} ${doctorToDelete.firstName}` : ''
                 }
             />
         </>

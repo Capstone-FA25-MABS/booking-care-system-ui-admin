@@ -4,17 +4,13 @@ import { NumericFormat } from 'react-number-format';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Textarea from '@/components/Textarea';
+import Spinner from '@/components/Spinner';
 import { DoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
-import {
-    mockPositions,
-    mockSpecialties,
-    mockLanguages,
-    mockServiceTypes,
-    mockHospitals,
-} from '@/data/doctor.mockData';
+// Options are provided from parent via props instead of using mock data
 import { selectCustomStyles } from '@/constants/select.styles';
 import styles from './DoctorFormFields.module.scss';
+import badgeCheck from '@/assets/img/icons/badge-check.svg';
 
 // Custom input component for NumericFormat (extracted to avoid inline component definition)
 const CustomNumericInput = React.forwardRef<
@@ -36,58 +32,153 @@ CustomNumericInput.displayName = 'CustomNumericInput';
 const AvatarSection: React.FC<{
     formData: DoctorFormData;
     onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}> = ({ formData, onFileChange }) => (
-    <div className="col-md-3 mb-4">
-        <div className="text-center">
-            <div className="position-relative d-inline-block">
-                <div
-                    className="bg-light rounded-circle d-flex align-items-center justify-content-center"
-                    style={{ width: '120px', height: '120px' }}
-                >
-                    {formData.avatar ? (
-                        <img
-                            src={
-                                typeof formData.avatar === 'string'
-                                    ? formData.avatar
-                                    : URL.createObjectURL(formData.avatar)
-                            }
-                            alt="Profile"
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                borderRadius: '50%',
-                            }}
-                        />
-                    ) : (
-                        <i className="feather-user fs-1 text-muted"></i>
-                    )}
-                </div>
-                <div
-                    className="position-absolute bottom-0 end-0 bg-primary rounded-circle d-flex align-items-center justify-content-center"
-                    style={{ width: '30px', height: '30px' }}
-                >
-                    <i className="feather-camera text-white" style={{ fontSize: '14px' }}></i>
-                </div>
-                <input
-                    type="file"
-                    accept="image/*"
-                    name="avatar"
-                    id="profileImage"
-                    onChange={onFileChange}
-                    className="d-none"
-                />
-                <label
-                    htmlFor="profileImage"
-                    className="position-absolute top-0 start-0 w-100 h-100"
-                    style={{ cursor: 'pointer' }}
-                    aria-label="Upload profile image"
-                ></label>
+}> = ({ formData, onFileChange }) => {
+    const [isDragOver, setIsDragOver] = React.useState(false);
+    const [isUploading, setIsUploading] = React.useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                setIsUploading(true);
+                // Simulate upload delay
+                setTimeout(() => {
+                    // Create a mock event object that matches the expected interface
+                    const mockEvent = {
+                        target: {
+                            files: [file],
+                            name: 'avatar',
+                            value: '',
+                        },
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    onFileChange(mockEvent);
+                    setIsUploading(false);
+                }, 500);
+            }
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsUploading(true);
+        setTimeout(() => {
+            onFileChange(e);
+            setIsUploading(false);
+        }, 500);
+    };
+
+    const getAvatarSrc = (): string => {
+        if (typeof formData.avatar === 'string') {
+            return formData.avatar;
+        }
+        if (formData.avatar) {
+            return URL.createObjectURL(formData.avatar);
+        }
+        return '';
+    };
+
+    const renderAvatarContent = (): React.ReactNode => {
+        if (isUploading) {
+            return (
+                <output className="d-flex flex-column align-items-center">
+                    <div className={`spinner-border text-primary ${styles.uploadSpinner}`}>
+                        <span className="visually-hidden">Uploading...</span>
+                    </div>
+                    <small className="text-primary mt-2">Đang tải...</small>
+                </output>
+            );
+        }
+
+        if (formData.avatar) {
+            return <img src={getAvatarSrc()} alt="Profile" className={styles.avatarImage} />;
+        }
+
+        return (
+            <div className="d-flex flex-column align-items-center">
+                <i className="feather-user fs-1 text-muted mb-2"></i>
+                <small className="text-muted">Chọn ảnh</small>
             </div>
-            <p className="mt-2 mb-0 text-muted">Ảnh đại diện</p>
+        );
+    };
+
+    return (
+        <div className="col-md-3 mb-4">
+            <div className="text-center">
+                <div className="position-relative d-inline-block">
+                    <div
+                        className={`bg-light rounded-circle d-flex align-items-center justify-content-center ${styles.avatarContainer} ${isDragOver ? styles.dragOver : ''}`}
+                        style={{ width: '140px', height: '140px' }}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                    >
+                        {renderAvatarContent()}
+
+                        {/* Upload overlay */}
+                        <div
+                            className={`${styles.uploadOverlay} ${isDragOver ? styles.overlayVisible : ''}`}
+                        >
+                            <div className="d-flex flex-column align-items-center">
+                                <i className="feather-upload fs-2 text-white mb-2"></i>
+                                <small className="text-white">Thả ảnh vào đây</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Badge Check Icon */}
+                    <div
+                        className={`${styles.badgeIcon} ${isUploading ? styles.badgeIconDisabled : ''}`}
+                    >
+                        <img
+                            src={badgeCheck}
+                            alt="Verified Badge"
+                            className={styles.badgeIconImage}
+                        />
+                    </div>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        name="avatar"
+                        id="profileImage"
+                        onChange={handleFileChange}
+                        className="d-none"
+                    />
+                    <label
+                        htmlFor="profileImage"
+                        className={`position-absolute top-0 start-0 w-100 h-100 ${styles.uploadLabel}`}
+                        aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
+                    ></label>
+                </div>
+
+                <div className="mt-3">
+                    <p className="mb-1 fw-semibold text-dark">Ảnh đại diện</p>
+                    <small className="text-muted">
+                        {isDragOver ? 'Thả ảnh vào đây' : 'Kéo thả hoặc nhấp để chọn ảnh'}
+                    </small>
+                    <div className="mt-2">
+                        <small className="text-muted">
+                            <i className="feather-info me-1"></i> JPG, PNG, GIF (tối đa 5MB)
+                        </small>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const BasicInfoFields: React.FC<{
     formData: DoctorFormData;
@@ -100,18 +191,6 @@ const BasicInfoFields: React.FC<{
         <div className="row">
             <Input
                 wrapperClassName="col-md-6 mb-3"
-                label="Tên"
-                icon="user"
-                iconPrefix="feather"
-                required
-                name="firstName"
-                value={formData.firstName}
-                onChange={onInputChange}
-                placeholder="Nhập tên"
-                error={errors.firstName}
-            />
-            <Input
-                wrapperClassName="col-md-6 mb-3"
                 label="Họ"
                 icon="user"
                 iconPrefix="feather"
@@ -121,6 +200,18 @@ const BasicInfoFields: React.FC<{
                 onChange={onInputChange}
                 placeholder="Nhập họ"
                 error={errors.lastName}
+            />
+            <Input
+                wrapperClassName="col-md-6 mb-3"
+                label="Tên"
+                icon="user"
+                iconPrefix="feather"
+                required
+                name="firstName"
+                value={formData.firstName}
+                onChange={onInputChange}
+                placeholder="Nhập tên"
+                error={errors.firstName}
             />
             <Input
                 wrapperClassName="col-md-6 mb-3"
@@ -230,19 +321,21 @@ const ProfessionalInfoSection: React.FC<{
         Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
     >;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-}> = ({ formData, errors, onInputChange }) => (
+    positions: Array<{ id: string; name: string }>;
+    specialties: Array<{ id: string; name: string }>;
+}> = ({ formData, errors, onInputChange, positions, specialties }) => (
     <div className="card mb-4">
         <div className={`card-body ${styles.sectionBorder}`}>
             <h5 className="card-title mb-4">Thông tin chuyên môn</h5>
             <div className="row">
-                <div className="col-md-4 mb-3">
+                <div className="col-md-6 mb-3">
                     <label htmlFor="positionId" className="form-label">
                         <i className="feather-briefcase me-1"></i> Chức vụ{' '}
                         <span className="text-danger">*</span>
                     </label>
                     <Select
                         inputId="positionId"
-                        options={mockPositions.map((position) => ({
+                        options={positions.map((position) => ({
                             value: position.id,
                             label: position.name,
                         }))}
@@ -250,7 +343,7 @@ const ProfessionalInfoSection: React.FC<{
                             formData.positionId
                                 ? {
                                       value: formData.positionId,
-                                      label: mockPositions.find((p) => p.id === formData.positionId)
+                                      label: positions.find((p) => p.id === formData.positionId)
                                           ?.name,
                                   }
                                 : null
@@ -273,14 +366,14 @@ const ProfessionalInfoSection: React.FC<{
                         <div className="text-danger mt-1">{errors.positionId}</div>
                     )}
                 </div>
-                <div className="col-md-4 mb-3">
+                <div className="col-md-6 mb-3">
                     <label htmlFor="specialtyId" className="form-label">
                         <i className="feather-heart me-1"></i> Chuyên khoa{' '}
                         <span className="text-danger">*</span>
                     </label>
                     <Select
                         inputId="specialtyId"
-                        options={mockSpecialties.map((specialty) => ({
+                        options={specialties.map((specialty) => ({
                             value: specialty.id,
                             label: specialty.name,
                         }))}
@@ -288,9 +381,8 @@ const ProfessionalInfoSection: React.FC<{
                             formData.specialtyId
                                 ? {
                                       value: formData.specialtyId,
-                                      label: mockSpecialties.find(
-                                          (s) => s.id === formData.specialtyId
-                                      )?.name,
+                                      label: specialties.find((s) => s.id === formData.specialtyId)
+                                          ?.name,
                                   }
                                 : null
                         }
@@ -312,44 +404,6 @@ const ProfessionalInfoSection: React.FC<{
                         <div className="text-danger mt-1">{errors.specialtyId}</div>
                     )}
                 </div>
-                <div className="col-md-4 mb-3">
-                    <label htmlFor="hospitalId" className="form-label">
-                        <i className="feather-home me-1"></i> Bệnh viện{' '}
-                        <span className="text-danger">*</span>
-                    </label>
-                    <Select
-                        inputId="hospitalId"
-                        options={mockHospitals.map((hospital) => ({
-                            value: hospital.id,
-                            label: hospital.name,
-                        }))}
-                        value={
-                            formData.hospitalId
-                                ? {
-                                      value: formData.hospitalId,
-                                      label: mockHospitals.find((h) => h.id === formData.hospitalId)
-                                          ?.name,
-                                  }
-                                : null
-                        }
-                        onChange={(selectedOption) => {
-                            onInputChange({
-                                target: {
-                                    name: 'hospitalId',
-                                    value: selectedOption?.value || '',
-                                },
-                            } as React.ChangeEvent<HTMLInputElement>);
-                        }}
-                        placeholder="Chọn bệnh viện"
-                        className={errors.hospitalId ? 'is-invalid' : ''}
-                        classNamePrefix="select2"
-                        styles={selectCustomStyles}
-                        menuPortalTarget={document.body}
-                    />
-                    {errors.hospitalId && (
-                        <div className="text-danger mt-1">{errors.hospitalId}</div>
-                    )}
-                </div>
             </div>
         </div>
     </div>
@@ -361,7 +415,8 @@ const LanguagesSection: React.FC<{
         Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
     >;
     onLanguageToggle: (languageId: string) => void;
-}> = ({ formData, errors, onLanguageToggle }) => (
+    languages: Array<{ id: string; name: string }>;
+}> = ({ formData, errors, onLanguageToggle, languages }) => (
     <div className="card mb-4">
         <div className={`card-body ${styles.sectionBorder}`}>
             <h5 className="card-title mb-4">
@@ -370,7 +425,7 @@ const LanguagesSection: React.FC<{
             <div className="row">
                 <div className="col-12">
                     <div className="d-flex flex-wrap gap-2">
-                        {mockLanguages.map((language) => (
+                        {languages.map((language) => (
                             <div
                                 key={language.id}
                                 className={`border rounded p-3 ${formData.languageIds.includes(language.id) ? 'border-primary bg-light' : 'border-light bg-white'}`}
@@ -429,7 +484,8 @@ const ServicePriceItem: React.FC<{
     >;
     onServicePriceChange: (index: number, field: keyof DoctorPrice, value: string | number) => void;
     onRemoveServicePrice: (index: number) => void;
-}> = ({ price, index, errors, onServicePriceChange, onRemoveServicePrice }) => (
+    serviceTypes: Array<{ id: string; name: string }>;
+}> = ({ price, index, errors, onServicePriceChange, onRemoveServicePrice, serviceTypes }) => (
     <div key={`${price.serviceTypeId}-${index}`} className="col-md-6 mb-3">
         <div className="border rounded p-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -450,7 +506,7 @@ const ServicePriceItem: React.FC<{
                     </label>
                     <Select
                         inputId={`serviceType-${index}`}
-                        options={mockServiceTypes.map((service) => ({
+                        options={serviceTypes.map((service) => ({
                             value: service.id,
                             label: service.name,
                         }))}
@@ -459,7 +515,7 @@ const ServicePriceItem: React.FC<{
                                 ? {
                                       value: price.serviceTypeId,
                                       label:
-                                          mockServiceTypes.find((s) => s.id === price.serviceTypeId)
+                                          serviceTypes.find((s) => s.id === price.serviceTypeId)
                                               ?.name || '',
                                   }
                                 : null
@@ -513,7 +569,15 @@ const ServicePricesSection: React.FC<{
     onServicePriceChange: (index: number, field: keyof DoctorPrice, value: string | number) => void;
     onAddServicePrice: () => void;
     onRemoveServicePrice: (index: number) => void;
-}> = ({ formData, errors, onServicePriceChange, onAddServicePrice, onRemoveServicePrice }) => (
+    serviceTypes: Array<{ id: string; name: string }>;
+}> = ({
+    formData,
+    errors,
+    onServicePriceChange,
+    onAddServicePrice,
+    onRemoveServicePrice,
+    serviceTypes,
+}) => (
     <div className="card mb-4">
         <div className="card-body">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -544,6 +608,7 @@ const ServicePricesSection: React.FC<{
                             errors={errors}
                             onServicePriceChange={onServicePriceChange}
                             onRemoveServicePrice={onRemoveServicePrice}
+                            serviceTypes={serviceTypes}
                         />
                     ))}
                 </div>
@@ -567,6 +632,11 @@ interface DoctorFormFieldsProps {
     onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
     isEdit?: boolean;
+    isLoading?: boolean;
+    positions: Array<{ id: string; name: string }>;
+    specialties: Array<{ id: string; name: string }>;
+    languages: Array<{ id: string; name: string }>;
+    serviceTypes: Array<{ id: string; name: string }>;
 }
 
 const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
@@ -581,7 +651,38 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
     onSubmit,
     onCancel,
     isEdit = false,
+    isLoading = false,
+    positions,
+    specialties,
+    languages,
+    serviceTypes,
 }) => {
+    const renderSubmitButtonText = (): React.ReactNode => {
+        if (isLoading) {
+            return (
+                <>
+                    <Spinner size="small" variant="primary" className="me-2" />
+                    {isEdit ? 'Đang cập nhật...' : 'Đang lưu...'}
+                </>
+            );
+        }
+        return isEdit ? 'Cập nhật bác sĩ' : 'Lưu bác sĩ';
+    };
+
+    if (isLoading) {
+        return (
+            <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ minHeight: '400px' }}
+            >
+                <div className="text-center">
+                    <Spinner size="large" variant="primary" centered />
+                    <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <form onSubmit={onSubmit}>
             <div className="card mb-4">
@@ -602,11 +703,14 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                 formData={formData}
                 errors={errors}
                 onInputChange={onInputChange}
+                positions={positions}
+                specialties={specialties}
             />
             <LanguagesSection
                 formData={formData}
                 errors={errors}
                 onLanguageToggle={onLanguageToggle}
+                languages={languages}
             />
             <ServicePricesSection
                 formData={formData}
@@ -614,21 +718,27 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                 onServicePriceChange={onServicePriceChange}
                 onAddServicePrice={onAddServicePrice}
                 onRemoveServicePrice={onRemoveServicePrice}
+                serviceTypes={serviceTypes}
             />
 
-            <div className="text-end mb-4 mt-4">
-                <Button
-                    type="button"
-                    variant="secondary"
-                    size="md"
-                    className="btn btn-light btn-md me-2"
-                    onClick={onCancel}
-                >
-                    Hủy
-                </Button>
-                <Button type="submit" variant="primary">
-                    {isEdit ? 'Cập nhật bác sĩ' : 'Lưu bác sĩ'}
-                </Button>
+            <div className="card mb-4">
+                <div className={`card-body ${styles.sectionBorder}`}>
+                    <div className="text-end">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            className="btn btn-light btn-md me-2"
+                            onClick={onCancel}
+                            disabled={isLoading}
+                        >
+                            Hủy
+                        </Button>
+                        <Button type="submit" variant="primary" disabled={isLoading}>
+                            {renderSubmitButtonText()}
+                        </Button>
+                    </div>
+                </div>
             </div>
         </form>
     );

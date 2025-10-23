@@ -129,9 +129,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.COMMON.ACCOUNT_SETTINGS.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[Role.ADMIN, Role.DOCTOR, Role.STAFF]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[Role.ADMIN, Role.DOCTOR, Role.STAFF]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            // </ProtectedRoute>
         ),
         children: [
             {

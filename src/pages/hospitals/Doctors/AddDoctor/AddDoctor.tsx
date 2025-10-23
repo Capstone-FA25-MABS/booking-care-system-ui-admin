@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DoctorFormFields from '../components/DoctorFormFields';
 import { DoctorFormData } from '@/types/doctor.types';
 import { useDoctorFormLogic } from '@/hooks/useDoctorFormLogic';
+import { useDoctorFormOptions } from '@/hooks/useDoctorFormOptions';
 
 const AddDoctor: React.FC = () => {
     const navigate = useNavigate();
@@ -38,6 +39,16 @@ const AddDoctor: React.FC = () => {
         resetForm,
         prepareSubmitData,
     } = useDoctorFormLogic({ initialData, isEdit: false });
+
+    const {
+        positions,
+        specialties,
+        languages,
+        serviceTypes,
+        isLoading: isLoadingOptions,
+    } = useDoctorFormOptions();
+
+    const [isSubmitting] = useState(false); // Placeholder for future submit logic
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,6 +92,11 @@ const AddDoctor: React.FC = () => {
                         onSubmit={handleSubmit}
                         onCancel={handleCancel}
                         isEdit={false}
+                        isLoading={isLoadingOptions || isSubmitting}
+                        positions={positions}
+                        specialties={specialties}
+                        languages={languages}
+                        serviceTypes={serviceTypes}
                     />
                 </div>
             </div>
