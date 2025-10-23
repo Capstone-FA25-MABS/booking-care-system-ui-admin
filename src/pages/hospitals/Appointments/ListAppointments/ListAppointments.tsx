@@ -6,6 +6,7 @@ import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
+import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
@@ -24,7 +25,11 @@ import {
     formatFullName,
     AppointmentUITab,
 } from '@/types/appointment.types';
-import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
+import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
+import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
+import { AppFooter } from '@/components/AppFooter';
+import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
+import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import {
@@ -89,6 +94,7 @@ const ListAppointments: React.FC = () => {
     const [showEditAppointment, setShowEditAppointment] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showAssignDoctorModal, setShowAssignDoctorModal] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
         null
@@ -199,55 +205,26 @@ const ListAppointments: React.FC = () => {
     }, [roles, doctorProfile, hospitalProfile]);
 
     // Fetch appointments from API
+    const fetchAppointments = async () => {
+        const primaryRole = roles[0]?.toUpperCase();
+        if (!validateUserProfile(primaryRole)) return;
+
+        setIsLoading(true);
+        setApiError(null);
+
+        const query = buildAppointmentQuery();
+
+        // Call API for management
+        await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
+            setAppointments,
+            setTotalCount,
+            setTabCounts,
+            setApiError,
+            setIsLoading,
+        });
+    };
+
     useEffect(() => {
-        const fetchAppointments = async () => {
-            const primaryRole = roles[0]?.toUpperCase();
-            if (!validateUserProfile(primaryRole)) return;
-
-            setIsLoading(true);
-            setApiError(null);
-
-            try {
-                const query = buildAppointmentQuery();
-
-                // Call API for management
-                const response = await AppointmentService.getAppointmentsForManagement(query);
-
-                if (response.success && response.data) {
-                    // Transform API responses to UI-friendly format
-                    const transformedAppointments = response.data.appointments.map((apt) => {
-                        const cardData = transformToCardData(apt);
-                        cardData.isNew = isNewAppointment(apt.createdAt);
-                        return cardData;
-                    });
-
-                    setAppointments(transformedAppointments);
-                    setTotalCount(response.data.totalCount || 0);
-
-                    // Update counts from statusCounts if available
-                    if (response.data.statusCounts) {
-                        setTabCounts({
-                            waiting: response.data.statusCounts.pending || 0,
-                            upcoming: response.data.statusCounts.confirmed || 0,
-                            cancelled: response.data.statusCounts.cancelled || 0,
-                            completed: response.data.statusCounts.completed || 0,
-                        });
-                    }
-                } else {
-                    throw new Error(response.message || 'Không thể tải danh sách lịch hẹn');
-                }
-            } catch (error: any) {
-                console.error('Error fetching appointments:', error);
-                const errorMessage = error.message || 'Không thể tải danh sách lịch hẹn';
-                setApiError(errorMessage);
-                setAppointments([]);
-                setTotalCount(0);
-                toast.error(errorMessage);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         fetchAppointments();
     }, [
         activeStatusTab,
@@ -275,33 +252,22 @@ const ListAppointments: React.FC = () => {
         setShowEditAppointment(false);
     };
 
-    const handleCancelConfirm = async (cancellationReason: string) => {
+    const handleCancelConfirm = async (cancellationReason: string, rescheduleOptions?: any) => {
         if (!selectedAppointment) return;
 
         setIsCancelling(true);
         try {
-            // Call API to cancel appointment
+            // Determine if reschedule options should be enabled (staff cancellation only)
+            const enableReschedule = !!rescheduleOptions;
+
+            // Call API to cancel appointment (with reschedule options for staff)
             await AppointmentService.cancelAppointment(
                 selectedAppointment.appointmentId,
-                cancellationReason
+                cancellationReason,
+                hospitalProfile?.id, // cancelledByStaffId
+                enableReschedule,
+                rescheduleOptions // Pass selected options to backend
             );
-
-            // Update local state to reflect cancellation
-            setAppointments(
-                appointments.map((apt) =>
-                    apt.appointmentId === selectedAppointment.appointmentId
-                        ? { ...apt, status: AppointmentStatus.CANCELLED }
-                        : apt
-                )
-            );
-
-            // Update tab counts
-            setTabCounts((prev) => ({
-                ...prev,
-                waiting: prev.waiting > 0 ? prev.waiting - 1 : 0,
-                upcoming: prev.upcoming > 0 ? prev.upcoming - 1 : 0,
-                cancelled: prev.cancelled + 1,
-            }));
 
             toast.success('Hủy lịch hẹn thành công. Quá trình hoàn tiền đã được khởi tạo.');
 
@@ -309,8 +275,8 @@ const ListAppointments: React.FC = () => {
             setShowCancelModal(false);
             setSelectedAppointment(null);
 
-            // Optionally refresh the list
-            // await fetchAppointments();
+            // Refresh the list to get updated status and counts from server
+            await fetchAppointments();
         } catch (error: any) {
             console.error('Error cancelling appointment:', error);
             toast.error(error.message || 'Không thể hủy lịch hẹn');
@@ -350,6 +316,24 @@ const ListAppointments: React.FC = () => {
 
         setSelectedAppointment(appointment);
         setShowCancelModal(true);
+    };
+
+    // New handler for assign doctor from cancel modal
+    // Note: Appointment will be cancelled AFTER successful doctor assignment
+    // This prevents the case where staff cancels but doesn't assign a new doctor
+    const handleAssignDoctorFromCancel = () => {
+        if (!selectedAppointment) return;
+
+        // Close cancel modal and open assign doctor modal
+        // The actual cancellation will happen in AssignNewDoctor API
+        setShowCancelModal(false);
+        setShowAssignDoctorModal(true);
+    };
+
+    // Handler for successful doctor assignment - refresh appointment list
+    const handleAssignSuccess = async () => {
+        // Refresh the appointment list after successful assignment and cancellation
+        await fetchAppointments();
     };
 
     const handleFilterSubmit = () => {
@@ -658,15 +642,7 @@ const ListAppointments: React.FC = () => {
             />
 
             {/* Footer Start */}
-            <div className="footer text-center bg-white p-2 border-top">
-                <p className="text-dark mb-0">
-                    2025 &copy;{' '}
-                    <Link to="/" className="link-primary">
-                        Preclinic
-                    </Link>
-                    , Tất Cả Quyền Được Bảo Lưu
-                </p>
-            </div>
+            <AppFooter />
             {/* Footer End */}
 
             {/* Filter Modal */}
@@ -690,26 +666,7 @@ const ListAppointments: React.FC = () => {
                         placeholder: 'Chọn bệnh nhân...',
                         resetValue: [],
                     },
-                    {
-                        name: 'types',
-                        label: 'Loại Khám',
-                        type: 'multiselect',
-                        value: selectedTypes.map((t) => t.toString()),
-                        onChange: (value) => {
-                            const types = (value as string[]).map((v) =>
-                                v === 'TELEHEALTH'
-                                    ? AppointmentType.TELEHEALTH
-                                    : AppointmentType.IN_PERSON
-                            );
-                            setSelectedTypes(types);
-                        },
-                        options: [
-                            { value: AppointmentType.TELEHEALTH.toString(), label: 'Trực tuyến' },
-                            { value: AppointmentType.IN_PERSON.toString(), label: 'Trực tiếp' },
-                        ],
-                        placeholder: 'Chọn loại khám...',
-                        resetValue: [],
-                    },
+                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
                     {
                         name: 'doctors',
                         label: 'Bác Sĩ',
@@ -1353,82 +1310,18 @@ const ListAppointments: React.FC = () => {
             {/* End Edit New Appointment*/}
 
             {/* Start View Details */}
+            <AppointmentDetailsOffcanvas
+                show={showViewDetails}
+                onClose={() => setShowViewDetails(false)}
+                appointment={selectedAppointment}
+            />
             <div
                 className={`offcanvas offcanvas-offset offcanvas-end ${showViewDetails ? 'show' : ''}`}
                 tabIndex={-1}
-                id="view_details"
+                id="view_details_extended"
                 style={{ display: showViewDetails ? 'block' : 'none' }}
             >
-                <div className="offcanvas-header d-block pb-0 px-0">
-                    <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold">
-                            Chi Tiết Lịch Hẹn{' '}
-                            <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2">
-                                #{selectedAppointment?.appointmentId?.substring(0, 8) || 'AP544658'}
-                            </span>
-                        </h5>
-                        <button
-                            type="button"
-                            className="btn-close opacity-100"
-                            onClick={() => setShowViewDetails(false)}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                </div>
                 <div className="offcanvas-body pt-0 px-0">
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Khi Nào & Ở Đâu </h6>
-                    <div className="px-3 my-4">
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Ngày Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? new Date(
-                                          selectedAppointment.appointmentDate
-                                      ).toLocaleDateString('vi-VN')
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Giờ{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment?.appointmentTime}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Địa Điểm{' '}
-                            <span className="text-body fw-normal">
-                                {selectedAppointment?.hospitalInfo?.address ||
-                                    'Hà Nội, Việt Nam'}{' '}
-                            </span>
-                        </p>
-                        <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Loại Khám{' '}
-                            <span className="text-body fw-normal">
-                                {' '}
-                                {selectedAppointment
-                                    ? getAppointmentTypeText(selectedAppointment.appointmentType)
-                                    : ''}{' '}
-                            </span>
-                        </p>
-                        <div className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                            Thông Tin Bệnh Nhân
-                            <div className="text-body fw-normal d-flex align-items-center">
-                                <span className="avatar avatar-sm">
-                                    <img
-                                        src={selectedAppointment?.patientInfo?.avatarUrl}
-                                        alt=""
-                                        className="rounded-circle me-1"
-                                    />
-                                </span>
-                                {formatFullName(
-                                    selectedAppointment?.patientInfo?.firstName,
-                                    selectedAppointment?.patientInfo?.lastName
-                                )}
-                            </div>
-                        </div>
-                    </div>
                     <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Chi Tiết Lịch Hẹn </h6>
                     <div className="px-3 my-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
@@ -1528,6 +1421,7 @@ const ListAppointments: React.FC = () => {
                     }
                 }}
                 onConfirm={handleCancelConfirm}
+                onAssignDoctor={handleAssignDoctorFromCancel}
                 title="Xác Nhận Hủy Lịch Hẹn"
                 message="Bạn có chắc chắn muốn hủy lịch hẹn"
                 confirmText="Xác nhận hủy"
@@ -1537,6 +1431,21 @@ const ListAppointments: React.FC = () => {
                 reasonLabel="Lý do hủy"
                 reasonPlaceholder="Vui lòng nhập lý do hủy lịch hẹn (tối thiểu 10 ký tự)..."
                 minReasonLength={10}
+                showRescheduleOptions={true}
+                hasDoctorAssigned={!!selectedAppointment?.doctorInfo?.id}
+                consultationFees={selectedAppointment?.consultationFees}
+            />
+
+            {/* Assign Doctor Modal */}
+            <AssignDoctorModal
+                show={showAssignDoctorModal}
+                onHide={() => {
+                    setShowAssignDoctorModal(false);
+                    setSelectedAppointment(null);
+                }}
+                appointment={selectedAppointment}
+                staffId={hospitalProfile?.id || ''}
+                onSuccess={handleAssignSuccess}
             />
         </>
     );
