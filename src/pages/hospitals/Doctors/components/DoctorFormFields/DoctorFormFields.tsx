@@ -80,6 +80,48 @@ const AvatarSection: React.FC<{
         }, 500);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            // Trigger the file input click
+            document.getElementById('profileImage')?.click();
+        }
+    };
+
+    const getAvatarSrc = (): string => {
+        if (typeof formData.avatar === 'string') {
+            return formData.avatar;
+        }
+        if (formData.avatar) {
+            return URL.createObjectURL(formData.avatar);
+        }
+        return '';
+    };
+
+    const renderAvatarContent = (): React.ReactNode => {
+        if (isUploading) {
+            return (
+                <output className="d-flex flex-column align-items-center">
+                    <div className={`spinner-border text-primary ${styles.uploadSpinner}`}>
+                        <span className="visually-hidden">Uploading...</span>
+                    </div>
+                    <small className="text-primary mt-2">Đang tải...</small>
+                </output>
+            );
+        }
+
+        if (formData.avatar) {
+            return <img src={getAvatarSrc()} alt="Profile" className={styles.avatarImage} />;
+        }
+
+        return (
+            <div className="d-flex flex-column align-items-center">
+                <i className="feather-user fs-1 text-muted mb-2"></i>
+                <small className="text-muted">Chọn ảnh</small>
+            </div>
+        );
+    };
+
     return (
         <div className="col-md-3 mb-4">
             <div className="text-center">
@@ -90,33 +132,12 @@ const AvatarSection: React.FC<{
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={handleKeyDown}
+                        aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
                     >
-                        {isUploading ? (
-                            <div className="d-flex flex-column align-items-center">
-                                <div
-                                    className={`spinner-border text-primary ${styles.uploadSpinner}`}
-                                    role="status"
-                                >
-                                    <span className="visually-hidden">Uploading...</span>
-                                </div>
-                                <small className="text-primary mt-2">Đang tải...</small>
-                            </div>
-                        ) : formData.avatar ? (
-                            <img
-                                src={
-                                    typeof formData.avatar === 'string'
-                                        ? formData.avatar
-                                        : URL.createObjectURL(formData.avatar)
-                                }
-                                alt="Profile"
-                                className={styles.avatarImage}
-                            />
-                        ) : (
-                            <div className="d-flex flex-column align-items-center">
-                                <i className="feather-user fs-1 text-muted mb-2"></i>
-                                <small className="text-muted">Chọn ảnh</small>
-                            </div>
-                        )}
+                        {renderAvatarContent()}
 
                         {/* Upload overlay */}
                         <div
@@ -162,8 +183,7 @@ const AvatarSection: React.FC<{
                     </small>
                     <div className="mt-2">
                         <small className="text-muted">
-                            <i className="feather-info me-1"></i>
-                            JPG, PNG, GIF (tối đa 5MB)
+                            <i className="feather-info me-1"></i> JPG, PNG, GIF (tối đa 5MB)
                         </small>
                     </div>
                 </div>
@@ -649,6 +669,18 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
     languages,
     serviceTypes,
 }) => {
+    const renderSubmitButtonText = (): React.ReactNode => {
+        if (isLoading) {
+            return (
+                <>
+                    <Spinner size="small" variant="primary" className="me-2" />
+                    {isEdit ? 'Đang cập nhật...' : 'Đang lưu...'}
+                </>
+            );
+        }
+        return isEdit ? 'Cập nhật bác sĩ' : 'Lưu bác sĩ';
+    };
+
     if (isLoading) {
         return (
             <div
@@ -715,16 +747,7 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                             Hủy
                         </Button>
                         <Button type="submit" variant="primary" disabled={isLoading}>
-                            {isLoading ? (
-                                <>
-                                    <Spinner size="small" variant="primary" className="me-2" />
-                                    {isEdit ? 'Đang cập nhật...' : 'Đang lưu...'}
-                                </>
-                            ) : isEdit ? (
-                                'Cập nhật bác sĩ'
-                            ) : (
-                                'Lưu bác sĩ'
-                            )}
+                            {renderSubmitButtonText()}
                         </Button>
                     </div>
                 </div>

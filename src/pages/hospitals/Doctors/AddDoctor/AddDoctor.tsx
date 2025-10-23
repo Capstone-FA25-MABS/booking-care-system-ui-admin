@@ -1,14 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DoctorFormFields from '../components/DoctorFormFields';
 import { DoctorFormData } from '@/types/doctor.types';
 import { useDoctorFormLogic } from '@/hooks/useDoctorFormLogic';
-import {
-    getPositions,
-    getSpecialties,
-    getLanguages,
-    getServiceTypes,
-} from '@/services/doctor.service';
+import { useDoctorFormOptions } from '@/hooks/useDoctorFormOptions';
 
 const AddDoctor: React.FC = () => {
     const navigate = useNavigate();
@@ -45,41 +40,15 @@ const AddDoctor: React.FC = () => {
         prepareSubmitData,
     } = useDoctorFormLogic({ initialData, isEdit: false });
 
-    const [positions, setPositions] = useState<Array<{ id: string; name: string }>>([]);
-    const [specialties, setSpecialties] = useState<Array<{ id: string; name: string }>>([]);
-    const [languages, setLanguages] = useState<Array<{ id: string; name: string }>>([]);
-    const [serviceTypes, setServiceTypes] = useState<Array<{ id: string; name: string }>>([]);
-    const [isLoadingData, setIsLoadingData] = useState(true);
+    const {
+        positions,
+        specialties,
+        languages,
+        serviceTypes,
+        isLoading: isLoadingOptions,
+    } = useDoctorFormOptions();
+
     const [isSubmitting] = useState(false); // Placeholder for future submit logic
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setIsLoadingData(true);
-                const [positionsRes, specialtiesRes, languagesRes, servicesRes] = await Promise.all(
-                    [getPositions(), getSpecialties(), getLanguages(), getServiceTypes()]
-                );
-
-                setPositions(
-                    (positionsRes.data || []).map((p: any) => ({ id: p.id, name: p.name }))
-                );
-                setSpecialties(
-                    (specialtiesRes.data || []).map((s: any) => ({ id: s.id, name: s.name }))
-                );
-                setLanguages(
-                    (languagesRes.data || []).map((l: any) => ({ id: l.id, name: l.name }))
-                );
-                setServiceTypes(
-                    (servicesRes.data || []).map((s: any) => ({ id: s.id, name: s.name }))
-                );
-            } catch {
-                // fallback silently; could show toast
-            } finally {
-                setIsLoadingData(false);
-            }
-        };
-        fetchData();
-    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -123,7 +92,7 @@ const AddDoctor: React.FC = () => {
                         onSubmit={handleSubmit}
                         onCancel={handleCancel}
                         isEdit={false}
-                        isLoading={isLoadingData || isSubmitting}
+                        isLoading={isLoadingOptions || isSubmitting}
                         positions={positions}
                         specialties={specialties}
                         languages={languages}

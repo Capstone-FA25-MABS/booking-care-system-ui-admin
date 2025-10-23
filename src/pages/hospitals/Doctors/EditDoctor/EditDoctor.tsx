@@ -4,15 +4,13 @@ import { toast } from 'react-toastify';
 import DoctorFormFields from '../components/DoctorFormFields';
 import { DoctorFormData } from '@/types/doctor.types';
 import { useDoctorFormLogic } from '@/hooks/useDoctorFormLogic';
+import { useDoctorFormOptions } from '@/hooks/useDoctorFormOptions';
+import { prepareDoctorUpdatePayload } from '@/utils/doctor.utils';
 import {
     getDoctorById,
     getDoctorPrices,
     updateDoctor,
     updateDoctorWithAvatar,
-    getPositions,
-    getSpecialties,
-    getLanguages,
-    getServiceTypes,
 } from '@/services/doctor.service';
 
 const EditDoctor: React.FC = () => {
@@ -53,32 +51,25 @@ const EditDoctor: React.FC = () => {
         prepareSubmitData,
     } = useDoctorFormLogic({ initialData, isEdit: true, doctorId: id });
 
-    const [positions, setPositions] = useState<Array<{ id: string; name: string }>>([]);
-    const [specialties, setSpecialties] = useState<Array<{ id: string; name: string }>>([]);
-    const [languages, setLanguages] = useState<Array<{ id: string; name: string }>>([]);
-    const [serviceTypes, setServiceTypes] = useState<Array<{ id: string; name: string }>>([]);
-    const [isLoadingData, setIsLoadingData] = useState(true);
+    const {
+        positions,
+        specialties,
+        languages,
+        serviceTypes,
+        isLoading: isLoadingOptions,
+    } = useDoctorFormOptions();
+
+    const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchDoctorData = async () => {
             if (!id) return;
             try {
-                setIsLoadingData(true);
-                const [
-                    doctorRes,
-                    pricesRes,
-                    positionsRes,
-                    specialtiesRes,
-                    languagesRes,
-                    servicesRes,
-                ] = await Promise.all([
+                setIsLoadingDoctor(true);
+                const [doctorRes, pricesRes] = await Promise.all([
                     getDoctorById(id),
                     getDoctorPrices(id),
-                    getPositions(),
-                    getSpecialties(),
-                    getLanguages(),
-                    getServiceTypes(),
                 ]);
 
                 const d = doctorRes.data as any; // DoctorByIdResponse
@@ -104,26 +95,13 @@ const EditDoctor: React.FC = () => {
                     })),
                 };
                 setFormData(formMapped);
-
-                setPositions(
-                    (positionsRes.data || []).map((p: any) => ({ id: p.id, name: p.name }))
-                );
-                setSpecialties(
-                    (specialtiesRes.data || []).map((s: any) => ({ id: s.id, name: s.name }))
-                );
-                setLanguages(
-                    (languagesRes.data || []).map((l: any) => ({ id: l.id, name: l.name }))
-                );
-                setServiceTypes(
-                    (servicesRes.data || []).map((s: any) => ({ id: s.id, name: s.name }))
-                );
             } catch {
                 // fallback silently; could show toast
             } finally {
-                setIsLoadingData(false);
+                setIsLoadingDoctor(false);
             }
         };
-        fetchData();
+        fetchDoctorData();
     }, [id, setFormData]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -134,46 +112,24 @@ const EditDoctor: React.FC = () => {
 
         try {
             setIsSubmitting(true);
+
+            // Prepare common payload
+            const basePayload = prepareDoctorUpdatePayload({
+                id,
+                email: formData.email,
+                doctorData,
+                languageIds: formData.languageIds,
+                doctorPrices,
+            });
+
+            // Update with or without avatar file
             if (doctorData.avatar && doctorData.avatar instanceof File) {
                 await updateDoctorWithAvatar(id, {
-                    id,
-                    email: formData.email, // Include email in update
-                    firstName: doctorData.firstName,
-                    lastName: doctorData.lastName,
-                    address: doctorData.address,
-                    gender: doctorData.gender as 'MALE' | 'FEMALE' | 'OTHER',
-                    bio: doctorData.bio,
-                    yearsOfExperience: doctorData.yearsOfExperience,
-                    positionId: doctorData.positionId,
-                    specialtyId: doctorData.specialtyId,
-                    hospitalId: doctorData.hospitalId,
-                    languageIds: formData.languageIds,
-                    prices: doctorPrices.map((p) => ({
-                        serviceTypeId: p.serviceTypeId,
-                        amount: p.amount,
-                    })),
+                    ...basePayload,
                     avatarFile: doctorData.avatar,
                 });
             } else {
-                await updateDoctor(id, {
-                    id,
-                    email: formData.email, // Include email in update
-                    firstName: doctorData.firstName,
-                    lastName: doctorData.lastName,
-                    address: doctorData.address,
-                    gender: doctorData.gender as 'MALE' | 'FEMALE' | 'OTHER',
-                    bio: doctorData.bio,
-                    yearsOfExperience: doctorData.yearsOfExperience,
-                    positionId: doctorData.positionId,
-                    specialtyId: doctorData.specialtyId,
-                    hospitalId: doctorData.hospitalId,
-                    languageIds: formData.languageIds,
-                    prices: doctorPrices.map((p) => ({
-                        serviceTypeId: p.serviceTypeId,
-                        amount: p.amount,
-                    })),
-                    // keep existing avatar if any; backend ignores nulls
-                });
+                await updateDoctor(id, basePayload);
             }
 
             toast.success('Cập nhật bác sĩ thành công!');
@@ -254,7 +210,7 @@ const EditDoctor: React.FC = () => {
                         onSubmit={handleSubmit}
                         onCancel={handleCancel}
                         isEdit={true}
-                        isLoading={isLoadingData || isSubmitting}
+                        isLoading={isLoadingOptions || isLoadingDoctor || isSubmitting}
                         positions={positions}
                         specialties={specialties}
                         languages={languages}
