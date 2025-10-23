@@ -119,7 +119,6 @@ const AvatarSection: React.FC<{
             <div className="text-center">
                 <div className="position-relative d-inline-block">
                     <div
-                        role="presentation"
                         className={`bg-light rounded-circle d-flex align-items-center justify-content-center ${styles.avatarContainer} ${isDragOver ? styles.dragOver : ''}`}
                         style={{ width: '140px', height: '140px' }}
                         onDragOver={handleDragOver}
