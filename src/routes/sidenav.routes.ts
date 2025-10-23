@@ -109,6 +109,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-language',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
             ),
+            createSimpleMenuItem(
+                'Phương thức thanh toán',
+                'ti ti-credit-card',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
+            ),
         ],
     },
     {
