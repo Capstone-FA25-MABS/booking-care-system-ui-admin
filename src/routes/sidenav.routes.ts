@@ -109,6 +109,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-language',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
             ),
+            createSimpleMenuItem(
+                'Chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SPECIALTIES.ROOT)
+            ),
         ],
     },
     {

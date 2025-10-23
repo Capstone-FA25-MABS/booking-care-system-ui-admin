@@ -130,7 +130,7 @@ export class LanguageService {
                 params,
             });
 
-            return this.formatResponse(response, 'Languages retrieved successfully');
+            return this.formatResponse(response, 'Lấy danh sách ngôn ngữ thành công');
         } catch (error: any) {
             this.handleError(error);
         }
@@ -142,7 +142,7 @@ export class LanguageService {
     static async getLanguageById(id: string): Promise<ApiResponse<Language>> {
         try {
             const response: any = await axiosInstance.get(LANGUAGE_ENDPOINTS.GET_LANGUAGE(id));
-            return this.formatResponse(response, 'Language retrieved successfully');
+            return this.formatResponse(response, 'Lấy thông tin ngôn ngữ thành công');
         } catch (error: any) {
             this.handleError(error);
         }
@@ -237,7 +237,7 @@ export class LanguageService {
                 params,
             });
 
-            return this.formatResponse(response, 'Languages filtered successfully');
+            return this.formatResponse(response, 'Lọc ngôn ngữ thành công');
         } catch (error: any) {
             this.handleError(error);
         }

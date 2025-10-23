@@ -130,7 +130,7 @@ export class PositionService {
                 params,
             });
 
-            return this.formatResponse(response, 'Positions retrieved successfully');
+            return this.formatResponse(response, 'Lấy danh sách chức vụ thành công');
         } catch (error: any) {
             this.handleError(error);
         }
@@ -143,7 +143,7 @@ export class PositionService {
         try {
             this.validatePositionId(id);
             const response: any = await axiosInstance.get(POSITION_ENDPOINTS.GET_POSITION(id));
-            return this.formatResponse(response, 'Position retrieved successfully');
+            return this.formatResponse(response, 'Lấy thông tin chức vụ thành công');
         } catch (error: any) {
             this.handleError(error);
         }
@@ -237,7 +237,7 @@ export class PositionService {
     static async getAllPositionsSimple(): Promise<ApiResponse<Position[]>> {
         try {
             const response: any = await axiosInstance.get(POSITION_ENDPOINTS.GET_ALL_POSITIONS);
-            return this.formatResponse(response, 'All positions retrieved successfully');
+            return this.formatResponse(response, 'Lấy tất cả chức vụ thành công');
         } catch (error: any) {
             this.handleError(error);
         }
@@ -254,7 +254,7 @@ export class PositionService {
                 params,
             });
 
-            return this.formatResponse(response, 'Positions filtered successfully');
+            return this.formatResponse(response, 'Lọc chức vụ thành công');
         } catch (error: any) {
             this.handleError(error);
         }

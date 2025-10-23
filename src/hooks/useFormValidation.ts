@@ -3,11 +3,13 @@ import { useState, useCallback } from 'react';
 export interface FormData {
     name: string;
     status: 'ACTIVE' | 'INACTIVE';
+    imageUrl?: string; // Optional for entities with images
 }
 
 export interface ValidationErrors {
     name?: string;
     status?: string;
+    imageUrl?: string; // Optional for entities with images
 }
 
 interface UseFormValidationProps {
@@ -36,6 +38,13 @@ export const useFormValidation = ({ entityName }: UseFormValidationProps) => {
             // Validate status
             if (!formData.status) {
                 errors.status = 'Vui lòng chọn trạng thái';
+            }
+
+            // Validate imageUrl if present in formData
+            if ('imageUrl' in formData && formData.imageUrl !== undefined) {
+                if (!formData.imageUrl.trim()) {
+                    errors.imageUrl = `Hình ảnh ${entityName} không được để trống`;
+                }
             }
 
             setValidationErrors(errors);

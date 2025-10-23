@@ -33,6 +33,9 @@ export const PATHS = {
         LANGUAGES: {
             ROOT: 'languages',
         },
+        SPECIALTIES: {
+            ROOT: 'specialties',
+        },
     },
 
     // Hospital paths
