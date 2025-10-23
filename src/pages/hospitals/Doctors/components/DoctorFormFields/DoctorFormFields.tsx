@@ -80,14 +80,6 @@ const AvatarSection: React.FC<{
         }, 500);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            // Trigger the file input click
-            document.getElementById('profileImage')?.click();
-        }
-    };
-
     const getAvatarSrc = (): string => {
         if (typeof formData.avatar === 'string') {
             return formData.avatar;
@@ -132,10 +124,6 @@ const AvatarSection: React.FC<{
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={handleKeyDown}
-                        aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
                     >
                         {renderAvatarContent()}
 
@@ -172,7 +160,8 @@ const AvatarSection: React.FC<{
                     <label
                         htmlFor="profileImage"
                         className={`position-absolute top-0 start-0 w-100 h-100 ${styles.uploadLabel}`}
-                        aria-label="Upload profile image"
+                        aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
+                        tabIndex={0}
                     ></label>
                 </div>
 
