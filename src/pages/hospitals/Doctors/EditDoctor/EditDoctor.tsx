@@ -1,48 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import DoctorFormFields from '../components/DoctorFormFields';
 import { DoctorFormData } from '@/types/doctor.types';
 import { useDoctorFormLogic } from '@/hooks/useDoctorFormLogic';
+import { useDoctorFormOptions } from '@/hooks/useDoctorFormOptions';
+import { prepareDoctorUpdatePayload } from '@/utils/doctor.utils';
+import {
+    getDoctorById,
+    getDoctorPrices,
+    updateDoctor,
+    updateDoctorWithAvatar,
+} from '@/services/doctor.service';
 
 const EditDoctor: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const mockDoctorData: DoctorFormData = {
-        firstName: 'Nguyễn',
-        lastName: 'Văn A',
-        email: 'nguyenvana@example.com',
-        phone: '0123456789',
-        dateOfBirth: '1985-01-15',
-        address: '123 Đường ABC, Quận 1, TP.HCM',
-        gender: 'MALE',
-        bio: 'Bác sĩ có nhiều năm kinh nghiệm trong lĩnh vực tim mạch.',
-        yearsOfExperience: 10,
+    const initialData: DoctorFormData = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        dateOfBirth: '',
+        address: '',
+        gender: '',
+        bio: '',
+        yearsOfExperience: 0,
         avatar: null,
-        positionId: '550e8400-e29b-41d4-a716-446655440001',
-        specialtyId: '550e8400-e29b-41d4-a716-446655440011',
-        hospitalId: '550e8400-e29b-41d4-a716-446655440041',
-        languageIds: [
-            '550e8400-e29b-41d4-a716-446655440021',
-            '550e8400-e29b-41d4-a716-446655440022',
-        ],
-        servicePrices: [
-            {
-                id: 'price-1',
-                serviceTypeId: '550e8400-e29b-41d4-a716-446655440031',
-                amount: 200000,
-            },
-            {
-                id: 'price-2',
-                serviceTypeId: '550e8400-e29b-41d4-a716-446655440032',
-                amount: 500000,
-            },
-        ],
+        positionId: '',
+        specialtyId: '',
+        hospitalId: '',
+        languageIds: [],
+        servicePrices: [],
     };
 
     const {
         formData,
         errors,
+        setFormData,
+        setErrors,
         handleInputChange,
         handleLanguageToggle,
         handleServicePriceChange,
@@ -52,29 +49,139 @@ const EditDoctor: React.FC = () => {
         validateForm,
         resetForm,
         prepareSubmitData,
-    } = useDoctorFormLogic({ initialData: mockDoctorData, isEdit: true, doctorId: id });
+    } = useDoctorFormLogic({ initialData, isEdit: true, doctorId: id });
+
+    const {
+        positions,
+        specialties,
+        languages,
+        serviceTypes,
+        isLoading: isLoadingOptions,
+    } = useDoctorFormOptions();
+
+    const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        // In real app, fetch doctor data by ID
-        // For now, using mock data
-    }, [id]);
+        const fetchDoctorData = async () => {
+            if (!id) return;
+            try {
+                setIsLoadingDoctor(true);
+                const [doctorRes, pricesRes] = await Promise.all([
+                    getDoctorById(id),
+                    getDoctorPrices(id),
+                ]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+                const d = doctorRes.data as any; // DoctorByIdResponse
+                const formMapped: DoctorFormData = {
+                    firstName: d.firstName || '',
+                    lastName: d.lastName || '',
+                    email: d.email || '',
+                    phone: '',
+                    dateOfBirth: '',
+                    address: d.address || '',
+                    gender: (d.gender as any) || '',
+                    bio: d.bio || '',
+                    yearsOfExperience: d.yearsOfExperience || 0,
+                    avatar: d.avatarUrl || null,
+                    positionId: d.position?.id || '',
+                    specialtyId: d.specialty?.id || '',
+                    hospitalId: d.hospital?.id || '',
+                    languageIds: (d.languages || []).map((l: any) => l.id),
+                    servicePrices: (pricesRes.data || []).map((p: any) => ({
+                        id: p.id,
+                        serviceTypeId: p.serviceTypeId,
+                        amount: Number(p.amount),
+                    })),
+                };
+                setFormData(formMapped);
+            } catch {
+                // fallback silently; could show toast
+            } finally {
+                setIsLoadingDoctor(false);
+            }
+        };
+        fetchDoctorData();
+    }, [id, setFormData]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) {
-            return;
+        if (!validateForm() || !id) return;
+
+        const { doctorData, doctorPrices } = prepareSubmitData();
+
+        try {
+            setIsSubmitting(true);
+
+            // Prepare common payload
+            const basePayload = prepareDoctorUpdatePayload({
+                id,
+                email: formData.email,
+                doctorData,
+                languageIds: formData.languageIds,
+                doctorPrices,
+            });
+
+            // Update with or without avatar file
+            if (doctorData.avatar && doctorData.avatar instanceof File) {
+                await updateDoctorWithAvatar(id, {
+                    ...basePayload,
+                    avatarFile: doctorData.avatar,
+                });
+            } else {
+                await updateDoctor(id, basePayload);
+            }
+
+            toast.success('Cập nhật bác sĩ thành công!');
+            navigate('/hospitals/doctors');
+        } catch (err: any) {
+            const server = err?.response?.data;
+            const errorMessages: string[] = server?.errors || [];
+
+            if (Array.isArray(errorMessages) && errorMessages.length) {
+                const fieldErrorMap: Record<string, string> = {};
+                errorMessages.forEach((msg: string) => {
+                    const [field, ...rest] = msg.split(':');
+                    const message = rest.join(':').trim() || msg;
+                    const key = (field || '').trim().toLowerCase();
+                    if (key.includes('email')) fieldErrorMap.email = message;
+                    if (key.includes('firstname')) fieldErrorMap.firstName = message;
+                    if (key.includes('lastname')) fieldErrorMap.lastName = message;
+                    if (key.includes('address')) fieldErrorMap.address = message;
+                    if (key.includes('gender')) fieldErrorMap.gender = message;
+                    if (key.includes('bio')) fieldErrorMap.bio = message;
+                    if (key.includes('years')) fieldErrorMap.yearsOfExperience = message;
+                    if (key.includes('position')) fieldErrorMap.positionId = message;
+                    if (key.includes('specialty')) fieldErrorMap.specialtyId = message;
+                    if (key.includes('hospital')) fieldErrorMap.hospitalId = message;
+                    if (key.includes('language')) fieldErrorMap.languageIds = message;
+                    if (key.includes('price') || key.includes('amount'))
+                        fieldErrorMap.servicePrices = message;
+                });
+                if (Object.keys(fieldErrorMap).length) {
+                    setErrors(fieldErrorMap as any);
+                }
+
+                // Check for email conflict error specifically
+                const emailConflictError = errorMessages.find(
+                    (msg: string) =>
+                        msg.toLowerCase().includes('email') &&
+                        (msg.toLowerCase().includes('đã tồn tại') ||
+                            msg.toLowerCase().includes('already exists'))
+                );
+                if (emailConflictError) {
+                    toast.error(emailConflictError);
+                    return;
+                }
+
+                toast.error(server?.message || 'Cập nhật thất bại. Vui lòng kiểm tra dữ liệu.');
+                return;
+            }
+
+            toast.error(err?.message || 'Cập nhật bác sĩ thất bại');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const { doctorData, doctorLanguages, doctorPrices } = prepareSubmitData();
-
-        console.log('Updating doctor:', {
-            doctorData,
-            doctorLanguages,
-            doctorPrices,
-        });
-
-        alert('Cập nhật bác sĩ thành công!');
-        navigate('/hospitals/doctors');
     };
 
     const handleCancel = () => {
@@ -103,6 +210,11 @@ const EditDoctor: React.FC = () => {
                         onSubmit={handleSubmit}
                         onCancel={handleCancel}
                         isEdit={true}
+                        isLoading={isLoadingOptions || isLoadingDoctor || isSubmitting}
+                        positions={positions}
+                        specialties={specialties}
+                        languages={languages}
+                        serviceTypes={serviceTypes}
                     />
                 </div>
             </div>
