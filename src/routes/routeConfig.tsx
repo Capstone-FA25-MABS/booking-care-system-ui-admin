@@ -31,6 +31,7 @@ import { Role } from '@/enums/common.enums';
 import ListPositions from '@/pages/admins/Positions/ListPositions';
 import ListLanguages from '@/pages/admins/Languages/ListLanguages';
 import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
+import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 
 const routes: RouteObject[] = [
@@ -71,6 +72,8 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.SPECIALTIES.ROOT,
                 children: [{ index: true, element: <ListSpecialties /> }],
+                path: PATHS.ADMIN.PAYMENT_METHODS.ROOT,
+                children: [{ index: true, element: <PaymentMethodsManagement /> }],
             },
         ],
     },

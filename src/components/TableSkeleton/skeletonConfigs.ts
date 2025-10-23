@@ -96,5 +96,16 @@ export const languageTableColumns: SkeletonColumn[] = [
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
+// Configuration for Payment Methods Table Skeleton
+// Columns: STT | Tên | Mô tả | Hình ảnh | Trạng thái | Thao tác
+export const paymentMethodTableColumns: SkeletonColumn[] = [
+    { type: 'text', width: 50, height: 16 }, // STT
+    COMMON_COLUMNS.text.medium, // Tên
+    COMMON_COLUMNS.text.large, // Mô tả
+    { type: 'avatar', width: 40, height: 40 }, // Hình ảnh
+    COMMON_COLUMNS.badge.medium, // Trạng thái
+    COMMON_COLUMNS.actions.single, // Thao tác
+];
+
 // Export common columns for custom configurations
 export { COMMON_COLUMNS };
