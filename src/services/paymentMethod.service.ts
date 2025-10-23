@@ -1,11 +1,9 @@
-import axios from 'axios';
+import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import type {
     PaymentMethodResponse,
     TogglePaymentMethodResponse,
     PaymentMethodToggleRequest,
 } from '@/types/paymentMethod.types';
-
-const API_BASE_URL = 'http://localhost:5000/api/v1.0';
 
 /**
  * Payment Method Service
@@ -15,15 +13,16 @@ export class PaymentMethodService {
     /**
      * Get all payment methods
      */
-    static async getAllPaymentMethods(): Promise<PaymentMethodResponse> {
+    static async getAllPaymentMethods(): Promise<ApiResponse<PaymentMethodResponse>> {
         try {
-            const response = await axios.get<PaymentMethodResponse>(
-                `${API_BASE_URL}/PaymentMethods`
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching payment methods:', error);
-            throw error;
+            const response: any = await axiosInstance.get('/PaymentMethods');
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Payment methods retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get payment methods');
         }
     }
 
@@ -32,15 +31,16 @@ export class PaymentMethodService {
      */
     static async togglePaymentMethodStatus(
         request: PaymentMethodToggleRequest
-    ): Promise<TogglePaymentMethodResponse> {
+    ): Promise<ApiResponse<TogglePaymentMethodResponse>> {
         try {
-            const response = await axios.put<TogglePaymentMethodResponse>(
-                `${API_BASE_URL}/PaymentMethods/${request.id}/toggle`
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error toggling payment method status:', error);
-            throw error;
+            const response: any = await axiosInstance.put(`/PaymentMethods/${request.id}/toggle`);
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Payment method status updated successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to toggle payment method status');
         }
     }
 }
