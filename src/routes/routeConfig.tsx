@@ -72,6 +72,8 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.SPECIALTIES.ROOT,
                 children: [{ index: true, element: <ListSpecialties /> }],
+            },
+            {
                 path: PATHS.ADMIN.PAYMENT_METHODS.ROOT,
                 children: [{ index: true, element: <PaymentMethodsManagement /> }],
             },

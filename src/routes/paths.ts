@@ -35,6 +35,7 @@ export const PATHS = {
         },
         SPECIALTIES: {
             ROOT: 'specialties',
+        },
         PAYMENT_METHODS: {
             ROOT: 'payment-methods',
         },
