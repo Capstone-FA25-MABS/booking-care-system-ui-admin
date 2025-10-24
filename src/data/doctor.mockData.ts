@@ -13,11 +13,36 @@ export const mockPositions: Position[] = [
 ];
 
 export const mockSpecialties: Specialty[] = [
-    { id: '550e8400-e29b-41d4-a716-446655440011', name: 'Tim mạch', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440012', name: 'Thần kinh', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440013', name: 'Nội khoa', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440014', name: 'Ngoại khoa', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440015', name: 'Sản phụ khoa', status: 'ACTIVE' },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440011',
+        name: 'Tim mạch',
+        imageUrl: '/images/specialties/cardiology.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440012',
+        name: 'Thần kinh',
+        imageUrl: '/images/specialties/neurology.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440013',
+        name: 'Nội khoa',
+        imageUrl: '/images/specialties/internal-medicine.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440014',
+        name: 'Ngoại khoa',
+        imageUrl: '/images/specialties/surgery.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440015',
+        name: 'Sản phụ khoa',
+        imageUrl: '/images/specialties/obstetrics-gynecology.jpg',
+        status: 'ACTIVE',
+    },
 ];
 
 export const mockLanguages: Language[] = [

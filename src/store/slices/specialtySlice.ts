@@ -1,11 +1,21 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { Specialty, SpecialtyFormData, SpecialtySearchParams } from '@/types/specialty.types';
+import { BaseEntityListResponse } from '@/services/baseEntity.service';
+
+// Extended interface to support both API response formats
+interface SpecialtyListResponse extends BaseEntityListResponse<Specialty> {
+    specialties?: Specialty[];
+}
 import {
-    Specialty,
-    SpecialtyFormData,
-    SpecialtySearchParams,
-    SpecialtyListResponse,
-} from '@/types/specialty.types';
-import { SpecialtyService } from '@/services/specialty.service';
+    getAllSpecialties as serviceGetAllSpecialties,
+    getSpecialtyById as serviceGetSpecialtyById,
+    createSpecialty as serviceCreateSpecialty,
+    createSpecialtyWithImage as serviceCreateSpecialtyWithImage,
+    updateSpecialty as serviceUpdateSpecialty,
+    updateSpecialtyWithImage as serviceUpdateSpecialtyWithImage,
+    deleteSpecialty as serviceDeleteSpecialty,
+    filterSpecialties as serviceFilterSpecialties,
+} from '@/services/specialty.service';
 
 export interface SpecialtyState {
     specialties: Specialty[];
@@ -52,7 +62,7 @@ export const fetchSpecialties = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await SpecialtyService.getAllSpecialties(
+            const response = await serviceGetAllSpecialties(
                 pageNumber,
                 pageSize,
                 sortBy,
@@ -69,7 +79,7 @@ export const fetchSpecialtyById = createAsyncThunk(
     'specialty/fetchSpecialtyById',
     async (id: string, { rejectWithValue }) => {
         try {
-            const response = await SpecialtyService.getSpecialtyById(id);
+            const response = await serviceGetSpecialtyById(id);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -81,7 +91,7 @@ export const createSpecialty = createAsyncThunk(
     'specialty/createSpecialty',
     async (specialtyData: SpecialtyFormData, { rejectWithValue }) => {
         try {
-            const response = await SpecialtyService.createSpecialty(specialtyData);
+            const response = await serviceCreateSpecialty(specialtyData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -93,7 +103,7 @@ export const createSpecialtyWithImage = createAsyncThunk(
     'specialty/createSpecialtyWithImage',
     async (specialtyData: SpecialtyFormData & { imageFile: File }, { rejectWithValue }) => {
         try {
-            const response = await SpecialtyService.createSpecialtyWithImage(specialtyData);
+            const response = await serviceCreateSpecialtyWithImage(specialtyData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -108,7 +118,7 @@ export const updateSpecialty = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await SpecialtyService.updateSpecialty(id, specialtyData);
+            const response = await serviceUpdateSpecialty(id, specialtyData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -126,7 +136,7 @@ export const updateSpecialtyWithImage = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await SpecialtyService.updateSpecialtyWithImage(id, specialtyData);
+            const response = await serviceUpdateSpecialtyWithImage(id, specialtyData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -138,7 +148,7 @@ export const deleteSpecialty = createAsyncThunk(
     'specialty/deleteSpecialty',
     async (id: string, { rejectWithValue }) => {
         try {
-            await SpecialtyService.deleteSpecialty(id);
+            await serviceDeleteSpecialty(id);
             return id;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -150,7 +160,7 @@ export const filterSpecialties = createAsyncThunk(
     'specialty/filterSpecialties',
     async (params: SpecialtySearchParams, { rejectWithValue }) => {
         try {
-            const response = await SpecialtyService.filterSpecialties(params);
+            const response = await serviceFilterSpecialties(params);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -184,7 +194,7 @@ const specialtySlice = createSlice({
                 fetchSpecialties.fulfilled,
                 (state, action: PayloadAction<SpecialtyListResponse>) => {
                     state.isLoading = false;
-                    state.specialties = action.payload.specialties;
+                    state.specialties = action.payload.specialties || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,
@@ -329,7 +339,7 @@ const specialtySlice = createSlice({
                 filterSpecialties.fulfilled,
                 (state, action: PayloadAction<SpecialtyListResponse>) => {
                     state.isLoading = false;
-                    state.specialties = action.payload.specialties;
+                    state.specialties = action.payload.specialties || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,

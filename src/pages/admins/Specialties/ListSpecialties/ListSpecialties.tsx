@@ -8,10 +8,10 @@ import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
 import TableActions from '@/components/TableActions';
 import AppliedFilters from '@/components/AppliedFilters/AppliedFilters';
-import SpecialtyModal from '@/components/Modal/SpecialtyModal';
+import EntityModal from '@/components/Modal/EntityModal';
 import { Specialty, SpecialtyFormData } from '@/types/specialty.types';
 import useSpecialty from '@/hooks/useSpecialty';
-import { SpecialtyService } from '@/services/specialty.service';
+import { getAllSpecialties } from '@/services/specialty.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import ActionDropdown from '@/components/ActionDropdown';
@@ -363,6 +363,7 @@ const ListSpecialties: React.FC = () => {
                     id: specialtyToEdit.id,
                     formData: formData,
                     specialtyToEdit: specialtyToEdit,
+                    imageUrl: formData.imageUrl,
                 });
 
                 if (imageFile) {
@@ -438,8 +439,8 @@ const ListSpecialties: React.FC = () => {
     // Function to fetch all specialties for filter modal
     const fetchAllSpecialtiesForFilter = async () => {
         try {
-            const response = await SpecialtyService.getAllSpecialties(1, 100); // Large page size to get all
-            setAllSpecialties(response.data.specialties);
+            const response = await getAllSpecialties(1, 100); // Large page size to get all
+            setAllSpecialties(response.data.items);
         } catch (error) {
             console.error('Error fetching all specialties for filter:', error);
             setAllSpecialties([]);
@@ -696,7 +697,7 @@ const ListSpecialties: React.FC = () => {
             )}
 
             {/* Specialty Modal */}
-            <SpecialtyModal
+            <EntityModal
                 show={showModal}
                 title={title}
                 formData={formData}
@@ -710,6 +711,8 @@ const ListSpecialties: React.FC = () => {
                 onRemoveImage={handleRemoveImage}
                 onStatusChange={handleStatusChange}
                 imagePreview={imagePreview}
+                entityName="Chuyên Khoa"
+                hasImageUpload={true}
                 styles={{
                     modal: styles.modal,
                     'modal-content': styles['modal-content'],
