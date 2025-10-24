@@ -137,9 +137,9 @@ const EntityModal: React.FC<EntityModalProps> = ({
                                         {imagePreview && (
                                             <div className="col-12">
                                                 <div className="mb-4">
-                                                    <label className="form-label fw-semibold text-dark mb-2">
+                                                    <div className="fw-semibold text-dark mb-2">
                                                         Xem trước hình ảnh
-                                                    </label>
+                                                    </div>
                                                     <div
                                                         className="position-relative border rounded p-2"
                                                         style={{ width: '100px', height: '100px' }}

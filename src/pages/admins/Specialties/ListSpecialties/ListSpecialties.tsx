@@ -75,25 +75,34 @@ const ListSpecialties: React.FC = () => {
         fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
     }, [fetchSpecialties, currentPage, itemsPerPage, sortBy]);
 
+    // Helper function to handle search with filters
+    const handleSearchWithFilters = () => {
+        const sortParams = getSortParams(sortBy);
+        const filterParams = {
+            pageNumber: 1,
+            pageSize: itemsPerPage,
+            searchTerm: searchTerm.trim(),
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        };
+        setCurrentPage(1);
+        filterSpecialties(filterParams);
+    };
+
+    // Helper function to handle search clear
+    const handleSearchClear = () => {
+        setCurrentPage(1);
+        const sortParams = getSortParams(sortBy);
+        fetchSpecialties(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+    };
+
     // Handle search term changes with debounce
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (searchTerm.trim()) {
-                const sortParams = getSortParams(sortBy);
-                const filterParams = {
-                    pageNumber: 1,
-                    pageSize: itemsPerPage,
-                    searchTerm: searchTerm.trim(),
-                    sortBy: sortParams.sortBy,
-                    sortOrder: sortParams.sortOrder,
-                };
-                setCurrentPage(1);
-                filterSpecialties(filterParams);
+                handleSearchWithFilters();
             } else {
-                // If search is cleared, fetch all specialties with current sort
-                setCurrentPage(1);
-                const sortParams = getSortParams(sortBy);
-                fetchSpecialties(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+                handleSearchClear();
             }
         }, 500); // 500ms debounce
 
@@ -239,33 +248,46 @@ const ListSpecialties: React.FC = () => {
         // For specialty filters, pagination is handled client-side
     };
 
-    const handleFilterSubmit = () => {
-        // Apply the selected filters
+    // Helper function to apply specialty filters
+    const applySpecialtyFilters = () => {
         setAppliedSpecialties([...selectedSpecialties]);
         setAppliedStatuses([...selectedStatuses]);
-
-        // If we have specialty filters, we need to fetch all specialties first
-        if (selectedSpecialties.length > 0) {
-            // Fetch all specialties without pagination for client-side filtering
-            fetchSpecialties(1, 100); // Large page size to get all specialties
-        } else {
-            // Only status filter, can use backend filtering with sorting
-            const sortParams = getSortParams(sortBy);
-            const filterParams = {
-                pageNumber: 1,
-                pageSize: itemsPerPage,
-                status:
-                    selectedStatuses.length === 1
-                        ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
-                        : undefined,
-                sortBy: sortParams.sortBy,
-                sortOrder: sortParams.sortOrder,
-            };
-            filterSpecialties(filterParams);
-        }
-
         setCurrentPage(1);
         setShowFilterModal(false);
+
+        // Fetch all specialties without pagination for client-side filtering
+        fetchSpecialties(1, 100); // Large page size to get all specialties
+    };
+
+    // Helper function to apply status filters only
+    const applyStatusFilters = () => {
+        setAppliedSpecialties([...selectedSpecialties]);
+        setAppliedStatuses([...selectedStatuses]);
+        setCurrentPage(1);
+        setShowFilterModal(false);
+
+        // Only status filter, can use backend filtering with sorting
+        const sortParams = getSortParams(sortBy);
+        const filterParams = {
+            pageNumber: 1,
+            pageSize: itemsPerPage,
+            status:
+                selectedStatuses.length === 1
+                    ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
+                    : undefined,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        };
+        filterSpecialties(filterParams);
+    };
+
+    const handleFilterSubmit = () => {
+        // If we have specialty filters, we need to fetch all specialties first
+        if (selectedSpecialties.length > 0) {
+            applySpecialtyFilters();
+        } else {
+            applyStatusFilters();
+        }
     };
 
     const handleClearFilters = () => {
@@ -288,50 +310,114 @@ const ListSpecialties: React.FC = () => {
         setShowDeleteModal(true);
     };
 
+    // Helper function to handle successful delete operation
+    const handleSuccessfulDelete = (specialtyName: string) => {
+        setShowDeleteModal(false);
+        setSpecialtyToDelete(null);
+        toast.success(`Đã ngừng hiển thị chuyên khoa "${specialtyName}" thành công!`);
+
+        // Refresh the specialties list
+        const sortParams = getSortParams(sortBy);
+        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+    };
+
+    // Helper function to handle delete error
+    const handleDeleteError = (error: any) => {
+        console.error('Error hiding specialty:', error);
+        const errorMessage =
+            error.message || 'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
+        toast.error(errorMessage);
+    };
+
     const handleHideConfirm = async () => {
-        if (specialtyToDelete) {
-            try {
-                const result = await deleteSpecialty(specialtyToDelete.id);
+        if (!specialtyToDelete) return;
 
-                // Check if the operation was successful
-                if ((result as any).type.endsWith('/fulfilled')) {
-                    // Success - show toast and close modal
-                    setShowDeleteModal(false);
-                    setSpecialtyToDelete(null);
-                    toast.success(
-                        `Đã ngừng hiển thị chuyên khoa "${specialtyToDelete.name}" thành công!`
-                    );
+        try {
+            const result = await deleteSpecialty(specialtyToDelete.id);
 
-                    // Refresh the specialties list
-                    const sortParams = getSortParams(sortBy);
-                    fetchSpecialties(
-                        currentPage,
-                        itemsPerPage,
-                        sortParams.sortBy,
-                        sortParams.sortOrder
-                    );
-                } else if ((result as any).type.endsWith('/rejected')) {
-                    // Error - show error message
-                    const errorMessage =
-                        ((result as any).payload as string) ||
-                        'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
-                    toast.error(errorMessage);
-                }
-            } catch (error: any) {
-                console.error('Error hiding specialty:', error);
-
-                // Show specific error message
+            // Check if the operation was successful
+            if ((result as any).type.endsWith('/fulfilled')) {
+                handleSuccessfulDelete(specialtyToDelete.name);
+            } else if ((result as any).type.endsWith('/rejected')) {
+                // Error - show error message
                 const errorMessage =
-                    error.message ||
+                    ((result as any).payload as string) ||
                     'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
+        } catch (error: any) {
+            handleDeleteError(error);
         }
     };
 
     const handleHideCancel = () => {
         setShowDeleteModal(false);
         setSpecialtyToDelete(null);
+    };
+
+    // Helper function to create specialty
+    const createSpecialtyData = async () => {
+        if (imageFile) {
+            return await createSpecialtyWithImage({ ...formData, imageFile });
+        } else {
+            return await createSpecialty(formData);
+        }
+    };
+
+    // Helper function to update specialty
+    const updateSpecialtyData = async () => {
+        if (!specialtyToEdit) {
+            toast.error('Không tìm thấy thông tin chuyên khoa cần cập nhật');
+            return null;
+        }
+
+        console.log('Updating specialty:', {
+            id: specialtyToEdit.id,
+            formData: formData,
+            specialtyToEdit: specialtyToEdit,
+            imageUrl: formData.imageUrl,
+        });
+
+        if (imageFile) {
+            return await updateSpecialtyWithImage(specialtyToEdit.id, {
+                ...formData,
+                imageFile,
+            });
+        } else {
+            return await updateSpecialty(specialtyToEdit.id, formData);
+        }
+    };
+
+    // Helper function to handle successful operation
+    const handleSuccessfulOperation = () => {
+        if (modalMode === 'add') {
+            toast.success('Tạo chuyên khoa thành công!');
+        } else {
+            toast.success('Cập nhật chuyên khoa thành công!');
+        }
+
+        // Close modal and refresh data
+        setShowModal(false);
+        setSpecialtyToEdit(null);
+        setFormData({
+            name: '',
+            imageUrl: '',
+            status: 'ACTIVE',
+        });
+        setImagePreview('');
+        setImageFile(null);
+        clearAllValidationErrors();
+
+        // Refresh the specialties list
+        const sortParams = getSortParams(sortBy);
+        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+    };
+
+    // Helper function to handle error
+    const handleOperationError = (error: any, defaultMessage: string) => {
+        console.error('Error saving specialty:', error);
+        const errorMessage = error.message || defaultMessage;
+        toast.error(errorMessage);
     };
 
     // Specialty modal functions
@@ -346,65 +432,15 @@ const ListSpecialties: React.FC = () => {
         try {
             let result;
             if (modalMode === 'add') {
-                // Create new specialty
-                if (imageFile) {
-                    result = await createSpecialtyWithImage({ ...formData, imageFile });
-                } else {
-                    result = await createSpecialty(formData);
-                }
+                result = await createSpecialtyData();
             } else {
-                // Update specialty
-                if (!specialtyToEdit) {
-                    toast.error('Không tìm thấy thông tin chuyên khoa cần cập nhật');
-                    return;
-                }
-
-                console.log('Updating specialty:', {
-                    id: specialtyToEdit.id,
-                    formData: formData,
-                    specialtyToEdit: specialtyToEdit,
-                    imageUrl: formData.imageUrl,
-                });
-
-                if (imageFile) {
-                    result = await updateSpecialtyWithImage(specialtyToEdit.id, {
-                        ...formData,
-                        imageFile,
-                    });
-                } else {
-                    result = await updateSpecialty(specialtyToEdit.id, formData);
-                }
+                result = await updateSpecialtyData();
+                if (!result) return; // Early return if validation failed
             }
 
             // Check if the operation was successful
             if ((result as any).type.endsWith('/fulfilled')) {
-                // Success - show toast and close modal
-                if (modalMode === 'add') {
-                    toast.success('Tạo chuyên khoa thành công!');
-                } else {
-                    toast.success('Cập nhật chuyên khoa thành công!');
-                }
-
-                // Close modal and refresh data
-                setShowModal(false);
-                setSpecialtyToEdit(null);
-                setFormData({
-                    name: '',
-                    imageUrl: '',
-                    status: 'ACTIVE',
-                });
-                setImagePreview('');
-                setImageFile(null);
-                clearAllValidationErrors();
-
-                // Refresh the specialties list
-                const sortParams = getSortParams(sortBy);
-                fetchSpecialties(
-                    currentPage,
-                    itemsPerPage,
-                    sortParams.sortBy,
-                    sortParams.sortOrder
-                );
+                handleSuccessfulOperation();
             } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
                 const errorMessage =
@@ -412,11 +448,7 @@ const ListSpecialties: React.FC = () => {
                 toast.error(errorMessage);
             }
         } catch (error: any) {
-            console.error('Error saving specialty:', error);
-
-            // Show specific error message
-            const errorMessage = error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-            toast.error(errorMessage);
+            handleOperationError(error, 'Có lỗi xảy ra. Vui lòng thử lại.');
         } finally {
             setIsSubmitting(false);
         }
@@ -447,6 +479,91 @@ const ListSpecialties: React.FC = () => {
         }
     };
 
+    // Helper function to render error state
+    const renderErrorState = () => (
+        <tr>
+            <td colSpan={6} className="text-center py-4">
+                <div className="alert alert-danger" role="alert">
+                    <strong>Lỗi:</strong> {error}
+                    <button
+                        type="button"
+                        className="btn-close ms-2"
+                        onClick={clearError}
+                        aria-label="Close"
+                    ></button>
+                </div>
+            </td>
+        </tr>
+    );
+
+    // Helper function to render empty state
+    const renderEmptyState = () => (
+        <tr>
+            <td colSpan={6} className="text-center py-4">
+                <p className="text-muted">Không có chuyên khoa nào được tìm thấy.</p>
+            </td>
+        </tr>
+    );
+
+    // Helper function to render specialty row
+    const renderSpecialtyRow = (specialty: Specialty) => (
+        <tr key={specialty.id}>
+            <td>
+                <div className="d-flex align-items-center">
+                    <div className="avatar me-2">
+                        <div className="avatar-title bg-primary-subtle text-primary rounded">
+                            <i className="ti ti-stethoscope"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 className="mb-1 fs-14 fw-semibold">{specialty.name}</h6>
+                        <span className="text-muted fs-13">ID: {specialty.id}</span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div className={styles.imagePreviewSmall}>
+                    <img
+                        src={specialty.imageUrl}
+                        alt={specialty.name}
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                                'https://via.placeholder.com/80x80?text=No+Image';
+                        }}
+                    />
+                </div>
+            </td>
+            <td>
+                <span className="text-muted fs-14">
+                    {specialty.createdAt
+                        ? new Date(specialty.createdAt).toLocaleDateString('vi-VN')
+                        : 'N/A'}
+                </span>
+            </td>
+            <td>
+                <span className="text-muted fs-14">
+                    {specialty.updatedAt
+                        ? new Date(specialty.updatedAt).toLocaleDateString('vi-VN')
+                        : 'N/A'}
+                </span>
+            </td>
+            <td>
+                <StatusBadge status={specialty.status} />
+            </td>
+            <td className="action-item">
+                <TableActions
+                    id={specialty.id}
+                    onEdit={() => handleEditClickWithSpecialty(specialty)}
+                    onHide={() => handleHideClick(specialty)}
+                    showEdit={true}
+                    showDelete={false}
+                    showHide={true}
+                    showView={false}
+                />
+            </td>
+        </tr>
+    );
+
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
         if (isLoading) {
@@ -454,90 +571,14 @@ const ListSpecialties: React.FC = () => {
         }
 
         if (error) {
-            return (
-                <tr>
-                    <td colSpan={6} className="text-center py-4">
-                        <div className="alert alert-danger" role="alert">
-                            <strong>Lỗi:</strong> {error}
-                            <button
-                                type="button"
-                                className="btn-close ms-2"
-                                onClick={clearError}
-                                aria-label="Close"
-                            ></button>
-                        </div>
-                    </td>
-                </tr>
-            );
+            return renderErrorState();
         }
 
         if (!paginatedFilteredSpecialties || paginatedFilteredSpecialties.length === 0) {
-            return (
-                <tr>
-                    <td colSpan={6} className="text-center py-4">
-                        <p className="text-muted">Không có chuyên khoa nào được tìm thấy.</p>
-                    </td>
-                </tr>
-            );
+            return renderEmptyState();
         }
 
-        return paginatedFilteredSpecialties.map((specialty) => (
-            <tr key={specialty.id}>
-                <td>
-                    <div className="d-flex align-items-center">
-                        <div className="avatar me-2">
-                            <div className="avatar-title bg-primary-subtle text-primary rounded">
-                                <i className="ti ti-stethoscope"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h6 className="mb-1 fs-14 fw-semibold">{specialty.name}</h6>
-                            <span className="text-muted fs-13">ID: {specialty.id}</span>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div className={styles.imagePreviewSmall}>
-                        <img
-                            src={specialty.imageUrl}
-                            alt={specialty.name}
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                    'https://via.placeholder.com/80x80?text=No+Image';
-                            }}
-                        />
-                    </div>
-                </td>
-                <td>
-                    <span className="text-muted fs-14">
-                        {specialty.createdAt
-                            ? new Date(specialty.createdAt).toLocaleDateString('vi-VN')
-                            : 'N/A'}
-                    </span>
-                </td>
-                <td>
-                    <span className="text-muted fs-14">
-                        {specialty.updatedAt
-                            ? new Date(specialty.updatedAt).toLocaleDateString('vi-VN')
-                            : 'N/A'}
-                    </span>
-                </td>
-                <td>
-                    <StatusBadge status={specialty.status} />
-                </td>
-                <td className="action-item">
-                    <TableActions
-                        id={specialty.id}
-                        onEdit={() => handleEditClickWithSpecialty(specialty)}
-                        onHide={() => handleHideClick(specialty)}
-                        showEdit={true}
-                        showDelete={false}
-                        showHide={true}
-                        showView={false}
-                    />
-                </td>
-            </tr>
-        ));
+        return paginatedFilteredSpecialties.map(renderSpecialtyRow);
     };
 
     return (
