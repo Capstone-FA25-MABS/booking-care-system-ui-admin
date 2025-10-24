@@ -31,6 +31,7 @@ import { Role } from '@/enums/common.enums';
 import ListPositions from '@/pages/admins/Positions/ListPositions';
 import ListLanguages from '@/pages/admins/Languages/ListLanguages';
 import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
+import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 
@@ -76,6 +77,10 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.PAYMENT_METHODS.ROOT,
                 children: [{ index: true, element: <PaymentMethodsManagement /> }],
+            },
+            {
+                path: PATHS.ADMIN.SERVICE_TYPES.ROOT,
+                children: [{ index: true, element: <ListServiceTypes /> }],
             },
         ],
     },

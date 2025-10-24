@@ -49,7 +49,7 @@ export abstract class BaseEntityService<
     protected formatResponse(response: any, defaultMessage: string): ApiResponse {
         return {
             success: response.success ?? true,
-            data: response.data || response,
+            data: response.data?.data || response.data || response,
             message: response.message || defaultMessage,
         };
     }

@@ -1,0 +1,589 @@
+// Image preview styling
+.imagePreviewSmall {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+// Applied filters container
+.appliedFiltersContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.appliedFiltersLabel {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 0.5rem;
+}
+
+.filterBadgeClose {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.25rem;
+    margin-left: 0.25rem;
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.clearAllButton {
+    margin-left: auto;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+// Modern Modal Styles
+.modal {
+    backdrop-filter: blur(8px);
+
+    .modal-dialog {
+        animation: modalSlideIn 0.3s ease-out;
+        max-width: 50vw;
+        width: 50%;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: none;
+        overflow: hidden;
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+
+            .modal-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin: 0;
+            }
+
+            .btn-close {
+                filter: brightness(0) invert(1);
+                opacity: 0.8;
+
+                &:hover {
+                    opacity: 1;
+                }
+            }
+        }
+
+        .modal-body {
+            padding: 2rem;
+            background: #fafbfc;
+
+            .form-label {
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 0.75rem;
+                font-size: 0.95rem;
+            }
+
+            .form-control,
+            .form-select {
+                border: 2px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 0.875rem 1rem;
+                font-size: 0.95rem;
+                transition: all 0.2s ease;
+                background: white;
+
+                &:focus {
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                    background: white;
+                }
+
+                &::placeholder {
+                    color: #9ca3af;
+                }
+            }
+
+            .form-control-lg,
+            .form-select-lg {
+                padding: 1rem 1.25rem;
+                font-size: 1rem;
+            }
+
+            textarea.form-control {
+                resize: vertical;
+                min-height: 100px;
+            }
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+
+            .btn {
+                border-radius: 12px;
+                padding: 0.75rem 2rem;
+                font-weight: 600;
+                font-size: 0.95rem;
+                transition: all 0.2s ease;
+
+                &.btn-primary {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: none;
+
+                    &:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+                    }
+                }
+
+                &.btn-light {
+                    background: #f8fafc;
+                    border: 2px solid #e5e7eb;
+                    color: #6b7280;
+
+                    &:hover {
+                        background: #f1f5f9;
+                        border-color: #cbd5e1;
+                        color: #475569;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Animation
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.invalidFeedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.reactSelectInvalid {
+    .react-select__control {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+}
+
+// Form styles
+.form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+
+        &:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        &.is-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+}
+
+// Image upload styles
+.image-upload {
+    .image-preview {
+        width: 100%;
+        max-width: 200px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        margin-bottom: 1rem;
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 6px;
+        }
+
+        .placeholder {
+            color: #6c757d;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+    }
+
+    .upload-button {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        background-color: #f8f9ff;
+        color: #007bff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+
+        &:hover {
+            background-color: #e3f2fd;
+            border-color: #0056b3;
+        }
+
+        i {
+            margin-right: 0.5rem;
+        }
+    }
+
+    .remove-image {
+        margin-top: 0.5rem;
+        color: #dc3545;
+        font-size: 0.875rem;
+        cursor: pointer;
+        text-decoration: underline;
+
+        &:hover {
+            color: #c82333;
+        }
+    }
+}
+
+// Status badge styles
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &.active {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    &.inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+}
+
+// Table styles
+.table {
+    th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+        padding: 1rem 0.75rem;
+    }
+
+    td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .avatar-sm {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .img-thumbnail {
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+    }
+}
+
+// Action dropdown styles
+.action-dropdown {
+    .dropdown-toggle {
+        border: none;
+        background: none;
+        color: #6c757d;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        &:focus {
+            box-shadow: none;
+        }
+    }
+
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 0.5rem 0;
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: #f8f9fa;
+            }
+
+            &.text-danger:hover {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+
+            &.text-warning:hover {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+        }
+    }
+}
+
+// Pagination styles
+.pagination {
+    .page-link {
+        border-radius: 6px;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+        color: #007bff;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+    }
+
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+}
+
+// Search and filter styles
+.input-group {
+    .form-control {
+        border-radius: 8px 0 0 8px;
+    }
+
+    .btn {
+        border-radius: 0 8px 8px 0;
+    }
+}
+
+// Filter modal styles
+.filter-modal {
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .filter-section {
+        margin-bottom: 1.5rem;
+
+        h6 {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-check {
+            margin-bottom: 0.5rem;
+
+            .form-check-input {
+                margin-top: 0.25rem;
+            }
+
+            .form-check-label {
+                font-size: 0.9rem;
+                color: #495057;
+            }
+        }
+    }
+}
+
+// Applied filters styles
+.applied-filters {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+
+    .filter-tag {
+        background-color: #2196f3;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+
+        .remove-tag {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+
+            &:hover {
+                color: #ffcdd2;
+            }
+        }
+    }
+}
+
+// Loading and empty states
+.loading-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+
+    i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    h5 {
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        margin-bottom: 0;
+    }
+}
+
+// Validation error styling
+.invalidFeedback {
+    color: #dc3545 !important;
+    font-size: 0.875rem;
+    margin-bottom: 5px !important;
+    display: block;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+// Input field with validation error
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+// Custom styling for react-select with validation error
+.reactSelectInvalid {
+    .react-select__control {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .react-select__control:hover {
+        border-color: #dc3545 !important;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .modal {
+        .modal-dialog {
+            margin: 1rem;
+            max-width: calc(100vw - 2rem);
+            width: calc(100vw - 2rem);
+        }
+
+        .modal-content {
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 1rem 1.5rem;
+            }
+        }
+    }
+
+    .imagePreviewSmall {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal {
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100vw - 1rem);
+            width: calc(100vw - 1rem);
+        }
+    }
+
+    .imagePreviewSmall {
+        width: 50px;
+        height: 50px;
+    }
+}
