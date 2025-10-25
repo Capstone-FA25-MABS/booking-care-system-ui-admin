@@ -188,16 +188,23 @@
 }
 
 .invalidFeedback {
-    color: #dc3545;
+    color: #dc3545 !important;
     font-size: 0.875rem;
     margin-top: 0.25rem;
+    margin-bottom: 5px !important;
     display: block;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 .reactSelectInvalid {
     .react-select__control {
         border-color: #dc3545 !important;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .react-select__control:hover {
+        border-color: #dc3545 !important;
     }
 }
 
@@ -521,15 +528,7 @@
     }
 }
 
-// Validation error styling
-.invalidFeedback {
-    color: #dc3545 !important;
-    font-size: 0.875rem;
-    margin-bottom: 5px !important;
-    display: block;
-    font-weight: 500;
-    line-height: 1.2;
-}
+// Validation error styling (merged with above)
 
 // Input field with validation error
 .is-invalid {
@@ -537,17 +536,7 @@
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
-// Custom styling for react-select with validation error
-.reactSelectInvalid {
-    .react-select__control {
-        border-color: #dc3545 !important;
-        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-    }
-
-    .react-select__control:hover {
-        border-color: #dc3545 !important;
-    }
-}
+// Custom styling for react-select with validation error (merged with above)
 
 // Responsive adjustments
 @media (max-width: 768px) {

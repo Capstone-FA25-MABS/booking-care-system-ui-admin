@@ -18,6 +18,58 @@ interface UseFormValidationProps {
     entityName: string; // e.g., 'học vị', 'ngôn ngữ'
 }
 
+// Helper functions to reduce cognitive complexity
+const validateName = (name: string, entityName: string): string | undefined => {
+    if (!name.trim()) {
+        return `Tên ${entityName} không được để trống`;
+    }
+
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+        return `Tên ${entityName} phải có ít nhất 2 ký tự`;
+    }
+
+    if (trimmedName.length > 255) {
+        return `Tên ${entityName} không được vượt quá 255 ký tự`;
+    }
+
+    return undefined;
+};
+
+const validateDescription = (
+    description: string | undefined,
+    entityName: string
+): string | undefined => {
+    if (!description || description.trim().length === 0) {
+        return `Mô tả ${entityName} không được để trống`;
+    }
+
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length < 10) {
+        return `Mô tả ${entityName} phải có ít nhất 10 ký tự`;
+    }
+
+    if (trimmedDescription.length > 255) {
+        return `Mô tả ${entityName} không được vượt quá 255 ký tự`;
+    }
+
+    return undefined;
+};
+
+const validateStatus = (status: 'ACTIVE' | 'INACTIVE'): string | undefined => {
+    if (!status) {
+        return 'Vui lòng chọn trạng thái';
+    }
+    return undefined;
+};
+
+const validateImageUrl = (imageUrl: string | undefined, entityName: string): string | undefined => {
+    if (!imageUrl || !imageUrl.trim()) {
+        return `Hình ảnh ${entityName} không được để trống`;
+    }
+    return undefined;
+};
+
 export const useFormValidation = ({ entityName }: UseFormValidationProps) => {
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
@@ -26,40 +78,30 @@ export const useFormValidation = ({ entityName }: UseFormValidationProps) => {
             const errors: ValidationErrors = {};
 
             // Validate name
-            if (!formData.name.trim()) {
-                errors.name = `Tên ${entityName} không được để trống`;
-            } else {
-                const trimmedName = formData.name.trim();
-                if (trimmedName.length < 2) {
-                    errors.name = `Tên ${entityName} phải có ít nhất 2 ký tự`;
-                } else if (trimmedName.length > 255) {
-                    errors.name = `Tên ${entityName} không được vượt quá 255 ký tự`;
-                }
+            const nameError = validateName(formData.name, entityName);
+            if (nameError) {
+                errors.name = nameError;
             }
 
             // Validate description if present
             if ('description' in formData && formData.description !== undefined) {
-                if (!formData.description || formData.description.trim().length === 0) {
-                    errors.description = `Mô tả ${entityName} không được để trống`;
-                } else {
-                    const trimmedDescription = formData.description.trim();
-                    if (trimmedDescription.length < 10) {
-                        errors.description = `Mô tả ${entityName} phải có ít nhất 10 ký tự`;
-                    } else if (trimmedDescription.length > 255) {
-                        errors.description = `Mô tả ${entityName} không được vượt quá 255 ký tự`;
-                    }
+                const descriptionError = validateDescription(formData.description, entityName);
+                if (descriptionError) {
+                    errors.description = descriptionError;
                 }
             }
 
             // Validate status
-            if (!formData.status) {
-                errors.status = 'Vui lòng chọn trạng thái';
+            const statusError = validateStatus(formData.status);
+            if (statusError) {
+                errors.status = statusError;
             }
 
             // Validate imageUrl if present in formData
             if ('imageUrl' in formData && formData.imageUrl !== undefined) {
-                if (!formData.imageUrl.trim()) {
-                    errors.imageUrl = `Hình ảnh ${entityName} không được để trống`;
+                const imageUrlError = validateImageUrl(formData.imageUrl, entityName);
+                if (imageUrlError) {
+                    errors.imageUrl = imageUrlError;
                 }
             }
 

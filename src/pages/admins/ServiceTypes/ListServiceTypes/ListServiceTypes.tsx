@@ -178,13 +178,20 @@ const ListServiceTypes: React.FC = () => {
             );
         }
 
+        // Filter by applied statuses
+        if (appliedStatuses.length > 0) {
+            filtered = filtered.filter((serviceType: ServiceType) =>
+                appliedStatuses.includes(serviceType.status)
+            );
+        }
+
         return filtered;
-    }, [serviceTypes, appliedServiceTypes]);
+    }, [serviceTypes, appliedServiceTypes, appliedStatuses]);
 
     // Paginate filtered service types for client-side filtering
     const paginatedFilteredServiceTypes = useMemo(() => {
-        if (appliedServiceTypes.length === 0) {
-            // No service type filter, use server-side pagination
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
+            // No filters applied, use server-side pagination
             return filteredServiceTypes;
         }
 
@@ -192,24 +199,36 @@ const ListServiceTypes: React.FC = () => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         return filteredServiceTypes.slice(startIndex, endIndex);
-    }, [filteredServiceTypes, currentPage, itemsPerPage, appliedServiceTypes.length]);
+    }, [
+        filteredServiceTypes,
+        currentPage,
+        itemsPerPage,
+        appliedServiceTypes.length,
+        appliedStatuses.length,
+    ]);
 
     // Calculate total pages for client-side filtering
     const effectiveTotalPages = useMemo(() => {
-        if (appliedServiceTypes.length === 0) {
-            // No service type filter, use server-side pagination
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
+            // No filters applied, use server-side pagination
             return totalPages;
         }
 
         // Client-side pagination
         return Math.ceil(filteredServiceTypes.length / itemsPerPage);
-    }, [totalPages, filteredServiceTypes.length, itemsPerPage, appliedServiceTypes.length]);
+    }, [
+        totalPages,
+        filteredServiceTypes.length,
+        itemsPerPage,
+        appliedServiceTypes.length,
+        appliedStatuses.length,
+    ]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
 
-        // Only fetch from server if no service type filter
-        if (appliedServiceTypes.length === 0) {
+        // Only fetch from server if no filters applied
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
             const sortParams = getSortParams(sortBy);
             fetchServiceTypes({
                 pageNumber: page,
@@ -218,7 +237,7 @@ const ListServiceTypes: React.FC = () => {
                 sortOrder: sortParams.sortOrder,
             });
         }
-        // For service type filters, pagination is handled client-side
+        // For filters, pagination is handled client-side
     };
 
     // Helper function to apply service type filters
@@ -232,34 +251,13 @@ const ListServiceTypes: React.FC = () => {
         fetchServiceTypes({ pageNumber: 1, pageSize: 100 }); // Large page size to get all service types
     };
 
-    // Helper function to apply status filters only
-    const applyStatusFilters = () => {
-        setAppliedServiceTypes([...selectedServiceTypes]);
-        setAppliedStatuses([...selectedStatuses]);
-        setCurrentPage(1);
-        setShowFilterModal(false);
-
-        // Only status filter, can use backend filtering with sorting
-        const sortParams = getSortParams(sortBy);
-        const filterParams = {
-            pageNumber: 1,
-            pageSize: itemsPerPage,
-            status:
-                selectedStatuses.length === 1
-                    ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
-                    : undefined,
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        };
-        filterServiceTypes(filterParams);
-    };
-
     const handleFilterSubmit = () => {
-        // If we have service type filters, we need to fetch all service types first
-        if (selectedServiceTypes.length > 0) {
+        // If we have any filters, we need to fetch all service types first
+        if (selectedServiceTypes.length > 0 || selectedStatuses.length > 0) {
             applyServiceTypeFilters();
         } else {
-            applyStatusFilters();
+            // No filters, reset to normal pagination
+            handleClearFilters();
         }
     };
 
@@ -424,7 +422,7 @@ const ListServiceTypes: React.FC = () => {
             }
 
             // Check if the operation was successful
-            if (result && result.success) {
+            if (result?.success) {
                 handleSuccessfulOperation();
             } else {
                 // Error - show error message
@@ -580,7 +578,7 @@ const ListServiceTypes: React.FC = () => {
                         Danh Sách Loại Dịch Vụ{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
                             Tổng Loại Dịch Vụ:{' '}
-                            {appliedServiceTypes.length > 0
+                            {appliedServiceTypes.length > 0 || appliedStatuses.length > 0
                                 ? filteredServiceTypes.length
                                 : pagination?.totalCount || 0}
                         </span>
@@ -663,7 +661,7 @@ const ListServiceTypes: React.FC = () => {
                             setCurrentPage(1);
 
                             // Fetch service types with new sort parameters
-                            if (appliedServiceTypes.length === 0) {
+                            if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
                                 const sortParams = getSortParams(newSortBy);
                                 fetchServiceTypes({
                                     pageNumber: 1,
