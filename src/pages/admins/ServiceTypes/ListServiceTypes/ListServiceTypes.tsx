@@ -20,6 +20,7 @@ import {
 } from '@/services/serviceType.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import ActionDropdown from '@/components/ActionDropdown';
 import styles from './ListServiceTypes.module.scss';
 
@@ -69,12 +70,7 @@ const ListServiceTypes: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Image upload states
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
-
-    // Reference imageFile to avoid unused variable warning
-    console.debug('Image file state:', imageFile ? 'File selected' : 'No file');
+    // Image upload states are now handled by useImageUpload hook
 
     // Fetch service types on component mount
     useEffect(() => {
@@ -141,6 +137,22 @@ const ListServiceTypes: React.FC = () => {
     const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
         useFormValidation({ entityName: 'loại dịch vụ' });
 
+    // Use image upload hook
+    const {
+        imagePreview,
+        imageFile,
+        setImagePreview,
+        setImageFile,
+        handleImageFileChange,
+        handleRemoveImage,
+        resetImage,
+    } = useImageUpload({
+        onImageChange: (imageUrl: string) => {
+            setFormData((prev) => ({ ...prev, imageUrl }));
+        },
+        onValidationError: (field: string) => clearValidationError(field as any),
+    });
+
     const handleAddClick = useCallback(() => {
         setModalMode('add');
         setFormData({
@@ -149,11 +161,10 @@ const ListServiceTypes: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
         setShowModal(true);
-    }, [clearAllValidationErrors]);
+    }, [clearAllValidationErrors, resetImage]);
 
     const handleCancel = useCallback(() => {
         setShowModal(false);
@@ -164,10 +175,9 @@ const ListServiceTypes: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
-    }, [clearAllValidationErrors]);
+    }, [clearAllValidationErrors, resetImage]);
 
     const title = modalMode === 'add' ? 'Thêm Loại Dịch Vụ Mới' : 'Sửa Loại Dịch Vụ';
 
@@ -182,42 +192,7 @@ const ListServiceTypes: React.FC = () => {
         clearValidationError('description');
     };
 
-    const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                toast.error('Vui lòng chọn file hình ảnh');
-                return;
-            }
-
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error('Kích thước file không được vượt quá 5MB');
-                return;
-            }
-
-            setImageFile(file);
-
-            // Create preview
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setImagePreview(result);
-                setFormData((prev) => ({ ...prev, imageUrl: result }));
-                clearValidationError('imageUrl');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview('');
-        // Set imageUrl to empty to indicate user wants to remove image
-        setFormData((prev) => ({ ...prev, imageUrl: '' }));
-        clearValidationError('imageUrl');
-    };
+    // Image handlers are now provided by useImageUpload hook
 
     const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
         setFormData((prev) => ({ ...prev, status: value }));
@@ -452,8 +427,7 @@ const ListServiceTypes: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
 
         // Refresh the service types list

@@ -14,6 +14,7 @@ import useSpecialty from '@/hooks/useSpecialty';
 import { getAllSpecialties } from '@/services/specialty.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import ActionDropdown from '@/components/ActionDropdown';
 import styles from './ListSpecialties.module.scss';
 
@@ -65,9 +66,7 @@ const ListSpecialties: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Image upload states
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
+    // Image upload states are now handled by useImageUpload hook
 
     // Fetch specialties on component mount
     useEffect(() => {
@@ -123,6 +122,22 @@ const ListSpecialties: React.FC = () => {
     const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
         useFormValidation({ entityName: 'chuyên khoa' });
 
+    // Use image upload hook
+    const {
+        imagePreview,
+        imageFile,
+        setImagePreview,
+        setImageFile,
+        handleImageFileChange,
+        handleRemoveImage,
+        resetImage,
+    } = useImageUpload({
+        onImageChange: (imageUrl: string) => {
+            setFormData((prev) => ({ ...prev, imageUrl }));
+        },
+        onValidationError: (field: string) => clearValidationError(field as any),
+    });
+
     const handleAddClick = useCallback(() => {
         setModalMode('add');
         setFormData({
@@ -130,11 +145,10 @@ const ListSpecialties: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
         setShowModal(true);
-    }, [clearAllValidationErrors]);
+    }, [clearAllValidationErrors, resetImage]);
 
     const handleCancel = useCallback(() => {
         setShowModal(false);
@@ -144,10 +158,9 @@ const ListSpecialties: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
-    }, [clearAllValidationErrors]);
+    }, [clearAllValidationErrors, resetImage]);
 
     const title = modalMode === 'add' ? 'Thêm Chuyên Khoa Mới' : 'Sửa Chuyên Khoa';
 
@@ -157,41 +170,7 @@ const ListSpecialties: React.FC = () => {
         clearValidationError('name');
     };
 
-    const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                toast.error('Vui lòng chọn file hình ảnh');
-                return;
-            }
-
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error('Kích thước file không được vượt quá 5MB');
-                return;
-            }
-
-            setImageFile(file);
-
-            // Create preview
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setImagePreview(result);
-                setFormData((prev) => ({ ...prev, imageUrl: result }));
-                clearValidationError('imageUrl');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview('');
-        setFormData((prev) => ({ ...prev, imageUrl: '' }));
-        clearValidationError('imageUrl');
-    };
+    // Image handlers are now provided by useImageUpload hook
 
     const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
         setFormData((prev) => ({ ...prev, status: value }));
@@ -404,8 +383,7 @@ const ListSpecialties: React.FC = () => {
             imageUrl: '',
             status: 'ACTIVE',
         });
-        setImagePreview('');
-        setImageFile(null);
+        resetImage();
         clearAllValidationErrors();
 
         // Refresh the specialties list
