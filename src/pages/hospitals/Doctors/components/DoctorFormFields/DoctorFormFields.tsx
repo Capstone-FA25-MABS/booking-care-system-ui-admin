@@ -673,10 +673,13 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
         return (
             <div
                 className="d-flex justify-content-center align-items-center"
-                style={{ minHeight: '400px' }}
+                style={{
+                    minHeight: 'calc(100vh - 300px)',
+                    width: '100%',
+                }}
             >
                 <div className="text-center">
-                    <Spinner size="large" variant="primary" centered />
+                    <Spinner size="large" variant="primary" />
                     <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
                 </div>
             </div>
