@@ -64,7 +64,7 @@ const validateStatus = (status: 'ACTIVE' | 'INACTIVE'): string | undefined => {
 };
 
 const validateImageUrl = (imageUrl: string | undefined, entityName: string): string | undefined => {
-    if (!imageUrl || !imageUrl.trim()) {
+    if (!imageUrl?.trim()) {
         return `Hình ảnh ${entityName} không được để trống`;
     }
     return undefined;
