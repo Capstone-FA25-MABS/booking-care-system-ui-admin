@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { DoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
 import { useDoctorFormHandlers } from './useDoctorFormHandlers';
+import { useDoctorServicePriceValidation } from './useDoctorServicePriceValidation';
 
 export interface UseDoctorFormLogicProps {
     initialData: DoctorFormData;
@@ -29,6 +30,9 @@ export const useDoctorFormLogic = ({
         removeServicePrice,
         handleFileChange,
     } = useDoctorFormHandlers(setFormData, errors as Record<string, string>, setErrors as any);
+
+    // Use shared validation to reduce duplication
+    const { validateServicePrices } = useDoctorServicePriceValidation(formData, isEdit);
 
     const handleInputChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -75,47 +79,6 @@ export const useDoctorFormLogic = ({
         [formData]
     );
 
-    // Helper function to validate service prices
-    const validateServicePrices = useCallback(
-        (
-            errors: Partial<
-                Record<
-                    keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`,
-                    string
-                >
-            >
-        ) => {
-            if (formData.servicePrices.length === 0) {
-                errors.servicePrices = isEdit
-                    ? 'Vui lòng thêm ít nhất một dịch vụ'
-                    : 'Vui lòng thêm ít nhất một loại dịch vụ';
-                return;
-            }
-
-            // Check for duplicate service types
-            const serviceTypeIds = formData.servicePrices
-                .map((price) => price.serviceTypeId)
-                .filter((id) => id); // Filter out empty IDs
-            const duplicateServiceTypes = new Set(
-                serviceTypeIds.filter((id, index) => serviceTypeIds.indexOf(id) !== index)
-            );
-
-            for (let index = 0; index < formData.servicePrices.length; index++) {
-                const price = formData.servicePrices[index];
-                if (!price.serviceTypeId) {
-                    errors[`servicePrices_${index}_amount`] = 'Vui lòng chọn loại dịch vụ';
-                } else if (duplicateServiceTypes.has(price.serviceTypeId)) {
-                    errors[`servicePrices_${index}_amount`] =
-                        'Loại dịch vụ này đã được chọn. Mỗi bác sĩ chỉ được có một giá cho mỗi loại dịch vụ';
-                }
-                if (price.amount <= 0) {
-                    errors[`servicePrices_${index}_amount`] = 'Giá phải lớn hơn 0';
-                }
-            }
-        },
-        [formData.servicePrices, isEdit]
-    );
-
     const validateForm = useCallback((): boolean => {
         const newErrors: Partial<
             Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
@@ -143,7 +106,7 @@ export const useDoctorFormLogic = ({
         }
 
         // Validate service prices
-        validateServicePrices(newErrors);
+        validateServicePrices(newErrors as Record<string, string>);
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

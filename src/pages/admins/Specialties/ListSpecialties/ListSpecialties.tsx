@@ -341,7 +341,7 @@ const ListSpecialties: React.FC = () => {
             } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
                 const errorMessage =
-                    ((result as any).payload as string) ||
+                    (result as any).payload ||
                     'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
@@ -443,8 +443,7 @@ const ListSpecialties: React.FC = () => {
                 handleSuccessfulOperation();
             } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
-                const errorMessage =
-                    ((result as any).payload as string) || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                const errorMessage = (result as any).payload || 'Có lỗi xảy ra. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {

@@ -35,10 +35,7 @@ const GenderSelect: React.FC<GenderSelectProps> = ({ value, onChange, error, req
                     onChange({
                         target: {
                             name: 'gender',
-                            value:
-                                selectedOption?.value !== undefined
-                                    ? selectedOption.value
-                                    : Gender.MALE,
+                            value: selectedOption?.value ?? Gender.MALE,
                         },
                     } as any);
                 }}

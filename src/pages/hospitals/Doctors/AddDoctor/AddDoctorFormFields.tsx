@@ -1,6 +1,5 @@
 import React from 'react';
 import Select from 'react-select';
-import { NumericFormat } from 'react-number-format';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Textarea from '@/components/Textarea';
@@ -11,22 +10,10 @@ import { selectCustomStyles } from '@/constants/select.styles';
 import styles from '../components/DoctorFormFields/DoctorFormFields.module.scss';
 import FullScreenSpinner from '@/components/FullScreenSpinner';
 import { Gender } from '@/enums/common.enums';
-
-// Custom input component for NumericFormat
-const CustomNumericInput = React.forwardRef<
-    HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean }
->((props, ref) => {
-    const { hasError, className, ...rest } = props;
-    return (
-        <input
-            {...rest}
-            ref={ref}
-            className={`form-control ${hasError ? 'is-invalid' : ''} ${className || ''}`}
-        />
-    );
-});
-CustomNumericInput.displayName = 'CustomNumericInput';
+// Import shared components to reduce duplication
+import ServicePricesSection from '../components/shared/ServicePricesSection';
+import LanguagesSection from '../components/shared/LanguagesSection';
+import YearsOfExperienceField from '../components/shared/YearsOfExperienceField';
 
 interface AddDoctorFormFieldsProps {
     formData: AddDoctorFormData;
@@ -149,10 +136,7 @@ const AddDoctorFormFields: React.FC<AddDoctorFormFieldsProps> = ({
                                             onInputChange({
                                                 target: {
                                                     name: 'gender',
-                                                    value:
-                                                        selectedOption?.value !== undefined
-                                                            ? selectedOption.value
-                                                            : Gender.MALE,
+                                                    value: selectedOption?.value ?? Gender.MALE,
                                                 },
                                             } as any);
                                         }}
@@ -167,33 +151,11 @@ const AddDoctorFormFields: React.FC<AddDoctorFormFieldsProps> = ({
                                     )}
                                 </div>
 
-                                <div className="col-md-6 mb-3">
-                                    <label htmlFor="yearsOfExperience" className="form-label">
-                                        <i className="feather-award me-1"></i> Số năm kinh nghiệm{' '}
-                                        <span className="text-danger">*</span>
-                                    </label>
-                                    <NumericFormat
-                                        customInput={CustomNumericInput}
-                                        hasError={!!errors.yearsOfExperience}
-                                        value={formData.yearsOfExperience}
-                                        onValueChange={(values) => {
-                                            onInputChange({
-                                                target: {
-                                                    name: 'yearsOfExperience',
-                                                    value: values.floatValue || 0,
-                                                },
-                                            } as unknown as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        thousandSeparator=""
-                                        allowNegative={false}
-                                        decimalScale={0}
-                                    />
-                                    {errors.yearsOfExperience && (
-                                        <div className="invalid-feedback">
-                                            {errors.yearsOfExperience}
-                                        </div>
-                                    )}
-                                </div>
+                                <YearsOfExperienceField
+                                    value={formData.yearsOfExperience}
+                                    onChange={onInputChange}
+                                    error={errors.yearsOfExperience}
+                                />
                                 <Textarea
                                     wrapperClassName="col-6 mb-3"
                                     label="Tiểu sử"
@@ -301,197 +263,22 @@ const AddDoctorFormFields: React.FC<AddDoctorFormFieldsProps> = ({
             </div>
 
             {/* Languages Card */}
-            <div className="card mb-4">
-                <div className={`card-body ${styles.sectionBorder}`}>
-                    <h5 className="card-title mb-4">
-                        <i className="feather-globe me-2"></i> Ngôn ngữ
-                    </h5>
-                    <div className="row">
-                        <div className="col-12">
-                            <div className="d-flex flex-wrap gap-2">
-                                {languages.map((language) => (
-                                    <div
-                                        key={language.id}
-                                        className={`border rounded p-3 ${formData.languageIds.includes(language.id) ? 'border-primary bg-light' : 'border-light bg-white'}`}
-                                        style={{
-                                            transition: 'all 0.3s ease',
-                                            minWidth: '150px',
-                                            maxWidth: '200px',
-                                        }}
-                                    >
-                                        <div className="form-check d-flex align-items-center">
-                                            <input
-                                                className="form-check-input me-2"
-                                                type="checkbox"
-                                                id={`language-${language.id}`}
-                                                checked={formData.languageIds.includes(language.id)}
-                                                onChange={() => onLanguageToggle(language.id)}
-                                                style={{ cursor: 'pointer' }}
-                                            />
-                                            <div>
-                                                <label
-                                                    className="form-check-label fw-bold mb-0 d-block"
-                                                    htmlFor={`language-${language.id}`}
-                                                    style={{ cursor: 'pointer' }}
-                                                >
-                                                    {language.name}
-                                                </label>
-                                                <small
-                                                    className={`text-muted ${formData.languageIds.includes(language.id) ? 'text-primary' : ''}`}
-                                                >
-                                                    {formData.languageIds.includes(language.id)
-                                                        ? 'Đã chọn'
-                                                        : 'Chưa chọn'}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            {errors.languageIds && (
-                                <div className="alert alert-danger mt-3 mb-0">
-                                    <i className="feather-alert-circle me-1"></i>
-                                    {errors.languageIds}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <LanguagesSection
+                selectedLanguageIds={formData.languageIds}
+                languages={languages}
+                onLanguageToggle={onLanguageToggle}
+                error={errors.languageIds}
+            />
 
             {/* Service Prices Card */}
-            <div className="card mb-4">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h5 className="card-title mb-0">
-                            <i className="feather-dollar-sign me-2"></i> Dịch vụ và giá
-                        </h5>
-                        <Button
-                            type="button"
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={onAddServicePrice}
-                        >
-                            Thêm dịch vụ
-                        </Button>
-                    </div>
-                    {formData.servicePrices.length === 0 ? (
-                        <div className="text-center text-muted py-4">
-                            <i className="feather-plus-circle fs-1 mb-3"></i>
-                            <p>Chưa có dịch vụ nào. Nhấn "Thêm dịch vụ" để bắt đầu.</p>
-                        </div>
-                    ) : (
-                        <div className="row">
-                            {formData.servicePrices.map((price, index) => (
-                                <div
-                                    key={`${price.serviceTypeId}-${index}`}
-                                    className="col-md-6 mb-3"
-                                >
-                                    <div className="border rounded p-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 className="mb-0">Dịch vụ {index + 1}</h6>
-                                            <Button
-                                                type="button"
-                                                variant="outline-danger"
-                                                size="sm"
-                                                onClick={() => onRemoveServicePrice(index)}
-                                            >
-                                                <i className="fa-solid fa-xmark"></i>
-                                            </Button>
-                                        </div>
-                                        <div className="row">
-                                            <div className="col-md-6 mb-3">
-                                                <label
-                                                    htmlFor={`serviceType-${index}`}
-                                                    className="form-label"
-                                                >
-                                                    <i className="feather-briefcase me-1"></i> Loại
-                                                    dịch vụ
-                                                </label>
-                                                <Select
-                                                    inputId={`serviceType-${index}`}
-                                                    options={serviceTypes.map((service) => ({
-                                                        value: service.id,
-                                                        label: service.name,
-                                                    }))}
-                                                    value={
-                                                        price.serviceTypeId
-                                                            ? {
-                                                                  value: price.serviceTypeId,
-                                                                  label:
-                                                                      serviceTypes.find(
-                                                                          (s) =>
-                                                                              s.id ===
-                                                                              price.serviceTypeId
-                                                                      )?.name || '',
-                                                              }
-                                                            : null
-                                                    }
-                                                    onChange={(selectedOption) =>
-                                                        onServicePriceChange(
-                                                            index,
-                                                            'serviceTypeId',
-                                                            selectedOption?.value || ''
-                                                        )
-                                                    }
-                                                    placeholder="Chọn loại dịch vụ"
-                                                    classNamePrefix="select2"
-                                                    styles={selectCustomStyles}
-                                                    menuPortalTarget={document.body}
-                                                />
-                                            </div>
-                                            <div className="col-md-6 mb-3">
-                                                <label
-                                                    htmlFor={`serviceAmount-${index}`}
-                                                    className="form-label"
-                                                >
-                                                    <i className="feather-dollar-sign me-1"></i> Giá
-                                                    (VNĐ)
-                                                </label>
-                                                <NumericFormat
-                                                    id={`serviceAmount-${index}`}
-                                                    customInput={CustomNumericInput}
-                                                    hasError={
-                                                        !!errors[
-                                                            `servicePrices_${index}_amount` as keyof AddDoctorFormData
-                                                        ]
-                                                    }
-                                                    value={price.amount}
-                                                    onValueChange={(values) =>
-                                                        onServicePriceChange(
-                                                            index,
-                                                            'amount',
-                                                            values.floatValue || 0
-                                                        )
-                                                    }
-                                                    thousandSeparator=","
-                                                    allowNegative={false}
-                                                    decimalScale={0}
-                                                    suffix=" VNĐ"
-                                                />
-                                                {errors[
-                                                    `servicePrices_${index}_amount` as keyof AddDoctorFormData
-                                                ] && (
-                                                    <div className="invalid-feedback">
-                                                        {
-                                                            errors[
-                                                                `servicePrices_${index}_amount` as keyof AddDoctorFormData
-                                                            ]
-                                                        }
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    {errors.servicePrices && (
-                        <div className="text-danger mt-2">{errors.servicePrices}</div>
-                    )}
-                </div>
-            </div>
+            <ServicePricesSection
+                servicePrices={formData.servicePrices}
+                serviceTypes={serviceTypes}
+                onServicePriceChange={onServicePriceChange}
+                onAddServicePrice={onAddServicePrice}
+                onRemoveServicePrice={onRemoveServicePrice}
+                errors={errors as Record<string, string>}
+            />
 
             {/* Form Actions */}
             <div className="card mb-4">
