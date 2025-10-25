@@ -13,8 +13,7 @@ import { Specialty, SpecialtyFormData } from '@/types/specialty.types';
 import useSpecialty from '@/hooks/useSpecialty';
 import { getAllSpecialties } from '@/services/specialty.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
-import { useFormValidation } from '@/hooks/useFormValidation';
-import { useImageUpload } from '@/hooks/useImageUpload';
+import { useEntityForm } from '@/hooks/useEntityForm';
 import ActionDropdown from '@/components/ActionDropdown';
 import styles from './ListSpecialties.module.scss';
 
@@ -108,74 +107,46 @@ const ListSpecialties: React.FC = () => {
         return () => clearTimeout(timeoutId);
     }, [searchTerm, itemsPerPage, filterSpecialties, fetchSpecialties, sortBy]);
 
-    // Specialty Modal States
-    const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState<SpecialtyFormData>({
-        name: '',
-        imageUrl: '',
-        status: 'ACTIVE',
-    });
-
-    // Use shared form validation hook
-    const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
-        useFormValidation({ entityName: 'chuyên khoa' });
-
-    // Use image upload hook
+    // Use entity form hook
     const {
+        showModal,
+        setShowModal,
+        modalMode,
+        setModalMode,
+        isSubmitting,
+        setIsSubmitting,
+        formData,
+        setFormData,
+        validationErrors,
+        validateForm,
+        clearAllValidationErrors,
         imagePreview,
         imageFile,
         setImagePreview,
         setImageFile,
         handleImageFileChange,
         handleRemoveImage,
-        resetImage,
-    } = useImageUpload({
-        onImageChange: (imageUrl: string) => {
-            setFormData((prev) => ({ ...prev, imageUrl }));
+        handleAddClick,
+        handleCancel,
+        handleNameChange,
+        handleStatusChange,
+        resetForm,
+    } = useEntityForm<SpecialtyFormData>({
+        entityName: 'chuyên khoa',
+        initialFormData: {
+            name: '',
+            imageUrl: '',
+            status: 'ACTIVE',
         },
-        onValidationError: (field: string) => clearValidationError(field as any),
     });
 
-    const handleAddClick = useCallback(() => {
-        setModalMode('add');
-        setFormData({
-            name: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
-        setShowModal(true);
-    }, [clearAllValidationErrors, resetImage]);
-
-    const handleCancel = useCallback(() => {
-        setShowModal(false);
+    // Override handleCancel to include specialtyToEdit reset
+    const handleCancelWithSpecialty = useCallback(() => {
+        handleCancel();
         setSpecialtyToEdit(null);
-        setFormData({
-            name: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
-    }, [clearAllValidationErrors, resetImage]);
+    }, [handleCancel]);
 
     const title = modalMode === 'add' ? 'Thêm Chuyên Khoa Mới' : 'Sửa Chuyên Khoa';
-
-    // Form data change handlers
-    const handleNameChange = (value: string) => {
-        setFormData((prev) => ({ ...prev, name: value }));
-        clearValidationError('name');
-    };
-
-    // Image handlers are now provided by useImageUpload hook
-
-    const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
-        setFormData((prev) => ({ ...prev, status: value }));
-        clearValidationError('status');
-    };
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
@@ -378,13 +349,7 @@ const ListSpecialties: React.FC = () => {
         // Close modal and refresh data
         setShowModal(false);
         setSpecialtyToEdit(null);
-        setFormData({
-            name: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
+        resetForm();
 
         // Refresh the specialties list
         const sortParams = getSortParams(sortBy);
@@ -723,7 +688,7 @@ const ListSpecialties: React.FC = () => {
                 validationErrors={validationErrors}
                 isSubmitting={isSubmitting}
                 modalMode={modalMode}
-                onCancel={handleCancel}
+                onCancel={handleCancelWithSpecialty}
                 onSubmit={handleSpecialtySubmit}
                 onNameChange={handleNameChange}
                 onImageFileChange={handleImageFileChange}

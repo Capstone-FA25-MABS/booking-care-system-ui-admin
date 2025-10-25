@@ -19,8 +19,7 @@ import {
     createServiceTypeWithImage,
 } from '@/services/serviceType.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
-import { useFormValidation } from '@/hooks/useFormValidation';
-import { useImageUpload } from '@/hooks/useImageUpload';
+import { useEntityForm } from '@/hooks/useEntityForm';
 import ActionDropdown from '@/components/ActionDropdown';
 import styles from './ListServiceTypes.module.scss';
 
@@ -122,82 +121,48 @@ const ListServiceTypes: React.FC = () => {
         return () => clearTimeout(timeoutId);
     }, [searchTerm, itemsPerPage, filterServiceTypes, fetchServiceTypes, sortBy]);
 
-    // Service Type Modal States
-    const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState<ServiceTypeFormData>({
-        name: '',
-        description: '',
-        imageUrl: '',
-        status: 'ACTIVE',
-    });
-
-    // Use shared form validation hook
-    const { validationErrors, validateForm, clearValidationError, clearAllValidationErrors } =
-        useFormValidation({ entityName: 'loại dịch vụ' });
-
-    // Use image upload hook
+    // Use entity form hook
     const {
+        showModal,
+        setShowModal,
+        modalMode,
+        setModalMode,
+        isSubmitting,
+        setIsSubmitting,
+        formData,
+        setFormData,
+        validationErrors,
+        validateForm,
+        clearAllValidationErrors,
         imagePreview,
         imageFile,
         setImagePreview,
         setImageFile,
         handleImageFileChange,
         handleRemoveImage,
-        resetImage,
-    } = useImageUpload({
-        onImageChange: (imageUrl: string) => {
-            setFormData((prev) => ({ ...prev, imageUrl }));
+        handleAddClick,
+        handleCancel,
+        handleNameChange,
+        handleDescriptionChange,
+        handleStatusChange,
+        resetForm,
+    } = useEntityForm<ServiceTypeFormData>({
+        entityName: 'loại dịch vụ',
+        initialFormData: {
+            name: '',
+            description: '',
+            imageUrl: '',
+            status: 'ACTIVE',
         },
-        onValidationError: (field: string) => clearValidationError(field as any),
     });
 
-    const handleAddClick = useCallback(() => {
-        setModalMode('add');
-        setFormData({
-            name: '',
-            description: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
-        setShowModal(true);
-    }, [clearAllValidationErrors, resetImage]);
-
-    const handleCancel = useCallback(() => {
-        setShowModal(false);
+    // Override handleCancel to include serviceTypeToEdit reset
+    const handleCancelWithServiceType = useCallback(() => {
+        handleCancel();
         setServiceTypeToEdit(null);
-        setFormData({
-            name: '',
-            description: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
-    }, [clearAllValidationErrors, resetImage]);
+    }, [handleCancel]);
 
     const title = modalMode === 'add' ? 'Thêm Loại Dịch Vụ Mới' : 'Sửa Loại Dịch Vụ';
-
-    // Form data change handlers
-    const handleNameChange = (value: string) => {
-        setFormData((prev) => ({ ...prev, name: value }));
-        clearValidationError('name');
-    };
-
-    const handleDescriptionChange = (value: string) => {
-        setFormData((prev) => ({ ...prev, description: value }));
-        clearValidationError('description');
-    };
-
-    // Image handlers are now provided by useImageUpload hook
-
-    const handleStatusChange = (value: 'ACTIVE' | 'INACTIVE') => {
-        setFormData((prev) => ({ ...prev, status: value }));
-        clearValidationError('status');
-    };
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
@@ -421,14 +386,7 @@ const ListServiceTypes: React.FC = () => {
         // Close modal and refresh data
         setShowModal(false);
         setServiceTypeToEdit(null);
-        setFormData({
-            name: '',
-            description: '',
-            imageUrl: '',
-            status: 'ACTIVE',
-        });
-        resetImage();
-        clearAllValidationErrors();
+        resetForm();
 
         // Refresh the service types list
         const sortParams = getSortParams(sortBy);
@@ -782,7 +740,7 @@ const ListServiceTypes: React.FC = () => {
                 validationErrors={validationErrors}
                 isSubmitting={isSubmitting}
                 modalMode={modalMode}
-                onCancel={handleCancel}
+                onCancel={handleCancelWithServiceType}
                 onSubmit={handleServiceTypeSubmit}
                 onNameChange={handleNameChange}
                 onDescriptionChange={handleDescriptionChange}
