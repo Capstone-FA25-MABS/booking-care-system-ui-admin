@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { DoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
+import { useDoctorFormHandlers } from './useDoctorFormHandlers';
 
 export interface UseDoctorFormLogicProps {
     initialData: DoctorFormData;
@@ -20,6 +21,15 @@ export const useDoctorFormLogic = ({
         >
     >({});
 
+    // Use shared handlers to reduce duplication
+    const {
+        handleLanguageToggle,
+        handleServicePriceChange,
+        addServicePrice,
+        removeServicePrice,
+        handleFileChange,
+    } = useDoctorFormHandlers(setFormData, errors as Record<string, string>, setErrors as any);
+
     const handleInputChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const { name, value } = e.target;
@@ -33,59 +43,6 @@ export const useDoctorFormLogic = ({
         },
         [errors]
     );
-
-    const handleLanguageToggle = useCallback((languageId: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            languageIds: prev.languageIds.includes(languageId)
-                ? prev.languageIds.filter((id) => id !== languageId)
-                : [...prev.languageIds, languageId],
-        }));
-    }, []);
-
-    const handleServicePriceChange = useCallback(
-        (index: number, field: keyof DoctorPrice, value: string | number) => {
-            setFormData((prev) => ({
-                ...prev,
-                servicePrices: prev.servicePrices.map((price, i) =>
-                    i === index ? { ...price, [field]: value } : price
-                ),
-            }));
-            if (errors[`servicePrices_${index}_${field}`]) {
-                setErrors((prev) => ({ ...prev, [`servicePrices_${index}_${field}`]: '' }));
-            }
-        },
-        [errors]
-    );
-
-    const addServicePrice = useCallback(() => {
-        setFormData((prev) => ({
-            ...prev,
-            servicePrices: [
-                ...prev.servicePrices,
-                {
-                    id: `temp-${Date.now()}`,
-                    serviceTypeId: '',
-                    amount: 0,
-                },
-            ],
-        }));
-    }, []);
-
-    const removeServicePrice = useCallback((index: number) => {
-        setFormData((prev) => ({
-            ...prev,
-            servicePrices: prev.servicePrices.filter((_, i) => i !== index),
-        }));
-    }, []);
-
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] || null;
-        setFormData((prev) => ({
-            ...prev,
-            avatar: file,
-        }));
-    }, []);
 
     // Helper function to validate required fields
     const validateRequiredFields = useCallback(
