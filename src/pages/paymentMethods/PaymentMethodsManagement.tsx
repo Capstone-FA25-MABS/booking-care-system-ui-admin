@@ -24,7 +24,9 @@ const PaymentMethodsManagement: React.FC = () => {
             setError(null);
             const response = await PaymentMethodService.getAllPaymentMethods();
             if (response.success) {
-                setPaymentMethods(response.data);
+                // Handle different response structures
+                const paymentMethodsData = response.data?.data || response.data || [];
+                setPaymentMethods(Array.isArray(paymentMethodsData) ? paymentMethodsData : []);
             } else {
                 setError('Không thể tải danh sách phương thức thanh toán');
             }
@@ -44,17 +46,25 @@ const PaymentMethodsManagement: React.FC = () => {
             });
 
             if (response.success) {
-                // Update the payment method in the list
-                setPaymentMethods((prev) =>
-                    prev.map((pm) =>
-                        pm.id === paymentMethod.id ? { ...pm, status: response.data.status } : pm
-                    )
-                );
+                // Handle different response structures
+                const updatedPaymentMethod = response.data?.data || response.data;
+                const newStatus = updatedPaymentMethod?.status;
 
-                const statusText = response.data.status === 'ACTIVE' ? 'kích hoạt' : 'vô hiệu hóa';
-                toast.success(
-                    `Đã ${statusText} phương thức thanh toán ${paymentMethod.description}`
-                );
+                if (newStatus) {
+                    // Update the payment method in the list
+                    setPaymentMethods((prev) =>
+                        prev.map((pm) =>
+                            pm.id === paymentMethod.id ? { ...pm, status: newStatus } : pm
+                        )
+                    );
+
+                    const statusText = newStatus === 'ACTIVE' ? 'kích hoạt' : 'vô hiệu hóa';
+                    toast.success(
+                        `Đã ${statusText} phương thức thanh toán ${paymentMethod.description}`
+                    );
+                } else {
+                    toast.error('Không thể cập nhật trạng thái - dữ liệu trả về không hợp lệ');
+                }
             } else {
                 toast.error('Không thể thay đổi trạng thái phương thức thanh toán');
             }

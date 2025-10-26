@@ -286,12 +286,14 @@ const ListSpecialties: React.FC = () => {
             const result = await deleteSpecialty(specialtyToDelete.id);
 
             // Check if the operation was successful
-            if ((result as any).type.endsWith('/fulfilled')) {
+
+            if (result.type?.endsWith('/fulfilled')) {
                 handleSuccessfulDelete(specialtyToDelete.name);
-            } else if ((result as any).type.endsWith('/rejected')) {
+            } else if (result.type?.endsWith('/rejected')) {
                 // Error - show error message
+
                 const errorMessage =
-                    ((result as any).payload as string) ||
+                    result.payload ||
                     'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
@@ -382,12 +384,13 @@ const ListSpecialties: React.FC = () => {
             }
 
             // Check if the operation was successful
-            if ((result as any).type.endsWith('/fulfilled')) {
+
+            if (result.type?.endsWith('/fulfilled')) {
                 handleSuccessfulOperation();
-            } else if ((result as any).type.endsWith('/rejected')) {
+            } else if (result.type?.endsWith('/rejected')) {
                 // Error - show error message
-                const errorMessage =
-                    ((result as any).payload as string) || 'Có lỗi xảy ra. Vui lòng thử lại.';
+
+                const errorMessage = result.payload || 'Có lỗi xảy ra. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {
