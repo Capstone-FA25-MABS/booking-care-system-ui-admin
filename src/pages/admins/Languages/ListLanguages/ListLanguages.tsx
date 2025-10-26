@@ -12,7 +12,7 @@ import TableActions from '@/components/TableActions';
 import { languageTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Language, LanguageFormData } from '@/types/language.types';
 import useLanguage from '@/hooks/useLanguage';
-import { LanguageService } from '@/services/language.service';
+import { getAllLanguages } from '@/services/language.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import EntityModal from '@/components/Modal/EntityModal';
@@ -402,8 +402,8 @@ const ListLanguages: React.FC = () => {
     // Function to fetch all languages for filter modal
     const fetchAllLanguagesForFilter = async () => {
         try {
-            const response = await LanguageService.getAllLanguages(1, 1000); // Large page size to get all
-            setAllLanguages(response.data.languages);
+            const response = await getAllLanguages(1, 1000); // Large page size to get all
+            setAllLanguages(response.data.items);
         } catch (error) {
             console.error('Error fetching all languages for filter:', error);
             setAllLanguages([]);
@@ -647,6 +647,7 @@ const ListLanguages: React.FC = () => {
                 onNameChange={handleNameChange}
                 onStatusChange={handleStatusChange}
                 entityName="Ngôn Ngữ"
+                hasImageUpload={false}
                 styles={{
                     modal: styles.modal,
                     'modal-content': styles['modal-content'],

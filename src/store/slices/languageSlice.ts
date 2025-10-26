@@ -1,11 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { Language, LanguageFormData, LanguageSearchParams } from '@/types/language.types';
+import { BaseEntityListResponse } from '@/services/baseEntity.service';
+
+// Extended interface to support both API response formats
+interface LanguageListResponse extends BaseEntityListResponse<Language> {
+    languages?: Language[];
+}
 import {
-    Language,
-    LanguageFormData,
-    LanguageSearchParams,
-    LanguageListResponse,
-} from '@/types/language.types';
-import { LanguageService } from '@/services/language.service';
+    getAllLanguages as serviceGetAllLanguages,
+    getLanguageById as serviceGetLanguageById,
+    createLanguage as serviceCreateLanguage,
+    updateLanguage as serviceUpdateLanguage,
+    deleteLanguage as serviceDeleteLanguage,
+    filterLanguages as serviceFilterLanguages,
+} from '@/services/language.service';
 
 export interface LanguageState {
     languages: Language[];
@@ -52,12 +60,7 @@ export const fetchLanguages = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await LanguageService.getAllLanguages(
-                pageNumber,
-                pageSize,
-                sortBy,
-                sortOrder
-            );
+            const response = await serviceGetAllLanguages(pageNumber, pageSize, sortBy, sortOrder);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -69,7 +72,7 @@ export const fetchLanguageById = createAsyncThunk(
     'language/fetchLanguageById',
     async (id: string, { rejectWithValue }) => {
         try {
-            const response = await LanguageService.getLanguageById(id);
+            const response = await serviceGetLanguageById(id);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -81,7 +84,7 @@ export const createLanguage = createAsyncThunk(
     'language/createLanguage',
     async (languageData: LanguageFormData, { rejectWithValue }) => {
         try {
-            const response = await LanguageService.createLanguage(languageData);
+            const response = await serviceCreateLanguage(languageData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -96,7 +99,7 @@ export const updateLanguage = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await LanguageService.updateLanguage(id, languageData);
+            const response = await serviceUpdateLanguage(id, languageData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -108,7 +111,7 @@ export const deleteLanguage = createAsyncThunk(
     'language/deleteLanguage',
     async (id: string, { rejectWithValue }) => {
         try {
-            await LanguageService.deleteLanguage(id);
+            await serviceDeleteLanguage(id);
             return id;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -120,7 +123,7 @@ export const filterLanguages = createAsyncThunk(
     'language/filterLanguages',
     async (params: LanguageSearchParams, { rejectWithValue }) => {
         try {
-            const response = await LanguageService.filterLanguages(params);
+            const response = await serviceFilterLanguages(params);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -154,7 +157,7 @@ const languageSlice = createSlice({
                 fetchLanguages.fulfilled,
                 (state, action: PayloadAction<LanguageListResponse>) => {
                     state.isLoading = false;
-                    state.languages = action.payload.languages;
+                    state.languages = action.payload.languages || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,
@@ -254,7 +257,7 @@ const languageSlice = createSlice({
                 filterLanguages.fulfilled,
                 (state, action: PayloadAction<LanguageListResponse>) => {
                     state.isLoading = false;
-                    state.languages = action.payload.languages;
+                    state.languages = action.payload.languages || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,
