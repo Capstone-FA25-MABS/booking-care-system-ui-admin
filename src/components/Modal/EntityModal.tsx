@@ -7,10 +7,12 @@ interface EntityModalProps {
     title: string;
     formData: {
         name: string;
+        imageUrl?: string; // Optional for entities that don't need image
         status: 'ACTIVE' | 'INACTIVE';
     };
     validationErrors: {
         name?: string;
+        imageUrl?: string;
         status?: string;
     };
     isSubmitting: boolean;
@@ -18,8 +20,12 @@ interface EntityModalProps {
     onCancel: () => void;
     onSubmit: () => void;
     onNameChange: (value: string) => void;
+    onImageFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onStatusChange: (value: 'ACTIVE' | 'INACTIVE') => void;
-    entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ'
+    onRemoveImage?: () => void;
+    imagePreview?: string;
+    entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ', 'Chuyên Khoa'
+    hasImageUpload?: boolean; // Flag to show/hide image upload section
     styles: {
         modal: string;
         'modal-content': string;
@@ -38,8 +44,12 @@ const EntityModal: React.FC<EntityModalProps> = ({
     onCancel,
     onSubmit,
     onNameChange,
+    onImageFileChange,
     onStatusChange,
+    onRemoveImage,
+    imagePreview,
     entityName,
+    hasImageUpload = false,
     styles,
 }) => {
     if (!show) return null;
@@ -87,6 +97,95 @@ const EntityModal: React.FC<EntityModalProps> = ({
                                         />
                                     </div>
                                 </div>
+
+                                {/* Image File Upload - Only show if hasImageUpload is true */}
+                                {hasImageUpload && (
+                                    <>
+                                        <div className="col-12">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor={`${entityName.toLowerCase()}-image-file`}
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Hình ảnh {entityName.toLowerCase()}{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    id={`${entityName.toLowerCase()}-image-file`}
+                                                    className={`form-control ${
+                                                        validationErrors.imageUrl
+                                                            ? 'is-invalid'
+                                                            : ''
+                                                    }`}
+                                                    accept="image/*"
+                                                    onChange={onImageFileChange}
+                                                    required
+                                                />
+                                                {validationErrors.imageUrl && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.imageUrl}
+                                                    </div>
+                                                )}
+                                                <small className="text-muted">
+                                                    Chấp nhận file: JPG, PNG, GIF (tối đa 5MB)
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        {/* Image Preview */}
+                                        {imagePreview && (
+                                            <div className="col-12">
+                                                <div className="mb-4">
+                                                    <div className="fw-semibold text-dark mb-2">
+                                                        Xem trước hình ảnh
+                                                    </div>
+                                                    <div
+                                                        className="position-relative border rounded p-2"
+                                                        style={{ width: '100px', height: '100px' }}
+                                                    >
+                                                        <img
+                                                            src={imagePreview}
+                                                            alt="Preview"
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                borderRadius: '8px',
+                                                                objectFit: 'cover',
+                                                            }}
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src =
+                                                                    'https://via.placeholder.com/100x100?text=Invalid+Image';
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-danger position-absolute"
+                                                            style={{
+                                                                top: '5px',
+                                                                right: '5px',
+                                                                borderRadius: '50%',
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                padding: '0',
+                                                            }}
+                                                            onClick={onRemoveImage}
+                                                            title="Xóa hình ảnh"
+                                                        >
+                                                            <i
+                                                                className="ti ti-x"
+                                                                style={{ fontSize: '10px' }}
+                                                            ></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
 
                                 {/* Status Field */}
                                 <div className="col-12">

@@ -1,11 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { Position, PositionFormData, PositionSearchParams } from '@/types/position.types';
+import { BaseEntityListResponse } from '@/services/baseEntity.service';
+
+// Extended interface to support both API response formats
+interface PositionListResponse extends BaseEntityListResponse<Position> {
+    positions?: Position[];
+}
 import {
-    Position,
-    PositionFormData,
-    PositionSearchParams,
-    PositionListResponse,
-} from '@/types/position.types';
-import { PositionService } from '@/services/position.service';
+    getAllPositions as serviceGetAllPositions,
+    getPositionById as serviceGetPositionById,
+    createPosition as serviceCreatePosition,
+    updatePosition as serviceUpdatePosition,
+    deletePosition as serviceDeletePosition,
+    filterPositions as serviceFilterPositions,
+} from '@/services/position.service';
 
 export interface PositionState {
     positions: Position[];
@@ -52,12 +60,7 @@ export const fetchPositions = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await PositionService.getAllPositions(
-                pageNumber,
-                pageSize,
-                sortBy,
-                sortOrder
-            );
+            const response = await serviceGetAllPositions(pageNumber, pageSize, sortBy, sortOrder);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -69,7 +72,7 @@ export const fetchPositionById = createAsyncThunk(
     'position/fetchPositionById',
     async (id: string, { rejectWithValue }) => {
         try {
-            const response = await PositionService.getPositionById(id);
+            const response = await serviceGetPositionById(id);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -81,7 +84,7 @@ export const createPosition = createAsyncThunk(
     'position/createPosition',
     async (positionData: PositionFormData, { rejectWithValue }) => {
         try {
-            const response = await PositionService.createPosition(positionData);
+            const response = await serviceCreatePosition(positionData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -96,7 +99,7 @@ export const updatePosition = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await PositionService.updatePosition(id, positionData);
+            const response = await serviceUpdatePosition(id, positionData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -108,7 +111,7 @@ export const deletePosition = createAsyncThunk(
     'position/deletePosition',
     async (id: string, { rejectWithValue }) => {
         try {
-            await PositionService.deletePosition(id);
+            await serviceDeletePosition(id);
             return id;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -120,7 +123,7 @@ export const filterPositions = createAsyncThunk(
     'position/filterPositions',
     async (params: PositionSearchParams, { rejectWithValue }) => {
         try {
-            const response = await PositionService.filterPositions(params);
+            const response = await serviceFilterPositions(params);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Không thể kết nối đến máy chủ!');
@@ -154,7 +157,7 @@ const positionSlice = createSlice({
                 fetchPositions.fulfilled,
                 (state, action: PayloadAction<PositionListResponse>) => {
                     state.isLoading = false;
-                    state.positions = action.payload.positions;
+                    state.positions = action.payload.positions || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,
@@ -254,7 +257,7 @@ const positionSlice = createSlice({
                 filterPositions.fulfilled,
                 (state, action: PayloadAction<PositionListResponse>) => {
                     state.isLoading = false;
-                    state.positions = action.payload.positions;
+                    state.positions = action.payload.positions || action.payload.items;
                     state.pagination = {
                         totalCount: action.payload.totalCount,
                         pageNumber: action.payload.pageNumber,
