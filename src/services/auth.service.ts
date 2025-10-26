@@ -6,6 +6,7 @@ import {
     GoogleLoginRequest,
     FacebookLoginRequest,
     AuthResponse,
+    RegisterDoctorRequest,
 } from '@/types/auth.types';
 import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
 // Base API endpoint for auth
@@ -13,6 +14,7 @@ const AUTH_ENDPOINTS = {
     BASE: '/auth',
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
+    REGISTER_DOCTOR: '/auth/register/doctor-saga',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
     GOOGLE_LOGIN: '/auth/google-login',
@@ -195,6 +197,23 @@ export class AuthService {
             throw new Error(error.message || 'Facebook login failed');
         }
     }
+
+    /**
+     * Register new doctor account using Saga pattern
+     */
+    static async registerDoctor(request: RegisterDoctorRequest): Promise<ApiResponse> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.REGISTER_DOCTOR, request);
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Doctor registered successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Doctor registration failed');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -202,6 +221,7 @@ export const {
     healthCheck,
     login,
     logout,
+    registerDoctor,
     forgotPassword,
     resetPassword,
     googleLogin,
