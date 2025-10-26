@@ -7,11 +7,13 @@ interface EntityModalProps {
     title: string;
     formData: {
         name: string;
+        description?: string; // Optional description field
         imageUrl?: string; // Optional for entities that don't need image
         status: 'ACTIVE' | 'INACTIVE';
     };
     validationErrors: {
         name?: string;
+        description?: string;
         imageUrl?: string;
         status?: string;
     };
@@ -20,12 +22,14 @@ interface EntityModalProps {
     onCancel: () => void;
     onSubmit: () => void;
     onNameChange: (value: string) => void;
+    onDescriptionChange?: (value: string) => void; // Optional description change handler
     onImageFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onStatusChange: (value: 'ACTIVE' | 'INACTIVE') => void;
     onRemoveImage?: () => void;
     imagePreview?: string;
     entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ', 'Chuyên Khoa'
     hasImageUpload?: boolean; // Flag to show/hide image upload section
+    hasDescription?: boolean; // Flag to show/hide description field
     styles: {
         modal: string;
         'modal-content': string;
@@ -44,12 +48,14 @@ const EntityModal: React.FC<EntityModalProps> = ({
     onCancel,
     onSubmit,
     onNameChange,
+    onDescriptionChange,
     onImageFileChange,
     onStatusChange,
     onRemoveImage,
     imagePreview,
     entityName,
     hasImageUpload = false,
+    hasDescription = false,
     styles,
 }) => {
     if (!show) return null;
@@ -97,6 +103,35 @@ const EntityModal: React.FC<EntityModalProps> = ({
                                         />
                                     </div>
                                 </div>
+
+                                {/* Description Field - Only show if hasDescription is true */}
+                                {hasDescription && (
+                                    <div className="col-12">
+                                        <div className="mb-4">
+                                            <label
+                                                htmlFor={`${entityName.toLowerCase()}-description`}
+                                                className="form-label fw-semibold text-dark mb-2"
+                                            >
+                                                Mô tả
+                                            </label>
+                                            <textarea
+                                                id={`${entityName.toLowerCase()}-description`}
+                                                className={`form-control ${validationErrors.description ? 'is-invalid' : ''}`}
+                                                rows={4}
+                                                placeholder={`Nhập mô tả cho ${entityName.toLowerCase()}`}
+                                                value={formData.description || ''}
+                                                onChange={(e) =>
+                                                    onDescriptionChange?.(e.target.value)
+                                                }
+                                            />
+                                            {validationErrors.description && (
+                                                <div className={`${styles.invalidFeedback}`}>
+                                                    {validationErrors.description}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Image File Upload - Only show if hasImageUpload is true */}
                                 {hasImageUpload && (

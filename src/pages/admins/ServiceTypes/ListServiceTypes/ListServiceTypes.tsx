@@ -9,57 +9,61 @@ import TableSkeleton from '@/components/TableSkeleton';
 import TableActions from '@/components/TableActions';
 import AppliedFilters from '@/components/AppliedFilters/AppliedFilters';
 import EntityModal from '@/components/Modal/EntityModal';
-import { Specialty, SpecialtyFormData } from '@/types/specialty.types';
-import useSpecialty from '@/hooks/useSpecialty';
-import { getAllSpecialties } from '@/services/specialty.service';
+import { ServiceType, ServiceTypeFormData } from '@/types/serviceType.types';
+import { useServiceType } from '@/hooks/useServiceType';
+import {
+    getAllServiceTypesSimple,
+    updateServiceTypeWithImage,
+    updateServiceTypeWithoutImage,
+    updateServiceTypeRemoveImage,
+    createServiceTypeWithImage,
+} from '@/services/serviceType.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useEntityForm } from '@/hooks/useEntityForm';
 import ActionDropdown from '@/components/ActionDropdown';
-import styles from './ListSpecialties.module.scss';
+import styles from './ListServiceTypes.module.scss';
 
-// Skeleton columns for specialty table
-const specialtyTableColumns = [
-    { label: 'Chuyên khoa', hasAvatar: true, type: 'text' as const },
+// Skeleton columns for service type table
+const serviceTypeTableColumns = [
+    { label: 'Loại Dịch Vụ', hasAvatar: true, type: 'text' as const },
     { label: 'Hình ảnh', hasAvatar: false, type: 'text' as const },
+    { label: 'Mô tả', hasAvatar: false, type: 'text' as const },
     { label: 'Ngày tạo', hasAvatar: false, type: 'text' as const },
     { label: 'Ngày cập nhật', hasAvatar: false, type: 'text' as const },
     { label: 'Trạng thái', hasAvatar: false, type: 'text' as const },
     { label: 'Hành động', hasAvatar: false, type: 'text' as const },
 ];
 
-const ListSpecialties: React.FC = () => {
+const ListServiceTypes: React.FC = () => {
     // Use Redux state management
     const {
-        specialties,
+        serviceTypes,
         pagination,
         isLoading,
         error,
-        fetchSpecialties,
-        createSpecialty,
-        createSpecialtyWithImage,
-        updateSpecialty,
-        updateSpecialtyWithImage,
-        deleteSpecialty,
-        filterSpecialties,
+        fetchServiceTypes,
+        createServiceType,
+        deleteServiceType,
+        filterServiceTypes,
         clearError,
-    } = useSpecialty();
+    } = useServiceType();
 
     // Local state for UI
-    const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+    const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
     // Applied filters (after clicking "Lọc" button)
-    const [appliedSpecialties, setAppliedSpecialties] = useState<string[]>([]);
+    const [appliedServiceTypes, setAppliedServiceTypes] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [specialtyToDelete, setSpecialtyToDelete] = useState<Specialty | null>(null);
-    const [specialtyToEdit, setSpecialtyToEdit] = useState<Specialty | null>(null);
+    const [serviceTypeToDelete, setServiceTypeToDelete] = useState<ServiceType | null>(null);
+    const [serviceTypeToEdit, setServiceTypeToEdit] = useState<ServiceType | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    // State for all specialties (for filter modal)
-    const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([]);
+    // State for all service types (for filter modal)
+    const [allServiceTypes, setAllServiceTypes] = useState<ServiceType[]>([]);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -67,11 +71,16 @@ const ListSpecialties: React.FC = () => {
 
     // Image upload states are now handled by useImageUpload hook
 
-    // Fetch specialties on component mount
+    // Fetch service types on component mount
     useEffect(() => {
         const sortParams = getSortParams(sortBy);
-        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    }, [fetchSpecialties, currentPage, itemsPerPage, sortBy]);
+        fetchServiceTypes({
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        });
+    }, [fetchServiceTypes, currentPage, itemsPerPage, sortBy]);
 
     // Helper function to handle search with filters
     const handleSearchWithFilters = () => {
@@ -84,14 +93,19 @@ const ListSpecialties: React.FC = () => {
             sortOrder: sortParams.sortOrder,
         };
         setCurrentPage(1);
-        filterSpecialties(filterParams);
+        filterServiceTypes(filterParams);
     };
 
     // Helper function to handle search clear
     const handleSearchClear = () => {
         setCurrentPage(1);
         const sortParams = getSortParams(sortBy);
-        fetchSpecialties(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        fetchServiceTypes({
+            pageNumber: 1,
+            pageSize: itemsPerPage,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        });
     };
 
     // Handle search term changes with debounce
@@ -105,7 +119,7 @@ const ListSpecialties: React.FC = () => {
         }, 500); // 500ms debounce
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterSpecialties, fetchSpecialties, sortBy]);
+    }, [searchTerm, itemsPerPage, filterServiceTypes, fetchServiceTypes, sortBy]);
 
     // Use entity form hook
     const {
@@ -129,125 +143,137 @@ const ListSpecialties: React.FC = () => {
         handleAddClick,
         handleCancel,
         handleNameChange,
+        handleDescriptionChange,
         handleStatusChange,
         resetForm,
-    } = useEntityForm<SpecialtyFormData>({
-        entityName: 'chuyên khoa',
+    } = useEntityForm<ServiceTypeFormData>({
+        entityName: 'loại dịch vụ',
         initialFormData: {
             name: '',
+            description: '',
             imageUrl: '',
             status: 'ACTIVE',
         },
     });
 
-    // Override handleCancel to include specialtyToEdit reset
-    const handleCancelWithSpecialty = useCallback(() => {
+    // Override handleCancel to include serviceTypeToEdit reset
+    const handleCancelWithServiceType = useCallback(() => {
         handleCancel();
-        setSpecialtyToEdit(null);
+        setServiceTypeToEdit(null);
     }, [handleCancel]);
 
-    const title = modalMode === 'add' ? 'Thêm Chuyên Khoa Mới' : 'Sửa Chuyên Khoa';
+    const title = modalMode === 'add' ? 'Thêm Loại Dịch Vụ Mới' : 'Sửa Loại Dịch Vụ';
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
 
-    // Client-side filtering for specialties (sorting is handled by backend)
-    const filteredSpecialties = useMemo(() => {
-        let filtered = specialties || [];
+    // Client-side filtering for service types (sorting is handled by backend)
+    const filteredServiceTypes = useMemo(() => {
+        let filtered = serviceTypes || [];
 
-        // Filter by applied specialties (not selected specialties)
-        if (appliedSpecialties.length > 0) {
-            filtered = filtered.filter((specialty) => appliedSpecialties.includes(specialty.id));
+        // Filter by applied service types (not selected service types)
+        if (appliedServiceTypes.length > 0) {
+            filtered = filtered.filter((serviceType: ServiceType) =>
+                appliedServiceTypes.includes(serviceType.id)
+            );
+        }
+
+        // Filter by applied statuses
+        if (appliedStatuses.length > 0) {
+            filtered = filtered.filter((serviceType: ServiceType) =>
+                appliedStatuses.includes(serviceType.status)
+            );
         }
 
         return filtered;
-    }, [specialties, appliedSpecialties]);
+    }, [serviceTypes, appliedServiceTypes, appliedStatuses]);
 
-    // Paginate filtered specialties for client-side filtering
-    const paginatedFilteredSpecialties = useMemo(() => {
-        if (appliedSpecialties.length === 0) {
-            // No specialty filter, use server-side pagination
-            return filteredSpecialties;
+    // Paginate filtered service types for client-side filtering
+    const paginatedFilteredServiceTypes = useMemo(() => {
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
+            // No filters applied, use server-side pagination
+            return filteredServiceTypes;
         }
 
         // Client-side pagination for filtered results
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        return filteredSpecialties.slice(startIndex, endIndex);
-    }, [filteredSpecialties, currentPage, itemsPerPage, appliedSpecialties.length]);
+        return filteredServiceTypes.slice(startIndex, endIndex);
+    }, [
+        filteredServiceTypes,
+        currentPage,
+        itemsPerPage,
+        appliedServiceTypes.length,
+        appliedStatuses.length,
+    ]);
 
     // Calculate total pages for client-side filtering
     const effectiveTotalPages = useMemo(() => {
-        if (appliedSpecialties.length === 0) {
-            // No specialty filter, use server-side pagination
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
+            // No filters applied, use server-side pagination
             return totalPages;
         }
 
         // Client-side pagination
-        return Math.ceil(filteredSpecialties.length / itemsPerPage);
-    }, [totalPages, filteredSpecialties.length, itemsPerPage, appliedSpecialties.length]);
+        return Math.ceil(filteredServiceTypes.length / itemsPerPage);
+    }, [
+        totalPages,
+        filteredServiceTypes.length,
+        itemsPerPage,
+        appliedServiceTypes.length,
+        appliedStatuses.length,
+    ]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
 
-        // Only fetch from server if no specialty filter
-        if (appliedSpecialties.length === 0) {
+        // Only fetch from server if no filters applied
+        if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
             const sortParams = getSortParams(sortBy);
-            fetchSpecialties(page, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            fetchServiceTypes({
+                pageNumber: page,
+                pageSize: itemsPerPage,
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            });
         }
-        // For specialty filters, pagination is handled client-side
+        // For filters, pagination is handled client-side
     };
 
-    // Helper function to apply specialty filters
-    const applySpecialtyFilters = () => {
-        setAppliedSpecialties([...selectedSpecialties]);
+    // Helper function to apply service type filters
+    const applyServiceTypeFilters = () => {
+        setAppliedServiceTypes([...selectedServiceTypes]);
         setAppliedStatuses([...selectedStatuses]);
         setCurrentPage(1);
         setShowFilterModal(false);
 
-        // Fetch all specialties without pagination for client-side filtering
-        fetchSpecialties(1, 100); // Large page size to get all specialties
-    };
-
-    // Helper function to apply status filters only
-    const applyStatusFilters = () => {
-        setAppliedSpecialties([...selectedSpecialties]);
-        setAppliedStatuses([...selectedStatuses]);
-        setCurrentPage(1);
-        setShowFilterModal(false);
-
-        // Only status filter, can use backend filtering with sorting
-        const sortParams = getSortParams(sortBy);
-        const filterParams = {
-            pageNumber: 1,
-            pageSize: itemsPerPage,
-            status:
-                selectedStatuses.length === 1
-                    ? (selectedStatuses[0] as 'ACTIVE' | 'INACTIVE')
-                    : undefined,
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        };
-        filterSpecialties(filterParams);
+        // Fetch all service types without pagination for client-side filtering
+        fetchServiceTypes({ pageNumber: 1, pageSize: 100 }); // Large page size to get all service types
     };
 
     const handleFilterSubmit = () => {
-        // If we have specialty filters, we need to fetch all specialties first
-        if (selectedSpecialties.length > 0) {
-            applySpecialtyFilters();
+        // If we have any filters, we need to fetch all service types first
+        if (selectedServiceTypes.length > 0 || selectedStatuses.length > 0) {
+            applyServiceTypeFilters();
         } else {
-            applyStatusFilters();
+            // No filters, reset to normal pagination
+            handleClearFilters();
         }
     };
 
     const handleClearFilters = () => {
-        setSelectedSpecialties([]);
+        setSelectedServiceTypes([]);
         setSelectedStatuses([]);
-        setAppliedSpecialties([]);
+        setAppliedServiceTypes([]);
         setAppliedStatuses([]);
         setCurrentPage(1);
         const sortParams = getSortParams(sortBy);
-        fetchSpecialties(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder); // Reset to normal pagination with current sort
+        fetchServiceTypes({
+            pageNumber: 1,
+            pageSize: itemsPerPage,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        }); // Reset to normal pagination with current sort
     };
 
     const handleResetFilter = () => {
@@ -255,46 +281,49 @@ const ListSpecialties: React.FC = () => {
     };
 
     // Stop displaying functions
-    const handleHideClick = (specialty: Specialty) => {
-        setSpecialtyToDelete(specialty);
+    const handleHideClick = (serviceType: ServiceType) => {
+        setServiceTypeToDelete(serviceType);
         setShowDeleteModal(true);
     };
 
     // Helper function to handle successful delete operation
-    const handleSuccessfulDelete = (specialtyName: string) => {
+    const handleSuccessfulDelete = (serviceTypeName: string) => {
         setShowDeleteModal(false);
-        setSpecialtyToDelete(null);
-        toast.success(`Đã ngừng hiển thị chuyên khoa "${specialtyName}" thành công!`);
+        setServiceTypeToDelete(null);
+        toast.success(`Đã ngừng hiển thị loại dịch vụ "${serviceTypeName}" thành công!`);
 
-        // Refresh the specialties list
+        // Refresh the service types list
         const sortParams = getSortParams(sortBy);
-        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        fetchServiceTypes({
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        });
     };
 
     // Helper function to handle delete error
     const handleDeleteError = (error: any) => {
-        console.error('Error hiding specialty:', error);
+        console.error('Error hiding service type:', error);
         const errorMessage =
-            error.message || 'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
+            error.message || 'Có lỗi xảy ra khi ngừng hiển thị loại dịch vụ. Vui lòng thử lại.';
         toast.error(errorMessage);
     };
 
     const handleHideConfirm = async () => {
-        if (!specialtyToDelete) return;
+        if (!serviceTypeToDelete) return;
 
         try {
-            const result = await deleteSpecialty(specialtyToDelete.id);
+            const result = await deleteServiceType(serviceTypeToDelete.id);
 
             // Check if the operation was successful
-
-            if (result.type?.endsWith('/fulfilled')) {
-                handleSuccessfulDelete(specialtyToDelete.name);
-            } else if (result.type?.endsWith('/rejected')) {
+            if ((result as any).type.endsWith('/fulfilled')) {
+                handleSuccessfulDelete(serviceTypeToDelete.name);
+            } else if ((result as any).type.endsWith('/rejected')) {
                 // Error - show error message
-
                 const errorMessage =
-                    result.payload ||
-                    'Có lỗi xảy ra khi ngừng hiển thị chuyên khoa. Vui lòng thử lại.';
+                    ((result as any).payload as string) ||
+                    'Có lỗi xảy ra khi ngừng hiển thị loại dịch vụ. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {
@@ -304,69 +333,78 @@ const ListSpecialties: React.FC = () => {
 
     const handleHideCancel = () => {
         setShowDeleteModal(false);
-        setSpecialtyToDelete(null);
+        setServiceTypeToDelete(null);
     };
 
-    // Helper function to create specialty
-    const createSpecialtyData = async () => {
+    // Helper function to create service type
+    const createServiceTypeData = async () => {
         if (imageFile) {
-            return await createSpecialtyWithImage({ ...formData, imageFile });
+            return await createServiceTypeWithImage(formData, imageFile);
         } else {
-            return await createSpecialty(formData);
+            return await createServiceType(formData);
         }
     };
 
-    // Helper function to update specialty
-    const updateSpecialtyData = async () => {
-        if (!specialtyToEdit) {
-            toast.error('Không tìm thấy thông tin chuyên khoa cần cập nhật');
+    // Helper function to update service type
+    const updateServiceTypeData = async () => {
+        if (!serviceTypeToEdit) {
+            toast.error('Không tìm thấy thông tin loại dịch vụ cần cập nhật');
             return null;
         }
 
-        console.log('Updating specialty:', {
-            id: specialtyToEdit.id,
+        console.log('Updating service type:', {
+            id: serviceTypeToEdit.id,
             formData: formData,
-            specialtyToEdit: specialtyToEdit,
+            serviceTypeToEdit: serviceTypeToEdit,
             imageUrl: formData.imageUrl,
+            imageFile: imageFile,
         });
 
+        // Determine update strategy based on image handling
         if (imageFile) {
-            return await updateSpecialtyWithImage(specialtyToEdit.id, {
-                ...formData,
-                imageFile,
-            });
+            // User selected a new image file
+            return await updateServiceTypeWithImage(serviceTypeToEdit.id, formData, imageFile);
+        } else if (formData.imageUrl === '') {
+            // User wants to remove the image (empty imageUrl)
+            return await updateServiceTypeRemoveImage(serviceTypeToEdit.id, formData);
         } else {
-            return await updateSpecialty(specialtyToEdit.id, formData);
+            // User doesn't want to change the image (preserve existing)
+            return await updateServiceTypeWithoutImage(serviceTypeToEdit.id, formData);
         }
     };
 
     // Helper function to handle successful operation
     const handleSuccessfulOperation = () => {
         if (modalMode === 'add') {
-            toast.success('Tạo chuyên khoa thành công!');
+            toast.success('Tạo loại dịch vụ thành công!');
         } else {
-            toast.success('Cập nhật chuyên khoa thành công!');
+            toast.success('Cập nhật loại dịch vụ thành công!');
         }
 
         // Close modal and refresh data
         setShowModal(false);
-        setSpecialtyToEdit(null);
+        setServiceTypeToEdit(null);
         resetForm();
 
-        // Refresh the specialties list
+        // Refresh the service types list
         const sortParams = getSortParams(sortBy);
-        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        fetchServiceTypes({
+            pageNumber: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: sortParams.sortBy,
+            sortOrder: sortParams.sortOrder,
+        });
     };
 
     // Helper function to handle error
     const handleOperationError = (error: any, defaultMessage: string) => {
-        console.error('Error saving specialty:', error);
+        console.error('Error saving service type:', error);
         const errorMessage = error.message || defaultMessage;
         toast.error(errorMessage);
     };
 
-    // Specialty modal functions
-    const handleSpecialtySubmit = async () => {
+    // Service type modal functions
+    const handleServiceTypeSubmit = async () => {
         // Client-side validation
         if (!validateForm(formData)) {
             return; // Stop if validation fails
@@ -377,20 +415,18 @@ const ListSpecialties: React.FC = () => {
         try {
             let result;
             if (modalMode === 'add') {
-                result = await createSpecialtyData();
+                result = await createServiceTypeData();
             } else {
-                result = await updateSpecialtyData();
+                result = await updateServiceTypeData();
                 if (!result) return; // Early return if validation failed
             }
 
             // Check if the operation was successful
-
-            if (result.type?.endsWith('/fulfilled')) {
+            if (result?.success) {
                 handleSuccessfulOperation();
-            } else if (result.type?.endsWith('/rejected')) {
+            } else {
                 // Error - show error message
-
-                const errorMessage = result.payload || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                const errorMessage = result?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
                 toast.error(errorMessage);
             }
         } catch (error: any) {
@@ -400,35 +436,37 @@ const ListSpecialties: React.FC = () => {
         }
     };
 
-    const handleEditClickWithSpecialty = (specialty: Specialty) => {
-        setSpecialtyToEdit(specialty);
+    const handleEditClickWithServiceType = (serviceType: ServiceType) => {
+        setServiceTypeToEdit(serviceType);
         setModalMode('edit');
         setFormData({
-            name: specialty.name,
-            imageUrl: specialty.imageUrl,
-            status: specialty.status,
+            name: serviceType.name,
+            description: serviceType.description || '',
+            imageUrl: serviceType.imageUrl, // Keep existing imageUrl for reference
+            status: serviceType.status,
         });
-        setImagePreview(specialty.imageUrl);
-        setImageFile(null);
+        setImagePreview(serviceType.imageUrl);
+        setImageFile(null); // No new file selected yet
         clearAllValidationErrors();
         setShowModal(true);
     };
 
-    // Function to fetch all specialties for filter modal
-    const fetchAllSpecialtiesForFilter = async () => {
+    // Function to fetch all service types for filter modal
+    const fetchAllServiceTypesForFilter = async () => {
         try {
-            const response = await getAllSpecialties(1, 100); // Large page size to get all
-            setAllSpecialties(response.data.items);
+            // Use getAllServiceTypesSimple for better performance (no pagination)
+            const response = await getAllServiceTypesSimple();
+            setAllServiceTypes(response.data);
         } catch (error) {
-            console.error('Error fetching all specialties for filter:', error);
-            setAllSpecialties([]);
+            console.error('Error fetching all service types for filter:', error);
+            setAllServiceTypes([]);
         }
     };
 
     // Helper function to render error state
     const renderErrorState = () => (
         <tr>
-            <td colSpan={6} className="text-center py-4">
+            <td colSpan={7} className="text-center py-4">
                 <div className="alert alert-danger" role="alert">
                     <strong>Lỗi:</strong> {error}
                     <button
@@ -445,33 +483,33 @@ const ListSpecialties: React.FC = () => {
     // Helper function to render empty state
     const renderEmptyState = () => (
         <tr>
-            <td colSpan={6} className="text-center py-4">
-                <p className="text-muted">Không có chuyên khoa nào được tìm thấy.</p>
+            <td colSpan={7} className="text-center py-4">
+                <p className="text-muted">Không có loại dịch vụ nào được tìm thấy.</p>
             </td>
         </tr>
     );
 
-    // Helper function to render specialty row
-    const renderSpecialtyRow = (specialty: Specialty) => (
-        <tr key={specialty.id}>
+    // Helper function to render service type row
+    const renderServiceTypeRow = (serviceType: ServiceType) => (
+        <tr key={serviceType.id}>
             <td>
                 <div className="d-flex align-items-center">
                     <div className="avatar me-2">
                         <div className="avatar-title bg-primary-subtle text-primary rounded">
-                            <i className="ti ti-stethoscope"></i>
+                            <i className="ti ti-medical-cross"></i>
                         </div>
                     </div>
                     <div>
-                        <h6 className="mb-1 fs-14 fw-semibold">{specialty.name}</h6>
-                        <span className="text-muted fs-13">ID: {specialty.id}</span>
+                        <h6 className="mb-1 fs-14 fw-semibold">{serviceType.name}</h6>
+                        <span className="text-muted fs-13">ID: {serviceType.id}</span>
                     </div>
                 </div>
             </td>
             <td>
                 <div className={styles.imagePreviewSmall}>
                     <img
-                        src={specialty.imageUrl}
-                        alt={specialty.name}
+                        src={serviceType.imageUrl}
+                        alt={serviceType.name}
                         onError={(e) => {
                             (e.target as HTMLImageElement).src =
                                 'https://via.placeholder.com/80x80?text=No+Image';
@@ -481,26 +519,31 @@ const ListSpecialties: React.FC = () => {
             </td>
             <td>
                 <span className="text-muted fs-14">
-                    {specialty.createdAt
-                        ? new Date(specialty.createdAt).toLocaleDateString('vi-VN')
+                    {serviceType.description || 'Không có mô tả'}
+                </span>
+            </td>
+            <td>
+                <span className="text-muted fs-14">
+                    {serviceType.createdAt
+                        ? new Date(serviceType.createdAt).toLocaleDateString('vi-VN')
                         : 'N/A'}
                 </span>
             </td>
             <td>
                 <span className="text-muted fs-14">
-                    {specialty.updatedAt
-                        ? new Date(specialty.updatedAt).toLocaleDateString('vi-VN')
+                    {serviceType.updatedAt
+                        ? new Date(serviceType.updatedAt).toLocaleDateString('vi-VN')
                         : 'N/A'}
                 </span>
             </td>
             <td>
-                <StatusBadge status={specialty.status} />
+                <StatusBadge status={serviceType.status} />
             </td>
             <td className="action-item">
                 <TableActions
-                    id={specialty.id}
-                    onEdit={() => handleEditClickWithSpecialty(specialty)}
-                    onHide={() => handleHideClick(specialty)}
+                    id={serviceType.id}
+                    onEdit={() => handleEditClickWithServiceType(serviceType)}
+                    onHide={() => handleHideClick(serviceType)}
                     showEdit={true}
                     showDelete={false}
                     showHide={true}
@@ -513,18 +556,18 @@ const ListSpecialties: React.FC = () => {
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
         if (isLoading) {
-            return <TableSkeleton rows={itemsPerPage} columns={specialtyTableColumns} />;
+            return <TableSkeleton rows={itemsPerPage} columns={serviceTypeTableColumns} />;
         }
 
         if (error) {
             return renderErrorState();
         }
 
-        if (!paginatedFilteredSpecialties || paginatedFilteredSpecialties.length === 0) {
+        if (!paginatedFilteredServiceTypes || paginatedFilteredServiceTypes.length === 0) {
             return renderEmptyState();
         }
 
-        return paginatedFilteredSpecialties.map(renderSpecialtyRow);
+        return paginatedFilteredServiceTypes.map(renderServiceTypeRow);
     };
 
     return (
@@ -532,11 +575,11 @@ const ListSpecialties: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Danh Sách Chuyên Khoa{' '}
+                        Danh Sách Loại Dịch Vụ{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng Chuyên Khoa:{' '}
-                            {appliedSpecialties.length > 0
-                                ? filteredSpecialties.length
+                            Tổng Loại Dịch Vụ:{' '}
+                            {appliedServiceTypes.length > 0 || appliedStatuses.length > 0
+                                ? filteredServiceTypes.length
                                 : pagination?.totalCount || 0}
                         </span>
                     </h4>
@@ -564,7 +607,7 @@ const ListSpecialties: React.FC = () => {
                         icon="ti ti-plus"
                         onClick={handleAddClick}
                     >
-                        Thêm Chuyên Khoa
+                        Thêm Loại Dịch Vụ
                     </Button>
                 </div>
             </div>
@@ -574,9 +617,12 @@ const ListSpecialties: React.FC = () => {
                     <div className="d-flex align-items-center flex-wrap gap-2">
                         <div className="table-search d-flex align-items-center mb-0">
                             <div className="search-input">
-                                <label htmlFor="specialtySearch" aria-label="Search specialties">
+                                <label
+                                    htmlFor="serviceTypeSearch"
+                                    aria-label="Search service types"
+                                >
                                     <input
-                                        id="specialtySearch"
+                                        id="serviceTypeSearch"
                                         type="search"
                                         className="form-control form-control-sm"
                                         placeholder="Tìm kiếm"
@@ -597,10 +643,10 @@ const ListSpecialties: React.FC = () => {
                         icon="ti ti-filter text-gray-5"
                         onClick={async () => {
                             // Sync selected filters with applied filters when opening modal
-                            setSelectedSpecialties([...appliedSpecialties]);
+                            setSelectedServiceTypes([...appliedServiceTypes]);
                             setSelectedStatuses([...appliedStatuses]);
-                            // Fetch all specialties for filter modal
-                            await fetchAllSpecialtiesForFilter();
+                            // Fetch all service types for filter modal
+                            await fetchAllServiceTypesForFilter();
                             setShowFilterModal(true);
                         }}
                     >
@@ -614,15 +660,15 @@ const ListSpecialties: React.FC = () => {
                             setSortBy(newSortBy);
                             setCurrentPage(1);
 
-                            // Fetch specialties with new sort parameters
-                            if (appliedSpecialties.length === 0) {
+                            // Fetch service types with new sort parameters
+                            if (appliedServiceTypes.length === 0 && appliedStatuses.length === 0) {
                                 const sortParams = getSortParams(newSortBy);
-                                fetchSpecialties(
-                                    1,
-                                    itemsPerPage,
-                                    sortParams.sortBy,
-                                    sortParams.sortOrder
-                                );
+                                fetchServiceTypes({
+                                    pageNumber: 1,
+                                    pageSize: itemsPerPage,
+                                    sortBy: sortParams.sortBy,
+                                    sortOrder: sortParams.sortOrder,
+                                });
                             }
                         }}
                         placeholder="Sắp xếp theo:"
@@ -632,15 +678,15 @@ const ListSpecialties: React.FC = () => {
 
             {/* Applied Filters */}
             <AppliedFilters
-                appliedItems={appliedSpecialties}
+                appliedItems={appliedServiceTypes}
                 appliedStatuses={appliedStatuses}
-                items={specialties || []}
-                onRemoveItem={(specialtyId: string) => {
-                    const newAppliedSpecialties = appliedSpecialties.filter(
-                        (id) => id !== specialtyId
+                items={serviceTypes || []}
+                onRemoveItem={(serviceTypeId: string) => {
+                    const newAppliedServiceTypes = appliedServiceTypes.filter(
+                        (id) => id !== serviceTypeId
                     );
-                    setAppliedSpecialties(newAppliedSpecialties);
-                    setSelectedSpecialties(newAppliedSpecialties);
+                    setAppliedServiceTypes(newAppliedServiceTypes);
+                    setSelectedServiceTypes(newAppliedServiceTypes);
                 }}
                 onRemoveStatus={(status: string) => {
                     const newAppliedStatuses = appliedStatuses.filter((s) => s !== status);
@@ -660,8 +706,9 @@ const ListSpecialties: React.FC = () => {
                 <table className="table table-nowrap datatable">
                     <thead className="thead-light">
                         <tr>
-                            <th>Tên Chuyên Khoa</th>
+                            <th>Tên Loại Dịch Vụ</th>
                             <th>Hình Ảnh</th>
+                            <th>Mô Tả</th>
                             <th>Ngày Tạo</th>
                             <th>Ngày Cập Nhật</th>
                             <th>Trạng Thái</th>
@@ -683,7 +730,7 @@ const ListSpecialties: React.FC = () => {
                 </div>
             )}
 
-            {/* Specialty Modal */}
+            {/* Service Type Modal */}
             <EntityModal
                 show={showModal}
                 title={title}
@@ -691,15 +738,17 @@ const ListSpecialties: React.FC = () => {
                 validationErrors={validationErrors}
                 isSubmitting={isSubmitting}
                 modalMode={modalMode}
-                onCancel={handleCancelWithSpecialty}
-                onSubmit={handleSpecialtySubmit}
+                onCancel={handleCancelWithServiceType}
+                onSubmit={handleServiceTypeSubmit}
                 onNameChange={handleNameChange}
+                onDescriptionChange={handleDescriptionChange}
                 onImageFileChange={handleImageFileChange}
                 onRemoveImage={handleRemoveImage}
                 onStatusChange={handleStatusChange}
                 imagePreview={imagePreview}
-                entityName="Chuyên Khoa"
+                entityName="Loại Dịch Vụ"
                 hasImageUpload={true}
+                hasDescription={true}
                 styles={{
                     modal: styles.modal,
                     'modal-content': styles['modal-content'],
@@ -713,8 +762,8 @@ const ListSpecialties: React.FC = () => {
                 show={showDeleteModal}
                 onHide={handleHideCancel}
                 onConfirm={handleHideConfirm}
-                title="Ngừng hiển thị chuyên khoa"
-                message={`Bạn có chắc chắn muốn ngừng hiển thị chuyên khoa "${specialtyToDelete?.name}"? Chuyên khoa này sẽ không hiển thị trong danh sách.`}
+                title="Ngừng hiển thị loại dịch vụ"
+                message={`Bạn có chắc chắn muốn ngừng hiển thị loại dịch vụ "${serviceTypeToDelete?.name}"? Loại dịch vụ này sẽ không hiển thị trong danh sách.`}
                 confirmText="Có, Ngừng hiển thị"
             />
 
@@ -724,19 +773,19 @@ const ListSpecialties: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleResetFilter}
-                title="Bộ lọc chuyên khoa"
+                title="Bộ lọc loại dịch vụ"
                 fields={[
                     {
-                        name: 'specialties',
-                        label: 'Chuyên Khoa',
+                        name: 'serviceTypes',
+                        label: 'Loại Dịch Vụ',
                         type: 'multiselect',
-                        options: (allSpecialties || []).map((specialty) => ({
-                            value: specialty.id,
-                            label: specialty.name,
+                        options: (allServiceTypes || []).map((serviceType) => ({
+                            value: serviceType.id,
+                            label: serviceType.name,
                         })),
-                        value: selectedSpecialties,
-                        onChange: setSelectedSpecialties,
-                        resetValue: () => setSelectedSpecialties([]),
+                        value: selectedServiceTypes,
+                        onChange: setSelectedServiceTypes,
+                        resetValue: () => setSelectedServiceTypes([]),
                     },
                     {
                         name: 'statuses',
@@ -756,4 +805,4 @@ const ListSpecialties: React.FC = () => {
     );
 };
 
-export default ListSpecialties;
+export default ListServiceTypes;
