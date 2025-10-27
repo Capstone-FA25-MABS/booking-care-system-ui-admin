@@ -6,8 +6,10 @@ import {
     GoogleLoginRequest,
     FacebookLoginRequest,
     AuthResponse,
+    AccountManagementResponse,
 } from '@/types/auth.types';
 import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
+import { Role } from '@/enums/common.enums';
 // Base API endpoint for auth
 const AUTH_ENDPOINTS = {
     BASE: '/auth',
@@ -18,6 +20,7 @@ const AUTH_ENDPOINTS = {
     GOOGLE_LOGIN: '/auth/google-login',
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
+    ADMIN_ACCOUNTS: '/auth/admin/accounts',
 } as const;
 
 /**
@@ -195,6 +198,53 @@ export class AuthService {
             throw new Error(error.message || 'Facebook login failed');
         }
     }
+
+    /**
+     * Get accounts by role for admin management
+     * @param role - The role to filter accounts (PATIENT/DOCTOR/STAFF)
+     * @param pageNumber - Page number for pagination (default: 1)
+     * @param pageSize - Number of items per page (default: 10)
+     * @param searchTerm - Search term for filtering by name or email
+     * @param sortBy - Sort field (FullName/Email/CreatedAt/Status)
+     * @param sortOrder - Sort order (asc/desc)
+     */
+    static async getAccountsByRole(
+        role: Role,
+        pageNumber: number = 1,
+        pageSize: number = 10,
+        searchTerm?: string,
+        sortBy: string = 'CreatedAt',
+        sortOrder: 'asc' | 'desc' = 'desc'
+    ): Promise<ApiResponse<AccountManagementResponse>> {
+        try {
+            // Map role enum to backend expected format (Patient/Doctor/Staff)
+            const roleMap: Record<Role, string> = {
+                [Role.PATIENT]: 'Patient',
+                [Role.DOCTOR]: 'Doctor',
+                [Role.STAFF]: 'Staff',
+                [Role.ADMIN]: 'Admin',
+            };
+
+            const response: any = await axiosInstance.get(AUTH_ENDPOINTS.ADMIN_ACCOUNTS, {
+                params: {
+                    role: roleMap[role],
+                    pageNumber,
+                    pageSize,
+                    searchTerm,
+                    sortBy,
+                    sortOrder,
+                },
+            });
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Accounts retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch accounts');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -210,6 +260,7 @@ export const {
     validatePhoneNumber,
     validatePassword,
     clearAuthData,
+    getAccountsByRole,
 } = AuthService;
 
 // Default export
