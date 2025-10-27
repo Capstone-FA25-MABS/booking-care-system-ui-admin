@@ -14,6 +14,18 @@
             max-height 0.3s ease-in,
             opacity 0.3s ease-in;
     }
+
+    // Reset all li items to inactive state by default
+    li {
+        &::before {
+            background: #e0e0e0 !important; // Gray dot for inactive items
+        }
+
+        // Only active items get the blue dot
+        &.active-item::before {
+            background: var(--primary) !important; // Blue dot for active item
+        }
+    }
 }
 
 /* Override default styles for submenu */
@@ -23,6 +35,21 @@
         background: transparent !important;
         border-left: none !important;
         color: var(--menu-item-color) !important;
+    }
+}
+
+/* Override submenu item active states */
+:global {
+    // Force inactive items to have gray dots
+    .sidebar .sidebar-menu .submenu.subdrop ul li {
+        &::before {
+            background: #e0e0e0 !important;
+        }
+
+        // Only items with active-item class get blue dots
+        &.active-item::before {
+            background: #4299e1 !important;
+        }
     }
 }
 
