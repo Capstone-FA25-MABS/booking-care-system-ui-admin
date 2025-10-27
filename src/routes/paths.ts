@@ -36,6 +36,9 @@ export const PATHS = {
         PAYMENT_METHODS: {
             ROOT: 'payment-methods',
         },
+        ACCOUNT_MANAGEMENT: {
+            ROOT: 'accounts',
+        },
     },
 
     // Hospital paths
