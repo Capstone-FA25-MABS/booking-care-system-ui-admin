@@ -21,6 +21,9 @@ const AUTH_ENDPOINTS = {
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
     ADMIN_ACCOUNTS: '/auth/admin/accounts',
+    BAN_UNBAN_ACCOUNT: (id: string) => `/auth/accounts/${id}/ban-unban`,
+    LOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/lock`,
+    UNLOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/unlock`,
 } as const;
 
 /**
@@ -245,6 +248,64 @@ export class AuthService {
             throw new Error(error.message || 'Failed to fetch accounts');
         }
     }
+
+    /**
+     * Ban/Unban account (toggle ACTIVE/INACTIVE status)
+     * @param accountId - Account ID to ban/unban
+     */
+    static async toggleBanUnbanAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.BAN_UNBAN_ACCOUNT(accountId)
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account status toggled successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to toggle account status');
+        }
+    }
+
+    /**
+     * Lock account
+     * @param accountId - Account ID to lock
+     */
+    static async lockAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.LOCK_ACCOUNT(accountId));
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account locked successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to lock account');
+        }
+    }
+
+    /**
+     * Unlock account
+     * @param accountId - Account ID to unlock
+     */
+    static async unlockAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.UNLOCK_ACCOUNT(accountId)
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account unlocked successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to unlock account');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -261,6 +322,9 @@ export const {
     validatePassword,
     clearAuthData,
     getAccountsByRole,
+    toggleBanUnbanAccount,
+    lockAccount,
+    unlockAccount,
 } = AuthService;
 
 // Default export
