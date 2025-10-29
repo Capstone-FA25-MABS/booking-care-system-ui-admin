@@ -61,14 +61,31 @@ const getToggleActiveTitle = (isLocked: boolean, status: string): string => {
         : 'Tắt (Vô hiệu hóa) - Click để bật';
 };
 
-// Helper function to get toggle lock title
-const getToggleLockTitle = (isLocked: boolean): string => {
-    return isLocked ? 'Đang khóa - Click để mở khóa' : 'Đang mở - Click để khóa tài khoản';
+// Helper functions to get lock/unlock titles
+const getLockTitle = (): string => 'Đang mở - Click để khóa tài khoản';
+const getUnlockTitle = (): string => 'Đang khóa - Click để mở khóa';
+
+// Skeleton cell component for loading state
+interface SkeletonCellProps {
+    height: string;
+    width: string;
+}
+
+const SkeletonCell: React.FC<SkeletonCellProps> = ({ height, width }) => {
+    const skeletonClass = 'bg-light rounded placeholder-glow';
+    const skeletonStyle = {
+        animation: 'pulse 1.5s ease-in-out infinite',
+    };
+
+    return (
+        <td>
+            <div className={skeletonClass} style={{ height, width, ...skeletonStyle }} />
+        </td>
+    );
 };
 
 // Skeleton row component for loading state
 const SkeletonRow: React.FC = () => {
-    const skeletonClass = 'bg-light rounded placeholder-glow';
     const skeletonStyle = {
         animation: 'pulse 1.5s ease-in-out infinite',
     };
@@ -84,54 +101,18 @@ const SkeletonRow: React.FC = () => {
                     />
                     <div className="flex-grow-1">
                         <div
-                            className={`${skeletonClass} mb-2`}
+                            className="bg-light rounded placeholder-glow mb-2"
                             style={{ height: '14px', width: '120px', ...skeletonStyle }}
                         />
                     </div>
                 </div>
             </td>
-            {/* Column 2: Email */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '14px', width: '180px', ...skeletonStyle }}
-                />
-            </td>
-            {/* Column 3: Phone */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '14px', width: '100px', ...skeletonStyle }}
-                />
-            </td>
-            {/* Column 4: Address */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '14px', width: '150px', ...skeletonStyle }}
-                />
-            </td>
-            {/* Column 5: Toggle Active */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '24px', width: '50px', ...skeletonStyle }}
-                />
-            </td>
-            {/* Column 6: Toggle Lock */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '24px', width: '50px', ...skeletonStyle }}
-                />
-            </td>
-            {/* Column 7: Status Badge */}
-            <td>
-                <div
-                    className={skeletonClass}
-                    style={{ height: '24px', width: '80px', ...skeletonStyle }}
-                />
-            </td>
+            <SkeletonCell height="14px" width="180px" />
+            <SkeletonCell height="14px" width="100px" />
+            <SkeletonCell height="14px" width="150px" />
+            <SkeletonCell height="24px" width="50px" />
+            <SkeletonCell height="24px" width="50px" />
+            <SkeletonCell height="24px" width="80px" />
         </tr>
     );
 };
@@ -281,6 +262,104 @@ const AccountManagement: React.FC = () => {
         }
     };
 
+    // Helper function to render table body content
+    const renderTableBody = () => {
+        if (isLoading) {
+            return (
+                <>
+                    {Array.from(
+                        { length: 5 },
+                        (_, index) => `skeleton-row-${Date.now()}-${index}`
+                    ).map((skeletonId) => (
+                        <SkeletonRow key={skeletonId} />
+                    ))}
+                </>
+            );
+        }
+
+        if (accounts.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={7} className="text-center py-5">
+                        <div className="text-muted">
+                            <i className="ti ti-database-off fs-48 mb-2 d-block" />
+                            <p className="mb-0">Không có dữ liệu</p>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        return accounts.map((account) => (
+            <tr key={account.accountId}>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <span className="avatar me-2">
+                            {account.avatarUrl ? (
+                                <img
+                                    src={account.avatarUrl}
+                                    alt={account.fullName}
+                                    className="rounded-circle"
+                                />
+                            ) : (
+                                <div className="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                    {account.fullName.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </span>
+                        <div>
+                            <h6 className="mb-1 fs-14 fw-semibold">
+                                <span className="text-dark">{account.fullName}</span>
+                            </h6>
+                        </div>
+                    </div>
+                </td>
+                <td>{account.email}</td>
+                <td>{account.phone || '-'}</td>
+                <td>{account.address || '-'}</td>
+
+                {/* Toggle Active/Inactive */}
+                <td>
+                    <div className="form-check form-switch">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id={`switch-active-${account.accountId}`}
+                            checked={account.status === 'ACTIVE'}
+                            onChange={() => handleToggleBanUnban(account.accountId)}
+                            disabled={account.isLocked}
+                            title={getToggleActiveTitle(account.isLocked, account.status)}
+                        />
+                    </div>
+                </td>
+                {/* Toggle Lock/Unlock */}
+                <td>
+                    <div className="form-check form-switch">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id={`switch-lock-${account.accountId}`}
+                            checked={account.isLocked}
+                            onChange={() =>
+                                account.isLocked
+                                    ? handleUnlockAccount(account.accountId)
+                                    : handleLockAccount(account.accountId)
+                            }
+                            title={account.isLocked ? getUnlockTitle() : getLockTitle()}
+                        />
+                    </div>
+                </td>
+                <td>
+                    <span className={getStatusBadgeClass(account.status)}>
+                        {getStatusLabel(account.status)}
+                    </span>
+                </td>
+            </tr>
+        ));
+    };
+
     return (
         <div className="content" id="profilePage">
             <style>
@@ -367,100 +446,7 @@ const AccountManagement: React.FC = () => {
                             <th>Trạng Thái</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <>
-                                {Array.from({ length: 5 }).map((_, index) => (
-                                    <SkeletonRow key={`skeleton-${index}`} />
-                                ))}
-                            </>
-                        ) : accounts.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="text-center py-5">
-                                    <div className="text-muted">
-                                        <i className="ti ti-database-off fs-48 mb-2 d-block" />
-                                        <p className="mb-0">Không có dữ liệu</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        ) : (
-                            accounts.map((account) => (
-                                <tr key={account.accountId}>
-                                    <td>
-                                        <div className="d-flex align-items-center">
-                                            <span className="avatar me-2">
-                                                {account.avatarUrl ? (
-                                                    <img
-                                                        src={account.avatarUrl}
-                                                        alt={account.fullName}
-                                                        className="rounded-circle"
-                                                    />
-                                                ) : (
-                                                    <div className="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                                                        {account.fullName.charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
-                                            </span>
-                                            <div>
-                                                <h6 className="mb-1 fs-14 fw-semibold">
-                                                    <span className="text-dark">
-                                                        {account.fullName}
-                                                    </span>
-                                                </h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{account.email}</td>
-                                    <td>{account.phone || '-'}</td>
-                                    <td>{account.address || '-'}</td>
-
-                                    {/* Toggle Active/Inactive */}
-                                    <td>
-                                        <div className="form-check form-switch">
-                                            <input
-                                                className="form-check-input"
-                                                type="checkbox"
-                                                role="switch"
-                                                id={`switch-active-${account.accountId}`}
-                                                checked={account.status === 'ACTIVE'}
-                                                onChange={() =>
-                                                    handleToggleBanUnban(account.accountId)
-                                                }
-                                                disabled={account.isLocked}
-                                                title={getToggleActiveTitle(
-                                                    account.isLocked,
-                                                    account.status
-                                                )}
-                                            />
-                                        </div>
-                                    </td>
-                                    {/* Toggle Lock/Unlock */}
-                                    <td>
-                                        <div className="form-check form-switch">
-                                            <input
-                                                className="form-check-input"
-                                                type="checkbox"
-                                                role="switch"
-                                                id={`switch-lock-${account.accountId}`}
-                                                checked={account.isLocked}
-                                                onChange={() =>
-                                                    account.isLocked
-                                                        ? handleUnlockAccount(account.accountId)
-                                                        : handleLockAccount(account.accountId)
-                                                }
-                                                title={getToggleLockTitle(account.isLocked)}
-                                            />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={getStatusBadgeClass(account.status)}>
-                                            {getStatusLabel(account.status)}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
+                    <tbody>{renderTableBody()}</tbody>
                 </table>
             </div>
             {/* Pagination */}
