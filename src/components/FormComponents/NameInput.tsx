@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import Input from '@/components/Input';
 
 interface NameInputProps {
@@ -24,40 +24,26 @@ const NameInput: React.FC<NameInputProps> = ({
     name = 'name',
     styles,
 }) => {
-    // Custom Input Component - refactored to reduce nesting
-    const handleInputChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            onChange(e.target.value);
-        },
-        [onChange]
-    );
-
-    const CustomInputComponent = useMemo(() => {
-        return () => {
-            return (
-                <div>
-                    <Input
-                        name={name}
-                        value={value}
-                        onChange={handleInputChange}
-                        placeholder={placeholder}
-                        required={required}
-                        maxLength={255}
-                        className={validationError ? 'is-invalid' : ''}
-                    />
-                    {validationError && (
-                        <div className={styles?.invalidFeedback || 'invalid-feedback'}>
-                            {validationError}
-                        </div>
-                    )}
-                </div>
-            );
-        };
-    }, [validationError, handleInputChange, value, placeholder, required, name]);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange(e.target.value);
+    };
 
     return (
         <div className={className}>
-            <CustomInputComponent />
+            <Input
+                name={name}
+                value={value}
+                onChange={handleInputChange}
+                placeholder={placeholder}
+                required={required}
+                maxLength={255}
+                className={validationError ? 'is-invalid' : ''}
+            />
+            {validationError && (
+                <div className={styles?.invalidFeedback || 'invalid-feedback'}>
+                    {validationError}
+                </div>
+            )}
         </div>
     );
 };

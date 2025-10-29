@@ -134,6 +134,16 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
             ),
             createSimpleMenuItem(
+                'Chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SPECIALTIES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Loại dịch vụ cho bác sĩ',
+                'ti ti-medical-cross',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_TYPES.ROOT)
+            ),
+            createSimpleMenuItem(
                 'Phương thức thanh toán',
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)

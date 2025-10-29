@@ -12,7 +12,7 @@ import TableActions from '@/components/TableActions';
 import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Position, PositionFormData } from '@/types/position.types';
 import usePosition from '@/hooks/usePosition';
-import { PositionService } from '@/services/position.service';
+import { getAllPositions } from '@/services/position.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import EntityModal from '@/components/Modal/EntityModal';
@@ -367,8 +367,8 @@ const ListPositions: React.FC = () => {
     // Function to fetch all positions for filter modal
     const fetchAllPositionsForFilter = async () => {
         try {
-            const response = await PositionService.getAllPositions(1, 100); // Large page size to get all
-            setAllPositions(response.data.positions);
+            const response = await getAllPositions(1, 100); // Large page size to get all
+            setAllPositions(response.data.items);
         } catch (error) {
             console.error('Error fetching all positions for filter:', error);
             setAllPositions([]);
@@ -640,6 +640,7 @@ const ListPositions: React.FC = () => {
                 onNameChange={handleNameChange}
                 onStatusChange={handleStatusChange}
                 entityName="Học Vị"
+                hasImageUpload={false}
                 styles={{
                     modal: styles.modal,
                     'modal-content': styles['modal-content'],

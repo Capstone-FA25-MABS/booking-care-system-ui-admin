@@ -20,6 +20,8 @@ import uiReducer from './slices/uiSlice';
 import doctorReducer from './slices/doctorSlice';
 import positionReducer from './slices/positionSlice';
 import languageReducer from './slices/languageSlice';
+import specialtyReducer from './slices/specialtySlice';
+import serviceTypeReducer from './slices/serviceTypeSlice';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -30,6 +32,8 @@ const rootReducer = combineReducers({
     doctor: doctorReducer,
     position: positionReducer,
     language: languageReducer,
+    specialty: specialtyReducer,
+    serviceType: serviceTypeReducer,
 });
 
 // Redux persist configuration

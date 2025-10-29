@@ -7,6 +7,7 @@ export interface JwtPayload {
     roles?: string[];
     confirmEmail?: string;
     confirmPhone?: string;
+    mustChangePassword?: string;
     hasExternalProvider?: string;
     exp?: number;
     iat?: number;
@@ -21,6 +22,7 @@ export function getAllJwtInfo(token: string | null): {
     roles: string[];
     emailConfirmed: boolean;
     phoneConfirmed: boolean;
+    mustChangePassword: boolean;
     hasExternalProvider: boolean;
 } {
     // Return default values if no token
@@ -30,6 +32,7 @@ export function getAllJwtInfo(token: string | null): {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            mustChangePassword: false,
         };
     }
 
@@ -43,6 +46,7 @@ export function getAllJwtInfo(token: string | null): {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            mustChangePassword: false,
         };
     }
 
@@ -58,6 +62,7 @@ export function getAllJwtInfo(token: string | null): {
     // Extract confirmation statuses
     const emailConfirmed = payload.confirmEmail?.toLowerCase() === 'true';
     const phoneConfirmed = payload.confirmPhone?.toLowerCase() === 'true';
+    const mustChangePassword = payload.mus?.toLowerCase() === 'true';
     const hasExternalProvider = payload.hasExternalProvider?.toLowerCase() === 'true';
 
     return {
@@ -65,5 +70,6 @@ export function getAllJwtInfo(token: string | null): {
         emailConfirmed,
         phoneConfirmed,
         hasExternalProvider,
+        mustChangePassword,
     };
 }

@@ -13,11 +13,36 @@ export const mockPositions: Position[] = [
 ];
 
 export const mockSpecialties: Specialty[] = [
-    { id: '550e8400-e29b-41d4-a716-446655440011', name: 'Tim mạch', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440012', name: 'Thần kinh', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440013', name: 'Nội khoa', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440014', name: 'Ngoại khoa', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440015', name: 'Sản phụ khoa', status: 'ACTIVE' },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440011',
+        name: 'Tim mạch',
+        imageUrl: '/images/specialties/cardiology.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440012',
+        name: 'Thần kinh',
+        imageUrl: '/images/specialties/neurology.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440013',
+        name: 'Nội khoa',
+        imageUrl: '/images/specialties/internal-medicine.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440014',
+        name: 'Ngoại khoa',
+        imageUrl: '/images/specialties/surgery.jpg',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440015',
+        name: 'Sản phụ khoa',
+        imageUrl: '/images/specialties/obstetrics-gynecology.jpg',
+        status: 'ACTIVE',
+    },
 ];
 
 export const mockLanguages: Language[] = [
@@ -49,10 +74,34 @@ export const mockLanguages: Language[] = [
 ];
 
 export const mockServiceTypes: ServiceType[] = [
-    { id: '550e8400-e29b-41d4-a716-446655440031', name: 'Khám tổng quát', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440032', name: 'Khám chuyên khoa', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440033', name: 'Tư vấn sức khỏe', status: 'ACTIVE' },
-    { id: '550e8400-e29b-41d4-a716-446655440034', name: 'Khám định kỳ', status: 'ACTIVE' },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440031',
+        name: 'Khám tổng quát',
+        description: 'Khám sức khỏe tổng quát cho bệnh nhân',
+        imageUrl: 'https://via.placeholder.com/200x150/007bff/ffffff?text=Khám+Tổng+Quát',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440032',
+        name: 'Khám chuyên khoa',
+        description: 'Khám chuyên sâu theo từng chuyên khoa',
+        imageUrl: 'https://via.placeholder.com/200x150/28a745/ffffff?text=Khám+Chuyên+Khoa',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440033',
+        name: 'Tư vấn sức khỏe',
+        description: 'Tư vấn và hướng dẫn về sức khỏe',
+        imageUrl: 'https://via.placeholder.com/200x150/ffc107/ffffff?text=Tư+Vấn+Sức+Khỏe',
+        status: 'ACTIVE',
+    },
+    {
+        id: '550e8400-e29b-41d4-a716-446655440034',
+        name: 'Khám định kỳ',
+        description: 'Khám sức khỏe định kỳ hàng năm',
+        imageUrl: 'https://via.placeholder.com/200x150/dc3545/ffffff?text=Khám+Định+Kỳ',
+        status: 'ACTIVE',
+    },
 ];
 
 export const mockHospitals: Hospital[] = [
