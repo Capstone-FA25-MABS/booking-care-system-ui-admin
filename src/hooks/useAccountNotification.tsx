@@ -61,7 +61,7 @@ export const useAccountNotification = (accessToken: string | null) => {
                 setTimeout(async () => {
                     await dispatch(logoutAsync()).unwrap();
                     dispatch(clearAllUserProfiles()); // Clear user profile from state
-                    window.location.href = '/login';
+                    globalThis.location.href = '/login';
                 }, 2000);
             } else if (eventType === 'account_activated' || eventType === 'account_unlocked') {
                 toast.success(message || 'Your account has been reactivated.');

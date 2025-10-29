@@ -56,8 +56,11 @@ const MenuItem: React.FC<MenuItemProps> = ({
                     <span className="menu-arrow"></span>
                 </a>
                 <ul className={clsx(styles.subMenuList, isOpen && styles.open)}>
-                    {subItems.map((item, index) => (
-                        <li key={index} className={isLinkActive(item.link) ? 'active-item' : ''}>
+                    {subItems.map((item) => (
+                        <li
+                            key={item.link}
+                            className={isLinkActive(item.link) ? 'active-item' : ''}
+                        >
                             <Link
                                 to={item.link}
                                 className={isLinkActive(item.link) ? 'active' : ''}

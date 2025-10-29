@@ -51,6 +51,91 @@ const sortOptions = [
     { value: 'Email_desc', label: 'Email Z-A', direction: 'desc' as const },
 ];
 
+// Helper function to get toggle active title
+const getToggleActiveTitle = (isLocked: boolean, status: string): string => {
+    if (isLocked) {
+        return 'Không thể thay đổi trạng thái khi tài khoản đang bị khóa';
+    }
+    return status === 'ACTIVE'
+        ? 'Bật (Hoạt động) - Click để tắt'
+        : 'Tắt (Vô hiệu hóa) - Click để bật';
+};
+
+// Helper function to get toggle lock title
+const getToggleLockTitle = (isLocked: boolean): string => {
+    return isLocked ? 'Đang khóa - Click để mở khóa' : 'Đang mở - Click để khóa tài khoản';
+};
+
+// Skeleton row component for loading state
+const SkeletonRow: React.FC = () => {
+    const skeletonClass = 'bg-light rounded placeholder-glow';
+    const skeletonStyle = {
+        animation: 'pulse 1.5s ease-in-out infinite',
+    };
+
+    return (
+        <tr>
+            {/* Column 1: Name with Avatar */}
+            <td>
+                <div className="d-flex align-items-center">
+                    <div
+                        className="avatar me-2 bg-light rounded-circle placeholder-glow"
+                        style={{ width: '40px', height: '40px', ...skeletonStyle }}
+                    />
+                    <div className="flex-grow-1">
+                        <div
+                            className={`${skeletonClass} mb-2`}
+                            style={{ height: '14px', width: '120px', ...skeletonStyle }}
+                        />
+                    </div>
+                </div>
+            </td>
+            {/* Column 2: Email */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '14px', width: '180px', ...skeletonStyle }}
+                />
+            </td>
+            {/* Column 3: Phone */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '14px', width: '100px', ...skeletonStyle }}
+                />
+            </td>
+            {/* Column 4: Address */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '14px', width: '150px', ...skeletonStyle }}
+                />
+            </td>
+            {/* Column 5: Toggle Active */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '24px', width: '50px', ...skeletonStyle }}
+                />
+            </td>
+            {/* Column 6: Toggle Lock */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '24px', width: '50px', ...skeletonStyle }}
+                />
+            </td>
+            {/* Column 7: Status Badge */}
+            <td>
+                <div
+                    className={skeletonClass}
+                    style={{ height: '24px', width: '80px', ...skeletonStyle }}
+                />
+            </td>
+        </tr>
+    );
+};
+
 const AccountManagement: React.FC = () => {
     const [searchParams] = useSearchParams();
     const roleParam = searchParams.get('role');
@@ -284,16 +369,14 @@ const AccountManagement: React.FC = () => {
                     </thead>
                     <tbody>
                         {isLoading ? (
-                            <tr>
-                                <td colSpan={9} className="text-center py-5">
-                                    <div className="spinner-border text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                </td>
-                            </tr>
+                            <>
+                                {Array.from({ length: 5 }).map((_, index) => (
+                                    <SkeletonRow key={`skeleton-${index}`} />
+                                ))}
+                            </>
                         ) : accounts.length === 0 ? (
                             <tr>
-                                <td colSpan={9} className="text-center py-5">
+                                <td colSpan={7} className="text-center py-5">
                                     <div className="text-muted">
                                         <i className="ti ti-database-off fs-48 mb-2 d-block" />
                                         <p className="mb-0">Không có dữ liệu</p>
@@ -305,7 +388,7 @@ const AccountManagement: React.FC = () => {
                                 <tr key={account.accountId}>
                                     <td>
                                         <div className="d-flex align-items-center">
-                                            <a href="javascript:void(0);" className="avatar me-2">
+                                            <span className="avatar me-2">
                                                 {account.avatarUrl ? (
                                                     <img
                                                         src={account.avatarUrl}
@@ -317,12 +400,12 @@ const AccountManagement: React.FC = () => {
                                                         {account.fullName.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
-                                            </a>
+                                            </span>
                                             <div>
                                                 <h6 className="mb-1 fs-14 fw-semibold">
-                                                    <a href="javascript:void(0);">
+                                                    <span className="text-dark">
                                                         {account.fullName}
-                                                    </a>
+                                                    </span>
                                                 </h6>
                                             </div>
                                         </div>
@@ -344,13 +427,10 @@ const AccountManagement: React.FC = () => {
                                                     handleToggleBanUnban(account.accountId)
                                                 }
                                                 disabled={account.isLocked}
-                                                title={
-                                                    account.isLocked
-                                                        ? 'Không thể thay đổi trạng thái khi tài khoản đang bị khóa'
-                                                        : account.status === 'ACTIVE'
-                                                          ? 'Bật (Hoạt động) - Click để tắt'
-                                                          : 'Tắt (Vô hiệu hóa) - Click để bật'
-                                                }
+                                                title={getToggleActiveTitle(
+                                                    account.isLocked,
+                                                    account.status
+                                                )}
                                             />
                                         </div>
                                     </td>
@@ -368,11 +448,7 @@ const AccountManagement: React.FC = () => {
                                                         ? handleUnlockAccount(account.accountId)
                                                         : handleLockAccount(account.accountId)
                                                 }
-                                                title={
-                                                    account.isLocked
-                                                        ? 'Đang khóa - Click để mở khóa'
-                                                        : 'Đang mở - Click để khóa tài khoản'
-                                                }
+                                                title={getToggleLockTitle(account.isLocked)}
                                             />
                                         </div>
                                     </td>
@@ -396,6 +472,18 @@ const AccountManagement: React.FC = () => {
             {/* Footer Start */}
             <AppFooter />
             {/* Footer End */}
+
+            {/* Skeleton Loading Animation */}
+            <style>{`
+                @keyframes pulse {
+                    0%, 100% {
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 0.5;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
