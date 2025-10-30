@@ -100,6 +100,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         title: 'Management',
         items: [
             createSimpleMenuItem(
+                'Đăng ký bệnh viện',
+                'ti ti-building-hospital',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT)
+            ),
+            createSimpleMenuItem(
                 'Học vị',
                 'ti ti-certificate',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.POSITIONS.ROOT)
