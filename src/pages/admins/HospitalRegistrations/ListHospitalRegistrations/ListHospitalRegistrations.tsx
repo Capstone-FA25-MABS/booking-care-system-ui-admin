@@ -29,6 +29,22 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     fileName,
     onClose,
 }) => {
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen) {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     // Check file type from URL instead of fileName
@@ -45,16 +61,10 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         <div
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={onClose}
-            onKeyDown={(e) => e.key === 'Escape' && onClose()}
-            role="button"
-            tabIndex={0}
-            aria-label="Close modal"
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered"
-                onClick={(e) => e.stopPropagation()}
-                role="document"
+                role="dialog"
                 aria-modal="true"
                 aria-labelledby="file-preview-modal-title"
             >

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { rejectRegistration } from '@/services/hospital-registration.service';
 
@@ -19,6 +19,29 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
 }) => {
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleClose = useCallback(() => {
+        if (!isSubmitting) {
+            setReason('');
+            onClose();
+        }
+    }, [isSubmitting, onClose]);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isOpen && !isSubmitting) {
+                handleClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscape);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isOpen, isSubmitting, handleClose]);
 
     if (!isOpen) return null;
 
@@ -72,27 +95,14 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
         }
     };
 
-    const handleClose = () => {
-        if (!isSubmitting) {
-            setReason('');
-            onClose();
-        }
-    };
-
     return (
         <div
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={handleClose}
-            onKeyDown={(e) => e.key === 'Escape' && handleClose()}
-            role="button"
-            tabIndex={0}
-            aria-label="Close modal"
         >
             <div
                 className="modal-dialog modal-dialog-centered"
-                onClick={(e) => e.stopPropagation()}
-                role="document"
+                role="dialog"
                 aria-modal="true"
                 aria-labelledby="rejection-modal-title"
             >
