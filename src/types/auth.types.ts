@@ -85,4 +85,26 @@ export interface AuthState {
     emailConfirmed: boolean;
     phoneConfirmed: boolean;
     hasExternalProvider: boolean;
+    accessToken: string | null; // Store access token for SignalR authentication
+}
+
+// Account Management types
+export interface Account {
+    accountId: string;
+    email: string;
+    fullName: string;
+    avatarUrl?: string;
+    phone?: string;
+    address?: string;
+    status: string;
+    createdAt: string;
+    isLocked: boolean;
+}
+
+export interface AccountManagementResponse {
+    accounts: Account[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+    totalPages: number;
 }
