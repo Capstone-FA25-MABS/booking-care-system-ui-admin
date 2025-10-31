@@ -42,15 +42,18 @@
 .priceContainer {
     display: flex;
     align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem;
 }
 
 .price {
     margin-bottom: 0;
     font-weight: bold;
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     color: #1a1a1a;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .priceSubtext {
@@ -58,6 +61,34 @@
     color: #6c757d;
     font-size: 1rem;
     white-space: nowrap;
+}
+
+.dateInfo {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.dateText {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #495057;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.dateLabel {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-right: 0.25rem;
+}
+
+.dateSeparator {
+    color: #6c757d;
+    font-weight: 300;
 }
 
 .badge {
@@ -128,10 +159,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #27ae60;
     min-width: 20px;
     height: 20px;
     margin-right: 0.5rem;
+}
+
+.checkIcon {
+    color: #27ae60;
+}
+
+.plusIcon {
+    color: #2e37a4;
 }
 
 .featureContent {

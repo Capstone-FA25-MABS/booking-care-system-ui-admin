@@ -42,6 +42,11 @@ export const PATHS = {
         SERVICE_TYPES: {
             ROOT: 'service-types',
         },
+        SUBSCRIPTION_PLANS: {
+            ROOT: 'subscription-plans',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
     },
 
     // Hospital paths

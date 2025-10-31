@@ -96,6 +96,28 @@ export const createDoctorsMenuItem = (): MenuItem => ({
 });
 
 /**
+ * Create Subscription Plans menu item (Admin only)
+ */
+export const createSubscriptionPlansMenuItem = (): MenuItem => ({
+    label: 'Gói dịch vụ',
+    icon: 'ti ti-package',
+    subItems: [
+        {
+            label: 'Danh sách gói dịch vụ',
+            link: buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT),
+        },
+        {
+            label: 'Thêm gói dịch vụ',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT,
+                PATHS.ADMIN.SUBSCRIPTION_PLANS.ADD
+            ),
+        },
+    ],
+});
+
+/**
  * Create Dashboard menu item for Admin with multiple dashboards
  */
 export const createDashboardMenuItem = (): MenuItem => ({

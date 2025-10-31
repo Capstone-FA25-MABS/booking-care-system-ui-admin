@@ -1,6 +1,7 @@
 import React from 'react';
 import StatusSelect from '@/components/FormComponents/StatusSelect';
 import NameInput from '@/components/FormComponents/NameInput';
+import FeaturesInput from '@/components/FormComponents/FeaturesInput';
 
 interface EntityModalProps {
     show: boolean;
@@ -10,12 +11,27 @@ interface EntityModalProps {
         description?: string; // Optional description field
         imageUrl?: string; // Optional for entities that don't need image
         status: 'ACTIVE' | 'INACTIVE';
+        // Subscription Plan specific fields
+        price?: string;
+        billingCycle?: string;
+        maxDoctors?: string;
+        maxSpecialties?: string;
+        maxAppointments?: string;
+        features?: string;
+        autoRenew?: boolean;
     };
     validationErrors: {
         name?: string;
         description?: string;
         imageUrl?: string;
         status?: string;
+        price?: string;
+        billingCycle?: string;
+        maxDoctors?: string;
+        maxSpecialties?: string;
+        maxAppointments?: string;
+        features?: string;
+        autoRenew?: string;
     };
     isSubmitting: boolean;
     modalMode: 'add' | 'edit';
@@ -27,9 +43,18 @@ interface EntityModalProps {
     onStatusChange: (value: 'ACTIVE' | 'INACTIVE') => void;
     onRemoveImage?: () => void;
     imagePreview?: string;
-    entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ', 'Chuyên Khoa'
+    entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ', 'Chuyên Khoa', 'Gói Dịch Vụ'
     hasImageUpload?: boolean; // Flag to show/hide image upload section
     hasDescription?: boolean; // Flag to show/hide description field
+    // Subscription Plan specific props
+    isSubscriptionPlan?: boolean; // Flag to show subscription plan fields
+    onPriceChange?: (value: string) => void;
+    onBillingCycleChange?: (value: string) => void;
+    onMaxDoctorsChange?: (value: string) => void;
+    onMaxSpecialtiesChange?: (value: string) => void;
+    onMaxAppointmentsChange?: (value: string) => void;
+    onFeaturesChange?: (value: string) => void;
+    onAutoRenewChange?: (value: boolean) => void;
     styles: {
         modal: string;
         'modal-content': string;
@@ -56,6 +81,14 @@ const EntityModal: React.FC<EntityModalProps> = ({
     entityName,
     hasImageUpload = false,
     hasDescription = false,
+    isSubscriptionPlan = false,
+    onPriceChange,
+    onBillingCycleChange,
+    onMaxDoctorsChange,
+    onMaxSpecialtiesChange,
+    onMaxAppointmentsChange,
+    onFeaturesChange,
+    onAutoRenewChange,
     styles,
 }) => {
     if (!show) return null;
@@ -219,6 +252,211 @@ const EntityModal: React.FC<EntityModalProps> = ({
                                                 </div>
                                             </div>
                                         )}
+                                    </>
+                                )}
+
+                                {/* Subscription Plan Specific Fields */}
+                                {isSubscriptionPlan && (
+                                    <>
+                                        {/* Price Field */}
+                                        <div className="col-md-6">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-price"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Giá (VNĐ) <span className="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    id="subscription-plan-price"
+                                                    className={`form-control ${validationErrors.price ? 'is-invalid' : ''}`}
+                                                    placeholder="Nhập giá gói dịch vụ"
+                                                    value={formData.price || ''}
+                                                    onChange={(e) =>
+                                                        onPriceChange?.(e.target.value)
+                                                    }
+                                                    min="0"
+                                                    step="1000"
+                                                    required
+                                                />
+                                                {validationErrors.price && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.price}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Billing Cycle Field */}
+                                        <div className="col-md-6">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-billing-cycle"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Chu Kỳ Thanh Toán{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <select
+                                                    id="subscription-plan-billing-cycle"
+                                                    className={`form-select ${validationErrors.billingCycle ? 'is-invalid' : ''}`}
+                                                    value={formData.billingCycle || ''}
+                                                    onChange={(e) =>
+                                                        onBillingCycleChange?.(e.target.value)
+                                                    }
+                                                    required
+                                                >
+                                                    <option value="">Chọn chu kỳ thanh toán</option>
+                                                    <option value="MONTHLY">Hàng tháng</option>
+                                                    <option value="QUARTERLY">Hàng quý</option>
+                                                    <option value="YEARLY">Hàng năm</option>
+                                                </select>
+                                                {validationErrors.billingCycle && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.billingCycle}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Max Doctors Field */}
+                                        <div className="col-md-4">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-max-doctors"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Số Bác Sĩ Tối Đa{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    id="subscription-plan-max-doctors"
+                                                    className={`form-control ${validationErrors.maxDoctors ? 'is-invalid' : ''}`}
+                                                    placeholder="Nhập số bác sĩ tối đa"
+                                                    value={formData.maxDoctors || ''}
+                                                    onChange={(e) =>
+                                                        onMaxDoctorsChange?.(e.target.value)
+                                                    }
+                                                    min="0"
+                                                    required
+                                                />
+                                                {validationErrors.maxDoctors && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.maxDoctors}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Max Specialties Field */}
+                                        <div className="col-md-4">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-max-specialties"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Số Chuyên Khoa Tối Đa{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    id="subscription-plan-max-specialties"
+                                                    className={`form-control ${validationErrors.maxSpecialties ? 'is-invalid' : ''}`}
+                                                    placeholder="Nhập số chuyên khoa tối đa"
+                                                    value={formData.maxSpecialties || ''}
+                                                    onChange={(e) =>
+                                                        onMaxSpecialtiesChange?.(e.target.value)
+                                                    }
+                                                    min="0"
+                                                    required
+                                                />
+                                                {validationErrors.maxSpecialties && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.maxSpecialties}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Max Appointments Field */}
+                                        <div className="col-md-4">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-max-appointments"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Số Lịch Hẹn Tối Đa{' '}
+                                                    <span className="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    id="subscription-plan-max-appointments"
+                                                    className={`form-control ${validationErrors.maxAppointments ? 'is-invalid' : ''}`}
+                                                    placeholder="Nhập số lịch hẹn tối đa"
+                                                    value={formData.maxAppointments || ''}
+                                                    onChange={(e) =>
+                                                        onMaxAppointmentsChange?.(e.target.value)
+                                                    }
+                                                    min="0"
+                                                    required
+                                                />
+                                                {validationErrors.maxAppointments && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.maxAppointments}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Features Field */}
+                                        <div className="col-12">
+                                            <div className="mb-4">
+                                                <label
+                                                    htmlFor="subscription-plan-features"
+                                                    className="form-label fw-semibold text-dark mb-2"
+                                                >
+                                                    Tính Năng
+                                                </label>
+                                                <FeaturesInput
+                                                    value={formData.features || ''}
+                                                    onChange={(jsonString) =>
+                                                        onFeaturesChange?.(jsonString)
+                                                    }
+                                                    validationError={validationErrors.features}
+                                                    styles={styles}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Auto Renew Field */}
+                                        <div className="col-md-6">
+                                            <div className="mb-4">
+                                                <div className="form-check">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="subscription-plan-auto-renew"
+                                                        className={`form-check-input ${validationErrors.autoRenew ? 'is-invalid' : ''}`}
+                                                        checked={formData.autoRenew || false}
+                                                        onChange={(e) =>
+                                                            onAutoRenewChange?.(e.target.checked)
+                                                        }
+                                                    />
+                                                    <label
+                                                        htmlFor="subscription-plan-auto-renew"
+                                                        className="form-check-label fw-semibold text-dark"
+                                                    >
+                                                        Tự Động Gia Hạn
+                                                    </label>
+                                                </div>
+                                                {validationErrors.autoRenew && (
+                                                    <div className={styles.invalidFeedback}>
+                                                        {validationErrors.autoRenew}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </>
                                 )}
 
