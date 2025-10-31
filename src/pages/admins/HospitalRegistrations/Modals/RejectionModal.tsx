@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { rejectRegistration } from '@/services/hospital-registration.service';
 import { useModalEscape } from '@/hooks/useModalEscape';
+import BaseModal from '@/components/Modal/BaseModal';
 
 interface RejectionModalProps {
     isOpen: boolean;
@@ -81,93 +82,72 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
     };
 
     return (
-        <div
-            className="modal fade show"
-            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+        <BaseModal
+            isOpen={isOpen}
+            title="Từ Chối Đơn Đăng Ký"
+            titleId="rejection-modal-title"
+            onClose={handleClose}
         >
-            <div
-                className="modal-dialog modal-dialog-centered"
-                aria-modal="true"
-                aria-labelledby="rejection-modal-title"
-            >
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title" id="rejection-modal-title">
-                            Từ Chối Đơn Đăng Ký
-                        </h5>
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
+            <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                    <p className="mb-3">
+                        <strong>Bệnh viện:</strong> {hospitalName}
+                    </p>
+                    <div className="alert alert-warning">
+                        <i className="ti ti-alert-triangle me-2"></i> Bệnh viện sẽ nhận được email
+                        thông báo về lý do từ chối.
                     </div>
-                    <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                            <p className="mb-3">
-                                <strong>Bệnh viện:</strong> {hospitalName}
-                            </p>
-                            <div className="alert alert-warning">
-                                <i className="ti ti-alert-triangle me-2"></i> Bệnh viện sẽ nhận được
-                                email thông báo về lý do từ chối.
-                            </div>
-                            <div className="mb-3">
-                                <label htmlFor="rejectionReason" className="form-label">
-                                    Lý do từ chối <span className="text-danger">*</span>
-                                </label>
-                                <textarea
-                                    className="form-control"
-                                    id="rejectionReason"
-                                    rows={5}
-                                    value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
-                                    placeholder="Nhập lý do từ chối đơn đăng ký..."
-                                    maxLength={1000}
-                                    required
-                                    aria-describedby="char-count"
-                                />
-                                <output
-                                    id="char-count"
-                                    className="text-muted small"
-                                    aria-live="polite"
-                                >
-                                    {reason.length}/1000 ký tự (Tối thiểu 10 ký tự)
-                                </output>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={handleClose}
-                                disabled={isSubmitting}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="submit"
-                                className="btn btn-danger"
-                                disabled={isSubmitting || reason.trim().length < 10}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <span
-                                            className="spinner-border spinner-border-sm me-2"
-                                            aria-hidden="true"
-                                        ></span>{' '}
-                                        Đang xử lý...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="ti ti-x me-2"></i> Từ Chối
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
+                    <div className="mb-3">
+                        <label htmlFor="rejectionReason" className="form-label">
+                            Lý do từ chối <span className="text-danger">*</span>
+                        </label>
+                        <textarea
+                            className="form-control"
+                            id="rejectionReason"
+                            rows={5}
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="Nhập lý do từ chối đơn đăng ký..."
+                            maxLength={1000}
+                            required
+                            aria-describedby="char-count"
+                        />
+                        <output id="char-count" className="text-muted small" aria-live="polite">
+                            {reason.length}/1000 ký tự (Tối thiểu 10 ký tự)
+                        </output>
+                    </div>
                 </div>
-            </div>
-        </div>
+                <div className="modal-footer">
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-danger"
+                        disabled={isSubmitting || reason.trim().length < 10}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    aria-hidden="true"
+                                ></span>{' '}
+                                Đang xử lý...
+                            </>
+                        ) : (
+                            <>
+                                <i className="ti ti-x me-2"></i> Từ Chối
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
+        </BaseModal>
     );
 };
 

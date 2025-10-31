@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { approveRegistration } from '@/services/hospital-registration.service';
 import { useModalEscape } from '@/hooks/useModalEscape';
+import BaseModal from '@/components/Modal/BaseModal';
 
 interface ApprovalModalProps {
     isOpen: boolean;
@@ -82,93 +83,74 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
     };
 
     return (
-        <div
-            className="modal fade show"
-            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+        <BaseModal
+            isOpen={isOpen}
+            title="Phê Duyệt Đơn Đăng Ký"
+            titleId="approval-modal-title"
+            onClose={handleClose}
         >
-            <div
-                className="modal-dialog modal-dialog-centered"
-                aria-modal="true"
-                aria-labelledby="approval-modal-title"
-            >
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title" id="approval-modal-title">
-                            Phê Duyệt Đơn Đăng Ký
-                        </h5>
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
+            <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                    <p className="mb-3">
+                        <strong>Bệnh viện:</strong> {hospitalName}
+                    </p>
+                    <div className="alert alert-info">
+                        <i className="ti ti-info-circle me-2"></i> Sau khi phê duyệt, hệ thống sẽ tự
+                        động tạo tài khoản cho bệnh viện và gửi email thông tin đăng nhập.
                     </div>
-                    <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                            <p className="mb-3">
-                                <strong>Bệnh viện:</strong> {hospitalName}
-                            </p>
-                            <div className="alert alert-info">
-                                <i className="ti ti-info-circle me-2"></i> Sau khi phê duyệt, hệ
-                                thống sẽ tự động tạo tài khoản cho bệnh viện và gửi email thông tin
-                                đăng nhập.
-                            </div>
-                            <div className="mb-3">
-                                <label htmlFor="contractFile" className="form-label">
-                                    Hợp đồng hợp tác <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                    type="file"
-                                    className="form-control"
-                                    id="contractFile"
-                                    accept=".pdf,.doc,.docx"
-                                    onChange={handleFileChange}
-                                    required
-                                />
-                                <small className="text-muted">
-                                    Chấp nhận file: PDF, DOC, DOCX (Tối đa 10MB)
-                                </small>
-                            </div>
-                            {contractFile && (
-                                <output className="alert alert-success" aria-live="polite">
-                                    <i className="ti ti-file-check me-2"></i> Đã chọn:{' '}
-                                    {contractFile.name}
-                                </output>
-                            )}
-                        </div>
-                        <div className="modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={handleClose}
-                                disabled={isSubmitting}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="submit"
-                                className="btn btn-success"
-                                disabled={isSubmitting || !contractFile}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <span
-                                            className="spinner-border spinner-border-sm me-2"
-                                            aria-hidden="true"
-                                        ></span>{' '}
-                                        Đang xử lý...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="ti ti-check me-2"></i> Phê Duyệt
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
+                    <div className="mb-3">
+                        <label htmlFor="contractFile" className="form-label">
+                            Hợp đồng hợp tác <span className="text-danger">*</span>
+                        </label>
+                        <input
+                            type="file"
+                            className="form-control"
+                            id="contractFile"
+                            accept=".pdf,.doc,.docx"
+                            onChange={handleFileChange}
+                            required
+                        />
+                        <small className="text-muted">
+                            Chấp nhận file: PDF, DOC, DOCX (Tối đa 10MB)
+                        </small>
+                    </div>
+                    {contractFile && (
+                        <output className="alert alert-success" aria-live="polite">
+                            <i className="ti ti-file-check me-2"></i> Đã chọn: {contractFile.name}
+                        </output>
+                    )}
                 </div>
-            </div>
-        </div>
+                <div className="modal-footer">
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-success"
+                        disabled={isSubmitting || !contractFile}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    aria-hidden="true"
+                                ></span>{' '}
+                                Đang xử lý...
+                            </>
+                        ) : (
+                            <>
+                                <i className="ti ti-check me-2"></i> Phê Duyệt
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
+        </BaseModal>
     );
 };
 
