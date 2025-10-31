@@ -47,13 +47,11 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
             onKeyDown={(e) => e.key === 'Escape' && onClose()}
-            role="presentation"
             tabIndex={-1}
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby="file-preview-modal-title"
             >
@@ -102,7 +100,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                                         className="alert-link"
                                     >
                                         tải xuống file
-                                    </a>
+                                    </a>{' '}
                                     .
                                 </div>
                             </div>

@@ -86,13 +86,11 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={handleClose}
             onKeyDown={(e) => e.key === 'Escape' && handleClose()}
-            role="presentation"
             tabIndex={-1}
         >
             <div
                 className="modal-dialog modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby="approval-modal-title"
             >
@@ -159,7 +157,6 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
                                     <>
                                         <span
                                             className="spinner-border spinner-border-sm me-2"
-                                            role="status"
                                             aria-hidden="true"
                                         ></span>{' '}
                                         Đang xử lý...
