@@ -85,11 +85,14 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={handleClose}
             onKeyDown={(e) => e.key === 'Escape' && handleClose()}
-            tabIndex={-1}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
         >
             <div
                 className="modal-dialog modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
+                role="document"
                 aria-modal="true"
                 aria-labelledby="rejection-modal-title"
             >

@@ -47,11 +47,14 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
             onKeyDown={(e) => e.key === 'Escape' && onClose()}
-            tabIndex={-1}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
+                role="document"
                 aria-modal="true"
                 aria-labelledby="file-preview-modal-title"
             >
