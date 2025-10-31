@@ -84,14 +84,22 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={handleClose}
+            onKeyDown={(e) => e.key === 'Escape' && handleClose()}
+            role="presentation"
+            tabIndex={-1}
         >
             <div
                 className="modal-dialog modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="rejection-modal-title"
             >
                 <div className="modal-content">
                     <div className="modal-header">
-                        <h5 className="modal-title">Từ Chối Đơn Đăng Ký</h5>
+                        <h5 className="modal-title" id="rejection-modal-title">
+                            Từ Chối Đơn Đăng Ký
+                        </h5>
                         <button
                             type="button"
                             className="btn-close"
@@ -105,8 +113,8 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
                                 <strong>Bệnh viện:</strong> {hospitalName}
                             </p>
                             <div className="alert alert-warning">
-                                <i className="ti ti-alert-triangle me-2"></i>
-                                Bệnh viện sẽ nhận được email thông báo về lý do từ chối.
+                                <i className="ti ti-alert-triangle me-2"></i> Bệnh viện sẽ nhận được
+                                email thông báo về lý do từ chối.
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="rejectionReason" className="form-label">
@@ -121,10 +129,15 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
                                     placeholder="Nhập lý do từ chối đơn đăng ký..."
                                     maxLength={1000}
                                     required
+                                    aria-describedby="char-count"
                                 />
-                                <small className="text-muted">
+                                <output
+                                    id="char-count"
+                                    className="text-muted small"
+                                    aria-live="polite"
+                                >
                                     {reason.length}/1000 ký tự (Tối thiểu 10 ký tự)
-                                </small>
+                                </output>
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -147,13 +160,12 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
                                             className="spinner-border spinner-border-sm me-2"
                                             role="status"
                                             aria-hidden="true"
-                                        ></span>
+                                        ></span>{' '}
                                         Đang xử lý...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="ti ti-x me-2"></i>
-                                        Từ Chối
+                                        <i className="ti ti-x me-2"></i> Từ Chối
                                     </>
                                 )}
                             </button>

@@ -46,14 +46,22 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
+            onKeyDown={(e) => e.key === 'Escape' && onClose()}
+            role="presentation"
+            tabIndex={-1}
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="file-preview-modal-title"
             >
                 <div className="modal-content">
                     <div className="modal-header">
-                        <h5 className="modal-title">{fileName}</h5>
+                        <h5 className="modal-title" id="file-preview-modal-title">
+                            {fileName}
+                        </h5>
                         <button
                             type="button"
                             className="btn-close"
@@ -85,9 +93,8 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                                     style={{ width: '100%', height: '70vh', border: 'none' }}
                                 />
                                 <div className="alert alert-info mt-3 mb-0">
-                                    <i className="ti ti-info-circle me-2"></i>
-                                    Preview được cung cấp bởi Google Docs Viewer. Nếu không hiển
-                                    thị, vui lòng{' '}
+                                    <i className="ti ti-info-circle me-2"></i> Preview được cung cấp
+                                    bởi Google Docs Viewer. Nếu không hiển thị, vui lòng{' '}
                                     <a
                                         href={fileUrl}
                                         target="_blank"
@@ -110,8 +117,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                                     rel="noopener noreferrer"
                                     className="btn btn-primary"
                                 >
-                                    <i className="ti ti-download me-2"></i>
-                                    Tải xuống
+                                    <i className="ti ti-download me-2"></i> Tải xuống
                                 </a>
                             </div>
                         )}
@@ -123,8 +129,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                             rel="noopener noreferrer"
                             className="btn btn-primary"
                         >
-                            <i className="ti ti-external-link me-2"></i>
-                            Mở trong tab mới
+                            <i className="ti ti-external-link me-2"></i> Mở trong tab mới
                         </a>
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
                             Đóng
@@ -403,8 +408,7 @@ const ListHospitalRegistrations: React.FC = () => {
                                     }
                                     title="Xem giấy phép hoạt động"
                                 >
-                                    <i className="ti ti-license me-1"></i>
-                                    GP
+                                    <i className="ti ti-license me-1"></i> GP
                                 </button>
                             )}
                         {registration.businessCertificateFile &&
@@ -421,8 +425,7 @@ const ListHospitalRegistrations: React.FC = () => {
                                     }
                                     title="Xem giấy chứng nhận ĐKKD"
                                 >
-                                    <i className="ti ti-certificate me-1"></i>
-                                    ĐKKD
+                                    <i className="ti ti-certificate me-1"></i> ĐKKD
                                 </button>
                             )}
                         {registration.identityCardFile &&
@@ -439,24 +442,21 @@ const ListHospitalRegistrations: React.FC = () => {
                                     }
                                     title="Xem CMND/CCCD"
                                 >
-                                    <i className="ti ti-id me-1"></i>
-                                    CMND
+                                    <i className="ti ti-id me-1"></i> CMND
                                 </button>
                             )}
                         {(registration.licenseFile === 'PENDING_UPLOAD' ||
                             registration.businessCertificateFile === 'PENDING_UPLOAD' ||
                             registration.identityCardFile === 'PENDING_UPLOAD') && (
                             <span className="badge bg-warning text-dark">
-                                <i className="ti ti-clock me-1"></i>
-                                Đang tải...
+                                <i className="ti ti-clock me-1"></i> Đang tải...
                             </span>
                         )}
                         {(registration.licenseFile === 'UPLOAD_FAILED' ||
                             registration.businessCertificateFile === 'UPLOAD_FAILED' ||
                             registration.identityCardFile === 'UPLOAD_FAILED') && (
                             <span className="badge bg-danger">
-                                <i className="ti ti-alert-triangle me-1"></i>
-                                Lỗi tải file
+                                <i className="ti ti-alert-triangle me-1"></i> Lỗi tải file
                             </span>
                         )}
                     </div>
@@ -472,8 +472,7 @@ const ListHospitalRegistrations: React.FC = () => {
                             }
                             title="Xem hợp đồng hợp tác"
                         >
-                            <i className="ti ti-file-text me-1"></i>
-                            Hợp đồng
+                            <i className="ti ti-file-text me-1"></i> Hợp đồng
                         </button>
                     ) : (
                         <span className="badge badge-outline-info">Chưa cập nhập</span>
@@ -497,8 +496,7 @@ const ListHospitalRegistrations: React.FC = () => {
                                 }
                                 title="Phê duyệt"
                             >
-                                <i className="ti ti-check me-1"></i>
-                                Phê duyệt
+                                <i className="ti ti-check me-1"></i> Phê duyệt
                             </button>
                             <button
                                 type="button"
@@ -508,8 +506,7 @@ const ListHospitalRegistrations: React.FC = () => {
                                 }
                                 title="Từ chối"
                             >
-                                <i className="ti ti-x me-1"></i>
-                                Từ chối
+                                <i className="ti ti-x me-1"></i> Từ chối
                             </button>
                         </div>
                     )}

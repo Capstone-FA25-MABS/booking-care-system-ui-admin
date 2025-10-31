@@ -23,8 +23,9 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
     if (!isOpen) return null;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setContractFile(e.target.files[0]);
+        const file = e.target.files?.[0];
+        if (file) {
+            setContractFile(file);
         }
     };
 
@@ -84,14 +85,22 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={handleClose}
+            onKeyDown={(e) => e.key === 'Escape' && handleClose()}
+            role="presentation"
+            tabIndex={-1}
         >
             <div
                 className="modal-dialog modal-dialog-centered"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="approval-modal-title"
             >
                 <div className="modal-content">
                     <div className="modal-header">
-                        <h5 className="modal-title">Phê Duyệt Đơn Đăng Ký</h5>
+                        <h5 className="modal-title" id="approval-modal-title">
+                            Phê Duyệt Đơn Đăng Ký
+                        </h5>
                         <button
                             type="button"
                             className="btn-close"
@@ -105,9 +114,9 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
                                 <strong>Bệnh viện:</strong> {hospitalName}
                             </p>
                             <div className="alert alert-info">
-                                <i className="ti ti-info-circle me-2"></i>
-                                Sau khi phê duyệt, hệ thống sẽ tự động tạo tài khoản cho bệnh viện
-                                và gửi email thông tin đăng nhập.
+                                <i className="ti ti-info-circle me-2"></i> Sau khi phê duyệt, hệ
+                                thống sẽ tự động tạo tài khoản cho bệnh viện và gửi email thông tin
+                                đăng nhập.
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="contractFile" className="form-label">
@@ -126,10 +135,10 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
                                 </small>
                             </div>
                             {contractFile && (
-                                <div className="alert alert-success">
-                                    <i className="ti ti-file-check me-2"></i>
-                                    Đã chọn: {contractFile.name}
-                                </div>
+                                <output className="alert alert-success" aria-live="polite">
+                                    <i className="ti ti-file-check me-2"></i> Đã chọn:{' '}
+                                    {contractFile.name}
+                                </output>
                             )}
                         </div>
                         <div className="modal-footer">
@@ -152,13 +161,12 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
                                             className="spinner-border spinner-border-sm me-2"
                                             role="status"
                                             aria-hidden="true"
-                                        ></span>
+                                        ></span>{' '}
                                         Đang xử lý...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="ti ti-check me-2"></i>
-                                        Phê Duyệt
+                                        <i className="ti ti-check me-2"></i> Phê Duyệt
                                     </>
                                 )}
                             </button>
