@@ -64,7 +64,6 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered"
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby="file-preview-modal-title"
             >

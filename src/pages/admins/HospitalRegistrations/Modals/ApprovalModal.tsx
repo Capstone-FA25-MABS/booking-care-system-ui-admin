@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { approveRegistration } from '@/services/hospital-registration.service';
+import { useModalEscape } from '@/hooks/useModalEscape';
 
 interface ApprovalModalProps {
     isOpen: boolean;
@@ -20,28 +21,12 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
     const [contractFile, setContractFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleClose = useCallback(() => {
-        if (!isSubmitting) {
-            setContractFile(null);
-            onClose();
-        }
-    }, [isSubmitting, onClose]);
+    const handleCloseWithCleanup = () => {
+        setContractFile(null);
+        onClose();
+    };
 
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen && !isSubmitting) {
-                handleClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-        }
-
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen, isSubmitting, handleClose]);
+    const handleClose = useModalEscape(isOpen, handleCloseWithCleanup, isSubmitting);
 
     if (!isOpen) return null;
 
@@ -103,7 +88,6 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
         >
             <div
                 className="modal-dialog modal-dialog-centered"
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby="approval-modal-title"
             >

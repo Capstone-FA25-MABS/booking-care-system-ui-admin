@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { rejectRegistration } from '@/services/hospital-registration.service';
+import { useModalEscape } from '@/hooks/useModalEscape';
 
 interface RejectionModalProps {
     isOpen: boolean;
@@ -20,28 +21,12 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleClose = useCallback(() => {
-        if (!isSubmitting) {
-            setReason('');
-            onClose();
-        }
-    }, [isSubmitting, onClose]);
+    const handleCloseWithCleanup = () => {
+        setReason('');
+        onClose();
+    };
 
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen && !isSubmitting) {
-                handleClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-        }
-
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen, isSubmitting, handleClose]);
+    const handleClose = useModalEscape(isOpen, handleCloseWithCleanup, isSubmitting);
 
     if (!isOpen) return null;
 
@@ -102,7 +87,6 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
         >
             <div
                 className="modal-dialog modal-dialog-centered"
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby="rejection-modal-title"
             >
