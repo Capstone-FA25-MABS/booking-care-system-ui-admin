@@ -26,12 +26,13 @@ const validateRoles = (response: any, rejectWithValue: any) => {
                 'Tài khoản của bạn không có quyền truy cập vào cổng quản trị này.'
             );
         }
-        // Return all JWT information
+        // Return all JWT information including token
         return {
             roles,
             emailConfirmed: jwtInfo.emailConfirmed,
             phoneConfirmed: jwtInfo.phoneConfirmed,
             hasExternalProvider: jwtInfo.hasExternalProvider,
+            accessToken: token,
         };
     }
     return null; // No error
@@ -45,6 +46,7 @@ const handleValidationResult = (validationResult: any) => {
             emailConfirmed: validationResult.emailConfirmed,
             phoneConfirmed: validationResult.phoneConfirmed,
             hasExternalProvider: validationResult.hasExternalProvider,
+            accessToken: validationResult.accessToken || null,
         };
     }
     if (validationResult === null) {
@@ -53,6 +55,7 @@ const handleValidationResult = (validationResult: any) => {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            accessToken: null,
         };
     }
     return validationResult; // This is the error case
@@ -67,6 +70,7 @@ const initialState: AuthState = {
     emailConfirmed: false,
     phoneConfirmed: false,
     hasExternalProvider: false,
+    accessToken: null,
 };
 
 // Async thunks
@@ -168,6 +172,7 @@ const authSlice = createSlice({
             state.emailConfirmed = false;
             state.phoneConfirmed = false;
             state.hasExternalProvider = false;
+            state.accessToken = null;
         },
     },
     extraReducers: (builder) => {
@@ -183,6 +188,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
@@ -222,6 +228,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = false;
                 state.error = null;
                 state.isLoading = false;
+                state.accessToken = null;
             })
             // Google login cases
             .addCase(googleLoginAsync.pending, (state) => {
@@ -232,6 +239,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })
@@ -247,6 +255,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
             })

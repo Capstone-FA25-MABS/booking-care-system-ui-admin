@@ -34,6 +34,7 @@ import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
 import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
+import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 
 const routes: RouteObject[] = [
@@ -78,6 +79,10 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.PAYMENT_METHODS.ROOT,
                 children: [{ index: true, element: <PaymentMethodsManagement /> }],
+            },
+            {
+                path: PATHS.ADMIN.ACCOUNT_MANAGEMENT.ROOT,
+                children: [{ index: true, element: <AccountManagement /> }],
             },
             {
                 path: PATHS.ADMIN.SERVICE_TYPES.ROOT,

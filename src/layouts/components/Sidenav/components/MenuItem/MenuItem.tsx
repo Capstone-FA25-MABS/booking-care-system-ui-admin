@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import type { MenuSubItem } from '@/types/menu.types';
 
 import styles from './MenuItem.module.scss';
@@ -25,8 +25,14 @@ const MenuItem: React.FC<MenuItemProps> = ({
     // Check if this menu item has sub-items
     const showArrow = subItems.length > 0;
 
+    // Helper function to check if a link is active (including query params)
+    const isLinkActive = (itemLink: string): boolean => {
+        const currentPath = location.pathname + location.search;
+        return currentPath === itemLink;
+    };
+
     // Check if any sub-item is currently active
-    const hasActiveSubItem = subItems.some((item) => location.pathname === item.link);
+    const hasActiveSubItem = subItems.some((item) => isLinkActive(item.link));
 
     const handleClick = (e: React.MouseEvent) => {
         if (showArrow && onToggle) {
@@ -50,15 +56,17 @@ const MenuItem: React.FC<MenuItemProps> = ({
                     <span className="menu-arrow"></span>
                 </a>
                 <ul className={clsx(styles.subMenuList, isOpen && styles.open)}>
-                    {subItems.map((item, index) => (
-                        <li key={index}>
-                            <NavLink
+                    {subItems.map((item) => (
+                        <li
+                            key={item.link}
+                            className={isLinkActive(item.link) ? 'active-item' : ''}
+                        >
+                            <Link
                                 to={item.link}
-                                end
-                                className={({ isActive }) => (isActive ? 'active' : '')}
+                                className={isLinkActive(item.link) ? 'active' : ''}
                             >
                                 {item.label}
-                            </NavLink>
+                            </Link>
                         </li>
                     ))}
                 </ul>

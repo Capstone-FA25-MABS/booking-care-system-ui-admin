@@ -99,6 +99,30 @@ export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Management',
         items: [
+            {
+                label: 'Quản lý tài khoản',
+                icon: 'ti ti-users',
+                subItems: [
+                    {
+                        label: 'Bệnh nhân',
+                        link:
+                            buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.ACCOUNT_MANAGEMENT.ROOT) +
+                            '?role=Patient',
+                    },
+                    {
+                        label: 'Bác sĩ',
+                        link:
+                            buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.ACCOUNT_MANAGEMENT.ROOT) +
+                            '?role=Doctor',
+                    },
+                    {
+                        label: 'Bệnh viện',
+                        link:
+                            buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.ACCOUNT_MANAGEMENT.ROOT) +
+                            '?role=Staff',
+                    },
+                ],
+            },
             createSimpleMenuItem(
                 'Đăng ký bệnh viện',
                 'ti ti-building-hospital',
