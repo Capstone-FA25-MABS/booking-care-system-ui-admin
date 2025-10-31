@@ -19,7 +19,7 @@ const BaseModal: React.FC<BaseModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    const sizeClass = size !== 'md' ? `modal-${size}` : '';
+    const sizeClass = size === 'md' ? '' : `modal-${size}`;
 
     return (
         <div
