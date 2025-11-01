@@ -114,6 +114,14 @@ export const createSubscriptionPlansMenuItem = (): MenuItem => ({
                 PATHS.ADMIN.SUBSCRIPTION_PLANS.ADD
             ),
         },
+        {
+            label: 'Đăng ký gói của bệnh viện',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT,
+                PATHS.ADMIN.SUBSCRIPTION_PLANS.MANAGE_HOSPITALS
+            ),
+        },
     ],
 });
 

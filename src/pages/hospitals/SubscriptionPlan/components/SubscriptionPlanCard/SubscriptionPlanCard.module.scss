@@ -43,7 +43,39 @@
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    margin-bottom: 0.125rem;
+}
+
+.originalPriceWrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 0.25rem;
+}
+
+.originalPriceLabel {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+    white-space: nowrap;
+}
+
+.originalPrice {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: #6b7280;
+    text-decoration: line-through;
+    text-decoration-color: #9ca3af;
+    text-decoration-thickness: 2px;
+    text-decoration-style: solid;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    opacity: 0.85;
+    letter-spacing: -0.01em;
 }
 
 .price {

@@ -11,6 +11,7 @@ interface Feature {
 interface SubscriptionPlanCardProps {
     title: string;
     price: string;
+    originalPrice?: string;
     priceSubtext?: string;
     buttonText: string;
     buttonVariant: 'primary' | 'secondary';
@@ -26,6 +27,7 @@ interface SubscriptionPlanCardProps {
 const SubscriptionPlanCard = ({
     title,
     price,
+    originalPrice,
     priceSubtext,
     buttonText,
     buttonVariant,
@@ -59,6 +61,12 @@ const SubscriptionPlanCard = ({
                     <div className={styles.titleSection}>
                         <p className={styles.title}>{title}</p>
                         <div className={styles.priceContainer}>
+                            {originalPrice && (
+                                <div className={styles.originalPriceWrapper}>
+                                    <span className={styles.originalPriceLabel}>Giá gốc:</span>
+                                    <h2 className={styles.originalPrice}>{originalPrice}</h2>
+                                </div>
+                            )}
                             <h2 className={styles.price}>{price}</h2>
                             {priceSubtext && (
                                 <span className={styles.priceSubtext}>{priceSubtext}</span>

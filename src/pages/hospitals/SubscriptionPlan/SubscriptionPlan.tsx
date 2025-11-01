@@ -399,6 +399,20 @@ const SubscriptionPlan = () => {
         return `${price.toLocaleString('vi-VN')} VNĐ`;
     };
 
+    // Tính giá gốc dựa trên phần trăm tiết kiệm
+    const calculateOriginalPrice = (
+        currentPrice: number,
+        savingsPercent: number | null
+    ): number | null => {
+        if (!savingsPercent || savingsPercent <= 0) {
+            return null;
+        }
+        // Giá gốc = giá hiện tại / (1 - savingsPercent/100)
+        // Ví dụ: giá hiện tại = 80, savingsPercent = 20%
+        // Giá gốc = 80 / (1 - 20/100) = 80 / 0.8 = 100
+        return Math.round(currentPrice / (1 - savingsPercent / 100));
+    };
+
     // Get price subtext based on billing period
     const getPriceSubtext = (period: BillingPeriod): string => {
         switch (period) {
@@ -726,11 +740,27 @@ const SubscriptionPlan = () => {
                                 buttonText = 'Không thể hạ cấp xuống gói này';
                             }
 
+                            // Tính giá gốc dựa trên phần trăm tiết kiệm
+                            const savingsPercent =
+                                billingPeriod === 'yearly'
+                                    ? yearlySavingsPercent
+                                    : billingPeriod === 'quarterly'
+                                      ? quarterlySavingsPercent
+                                      : null;
+                            const originalPriceNumber = calculateOriginalPrice(
+                                plan.price,
+                                savingsPercent
+                            );
+                            const originalPriceFormatted = originalPriceNumber
+                                ? formatPrice(originalPriceNumber)
+                                : undefined;
+
                             return (
                                 <div key={plan.id} className={styles.planColumn}>
                                     <SubscriptionPlanCard
                                         title={plan.name}
                                         price={formatPrice(plan.price)}
+                                        originalPrice={originalPriceFormatted}
                                         priceSubtext={getPriceSubtext(billingPeriod)}
                                         buttonText={buttonText}
                                         buttonVariant={

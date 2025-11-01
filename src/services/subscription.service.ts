@@ -420,6 +420,59 @@ export class SubscriptionService {
     }
 
     /**
+     * Get all hospitals list
+     */
+    static async getAllHospitals(): Promise<ApiResponse<any[]>> {
+        try {
+            const response: any = await axiosInstance.get('/hospitals/all');
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Hospitals retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get all hospitals');
+        }
+    }
+
+    /**
+     * Get all hospital subscriptions (all hospitals)
+     * Note: This fetches all hospitals first, then gets subscriptions for each
+     */
+    static async getAllHospitalSubscriptions(): Promise<ApiResponse<HospitalSubscription[]>> {
+        try {
+            // First, get all hospitals
+            const hospitalsResponse = await this.getAllHospitals();
+            const hospitals = hospitalsResponse?.data || [];
+
+            // Then, get subscriptions for each hospital
+            const allSubscriptions: HospitalSubscription[] = [];
+            for (const hospital of hospitals) {
+                try {
+                    const subscriptionsResponse = await this.getHospitalSubscriptions(hospital.id);
+                    if (subscriptionsResponse.success && subscriptionsResponse.data) {
+                        allSubscriptions.push(...subscriptionsResponse.data);
+                    }
+                } catch (error) {
+                    // Skip hospitals that fail to load subscriptions
+                    console.warn(
+                        `Failed to load subscriptions for hospital ${hospital.id}:`,
+                        error
+                    );
+                }
+            }
+
+            return {
+                success: true,
+                data: allSubscriptions,
+                message: 'All hospital subscriptions retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get all hospital subscriptions');
+        }
+    }
+
+    /**
      * Get active subscription for a hospital
      */
     static async getActiveHospitalSubscription(

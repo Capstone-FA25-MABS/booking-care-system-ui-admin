@@ -46,6 +46,7 @@ export const PATHS = {
             ROOT: 'subscription-plans',
             ADD: 'add',
             EDIT: 'edit/:id',
+            MANAGE_HOSPITALS: 'manage-hospital-subscriptions',
         },
     },
 
