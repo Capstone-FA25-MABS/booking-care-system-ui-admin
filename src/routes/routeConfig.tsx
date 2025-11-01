@@ -40,6 +40,8 @@ import {
 } from '@/pages/admins/SubscriptionPlans';
 import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptionPlan';
 import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscriptionPlan';
+import AccountManagement from '@/pages/admins/AccountManagement';
+import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 
 const routes: RouteObject[] = [
     {
@@ -85,6 +87,10 @@ const routes: RouteObject[] = [
                 children: [{ index: true, element: <PaymentMethodsManagement /> }],
             },
             {
+                path: PATHS.ADMIN.ACCOUNT_MANAGEMENT.ROOT,
+                children: [{ index: true, element: <AccountManagement /> }],
+            },
+            {
                 path: PATHS.ADMIN.SERVICE_TYPES.ROOT,
                 children: [{ index: true, element: <ListServiceTypes /> }],
             },
@@ -102,6 +108,10 @@ const routes: RouteObject[] = [
                         element: <ManageHospitalSubscriptions />,
                     },
                 ],
+            },
+          {
+                path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
+                children: [{ index: true, element: <ListHospitalRegistrations /> }],
             },
         ],
     },
