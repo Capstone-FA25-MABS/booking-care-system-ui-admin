@@ -843,11 +843,22 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
         };
     }, []);
 
+    // Handle keyboard events for accessibility
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClose();
+        }
+    };
+
     return (
         <div
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            aria-label="Đóng modal"
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
