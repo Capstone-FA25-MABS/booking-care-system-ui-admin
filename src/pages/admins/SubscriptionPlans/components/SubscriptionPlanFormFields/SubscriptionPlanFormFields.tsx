@@ -195,15 +195,19 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                     ]}
                                     value={
                                         formData.billingCycle
-                                            ? {
-                                                  value: formData.billingCycle,
-                                                  label:
-                                                      formData.billingCycle === 'MONTHLY'
-                                                          ? 'Hàng tháng'
-                                                          : formData.billingCycle === 'QUARTERLY'
-                                                            ? 'Hàng quý'
-                                                            : 'Hàng năm',
-                                              }
+                                            ? (() => {
+                                                  const getBillingCycleLabel = () => {
+                                                      if (formData.billingCycle === 'MONTHLY')
+                                                          return 'Hàng tháng';
+                                                      if (formData.billingCycle === 'QUARTERLY')
+                                                          return 'Hàng quý';
+                                                      return 'Hàng năm';
+                                                  };
+                                                  return {
+                                                      value: formData.billingCycle,
+                                                      label: getBillingCycleLabel(),
+                                                  };
+                                              })()
                                             : null
                                     }
                                     onChange={(selectedOption) => {
@@ -222,9 +226,12 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         )}
 
                         <div className="col-md-4">
-                            <label className="form-label">Số Bác Sĩ Tối Đa</label>
+                            <label htmlFor="maxDoctors" className="form-label">
+                                Số Bác Sĩ Tối Đa
+                            </label>
                             <div className="d-flex align-items-center">
                                 <Input
+                                    id="maxDoctors"
                                     className="flex-grow-1"
                                     type="number"
                                     required
@@ -257,9 +264,12 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                             )}
                         </div>
                         <div className="col-md-4">
-                            <label className="form-label">Số Chuyên Khoa Tối Đa</label>
+                            <label htmlFor="maxSpecialties" className="form-label">
+                                Số Chuyên Khoa Tối Đa
+                            </label>
                             <div className="d-flex align-items-center">
                                 <Input
+                                    id="maxSpecialties"
                                     className="flex-grow-1"
                                     type="number"
                                     required
@@ -294,9 +304,12 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                             )}
                         </div>
                         <div className="col-md-4">
-                            <label className="form-label">Số Lịch Hẹn Tối Đa</label>
+                            <label htmlFor="maxAppointments" className="form-label">
+                                Số Lịch Hẹn Tối Đa
+                            </label>
                             <div className="d-flex align-items-center">
                                 <Input
+                                    id="maxAppointments"
                                     className="flex-grow-1"
                                     type="number"
                                     required

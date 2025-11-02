@@ -43,7 +43,7 @@ const ManageHospitalSubscriptions: React.FC = () => {
                 const hospitalsResponse = await SubscriptionService.getAllHospitals();
                 const hospitalsList = hospitalsResponse?.data || [];
 
-                hospitalsList.forEach((hospital: any) => {
+                for (const hospital of hospitalsList) {
                     if (hospital?.id) {
                         hospitalMap.set(hospital.id, {
                             hospitalId: hospital.id,
@@ -52,14 +52,14 @@ const ManageHospitalSubscriptions: React.FC = () => {
                             allSubscriptions: [],
                         });
                     }
-                });
+                }
             } catch (error: any) {
                 console.error('Failed to load hospitals:', error);
                 toast.error(error.message || 'Không thể tải danh sách bệnh viện');
             }
 
             // Group subscriptions by hospital
-            allSubscriptions.forEach((subscription) => {
+            for (const subscription of allSubscriptions) {
                 const hospitalId = subscription.hospitalId;
                 if (!hospitalMap.has(hospitalId)) {
                     // Try to get hospital name from subscription if available
@@ -80,7 +80,7 @@ const ManageHospitalSubscriptions: React.FC = () => {
                 if (subscription.status === 'ACTIVE' && !hospital.activeSubscription) {
                     hospital.activeSubscription = subscription;
                 }
-            });
+            }
 
             setHospitals(Array.from(hospitalMap.values()));
         } catch (error: any) {
@@ -389,73 +389,90 @@ const ManageHospitalSubscriptions: React.FC = () => {
                                         Lịch Sử Đăng Ký/Nâng Cấp Gói
                                     </h6>
                                     <div className="d-flex flex-column gap-2">
-                                        {hospital.allSubscriptions
-                                            .sort(
-                                                (a, b) =>
+                                        {(() => {
+                                            const sortedSubscriptions = [
+                                                ...hospital.allSubscriptions,
+                                            ].sort(
+                                                (
+                                                    a: HospitalSubscription,
+                                                    b: HospitalSubscription
+                                                ) =>
                                                     new Date(b.createdAt).getTime() -
                                                     new Date(a.createdAt).getTime()
-                                            )
-                                            .map((subscription) => (
-                                                <div
-                                                    key={subscription.hospitalSubscriptionId}
-                                                    className="p-2 bg-light rounded border-start border-primary border-3"
-                                                >
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <div className="fw-semibold">
-                                                            {subscription.subscriptionPlan?.name ||
-                                                                'Không xác định'}
-                                                            {subscription.status === 'ACTIVE' && (
-                                                                <span className="badge bg-success ms-2 fs-11">
-                                                                    (Hiện tại)
+                                            );
+                                            return sortedSubscriptions.map(
+                                                (subscription: HospitalSubscription) => (
+                                                    <div
+                                                        key={subscription.hospitalSubscriptionId}
+                                                        className="p-2 bg-light rounded border-start border-primary border-3"
+                                                    >
+                                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                                            <div className="fw-semibold">
+                                                                {subscription.subscriptionPlan
+                                                                    ?.name || 'Không xác định'}
+                                                                {subscription.status ===
+                                                                    'ACTIVE' && (
+                                                                    <span className="badge bg-success ms-2 fs-11">
+                                                                        (Hiện tại)
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <StatusBadge
+                                                                status={subscription.status}
+                                                                variant={getStatusColor(
+                                                                    subscription.status
+                                                                )}
+                                                                customText={getStatusText(
+                                                                    subscription.status
+                                                                )}
+                                                            />
+                                                        </div>
+                                                        <div className="row g-2 small">
+                                                            <div className="col-md-3">
+                                                                <strong>Giá:</strong>{' '}
+                                                                {subscription.subscriptionPlan
+                                                                    ? formatPrice(
+                                                                          subscription
+                                                                              .subscriptionPlan
+                                                                              .price
+                                                                      ) +
+                                                                      ' / ' +
+                                                                      getBillingCycleText(
+                                                                          subscription
+                                                                              .subscriptionPlan
+                                                                              .billingCycle
+                                                                      )
+                                                                    : 'N/A'}
+                                                            </div>
+                                                            <div className="col-md-3">
+                                                                <strong>Bắt đầu:</strong>{' '}
+                                                                <span className="badge badge-soft-info fs-12">
+                                                                    {formatDate(
+                                                                        subscription.startDate
+                                                                    )}
                                                                 </span>
-                                                            )}
-                                                        </div>
-                                                        <StatusBadge
-                                                            status={subscription.status}
-                                                            variant={getStatusColor(
-                                                                subscription.status
-                                                            )}
-                                                            customText={getStatusText(
-                                                                subscription.status
-                                                            )}
-                                                        />
-                                                    </div>
-                                                    <div className="row g-2 small">
-                                                        <div className="col-md-3">
-                                                            <strong>Giá:</strong>{' '}
-                                                            {subscription.subscriptionPlan
-                                                                ? formatPrice(
-                                                                      subscription.subscriptionPlan
-                                                                          .price
-                                                                  ) +
-                                                                  ' / ' +
-                                                                  getBillingCycleText(
-                                                                      subscription.subscriptionPlan
-                                                                          .billingCycle
-                                                                  )
-                                                                : 'N/A'}
-                                                        </div>
-                                                        <div className="col-md-3">
-                                                            <strong>Bắt đầu:</strong>{' '}
-                                                            <span className="badge badge-soft-info fs-12">
-                                                                {formatDate(subscription.startDate)}
-                                                            </span>
-                                                        </div>
-                                                        <div className="col-md-3">
-                                                            <strong>Hết hạn:</strong>{' '}
-                                                            <span className="badge badge-soft-warning fs-12">
-                                                                {formatDate(subscription.endDate)}
-                                                            </span>
-                                                        </div>
-                                                        <div className="col-md-3">
-                                                            <strong>Đăng ký:</strong>{' '}
-                                                            <span className="badge badge-soft-secondary fs-12">
-                                                                {formatDate(subscription.createdAt)}
-                                                            </span>
+                                                            </div>
+                                                            <div className="col-md-3">
+                                                                <strong>Hết hạn:</strong>{' '}
+                                                                <span className="badge badge-soft-warning fs-12">
+                                                                    {formatDate(
+                                                                        subscription.endDate
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                            <div className="col-md-3">
+                                                                <strong>Đăng ký:</strong>{' '}
+                                                                <span className="badge badge-soft-secondary fs-12">
+                                                                    {formatDate(
+                                                                        subscription.createdAt
+                                                                    )}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                )
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </td>
@@ -467,130 +484,128 @@ const ManageHospitalSubscriptions: React.FC = () => {
     };
 
     return (
-        <>
-            <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                    <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">
-                            Đăng Ký Gói Của Bệnh Viện{' '}
-                            <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Bệnh Viện: {filteredHospitals.length}
-                            </span>
-                        </h4>
-                    </div>
-                    <div className="text-end d-flex">
-                        <ActionDropdown
-                            type="export"
-                            options={[
-                                { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                {
-                                    value: 'excel',
-                                    label: 'Tải xuống dạng Excel',
-                                    format: 'excel',
-                                },
-                            ]}
-                            onExport={(format: string) => {
-                                console.log('Exporting:', format);
-                                // Handle export logic here
-                            }}
-                        />
-                        <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                            <Link
-                                to="/admin/subscription-plans/manage-hospital-subscriptions"
-                                className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
-                            >
-                                <i className="ti ti-list fs-14 text-body"></i>
-                            </Link>
-                            <Link
-                                to="/admin/subscription-plans/manage-hospital-subscriptions"
-                                className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
-                            >
-                                <i className="ti ti-layout-grid fs-14 text-body"></i>
-                            </Link>
-                        </div>
-                        <Button
-                            variant="primary"
-                            size="md"
-                            className="ms-2 fs-13"
-                            icon="ti ti-refresh"
-                            onClick={loadHospitalSubscriptions}
-                        >
-                            Làm Mới
-                        </Button>
-                    </div>
+        <div className="content">
+            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                <div className="flex-grow-1">
+                    <h4 className="fw-bold mb-0">
+                        Đăng Ký Gói Của Bệnh Viện{' '}
+                        <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
+                            Tổng Bệnh Viện: {filteredHospitals.length}
+                        </span>
+                    </h4>
                 </div>
+                <div className="text-end d-flex">
+                    <ActionDropdown
+                        type="export"
+                        options={[
+                            { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
+                            {
+                                value: 'excel',
+                                label: 'Tải xuống dạng Excel',
+                                format: 'excel',
+                            },
+                        ]}
+                        onExport={(format: string) => {
+                            console.log('Exporting:', format);
+                            // Handle export logic here
+                        }}
+                    />
+                    <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
+                        <Link
+                            to="/admin/subscription-plans/manage-hospital-subscriptions"
+                            className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
+                        >
+                            <i className="ti ti-list fs-14 text-body"></i>
+                        </Link>
+                        <Link
+                            to="/admin/subscription-plans/manage-hospital-subscriptions"
+                            className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                        >
+                            <i className="ti ti-layout-grid fs-14 text-body"></i>
+                        </Link>
+                    </div>
+                    <Button
+                        variant="primary"
+                        size="md"
+                        className="ms-2 fs-13"
+                        icon="ti ti-refresh"
+                        onClick={loadHospitalSubscriptions}
+                    >
+                        Làm Mới
+                    </Button>
+                </div>
+            </div>
 
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <div className="search-set mb-3">
-                        <div className="d-flex align-items-center flex-wrap gap-2">
-                            <div className="table-search d-flex align-items-center mb-0">
-                                <div className="search-input">
-                                    <label htmlFor="hospitalSearch" aria-label="Search hospitals">
-                                        <input
-                                            id="hospitalSearch"
-                                            type="search"
-                                            className="form-control form-control-sm"
-                                            placeholder="Tìm kiếm theo tên bệnh viện hoặc tên gói..."
-                                            value={searchTerm}
-                                            onChange={(e) => {
-                                                setSearchTerm(e.target.value);
-                                                setCurrentPage(1);
-                                            }}
-                                        ></input>
-                                    </label>
-                                </div>
+            <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                <div className="search-set mb-3">
+                    <div className="d-flex align-items-center flex-wrap gap-2">
+                        <div className="table-search d-flex align-items-center mb-0">
+                            <div className="search-input">
+                                <label htmlFor="hospitalSearch" aria-label="Search hospitals">
+                                    <input
+                                        id="hospitalSearch"
+                                        type="search"
+                                        className="form-control form-control-sm"
+                                        placeholder="Tìm kiếm theo tên bệnh viện hoặc tên gói..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                    ></input>
+                                </label>
                             </div>
                         </div>
                     </div>
-                    <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
-                        <ActionDropdown
-                            type="sort"
-                            options={[
-                                { value: 'all', label: 'Tất cả trạng thái' },
-                                { value: 'with_subscription', label: 'Có gói đăng ký' },
-                                { value: 'no_subscription', label: 'Chưa có gói' },
-                                { value: 'ACTIVE', label: 'Đang hoạt động' },
-                                { value: 'EXPIRED', label: 'Hết hạn' },
-                                { value: 'CANCELLED', label: 'Đã hủy' },
-                            ]}
-                            selectedValue={selectedStatus}
-                            onSelect={(value) => {
-                                setSelectedStatus(value);
-                                setCurrentPage(1);
-                            }}
-                            placeholder="Lọc theo trạng thái:"
-                        />
-                    </div>
                 </div>
-
-                <div className="table-responsive">
-                    <table className="table table-nowrap datatable">
-                        <thead className="thead-light">
-                            <tr>
-                                <th style={{ width: '30px' }}></th>
-                                <th style={{ minWidth: '250px' }}>Bệnh Viện</th>
-                                <th style={{ minWidth: '200px' }}>Gói Đang Sử Dụng</th>
-                                <th style={{ minWidth: '150px' }}>Thời Gian</th>
-                                <th style={{ minWidth: '120px' }}>Trạng Thái</th>
-                                <th style={{ minWidth: '100px' }}>Thao Tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>{renderTableBody()}</tbody>
-                    </table>
+                <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
+                    <ActionDropdown
+                        type="sort"
+                        options={[
+                            { value: 'all', label: 'Tất cả trạng thái' },
+                            { value: 'with_subscription', label: 'Có gói đăng ký' },
+                            { value: 'no_subscription', label: 'Chưa có gói' },
+                            { value: 'ACTIVE', label: 'Đang hoạt động' },
+                            { value: 'EXPIRED', label: 'Hết hạn' },
+                            { value: 'CANCELLED', label: 'Đã hủy' },
+                        ]}
+                        selectedValue={selectedStatus}
+                        onSelect={(value) => {
+                            setSelectedStatus(value);
+                            setCurrentPage(1);
+                        }}
+                        placeholder="Lọc theo trạng thái:"
+                    />
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="d-flex justify-content-center mt-3">
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
-                    </div>
-                )}
             </div>
-        </>
+
+            <div className="table-responsive">
+                <table className="table table-nowrap datatable">
+                    <thead className="thead-light">
+                        <tr>
+                            <th style={{ width: '30px' }}></th>
+                            <th style={{ minWidth: '250px' }}>Bệnh Viện</th>
+                            <th style={{ minWidth: '200px' }}>Gói Đang Sử Dụng</th>
+                            <th style={{ minWidth: '150px' }}>Thời Gian</th>
+                            <th style={{ minWidth: '120px' }}>Trạng Thái</th>
+                            <th style={{ minWidth: '100px' }}>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>{renderTableBody()}</tbody>
+                </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-3">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            )}
+        </div>
     );
 };
 

@@ -185,7 +185,7 @@ const SubscriptionPlan = () => {
 
     // Helper function to get period from URL query parameter
     const getPeriodFromUrl = (): BillingPeriod | null => {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(globalThis.location.search);
         const planType = params.get('plan-type');
         if (planType === 'monthly' || planType === 'quarterly' || planType === 'yearly') {
             return planType as BillingPeriod;
@@ -212,10 +212,10 @@ const SubscriptionPlan = () => {
                 );
                 setBillingPeriod(subscriptionPeriod);
                 // Update URL to match current subscription (replace to avoid adding to history)
-                window.history.replaceState(
+                globalThis.history.replaceState(
                     {},
                     '',
-                    `${window.location.pathname}?plan-type=${subscriptionPeriod}`
+                    `${globalThis.location.pathname}?plan-type=${subscriptionPeriod}`
                 );
                 if (!hasInitialized) {
                     setHasInitialized(true);
@@ -275,10 +275,10 @@ const SubscriptionPlan = () => {
                 });
                 setBillingPeriod(subscriptionPeriod);
                 // Update URL to match current subscription (replace to avoid adding to history)
-                window.history.replaceState(
+                globalThis.history.replaceState(
                     {},
                     '',
-                    `${window.location.pathname}?plan-type=${subscriptionPeriod}`
+                    `${globalThis.location.pathname}?plan-type=${subscriptionPeriod}`
                 );
                 setHasInitialized(true);
                 return;
@@ -306,10 +306,10 @@ const SubscriptionPlan = () => {
                             '⚠️ Setting default billing period to yearly after delay (no active subscription found)'
                         );
                         setBillingPeriod('yearly');
-                        window.history.replaceState(
+                        globalThis.history.replaceState(
                             {},
                             '',
-                            `${window.location.pathname}?plan-type=yearly`
+                            `${globalThis.location.pathname}?plan-type=yearly`
                         );
                         setHasInitialized(true);
                     }
@@ -339,7 +339,7 @@ const SubscriptionPlan = () => {
             }
         };
 
-        window.addEventListener('popstate', handlePopState);
+        globalThis.addEventListener('popstate', handlePopState);
 
         // Also check on mount if URL changed
         const urlPeriod = getPeriodFromUrl();
@@ -348,7 +348,7 @@ const SubscriptionPlan = () => {
         }
 
         return () => {
-            window.removeEventListener('popstate', handlePopState);
+            globalThis.removeEventListener('popstate', handlePopState);
         };
     }, [billingPeriod]);
 
@@ -637,7 +637,7 @@ const SubscriptionPlan = () => {
 
     return (
         <div className={styles.subscriptionPlan}>
-            <button className={styles.closeButton} onClick={() => window.history.back()}>
+            <button className={styles.closeButton} onClick={() => globalThis.history.back()}>
                 <X size={24} color="#6c757d" />
             </button>
 
@@ -651,10 +651,10 @@ const SubscriptionPlan = () => {
                         <button
                             onClick={() => {
                                 setBillingPeriod('yearly');
-                                window.history.pushState(
+                                globalThis.history.pushState(
                                     {},
                                     '',
-                                    `${window.location.pathname}?plan-type=yearly`
+                                    `${globalThis.location.pathname}?plan-type=yearly`
                                 );
                             }}
                             className={`${styles.billingButton} ${
@@ -671,10 +671,10 @@ const SubscriptionPlan = () => {
                         <button
                             onClick={() => {
                                 setBillingPeriod('quarterly');
-                                window.history.pushState(
+                                globalThis.history.pushState(
                                     {},
                                     '',
-                                    `${window.location.pathname}?plan-type=quarterly`
+                                    `${globalThis.location.pathname}?plan-type=quarterly`
                                 );
                             }}
                             className={`${styles.billingButton} ${
@@ -691,10 +691,10 @@ const SubscriptionPlan = () => {
                         <button
                             onClick={() => {
                                 setBillingPeriod('monthly');
-                                window.history.pushState(
+                                globalThis.history.pushState(
                                     {},
                                     '',
-                                    `${window.location.pathname}?plan-type=monthly`
+                                    `${globalThis.location.pathname}?plan-type=monthly`
                                 );
                             }}
                             className={`${styles.billingButton} ${
@@ -710,7 +710,7 @@ const SubscriptionPlan = () => {
                     {loading ? (
                         <>
                             {[...Array(3)].map((_, index) => (
-                                <div key={index} className={styles.planColumn}>
+                                <div key={`skeleton-${index}`} className={styles.planColumn}>
                                     <SubscriptionPlanSkeletonCard highlighted={index === 1} />
                                 </div>
                             ))}
@@ -741,12 +741,12 @@ const SubscriptionPlan = () => {
                             }
 
                             // Tính giá gốc dựa trên phần trăm tiết kiệm
-                            const savingsPercent =
-                                billingPeriod === 'yearly'
-                                    ? yearlySavingsPercent
-                                    : billingPeriod === 'quarterly'
-                                      ? quarterlySavingsPercent
-                                      : null;
+                            const getSavingsPercent = (): number | null => {
+                                if (billingPeriod === 'yearly') return yearlySavingsPercent;
+                                if (billingPeriod === 'quarterly') return quarterlySavingsPercent;
+                                return null;
+                            };
+                            const savingsPercent = getSavingsPercent();
                             const originalPriceNumber = calculateOriginalPrice(
                                 plan.price,
                                 savingsPercent

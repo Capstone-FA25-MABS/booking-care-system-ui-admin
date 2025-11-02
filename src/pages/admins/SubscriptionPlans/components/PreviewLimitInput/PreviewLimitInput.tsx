@@ -21,18 +21,18 @@ const PreviewLimitInput: React.FC<PreviewLimitInputProps> = ({
     setCustomPlansConfig,
 }) => {
     const key = billingCycle === 'QUARTERLY' ? 'quarterly' : 'yearly';
-    const maxFieldName =
-        type === 'doctors'
-            ? 'maxDoctors'
-            : type === 'specialties'
-              ? 'maxSpecialties'
-              : 'maxAppointments';
-    const unlimitedFieldName =
-        type === 'doctors'
-            ? 'unlimitedDoctors'
-            : type === 'specialties'
-              ? 'unlimitedSpecialties'
-              : 'unlimitedAppointments';
+    const getMaxFieldName = () => {
+        if (type === 'doctors') return 'maxDoctors';
+        if (type === 'specialties') return 'maxSpecialties';
+        return 'maxAppointments';
+    };
+    const getUnlimitedFieldName = () => {
+        if (type === 'doctors') return 'unlimitedDoctors';
+        if (type === 'specialties') return 'unlimitedSpecialties';
+        return 'unlimitedAppointments';
+    };
+    const maxFieldName = getMaxFieldName();
+    const unlimitedFieldName = getUnlimitedFieldName();
 
     return (
         <div className={type === 'appointments' ? 'mb-1' : 'mb-2'}>

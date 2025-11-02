@@ -80,8 +80,8 @@ const validatePrice = (price: string): string | undefined => {
         return 'Giá không được để trống';
     }
 
-    const priceValue = parseFloat(price);
-    if (isNaN(priceValue)) {
+    const priceValue = Number.parseFloat(price);
+    if (Number.isNaN(priceValue)) {
         return 'Giá phải là một số hợp lệ';
     }
 
@@ -115,8 +115,8 @@ const validateMaxDoctors = (maxDoctors: string): string | undefined => {
         return 'Số bác sĩ tối đa không được để trống';
     }
 
-    const value = parseInt(maxDoctors);
-    if (isNaN(value)) {
+    const value = Number.parseInt(maxDoctors, 10);
+    if (Number.isNaN(value)) {
         return 'Số bác sĩ tối đa phải là một số hợp lệ';
     }
 
@@ -137,8 +137,8 @@ const validateMaxSpecialties = (maxSpecialties: string): string | undefined => {
         return 'Số chuyên khoa tối đa không được để trống';
     }
 
-    const value = parseInt(maxSpecialties);
-    if (isNaN(value)) {
+    const value = Number.parseInt(maxSpecialties, 10);
+    if (Number.isNaN(value)) {
         return 'Số chuyên khoa tối đa phải là một số hợp lệ';
     }
 
@@ -159,8 +159,8 @@ const validateMaxAppointments = (maxAppointments: string): string | undefined =>
         return 'Số lịch hẹn tối đa không được để trống';
     }
 
-    const value = parseInt(maxAppointments);
-    if (isNaN(value)) {
+    const value = Number.parseInt(maxAppointments, 10);
+    if (Number.isNaN(value)) {
         return 'Số lịch hẹn tối đa phải là một số hợp lệ';
     }
 
@@ -446,7 +446,7 @@ export const validateSubscriptionPlanForm = (
     isUnlimitedAppointments: boolean,
     requiresBillingCycle: boolean = true
 ): string | null => {
-    if (!formData.name || !formData.name.trim()) {
+    if (!formData.name?.trim()) {
         return 'Vui lòng nhập tên gói dịch vụ';
     }
 
@@ -454,8 +454,8 @@ export const validateSubscriptionPlanForm = (
         return 'Vui lòng nhập giá gói';
     }
 
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price <= 0) {
+    const price = Number.parseFloat(formData.price);
+    if (Number.isNaN(price) || price <= 0) {
         return 'Giá gói phải là số dương';
     }
 
@@ -463,20 +463,23 @@ export const validateSubscriptionPlanForm = (
         return 'Vui lòng chọn chu kỳ thanh toán';
     }
 
-    if (!isUnlimitedDoctors && (!formData.maxDoctors || parseInt(formData.maxDoctors) <= 0)) {
+    if (
+        !isUnlimitedDoctors &&
+        (!formData.maxDoctors || Number.parseInt(formData.maxDoctors, 10) <= 0)
+    ) {
         return 'Vui lòng nhập số bác sĩ tối đa hoặc chọn không giới hạn';
     }
 
     if (
         !isUnlimitedSpecialties &&
-        (!formData.maxSpecialties || parseInt(formData.maxSpecialties) <= 0)
+        (!formData.maxSpecialties || Number.parseInt(formData.maxSpecialties, 10) <= 0)
     ) {
         return 'Vui lòng nhập số chuyên khoa tối đa hoặc chọn không giới hạn';
     }
 
     if (
         !isUnlimitedAppointments &&
-        (!formData.maxAppointments || parseInt(formData.maxAppointments) <= 0)
+        (!formData.maxAppointments || Number.parseInt(formData.maxAppointments, 10) <= 0)
     ) {
         return 'Vui lòng nhập số lịch hẹn tối đa hoặc chọn không giới hạn';
     }
@@ -486,7 +489,7 @@ export const validateSubscriptionPlanForm = (
 
 export const parseLimit = (value: string, unlimited: boolean): number | null => {
     if (unlimited) return null;
-    const num = parseInt(value);
+    const num = Number.parseInt(value, 10);
     return num === -1 ? null : num;
 };
 

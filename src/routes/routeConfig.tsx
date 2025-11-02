@@ -107,7 +107,7 @@ const routes: RouteObject[] = [
                     },
                 ],
             },
-          {
+            {
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
                 children: [{ index: true, element: <ListHospitalRegistrations /> }],
             },

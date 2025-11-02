@@ -10,8 +10,10 @@ import {
     validateSubscriptionPlanForm,
     parseLimit,
 } from '@/hooks/useSubscriptionPlanFormValidation';
-import { createSubscriptionPlan } from '@/services/subscription.service';
-import { CreateSubscriptionPlanRequest } from '@/services/subscription.service';
+import {
+    createSubscriptionPlan,
+    CreateSubscriptionPlanRequest,
+} from '@/services/subscription.service';
 
 // Thêm state toggle unlimited
 const DISCOUNT_QUARTER = 0.1;
@@ -62,7 +64,7 @@ const AddSubscriptionPlan: React.FC = () => {
             return [];
         }
 
-        const price = parseFloat(formData.price);
+        const price = Number.parseFloat(formData.price);
         const baseName = formData.name;
 
         return [
@@ -158,7 +160,7 @@ const AddSubscriptionPlan: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            const basePrice = parseFloat(formData.price);
+            const basePrice = Number.parseFloat(formData.price);
             const baseName = formData.name;
 
             let plansToCreate: CreateSubscriptionPlanRequest[] = [];
@@ -393,7 +395,7 @@ const AddSubscriptionPlan: React.FC = () => {
                                                                                 idx: number
                                                                             ) => (
                                                                                 <li
-                                                                                    key={idx}
+                                                                                    key={`feature-${idx}-${feature.text}`}
                                                                                     className="text-muted mb-1"
                                                                                 >
                                                                                     {feature.text}
@@ -491,10 +493,14 @@ const AddSubscriptionPlan: React.FC = () => {
 
                                                             {/* Status dropdown cho gói Quý và Năm */}
                                                             <div className="mt-3">
-                                                                <label className="form-label small mb-1">
+                                                                <label
+                                                                    htmlFor={`status-${preview.billingCycle}-${index}`}
+                                                                    className="form-label small mb-1"
+                                                                >
                                                                     Trạng thái:
                                                                 </label>
                                                                 <select
+                                                                    id={`status-${preview.billingCycle}-${index}`}
                                                                     className="form-select form-select-sm"
                                                                     value={
                                                                         preview.status || 'ACTIVE'

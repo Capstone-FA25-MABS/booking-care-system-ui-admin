@@ -26,7 +26,7 @@ const FeaturesInput: React.FC<FeaturesInputProps> = ({
 
     // Parse JSON string to array when value changes
     useEffect(() => {
-        if (value && value.trim()) {
+        if (value?.trim()) {
             try {
                 const parsed = JSON.parse(value);
                 if (Array.isArray(parsed) && parsed.length > 0) {
@@ -74,10 +74,11 @@ const FeaturesInput: React.FC<FeaturesInputProps> = ({
         onChange(jsonString);
     };
 
+    type IconTypeValue = 'check' | 'plus' | 'star' | 'info';
     const handleFeatureChange = (
         index: number,
         field: keyof FeatureInput,
-        fieldValue: string | 'check' | 'plus' | 'star' | 'info'
+        fieldValue: string | IconTypeValue
     ) => {
         const newFeatures = [...features];
         newFeatures[index] = {
@@ -131,7 +132,7 @@ const FeaturesInput: React.FC<FeaturesInputProps> = ({
             <div className="features-input-container">
                 {features.map((feature, index) => (
                     <div
-                        key={index}
+                        key={`feature-${index}-${feature.text}-${feature.iconType}`}
                         className="d-flex align-items-start gap-2 mb-3 p-3 border rounded"
                     >
                         {/* Icon Select */}

@@ -335,7 +335,7 @@ const ListSubscriptionPlans: React.FC = () => {
                             <ul className="list-unstyled mb-0 small" style={{ maxWidth: '280px' }}>
                                 {features.slice(0, 3).map((feature, idx) => (
                                     <li
-                                        key={idx}
+                                        key={`feature-${idx}-${feature.text || ''}`}
                                         className="mb-1"
                                         style={{ wordWrap: 'break-word', wordBreak: 'break-word' }}
                                     >
@@ -562,26 +562,28 @@ const ListSubscriptionPlans: React.FC = () => {
                                 </span>
                             ))}
 
-                            {appliedBillingCycles.map((cycle) => (
-                                <span key={cycle} className="badge badge-soft-info fs-12">
-                                    {cycle === 'MONTHLY'
-                                        ? 'Hàng tháng'
-                                        : cycle === 'QUARTERLY'
-                                          ? 'Hàng quý'
-                                          : 'Hàng năm'}
-                                    <button
-                                        type="button"
-                                        className="btn-close btn-close-white ms-1"
-                                        onClick={() => {
-                                            const newAppliedCycles = appliedBillingCycles.filter(
-                                                (c) => c !== cycle
-                                            );
-                                            setAppliedBillingCycles(newAppliedCycles);
-                                            setSelectedBillingCycles(newAppliedCycles);
-                                        }}
-                                    />
-                                </span>
-                            ))}
+                            {appliedBillingCycles.map((cycle) => {
+                                const getCycleLabel = () => {
+                                    if (cycle === 'MONTHLY') return 'Hàng tháng';
+                                    if (cycle === 'QUARTERLY') return 'Hàng quý';
+                                    return 'Hàng năm';
+                                };
+                                return (
+                                    <span key={cycle} className="badge badge-soft-info fs-12">
+                                        {getCycleLabel()}
+                                        <button
+                                            type="button"
+                                            className="btn-close btn-close-white ms-1"
+                                            onClick={() => {
+                                                const newAppliedCycles =
+                                                    appliedBillingCycles.filter((c) => c !== cycle);
+                                                setAppliedBillingCycles(newAppliedCycles);
+                                                setSelectedBillingCycles(newAppliedCycles);
+                                            }}
+                                        />
+                                    </span>
+                                );
+                            })}
 
                             <button
                                 type="button"

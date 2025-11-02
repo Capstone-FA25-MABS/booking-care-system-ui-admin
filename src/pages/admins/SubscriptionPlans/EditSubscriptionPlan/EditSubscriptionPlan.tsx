@@ -14,8 +14,9 @@ import {
     updateSubscriptionPlan,
     getSubscriptionPlanById,
     getAllSubscriptionPlans,
+    UpdateSubscriptionPlanRequest,
+    SubscriptionPlan,
 } from '@/services/subscription.service';
-import { UpdateSubscriptionPlanRequest, SubscriptionPlan } from '@/services/subscription.service';
 
 // Constants for discount
 const DISCOUNT_QUARTER = 0.1;
@@ -158,8 +159,8 @@ const EditSubscriptionPlan: React.FC = () => {
             return [];
         }
 
-        const basePrice = parseFloat(formData.price);
-        if (isNaN(basePrice)) return [];
+        const basePrice = Number.parseFloat(formData.price);
+        if (Number.isNaN(basePrice)) return [];
 
         return relatedPlans.map((plan) => {
             let newPrice = basePrice;
@@ -287,7 +288,7 @@ const EditSubscriptionPlan: React.FC = () => {
             const planData: UpdateSubscriptionPlanRequest = {
                 name: formData.name,
                 description: formData.description || undefined,
-                price: parseFloat(formData.price),
+                price: Number.parseFloat(formData.price),
                 billingCycle: formData.billingCycle as 'MONTHLY' | 'QUARTERLY' | 'YEARLY',
                 maxDoctors: parseLimit(formData.maxDoctors, isUnlimitedDoctors),
                 maxSpecialties: parseLimit(formData.maxSpecialties, isUnlimitedSpecialties),
@@ -309,7 +310,7 @@ const EditSubscriptionPlan: React.FC = () => {
                 currentPlanBillingCycle === 'MONTHLY' &&
                 relatedPlans.length > 0
             ) {
-                const basePrice = parseFloat(formData.price);
+                const basePrice = Number.parseFloat(formData.price);
                 let updatedCount = 0;
 
                 for (const relatedPlan of relatedPlans) {
@@ -568,15 +569,24 @@ const EditSubscriptionPlan: React.FC = () => {
                                                                         <div>
                                                                             <h6 className="fw-bold mb-2">
                                                                                 <i className="ti ti-star text-warning me-1"></i>
-                                                                                {syncSameLimits &&
-                                                                                !customPlansConfig[
-                                                                                    preview.billingCycle ===
-                                                                                    'QUARTERLY'
-                                                                                        ? 'quarterly'
-                                                                                        : ('yearly' as keyof typeof customPlansConfig)
-                                                                                ]?.features
-                                                                                    ? 'Tính năng (từ gói tháng):'
-                                                                                    : 'Tính năng:'}
+                                                                                {(() => {
+                                                                                    const configKey =
+                                                                                        preview.billingCycle ===
+                                                                                        'QUARTERLY'
+                                                                                            ? 'quarterly'
+                                                                                            : ('yearly' as keyof typeof customPlansConfig);
+                                                                                    const hasCustomFeatures =
+                                                                                        customPlansConfig[
+                                                                                            configKey
+                                                                                        ]?.features;
+                                                                                    if (
+                                                                                        syncSameLimits &&
+                                                                                        !hasCustomFeatures
+                                                                                    ) {
+                                                                                        return 'Tính năng (từ gói tháng):';
+                                                                                    }
+                                                                                    return 'Tính năng:';
+                                                                                })()}
                                                                             </h6>
                                                                             <ul className="mb-0 ps-3">
                                                                                 {parsedFeatures.map(
@@ -585,9 +595,7 @@ const EditSubscriptionPlan: React.FC = () => {
                                                                                         idx: number
                                                                                     ) => (
                                                                                         <li
-                                                                                            key={
-                                                                                                idx
-                                                                                            }
+                                                                                            key={`feature-${idx}-${feature.text}`}
                                                                                             className="text-muted mb-1"
                                                                                         >
                                                                                             {
@@ -615,15 +623,23 @@ const EditSubscriptionPlan: React.FC = () => {
                                                         <div>
                                                             <h6 className="fw-bold mb-2">
                                                                 <i className="ti ti-settings text-info me-1"></i>
-                                                                {syncSameLimits &&
-                                                                !customPlansConfig[
-                                                                    preview.billingCycle ===
-                                                                    'QUARTERLY'
-                                                                        ? 'quarterly'
-                                                                        : ('yearly' as keyof typeof customPlansConfig)
-                                                                ]?.maxDoctors
-                                                                    ? 'Giới hạn (từ gói tháng):'
-                                                                    : 'Tùy chỉnh giới hạn:'}
+                                                                {(() => {
+                                                                    const configKey =
+                                                                        preview.billingCycle ===
+                                                                        'QUARTERLY'
+                                                                            ? 'quarterly'
+                                                                            : ('yearly' as keyof typeof customPlansConfig);
+                                                                    const hasCustomMaxDoctors =
+                                                                        customPlansConfig[configKey]
+                                                                            ?.maxDoctors;
+                                                                    if (
+                                                                        syncSameLimits &&
+                                                                        !hasCustomMaxDoctors
+                                                                    ) {
+                                                                        return 'Giới hạn (từ gói tháng):';
+                                                                    }
+                                                                    return 'Tùy chỉnh giới hạn:';
+                                                                })()}
                                                             </h6>
                                                             <div className="small">
                                                                 {/* Bác sĩ */}
@@ -698,10 +714,14 @@ const EditSubscriptionPlan: React.FC = () => {
 
                                                                 {/* Status dropdown cho gói Quý và Năm */}
                                                                 <div className="mt-3">
-                                                                    <label className="form-label small mb-1">
+                                                                    <label
+                                                                        htmlFor={`status-${preview.id}`}
+                                                                        className="form-label small mb-1"
+                                                                    >
                                                                         Trạng thái:
                                                                     </label>
                                                                     <select
+                                                                        id={`status-${preview.id}`}
                                                                         className="form-select form-select-sm"
                                                                         value={
                                                                             preview.status ||

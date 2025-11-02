@@ -1,17 +1,22 @@
 import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 
+// Type aliases
+type BillingCycle = 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+type SubscriptionStatus = 'ACTIVE' | 'INACTIVE';
+type HospitalSubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PENDING' | 'TRIAL';
+
 // Subscription Plan Types
 export interface SubscriptionPlan {
     id: string;
     name: string;
     description?: string;
     price: number;
-    billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+    billingCycle: BillingCycle;
     maxDoctors: number | null; // null = unlimited
     maxSpecialties: number | null; // null = unlimited
     maxAppointments: number | null; // null = unlimited
     features?: string;
-    status: 'ACTIVE' | 'INACTIVE';
+    status: SubscriptionStatus;
     createdAt: string;
     updatedAt: string;
 }
@@ -20,32 +25,32 @@ export interface CreateSubscriptionPlanRequest {
     name: string;
     description?: string;
     price: number;
-    billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+    billingCycle: BillingCycle;
     maxDoctors: number | null; // null = unlimited
     maxSpecialties: number | null; // null = unlimited
     maxAppointments: number | null; // null = unlimited
     features?: string;
-    status?: 'ACTIVE' | 'INACTIVE';
+    status?: SubscriptionStatus;
 }
 
 export interface UpdateSubscriptionPlanRequest {
     name?: string;
     description?: string;
     price?: number;
-    billingCycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+    billingCycle?: BillingCycle;
     maxDoctors?: number | null; // null = unlimited
     maxSpecialties?: number | null; // null = unlimited
     maxAppointments?: number | null; // null = unlimited
     features?: string;
-    status?: 'ACTIVE' | 'INACTIVE';
+    status?: SubscriptionStatus;
 }
 
 export interface SubscriptionPlanFilterRequest {
     name?: string;
-    status?: 'ACTIVE' | 'INACTIVE';
+    status?: SubscriptionStatus;
     minPrice?: number;
     maxPrice?: number;
-    billingCycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+    billingCycle?: BillingCycle;
     page?: number;
     pageSize?: number;
     sortBy?: string;
@@ -72,7 +77,7 @@ export interface HospitalSubscription {
     subscriptionId: string;
     startDate: string;
     endDate: string;
-    status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PENDING' | 'TRIAL';
+    status: HospitalSubscriptionStatus;
     createdAt: string;
     updatedAt: string;
     subscriptionPlan?: SubscriptionPlan;
@@ -88,13 +93,13 @@ export interface CreateHospitalSubscriptionRequest {
 export interface UpdateHospitalSubscriptionRequest {
     startDate?: string;
     endDate?: string;
-    status?: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PENDING' | 'TRIAL';
+    status?: HospitalSubscriptionStatus;
 }
 
 export interface HospitalSubscriptionFilterRequest {
     hospitalId?: string;
     subscriptionId?: string;
-    status?: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PENDING' | 'TRIAL';
+    status?: HospitalSubscriptionStatus;
     startDateFrom?: string;
     startDateTo?: string;
     endDateFrom?: string;
@@ -259,11 +264,11 @@ export class SubscriptionService {
             const queryString = new URLSearchParams();
 
             if (filter) {
-                Object.entries(filter).forEach(([key, value]) => {
+                for (const [key, value] of Object.entries(filter)) {
                     if (value !== undefined && value !== null && value !== '') {
                         queryString.append(key, String(value));
                     }
-                });
+                }
             }
 
             const response: any = await axiosInstance.get(
@@ -271,7 +276,7 @@ export class SubscriptionService {
             );
 
             // Handle direct response (without wrapper)
-            if (response && response.subscriptionPlans !== undefined) {
+            if (response?.subscriptionPlans !== undefined) {
                 return {
                     success: true,
                     data: response,
