@@ -48,7 +48,7 @@ const getConfigKey = (billingCycle: string): 'quarterly' | 'yearly' => {
     return billingCycle === 'QUARTERLY' ? 'quarterly' : 'yearly';
 };
 
-// Helper function to get limit value for preview
+// Helper function to get limit value (used for both preview and update)
 const getLimitValue = (
     config: CustomPlansConfig | undefined,
     key: 'quarterly' | 'yearly',
@@ -63,7 +63,7 @@ const getLimitValue = (
     return planValue?.toString() || '';
 };
 
-// Helper function to get unlimited flag for preview
+// Helper function to get unlimited flag (used for both preview and update)
 const getUnlimitedFlag = (
     config: CustomPlansConfig | undefined,
     key: 'quarterly' | 'yearly',
@@ -294,36 +294,6 @@ const EditSubscriptionPlan: React.FC = () => {
         customPlansConfig,
     ]);
 
-    // Helper function to get limit value for related plan update
-    const getLimitValueForUpdate = (
-        config: CustomPlansConfig | undefined,
-        key: 'quarterly' | 'yearly',
-        limitType: 'maxDoctors' | 'maxSpecialties' | 'maxAppointments',
-        syncSameLimits: boolean,
-        formValue: string,
-        planValue: number | null | undefined
-    ): string => {
-        const configValue = config?.[key]?.[limitType];
-        if (configValue) return configValue;
-        if (syncSameLimits) return formValue;
-        return planValue?.toString() || '';
-    };
-
-    // Helper function to get unlimited flag for related plan update
-    const getUnlimitedFlagForUpdate = (
-        config: CustomPlansConfig | undefined,
-        key: 'quarterly' | 'yearly',
-        limitType: 'unlimitedDoctors' | 'unlimitedSpecialties' | 'unlimitedAppointments',
-        syncSameLimits: boolean,
-        formUnlimited: boolean,
-        planValue: number | null | undefined
-    ): boolean => {
-        const configValue = config?.[key]?.[limitType];
-        if (configValue !== undefined) return configValue;
-        if (syncSameLimits) return formUnlimited;
-        return planValue === null;
-    };
-
     // Helper function to create update data for a related plan
     const createRelatedPlanUpdateData = (
         relatedPlan: SubscriptionPlan,
@@ -338,7 +308,7 @@ const EditSubscriptionPlan: React.FC = () => {
             price: newPrice,
             billingCycle: relatedPlan.billingCycle,
             maxDoctors: parseLimit(
-                getLimitValueForUpdate(
+                getLimitValue(
                     customPlansConfig,
                     key,
                     'maxDoctors',
@@ -346,7 +316,7 @@ const EditSubscriptionPlan: React.FC = () => {
                     formData.maxDoctors,
                     relatedPlan.maxDoctors
                 ),
-                getUnlimitedFlagForUpdate(
+                getUnlimitedFlag(
                     customPlansConfig,
                     key,
                     'unlimitedDoctors',
@@ -356,7 +326,7 @@ const EditSubscriptionPlan: React.FC = () => {
                 )
             ),
             maxSpecialties: parseLimit(
-                getLimitValueForUpdate(
+                getLimitValue(
                     customPlansConfig,
                     key,
                     'maxSpecialties',
@@ -364,7 +334,7 @@ const EditSubscriptionPlan: React.FC = () => {
                     formData.maxSpecialties,
                     relatedPlan.maxSpecialties
                 ),
-                getUnlimitedFlagForUpdate(
+                getUnlimitedFlag(
                     customPlansConfig,
                     key,
                     'unlimitedSpecialties',
@@ -374,7 +344,7 @@ const EditSubscriptionPlan: React.FC = () => {
                 )
             ),
             maxAppointments: parseLimit(
-                getLimitValueForUpdate(
+                getLimitValue(
                     customPlansConfig,
                     key,
                     'maxAppointments',
@@ -382,7 +352,7 @@ const EditSubscriptionPlan: React.FC = () => {
                     formData.maxAppointments,
                     relatedPlan.maxAppointments
                 ),
-                getUnlimitedFlagForUpdate(
+                getUnlimitedFlag(
                     customPlansConfig,
                     key,
                     'unlimitedAppointments',

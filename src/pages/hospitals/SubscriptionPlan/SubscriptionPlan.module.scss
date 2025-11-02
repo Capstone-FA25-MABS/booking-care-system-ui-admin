@@ -139,12 +139,26 @@
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
+    z-index: 1050;
+    border: none;
+    margin: 0;
+    padding: 0;
+
+    // Padding only applied to modal content, not overlay
+    .modalContent {
+        margin: 1rem;
+    }
+
+    // Reset default dialog backdrop and use our custom overlay
+    &::backdrop {
+        display: none;
+    }
 }
 
 .modalContent {
