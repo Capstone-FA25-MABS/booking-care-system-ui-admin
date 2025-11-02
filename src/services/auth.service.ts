@@ -6,9 +6,11 @@ import {
     GoogleLoginRequest,
     FacebookLoginRequest,
     AuthResponse,
+    AccountManagementResponse,
     RegisterDoctorRequest,
 } from '@/types/auth.types';
 import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
+import { Role } from '@/enums/common.enums';
 // Base API endpoint for auth
 const AUTH_ENDPOINTS = {
     BASE: '/auth',
@@ -20,6 +22,10 @@ const AUTH_ENDPOINTS = {
     GOOGLE_LOGIN: '/auth/google-login',
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
+    ADMIN_ACCOUNTS: '/auth/admin/accounts',
+    BAN_UNBAN_ACCOUNT: (id: string) => `/auth/accounts/${id}/ban-unban`,
+    LOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/lock`,
+    UNLOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/unlock`,
 } as const;
 
 /**
@@ -199,6 +205,111 @@ export class AuthService {
     }
 
     /**
+     * Get accounts by role for admin management
+     * @param role - The role to filter accounts (PATIENT/DOCTOR/STAFF)
+     * @param pageNumber - Page number for pagination (default: 1)
+     * @param pageSize - Number of items per page (default: 10)
+     * @param searchTerm - Search term for filtering by name or email
+     * @param sortBy - Sort field (FullName/Email/CreatedAt/Status)
+     * @param sortOrder - Sort order (asc/desc)
+     */
+    static async getAccountsByRole(
+        role: Role,
+        pageNumber: number = 1,
+        pageSize: number = 10,
+        searchTerm?: string,
+        sortBy: string = 'CreatedAt',
+        sortOrder: 'asc' | 'desc' = 'desc'
+    ): Promise<ApiResponse<AccountManagementResponse>> {
+        try {
+            // Map role enum to backend expected format (Patient/Doctor/Staff)
+            const roleMap: Record<Role, string> = {
+                [Role.PATIENT]: 'Patient',
+                [Role.DOCTOR]: 'Doctor',
+                [Role.STAFF]: 'Staff',
+                [Role.ADMIN]: 'Admin',
+            };
+
+            const response: any = await axiosInstance.get(AUTH_ENDPOINTS.ADMIN_ACCOUNTS, {
+                params: {
+                    role: roleMap[role],
+                    pageNumber,
+                    pageSize,
+                    searchTerm,
+                    sortBy,
+                    sortOrder,
+                },
+            });
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Accounts retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch accounts');
+        }
+    }
+
+    /**
+     * Ban/Unban account (toggle ACTIVE/INACTIVE status)
+     * @param accountId - Account ID to ban/unban
+     */
+    static async toggleBanUnbanAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.BAN_UNBAN_ACCOUNT(accountId)
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account status toggled successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to toggle account status');
+        }
+    }
+
+    /**
+     * Lock account
+     * @param accountId - Account ID to lock
+     */
+    static async lockAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.LOCK_ACCOUNT(accountId));
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account locked successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to lock account');
+        }
+    }
+
+    /**
+     * Unlock account
+     * @param accountId - Account ID to unlock
+     */
+    static async unlockAccount(accountId: string): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.UNLOCK_ACCOUNT(accountId)
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Account unlocked successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to unlock account');
+        }
+    }
+
+    /**
      * Register new doctor account using Saga pattern
      */
     static async registerDoctor(request: RegisterDoctorRequest): Promise<ApiResponse> {
@@ -230,6 +341,10 @@ export const {
     validatePhoneNumber,
     validatePassword,
     clearAuthData,
+    getAccountsByRole,
+    toggleBanUnbanAccount,
+    lockAccount,
+    unlockAccount,
 } = AuthService;
 
 // Default export

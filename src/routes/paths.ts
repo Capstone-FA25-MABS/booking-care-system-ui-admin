@@ -39,6 +39,9 @@ export const PATHS = {
         PAYMENT_METHODS: {
             ROOT: 'payment-methods',
         },
+        ACCOUNT_MANAGEMENT: {
+            ROOT: 'accounts',
+        },
         SERVICE_TYPES: {
             ROOT: 'service-types',
         },
@@ -47,6 +50,9 @@ export const PATHS = {
             ADD: 'add',
             EDIT: 'edit/:id',
             MANAGE_HOSPITALS: 'manage-hospital-subscriptions',
+        },
+        HOSPITAL_REGISTRATIONS: {
+            ROOT: 'hospital-registrations',
         },
     },
 
