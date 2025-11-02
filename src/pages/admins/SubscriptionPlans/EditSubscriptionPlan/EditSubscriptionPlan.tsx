@@ -23,7 +23,6 @@ const DISCOUNT_QUARTER = 0.1;
 const DISCOUNT_YEAR = 0.2;
 
 // Helper function to safely parse JSON
-
 const safeParseJSON = (jsonString: string): any[] | null => {
     try {
         const parsed = JSON.parse(jsonString);
@@ -31,6 +30,52 @@ const safeParseJSON = (jsonString: string): any[] | null => {
     } catch {
         return null;
     }
+};
+
+// Helper function to calculate price based on billing cycle
+const calculatePriceByCycle = (basePrice: number, billingCycle: string): number => {
+    if (billingCycle === 'QUARTERLY') {
+        return Math.round(basePrice * 3 * (1 - DISCOUNT_QUARTER));
+    }
+    if (billingCycle === 'YEARLY') {
+        return Math.round(basePrice * 12 * (1 - DISCOUNT_YEAR));
+    }
+    return basePrice;
+};
+
+// Helper function to get config key from billing cycle
+const getConfigKey = (billingCycle: string): 'quarterly' | 'yearly' => {
+    return billingCycle === 'QUARTERLY' ? 'quarterly' : 'yearly';
+};
+
+// Helper function to get limit value for preview
+const getLimitValue = (
+    config: CustomPlansConfig | undefined,
+    key: 'quarterly' | 'yearly',
+    limitType: 'maxDoctors' | 'maxSpecialties' | 'maxAppointments',
+    syncSameLimits: boolean,
+    formValue: string,
+    planValue: number | null | undefined
+): string => {
+    const configValue = config?.[key]?.[limitType];
+    if (configValue) return configValue;
+    if (syncSameLimits) return formValue;
+    return planValue?.toString() || '';
+};
+
+// Helper function to get unlimited flag for preview
+const getUnlimitedFlag = (
+    config: CustomPlansConfig | undefined,
+    key: 'quarterly' | 'yearly',
+    limitType: 'unlimitedDoctors' | 'unlimitedSpecialties' | 'unlimitedAppointments',
+    syncSameLimits: boolean,
+    formUnlimited: boolean,
+    planValue: number | null | undefined
+): boolean => {
+    const configValue = config?.[key]?.[limitType];
+    if (configValue !== undefined) return configValue;
+    if (syncSameLimits) return formUnlimited;
+    return planValue === null;
 };
 
 const EditSubscriptionPlan: React.FC = () => {
@@ -69,6 +114,41 @@ const EditSubscriptionPlan: React.FC = () => {
         resetForm,
     } = useSubscriptionPlanFormValidation();
 
+    // Helper function to fetch related plans for MONTHLY plans
+    const fetchRelatedPlans = async (planName: string) => {
+        try {
+            const allPlansResponse = await getAllSubscriptionPlans();
+            if (!allPlansResponse.success || !allPlansResponse.data?.subscriptionPlans) {
+                return;
+            }
+
+            // Tìm các gói có cùng tên nhưng billing cycle là QUARTERLY hoặc YEARLY
+            const related = allPlansResponse.data.subscriptionPlans.filter(
+                (p: SubscriptionPlan) =>
+                    p.name === planName &&
+                    (p.billingCycle === 'QUARTERLY' || p.billingCycle === 'YEARLY')
+            );
+            setRelatedPlans(related);
+
+            // Tự động bật sync nếu tìm thấy các gói liên quan
+            if (related.length > 0) {
+                setSyncWithRelatedPlans(true);
+            }
+        } catch (err) {
+            console.error('Error finding related plans:', err);
+        }
+    };
+
+    // Helper function to convert null to empty string for display in form
+    const displayLimit = (value: number | null, setUnlimited: (v: boolean) => void): string => {
+        if (value === null) {
+            setUnlimited(true);
+            return '';
+        }
+        setUnlimited(false);
+        return value.toString();
+    };
+
     useEffect(() => {
         const fetchPlan = async () => {
             if (!id) return;
@@ -77,71 +157,32 @@ const EditSubscriptionPlan: React.FC = () => {
                 setIsLoadingPlan(true);
                 const response = await getSubscriptionPlanById(id);
 
-                if (response.success && response.data) {
-                    const plan = response.data;
-
-                    // Lưu billing cycle của plan hiện tại
-                    setCurrentPlanBillingCycle(plan.billingCycle);
-
-                    // Nếu là gói MONTHLY, tìm các gói liên quan có cùng tên nhưng khác billing cycle
-                    if (plan.billingCycle === 'MONTHLY') {
-                        try {
-                            const allPlansResponse = await getAllSubscriptionPlans();
-                            if (
-                                allPlansResponse.success &&
-                                allPlansResponse.data?.subscriptionPlans
-                            ) {
-                                // Tìm các gói có cùng tên nhưng billing cycle là QUARTERLY hoặc YEARLY
-                                const related = allPlansResponse.data.subscriptionPlans.filter(
-                                    (p: SubscriptionPlan) =>
-                                        p.name === plan.name &&
-                                        (p.billingCycle === 'QUARTERLY' ||
-                                            p.billingCycle === 'YEARLY')
-                                );
-                                setRelatedPlans(related);
-
-                                // Tự động bật sync nếu tìm thấy các gói liên quan
-                                if (related.length > 0) {
-                                    setSyncWithRelatedPlans(true);
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Error finding related plans:', err);
-                        }
-                    }
-
-                    // Helper function to convert null to -1 for display in form
-                    const displayLimit = (
-                        value: number | null,
-                        setUnlimited: (v: boolean) => void
-                    ): string => {
-                        if (value === null) {
-                            setUnlimited(true);
-                            return '';
-                        }
-                        setUnlimited(false);
-                        return value.toString();
-                    };
-
-                    setFormData({
-                        name: plan.name,
-                        description: plan.description || '',
-                        price: plan.price.toString(),
-                        billingCycle: plan.billingCycle,
-                        maxDoctors: displayLimit(plan.maxDoctors, setIsUnlimitedDoctors),
-                        maxSpecialties: displayLimit(
-                            plan.maxSpecialties,
-                            setIsUnlimitedSpecialties
-                        ),
-                        maxAppointments: displayLimit(
-                            plan.maxAppointments,
-                            setIsUnlimitedAppointments
-                        ),
-                        features: plan.features || '',
-                        status: plan.status,
-                    });
-                    setValidationErrors({});
+                if (!response.success || !response.data) {
+                    return;
                 }
+
+                const plan = response.data;
+
+                // Lưu billing cycle của plan hiện tại
+                setCurrentPlanBillingCycle(plan.billingCycle);
+
+                // Nếu là gói MONTHLY, tìm các gói liên quan có cùng tên nhưng khác billing cycle
+                if (plan.billingCycle === 'MONTHLY') {
+                    await fetchRelatedPlans(plan.name);
+                }
+
+                setFormData({
+                    name: plan.name,
+                    description: plan.description || '',
+                    price: plan.price.toString(),
+                    billingCycle: plan.billingCycle,
+                    maxDoctors: displayLimit(plan.maxDoctors, setIsUnlimitedDoctors),
+                    maxSpecialties: displayLimit(plan.maxSpecialties, setIsUnlimitedSpecialties),
+                    maxAppointments: displayLimit(plan.maxAppointments, setIsUnlimitedAppointments),
+                    features: plan.features || '',
+                    status: plan.status,
+                });
+                setValidationErrors({});
             } catch (error: any) {
                 toast.error(error.message || 'Không thể tải thông tin gói dịch vụ');
                 navigate('/admin/subscription-plans');
@@ -153,6 +194,80 @@ const EditSubscriptionPlan: React.FC = () => {
         fetchPlan();
     }, [id, setFormData, setValidationErrors, navigate]);
 
+    // Helper function to create preview object for a related plan
+    const createPlanPreview = (plan: SubscriptionPlan, basePrice: number) => {
+        const configKey = getConfigKey(plan.billingCycle);
+        const newPrice = calculatePriceByCycle(basePrice, plan.billingCycle);
+        const label = plan.billingCycle === 'QUARTERLY' ? 'Gói Quý' : 'Gói Năm';
+        const discount = plan.billingCycle === 'QUARTERLY' ? DISCOUNT_QUARTER : DISCOUNT_YEAR;
+
+        return {
+            id: plan.id,
+            name: plan.name,
+            billingCycle: plan.billingCycle,
+            oldPrice: plan.price,
+            newPrice: newPrice,
+            discount: discount,
+            label: label,
+            maxDoctors: getLimitValue(
+                customPlansConfig,
+                configKey,
+                'maxDoctors',
+                syncSameLimits,
+                formData.maxDoctors,
+                plan.maxDoctors
+            ),
+            maxSpecialties: getLimitValue(
+                customPlansConfig,
+                configKey,
+                'maxSpecialties',
+                syncSameLimits,
+                formData.maxSpecialties,
+                plan.maxSpecialties
+            ),
+            maxAppointments: getLimitValue(
+                customPlansConfig,
+                configKey,
+                'maxAppointments',
+                syncSameLimits,
+                formData.maxAppointments,
+                plan.maxAppointments
+            ),
+            unlimitedDoctors: getUnlimitedFlag(
+                customPlansConfig,
+                configKey,
+                'unlimitedDoctors',
+                syncSameLimits,
+                isUnlimitedDoctors,
+                plan.maxDoctors
+            ),
+            unlimitedSpecialties: getUnlimitedFlag(
+                customPlansConfig,
+                configKey,
+                'unlimitedSpecialties',
+                syncSameLimits,
+                isUnlimitedSpecialties,
+                plan.maxSpecialties
+            ),
+            unlimitedAppointments: getUnlimitedFlag(
+                customPlansConfig,
+                configKey,
+                'unlimitedAppointments',
+                syncSameLimits,
+                isUnlimitedAppointments,
+                plan.maxAppointments
+            ),
+            features:
+                customPlansConfig[configKey]?.features ||
+                (syncSameLimits ? formData.features : plan.features),
+            currentFeatures: plan.features,
+            status:
+                customPlansConfig[configKey]?.status ||
+                (syncSameLimits ? formData.status : plan.status),
+            currentStatus: plan.status,
+        };
+    };
+
     // Preview các gói sẽ được update khi sync enabled
     const relatedPlansPreviews = useMemo(() => {
         if (!syncWithRelatedPlans || relatedPlans.length === 0 || !formData.price) {
@@ -162,88 +277,7 @@ const EditSubscriptionPlan: React.FC = () => {
         const basePrice = Number.parseFloat(formData.price);
         if (Number.isNaN(basePrice)) return [];
 
-        return relatedPlans.map((plan) => {
-            let newPrice = basePrice;
-            if (plan.billingCycle === 'QUARTERLY') {
-                newPrice = Math.round(basePrice * 3 * (1 - DISCOUNT_QUARTER));
-            } else if (plan.billingCycle === 'YEARLY') {
-                newPrice = Math.round(basePrice * 12 * (1 - DISCOUNT_YEAR));
-            }
-
-            const label = plan.billingCycle === 'QUARTERLY' ? 'Gói Quý' : 'Gói Năm';
-            const discount = plan.billingCycle === 'QUARTERLY' ? DISCOUNT_QUARTER : DISCOUNT_YEAR;
-
-            return {
-                id: plan.id,
-                name: plan.name,
-                billingCycle: plan.billingCycle,
-                oldPrice: plan.price,
-                newPrice: newPrice,
-                discount: discount,
-                label: label,
-                // Giới hạn: sử dụng custom nếu có, nếu không thì dùng từ form (nếu syncSameLimits) hoặc giữ nguyên
-                maxDoctors:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.maxDoctors ||
-                    (syncSameLimits ? formData.maxDoctors : plan.maxDoctors?.toString() || ''),
-                maxSpecialties:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.maxSpecialties ||
-                    (syncSameLimits
-                        ? formData.maxSpecialties
-                        : plan.maxSpecialties?.toString() || ''),
-                maxAppointments:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.maxAppointments ||
-                    (syncSameLimits
-                        ? formData.maxAppointments
-                        : plan.maxAppointments?.toString() || ''),
-                unlimitedDoctors:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.unlimitedDoctors ??
-                    (syncSameLimits ? isUnlimitedDoctors : plan.maxDoctors === null),
-                unlimitedSpecialties:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.unlimitedSpecialties ??
-                    (syncSameLimits ? isUnlimitedSpecialties : plan.maxSpecialties === null),
-                unlimitedAppointments:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.unlimitedAppointments ??
-                    (syncSameLimits ? isUnlimitedAppointments : plan.maxAppointments === null),
-                features:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.features || (syncSameLimits ? formData.features : plan.features),
-                currentFeatures: plan.features,
-                status:
-                    customPlansConfig[
-                        plan.billingCycle === 'QUARTERLY'
-                            ? 'quarterly'
-                            : ('yearly' as keyof typeof customPlansConfig)
-                    ]?.status || (syncSameLimits ? formData.status : plan.status),
-                currentStatus: plan.status,
-            };
-        });
+        return relatedPlans.map((plan) => createPlanPreview(plan, basePrice));
     }, [
         syncWithRelatedPlans,
         relatedPlans,
@@ -259,6 +293,138 @@ const EditSubscriptionPlan: React.FC = () => {
         isUnlimitedAppointments,
         customPlansConfig,
     ]);
+
+    // Helper function to get limit value for related plan update
+    const getLimitValueForUpdate = (
+        config: CustomPlansConfig | undefined,
+        key: 'quarterly' | 'yearly',
+        limitType: 'maxDoctors' | 'maxSpecialties' | 'maxAppointments',
+        syncSameLimits: boolean,
+        formValue: string,
+        planValue: number | null | undefined
+    ): string => {
+        const configValue = config?.[key]?.[limitType];
+        if (configValue) return configValue;
+        if (syncSameLimits) return formValue;
+        return planValue?.toString() || '';
+    };
+
+    // Helper function to get unlimited flag for related plan update
+    const getUnlimitedFlagForUpdate = (
+        config: CustomPlansConfig | undefined,
+        key: 'quarterly' | 'yearly',
+        limitType: 'unlimitedDoctors' | 'unlimitedSpecialties' | 'unlimitedAppointments',
+        syncSameLimits: boolean,
+        formUnlimited: boolean,
+        planValue: number | null | undefined
+    ): boolean => {
+        const configValue = config?.[key]?.[limitType];
+        if (configValue !== undefined) return configValue;
+        if (syncSameLimits) return formUnlimited;
+        return planValue === null;
+    };
+
+    // Helper function to create update data for a related plan
+    const createRelatedPlanUpdateData = (
+        relatedPlan: SubscriptionPlan,
+        basePrice: number
+    ): UpdateSubscriptionPlanRequest => {
+        const key = getConfigKey(relatedPlan.billingCycle);
+        const newPrice = calculatePriceByCycle(basePrice, relatedPlan.billingCycle);
+
+        return {
+            name: relatedPlan.name, // Giữ nguyên tên
+            description: formData.description || undefined,
+            price: newPrice,
+            billingCycle: relatedPlan.billingCycle,
+            maxDoctors: parseLimit(
+                getLimitValueForUpdate(
+                    customPlansConfig,
+                    key,
+                    'maxDoctors',
+                    syncSameLimits,
+                    formData.maxDoctors,
+                    relatedPlan.maxDoctors
+                ),
+                getUnlimitedFlagForUpdate(
+                    customPlansConfig,
+                    key,
+                    'unlimitedDoctors',
+                    syncSameLimits,
+                    isUnlimitedDoctors,
+                    relatedPlan.maxDoctors
+                )
+            ),
+            maxSpecialties: parseLimit(
+                getLimitValueForUpdate(
+                    customPlansConfig,
+                    key,
+                    'maxSpecialties',
+                    syncSameLimits,
+                    formData.maxSpecialties,
+                    relatedPlan.maxSpecialties
+                ),
+                getUnlimitedFlagForUpdate(
+                    customPlansConfig,
+                    key,
+                    'unlimitedSpecialties',
+                    syncSameLimits,
+                    isUnlimitedSpecialties,
+                    relatedPlan.maxSpecialties
+                )
+            ),
+            maxAppointments: parseLimit(
+                getLimitValueForUpdate(
+                    customPlansConfig,
+                    key,
+                    'maxAppointments',
+                    syncSameLimits,
+                    formData.maxAppointments,
+                    relatedPlan.maxAppointments
+                ),
+                getUnlimitedFlagForUpdate(
+                    customPlansConfig,
+                    key,
+                    'unlimitedAppointments',
+                    syncSameLimits,
+                    isUnlimitedAppointments,
+                    relatedPlan.maxAppointments
+                )
+            ),
+            features:
+                customPlansConfig[key]?.features ||
+                (syncSameLimits ? formData.features || undefined : relatedPlan.features),
+            status:
+                customPlansConfig[key]?.status ||
+                (syncSameLimits ? formData.status : relatedPlan.status),
+        };
+    };
+
+    // Helper function to update related plans
+    const updateRelatedPlans = async (basePrice: number): Promise<number> => {
+        if (
+            !syncWithRelatedPlans ||
+            currentPlanBillingCycle !== 'MONTHLY' ||
+            relatedPlans.length === 0
+        ) {
+            return 0;
+        }
+
+        let updatedCount = 0;
+
+        for (const relatedPlan of relatedPlans) {
+            try {
+                const relatedPlanData = createRelatedPlanUpdateData(relatedPlan, basePrice);
+                await updateSubscriptionPlan(relatedPlan.id, relatedPlanData);
+                updatedCount++;
+            } catch (err: any) {
+                console.error(`Error updating related plan ${relatedPlan.name}:`, err);
+                toast.warning(`Không thể cập nhật gói ${relatedPlan.name}`);
+            }
+        }
+
+        return updatedCount;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -304,94 +470,12 @@ const EditSubscriptionPlan: React.FC = () => {
                 throw new Error('Cập nhật gói chính thất bại');
             }
 
-            // Nếu sync và là gói MONTHLY, update các gói liên quan
-            if (
-                syncWithRelatedPlans &&
-                currentPlanBillingCycle === 'MONTHLY' &&
-                relatedPlans.length > 0
-            ) {
-                const basePrice = Number.parseFloat(formData.price);
-                let updatedCount = 0;
+            // Update các gói liên quan nếu có
+            const basePrice = Number.parseFloat(formData.price);
+            const updatedCount = await updateRelatedPlans(basePrice);
 
-                for (const relatedPlan of relatedPlans) {
-                    try {
-                        let newPrice = basePrice;
-                        const key =
-                            relatedPlan.billingCycle === 'QUARTERLY' ? 'quarterly' : 'yearly';
-
-                        // Tính giá mới dựa trên chu kỳ
-                        if (relatedPlan.billingCycle === 'QUARTERLY') {
-                            newPrice = Math.round(basePrice * 3 * (1 - DISCOUNT_QUARTER));
-                        } else if (relatedPlan.billingCycle === 'YEARLY') {
-                            newPrice = Math.round(basePrice * 12 * (1 - DISCOUNT_YEAR));
-                        }
-
-                        const relatedPlanData: UpdateSubscriptionPlanRequest = {
-                            name: relatedPlan.name, // Giữ nguyên tên
-                            description: formData.description || undefined,
-                            price: newPrice,
-                            billingCycle: relatedPlan.billingCycle,
-                            // Nếu có custom config, dùng custom; nếu không và syncSameLimits = true, copy từ gói chính; nếu false, giữ nguyên
-                            maxDoctors: parseLimit(
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.maxDoctors ||
-                                    (syncSameLimits
-                                        ? formData.maxDoctors
-                                        : relatedPlan.maxDoctors?.toString() || ''),
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.unlimitedDoctors ??
-                                    (syncSameLimits
-                                        ? isUnlimitedDoctors
-                                        : relatedPlan.maxDoctors === null)
-                            ),
-                            maxSpecialties: parseLimit(
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.maxSpecialties ||
-                                    (syncSameLimits
-                                        ? formData.maxSpecialties
-                                        : relatedPlan.maxSpecialties?.toString() || ''),
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.unlimitedSpecialties ??
-                                    (syncSameLimits
-                                        ? isUnlimitedSpecialties
-                                        : relatedPlan.maxSpecialties === null)
-                            ),
-                            maxAppointments: parseLimit(
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.maxAppointments ||
-                                    (syncSameLimits
-                                        ? formData.maxAppointments
-                                        : relatedPlan.maxAppointments?.toString() || ''),
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.unlimitedAppointments ??
-                                    (syncSameLimits
-                                        ? isUnlimitedAppointments
-                                        : relatedPlan.maxAppointments === null)
-                            ),
-                            features:
-                                customPlansConfig[key as keyof typeof customPlansConfig]
-                                    ?.features ||
-                                (syncSameLimits
-                                    ? formData.features || undefined
-                                    : relatedPlan.features),
-                            status:
-                                customPlansConfig[key as keyof typeof customPlansConfig]?.status ||
-                                (syncSameLimits ? formData.status : relatedPlan.status),
-                        };
-
-                        await updateSubscriptionPlan(relatedPlan.id, relatedPlanData);
-                        updatedCount++;
-                    } catch (err: any) {
-                        console.error(`Error updating related plan ${relatedPlan.name}:`, err);
-                        toast.warning(`Không thể cập nhật gói ${relatedPlan.name}`);
-                    }
-                }
-
-                if (updatedCount > 0) {
-                    toast.success(`Đã cập nhật gói chính và ${updatedCount} gói liên quan!`);
-                } else {
-                    toast.success('Cập nhật gói dịch vụ thành công!');
-                }
+            if (updatedCount > 0) {
+                toast.success(`Đã cập nhật gói chính và ${updatedCount} gói liên quan!`);
             } else {
                 toast.success('Cập nhật gói dịch vụ thành công!');
             }

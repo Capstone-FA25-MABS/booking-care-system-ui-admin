@@ -5,7 +5,7 @@ import { Check, X, Info, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './SubscriptionPlan.module.scss';
 import { useSubscription } from '@/hooks/useSubscription';
-import type { SubscriptionPlan } from '@/services/subscription.service';
+import type { SubscriptionPlan as SubscriptionPlanType } from '@/services/subscription.service';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 
 type BillingPeriod = 'yearly' | 'quarterly' | 'monthly';
@@ -426,7 +426,7 @@ const SubscriptionPlan: React.FC = () => {
     };
 
     // Parse features from JSON - chỉ hiển thị data từ API, không thêm limits
-    const getFeatures = (plan: SubscriptionPlan): Feature[] => {
+    const getFeatures = (plan: SubscriptionPlanType): Feature[] => {
         return parseFeatures(plan.features);
     };
 
@@ -513,131 +513,154 @@ const SubscriptionPlan: React.FC = () => {
         };
     };
 
+    // Helper function to validate hospital ID
+    const validateHospitalId = (id: string | undefined): boolean => {
+        if (!id) {
+            toast.error('Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.');
+            return false;
+        }
+
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(id)) {
+            toast.error('ID bệnh viện không hợp lệ. Vui lòng liên hệ quản trị viên.');
+            console.error('Invalid hospital ID format:', id);
+            return false;
+        }
+
+        return true;
+    };
+
+    // Helper function to get billing cycle label for error messages
+    const getBillingCycleLabel = (billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'): string => {
+        if (billingCycle === 'QUARTERLY') return 'quý';
+        if (billingCycle === 'YEARLY') return 'năm';
+        return 'tháng';
+    };
+
+    // Helper function to check and handle downgrade attempt
+    const checkDowngradeAndHandle = (
+        targetPlan: SubscriptionPlanType | undefined,
+        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY',
+        currentPlan: SubscriptionPlanType | undefined
+    ): boolean => {
+        if (!targetPlan || !isDowngrade(planBillingCycle, targetPlan.price)) {
+            return false;
+        }
+
+        const billingCycleText = getBillingCycleLabel(planBillingCycle);
+
+        if (
+            currentPlan &&
+            currentPlan.price > targetPlan.price &&
+            currentPlan.billingCycle === planBillingCycle
+        ) {
+            toast.error(
+                `Không thể chuyển từ "${currentPlan.name}" xuống "${targetPlan.name}" (cùng chu kỳ ${billingCycleText}). Vui lòng đợi gói hiện tại hết hạn.`
+            );
+        } else {
+            toast.error(
+                'Không thể chuyển từ gói theo quý xuống gói theo tháng. Vui lòng đợi gói hiện tại hết hạn.'
+            );
+        }
+        return true;
+    };
+
+    // Helper function to handle upgrade subscription
+    const handleUpgradeSubscription = async (
+        currentActiveSubscription: any,
+        planId: string
+    ): Promise<void> => {
+        const success = await upgradeHospitalSubscription(
+            currentActiveSubscription.hospitalSubscriptionId,
+            planId
+        );
+        if (success) {
+            toast.success('Nâng cấp gói dịch vụ thành công!');
+            await loadActiveHospitalSubscription(hospitalId!);
+        } else {
+            toast.error('Nâng cấp gói dịch vụ thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    // Helper function to handle create subscription
+    const handleCreateSubscription = async (
+        planId: string,
+        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
+    ): Promise<void> => {
+        const { startDate, endDate } = calculateSubscriptionDates(planBillingCycle);
+
+        const success = await createHospitalSubscription({
+            hospitalId: hospitalId!,
+            subscriptionId: planId,
+            startDate,
+            endDate,
+        });
+
+        if (success) {
+            toast.success('Đăng ký gói dịch vụ thành công!');
+            await loadActiveHospitalSubscription(hospitalId!);
+        } else {
+            toast.error('Đăng ký gói dịch vụ thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    // Helper function to handle errors
+    const handleSubscriptionError = (err: any): void => {
+        console.error('Error creating subscription:', err);
+        const errorMessage = err.message || 'Có lỗi xảy ra khi đăng ký gói dịch vụ';
+        const lowerMessage = errorMessage.toLowerCase();
+
+        if (
+            lowerMessage.includes('không thể chuyển') ||
+            lowerMessage.includes('chuyển từ gói') ||
+            lowerMessage.includes('xuống gói')
+        ) {
+            toast.error(errorMessage);
+        } else if (lowerMessage.includes('hospital') && lowerMessage.includes('not found')) {
+            toast.error(
+                'Không tìm thấy thông tin bệnh viện trong hệ thống. Vui lòng liên hệ quản trị viên để được hỗ trợ.'
+            );
+        } else {
+            toast.error(errorMessage);
+        }
+    };
+
     // Xử lý nâng cấp gói dịch vụ
     const handleUpgradePlan = async (
         planId: string,
         planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
     ) => {
-        if (!hospitalId) {
-            toast.error('Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.');
-            return;
-        }
-
-        // Validate hospital ID format (UUID)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(hospitalId)) {
-            toast.error('ID bệnh viện không hợp lệ. Vui lòng liên hệ quản trị viên.');
-            console.error('Invalid hospital ID format:', hospitalId);
+        if (!validateHospitalId(hospitalId)) {
             return;
         }
 
         try {
-            // TODO: Phần này cần check thanh toán thành công hay chưa
-            // Hiện tại tạm thời bỏ qua bước check thanh toán, chỉ add vào DB
-            // Sau này sẽ thêm logic check payment status tại đây
-
-            const { startDate, endDate } = calculateSubscriptionDates(planBillingCycle);
-
-            console.log('Creating subscription with:', {
-                hospitalId,
-                subscriptionId: planId,
-                startDate,
-                endDate,
-            });
-
-            // Kiểm tra xem hospital đã có subscription chưa
             const currentActiveSubscription = hospitalSubscriptions.find(
                 (s) => s.status === 'ACTIVE'
             );
+            const targetPlan = subscriptionPlans.find((p) => p.id === planId);
+            const currentPlan = subscriptionPlans.find((p) => p.id === currentSubscriptionPlanId);
 
             if (currentActiveSubscription) {
-                // Prevent downgrade on frontend (backend also validates)
-                // Find the plan to get its price for comparison
-                const targetPlan = subscriptionPlans.find((p) => p.id === planId);
-                if (targetPlan && isDowngrade(planBillingCycle, targetPlan.price)) {
-                    const currentPlan = subscriptionPlans.find(
-                        (p) => p.id === currentSubscriptionPlanId
-                    );
-                    const billingCycleText =
-                        planBillingCycle === 'QUARTERLY'
-                            ? 'quý'
-                            : planBillingCycle === 'YEARLY'
-                              ? 'năm'
-                              : 'tháng';
-
-                    if (
-                        currentPlan &&
-                        currentPlan.price > targetPlan.price &&
-                        currentPlan.billingCycle === planBillingCycle
-                    ) {
-                        toast.error(
-                            `Không thể chuyển từ "${currentPlan.name}" xuống "${targetPlan.name}" (cùng chu kỳ ${billingCycleText}). Vui lòng đợi gói hiện tại hết hạn.`
-                        );
-                    } else {
-                        toast.error(
-                            'Không thể chuyển từ gói theo quý xuống gói theo tháng. Vui lòng đợi gói hiện tại hết hạn.'
-                        );
-                    }
+                if (checkDowngradeAndHandle(targetPlan, planBillingCycle, currentPlan)) {
                     return;
                 }
-
-                // Nếu đã có subscription, sử dụng upgrade
-                const success = await upgradeHospitalSubscription(
-                    currentActiveSubscription.hospitalSubscriptionId,
-                    planId
-                );
-                if (success) {
-                    toast.success('Nâng cấp gói dịch vụ thành công!');
-                    // Reload subscription để cập nhật UI
-                    await loadActiveHospitalSubscription(hospitalId);
-                } else {
-                    toast.error('Nâng cấp gói dịch vụ thất bại. Vui lòng thử lại.');
-                }
+                await handleUpgradeSubscription(currentActiveSubscription, planId);
             } else {
-                // Nếu chưa có subscription, tạo mới
-                const success = await createHospitalSubscription({
-                    hospitalId,
-                    subscriptionId: planId,
-                    startDate,
-                    endDate,
-                });
-
-                if (success) {
-                    toast.success('Đăng ký gói dịch vụ thành công!');
-                    // Reload subscription để cập nhật UI
-                    await loadActiveHospitalSubscription(hospitalId);
-                } else {
-                    toast.error('Đăng ký gói dịch vụ thất bại. Vui lòng thử lại.');
-                }
+                await handleCreateSubscription(planId, planBillingCycle);
             }
         } catch (err: any) {
-            console.error('Error creating subscription:', err);
-            // Xử lý lỗi cụ thể
-            const errorMessage = err.message || 'Có lỗi xảy ra khi đăng ký gói dịch vụ';
-
-            // Check for downgrade error
-            if (
-                errorMessage.toLowerCase().includes('không thể chuyển') ||
-                errorMessage.toLowerCase().includes('chuyển từ gói') ||
-                errorMessage.toLowerCase().includes('xuống gói')
-            ) {
-                toast.error(errorMessage);
-            } else if (
-                errorMessage.toLowerCase().includes('hospital') &&
-                errorMessage.toLowerCase().includes('not found')
-            ) {
-                toast.error(
-                    'Không tìm thấy thông tin bệnh viện trong hệ thống. Vui lòng liên hệ quản trị viên để được hỗ trợ.'
-                );
-            } else {
-                toast.error(errorMessage);
-            }
+            handleSubscriptionError(err);
         }
     };
 
     return (
         <div className={styles.subscriptionPlan}>
-            <button className={styles.closeButton} onClick={() => globalThis.history.back()}>
+            <button
+                className={styles.closeButton}
+                onClick={() => globalThis.history.back()}
+                aria-label="Quay lại"
+            >
                 <X size={24} color="#6c757d" />
             </button>
 
@@ -709,9 +732,14 @@ const SubscriptionPlan: React.FC = () => {
                 <div className={styles.plansContainer}>
                     {loading ? (
                         <>
-                            {[...Array(3)].map((_, index) => (
-                                <div key={`skeleton-${index}`} className={styles.planColumn}>
-                                    <SubscriptionPlanSkeletonCard highlighted={index === 1} />
+                            {[0, 1, 2].map((skeletonIndex) => (
+                                <div
+                                    key={`skeleton-${skeletonIndex}`}
+                                    className={styles.planColumn}
+                                >
+                                    <SubscriptionPlanSkeletonCard
+                                        highlighted={skeletonIndex === 1}
+                                    />
                                 </div>
                             ))}
                         </>
@@ -821,12 +849,33 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
         };
     }, []);
 
+    // Handle keyboard events
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            onClose();
+        }
+    };
+
     return (
-        <div className={styles.modalOverlay} onClick={onClose}>
+        <div
+            className={styles.modalOverlay}
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="terms-modal-title"
+            onKeyDown={handleKeyDown}
+            tabIndex={-1}
+        >
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>Chính sách và Điều khoản</h2>
-                    <button className={styles.modalCloseButton} onClick={onClose}>
+                    <h2 id="terms-modal-title" className={styles.modalTitle}>
+                        Chính sách và Điều khoản
+                    </h2>
+                    <button
+                        className={styles.modalCloseButton}
+                        onClick={onClose}
+                        aria-label="Đóng modal"
+                    >
                         <X size={24} />
                     </button>
                 </div>

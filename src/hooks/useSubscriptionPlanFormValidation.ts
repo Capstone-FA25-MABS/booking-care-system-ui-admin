@@ -176,6 +176,45 @@ const validateMaxAppointments = (maxAppointments: string): string | undefined =>
     return undefined;
 };
 
+const validateFeatureItem = (feature: unknown, index: number): string | undefined => {
+    if (!feature || typeof feature !== 'object') {
+        return `Tính năng thứ ${index + 1} không hợp lệ`;
+    }
+
+    const featureObj = feature as Record<string, unknown>;
+
+    // Text is required
+    if (
+        !featureObj.text ||
+        typeof featureObj.text !== 'string' ||
+        featureObj.text.trim().length === 0
+    ) {
+        return `Tính năng thứ ${index + 1} phải có nội dung`;
+    }
+
+    // Validate iconType
+    const validIconTypes = ['check', 'plus', 'star', 'info'];
+    if (featureObj.iconType && !validIconTypes.includes(featureObj.iconType as string)) {
+        return `Tính năng thứ ${index + 1} có loại icon không hợp lệ`;
+    }
+
+    // Validate text length
+    if (featureObj.text.length > 500) {
+        return `Tính năng thứ ${index + 1} có nội dung quá dài (tối đa 500 ký tự)`;
+    }
+
+    // Validate subtext length if exists
+    if (
+        featureObj.subtext &&
+        typeof featureObj.subtext === 'string' &&
+        featureObj.subtext.length > 200
+    ) {
+        return `Tính năng thứ ${index + 1} có mô tả phụ quá dài (tối đa 200 ký tự)`;
+    }
+
+    return undefined;
+};
+
 const validateFeatures = (features: string | undefined): string | undefined => {
     if (!features || features.trim().length === 0) {
         return undefined; // Features is optional
@@ -183,56 +222,34 @@ const validateFeatures = (features: string | undefined): string | undefined => {
 
     const trimmedFeatures = features.trim();
 
+    // Validate total JSON length first
+    if (trimmedFeatures.length > 5000) {
+        return 'Tổng độ dài tính năng không được vượt quá 5000 ký tự';
+    }
+
     // Validate JSON format
+    let parsed: unknown;
     try {
-        const parsed = JSON.parse(trimmedFeatures);
-        if (!Array.isArray(parsed)) {
-            return 'Tính năng phải là một mảng JSON hợp lệ';
-        }
-
-        // Validate each feature object
-        for (let i = 0; i < parsed.length; i++) {
-            const feature = parsed[i];
-            if (!feature || typeof feature !== 'object') {
-                return `Tính năng thứ ${i + 1} không hợp lệ`;
-            }
-
-            // Text is required
-            if (
-                !feature.text ||
-                typeof feature.text !== 'string' ||
-                feature.text.trim().length === 0
-            ) {
-                return `Tính năng thứ ${i + 1} phải có nội dung`;
-            }
-
-            // Validate iconType
-            if (feature.iconType && !['check', 'plus', 'star', 'info'].includes(feature.iconType)) {
-                return `Tính năng thứ ${i + 1} có loại icon không hợp lệ`;
-            }
-
-            // Validate text length
-            if (feature.text.length > 500) {
-                return `Tính năng thứ ${i + 1} có nội dung quá dài (tối đa 500 ký tự)`;
-            }
-
-            // Validate subtext length if exists
-            if (feature.subtext && feature.subtext.length > 200) {
-                return `Tính năng thứ ${i + 1} có mô tả phụ quá dài (tối đa 200 ký tự)`;
-            }
-        }
-
-        // Validate total features count
-        if (parsed.length > 50) {
-            return 'Số lượng tính năng không được vượt quá 50';
-        }
-
-        // Validate total JSON length
-        if (trimmedFeatures.length > 5000) {
-            return 'Tổng độ dài tính năng không được vượt quá 5000 ký tự';
-        }
+        parsed = JSON.parse(trimmedFeatures);
     } catch {
         return 'Tính năng phải là một JSON hợp lệ';
+    }
+
+    if (!Array.isArray(parsed)) {
+        return 'Tính năng phải là một mảng JSON hợp lệ';
+    }
+
+    // Validate total features count
+    if (parsed.length > 50) {
+        return 'Số lượng tính năng không được vượt quá 50';
+    }
+
+    // Validate each feature object
+    for (let i = 0; i < parsed.length; i++) {
+        const error = validateFeatureItem(parsed[i], i);
+        if (error) {
+            return error;
+        }
     }
 
     return undefined;

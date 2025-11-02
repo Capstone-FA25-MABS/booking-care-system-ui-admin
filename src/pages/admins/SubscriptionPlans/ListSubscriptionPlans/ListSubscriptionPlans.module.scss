@@ -94,42 +94,8 @@
     }
 }
 
-// Badge styling
-.badge {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 4px;
-
-    &.badge-soft-primary {
-        background-color: rgba(13, 110, 253, 0.1);
-        color: #0d6efd;
-    }
-
-    &.badge-soft-secondary {
-        background-color: rgba(108, 117, 125, 0.1);
-        color: #6c757d;
-    }
-
-    &.badge-soft-info {
-        background-color: rgba(13, 202, 240, 0.1);
-        color: #0dcaf0;
-    }
-}
-
-// Status badge styling
-.status-badge {
-    &.active {
-        background-color: #d1e7dd;
-        color: #0f5132;
-        border: 1px solid #badbcc;
-    }
-
-    &.inactive {
-        background-color: #f8d7da;
-        color: #842029;
-        border: 1px solid #f5c2c7;
-    }
-}
+// Note: Badge and status badge styling removed - using global styles from style.css instead
+// These definitions were causing contrast ratio issues
 
 // Search input styling
 .search-input {
@@ -192,6 +158,7 @@
     .page-item.active .page-link {
         background-color: #0d6efd;
         border-color: #0d6efd;
+        color: #fff;
     }
 }
 

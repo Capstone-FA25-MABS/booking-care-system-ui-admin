@@ -27,60 +27,69 @@ const ManageHospitalSubscriptions: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Helper function to load hospitals into map
+    const loadHospitalsIntoMap = async (
+        hospitalMap: Map<string, HospitalWithSubscription>
+    ): Promise<void> => {
+        try {
+            const hospitalsResponse = await SubscriptionService.getAllHospitals();
+            const hospitalsList = hospitalsResponse?.data || [];
+
+            for (const hospital of hospitalsList) {
+                if (!hospital?.id) continue;
+
+                hospitalMap.set(hospital.id, {
+                    hospitalId: hospital.id,
+                    hospitalName: hospital.name || hospital.hospitalName || 'Không có tên',
+                    activeSubscription: null,
+                    allSubscriptions: [],
+                });
+            }
+        } catch (error: any) {
+            console.error('Failed to load hospitals:', error);
+            toast.error(error.message || 'Không thể tải danh sách bệnh viện');
+        }
+    };
+
+    // Helper function to process subscriptions
+    const processSubscriptions = (
+        allSubscriptions: HospitalSubscription[],
+        hospitalMap: Map<string, HospitalWithSubscription>
+    ): void => {
+        for (const subscription of allSubscriptions) {
+            const hospitalId = subscription.hospitalId;
+
+            if (!hospitalMap.has(hospitalId)) {
+                const hospitalName =
+                    (subscription as any).hospital?.name || 'Bệnh viện không xác định';
+                hospitalMap.set(hospitalId, {
+                    hospitalId,
+                    hospitalName,
+                    activeSubscription: null,
+                    allSubscriptions: [],
+                });
+            }
+
+            const hospital = hospitalMap.get(hospitalId)!;
+            hospital.allSubscriptions.push(subscription);
+
+            // Set active subscription if status is ACTIVE
+            if (subscription.status === 'ACTIVE' && !hospital.activeSubscription) {
+                hospital.activeSubscription = subscription;
+            }
+        }
+    };
+
     // Load all hospital subscriptions
     const loadHospitalSubscriptions = useCallback(async () => {
         setLoading(true);
         try {
-            // Get all hospitals
             const hospitalsResponse: any = await SubscriptionService.getAllHospitalSubscriptions();
             const allSubscriptions: HospitalSubscription[] = hospitalsResponse?.data || [];
-
-            // Group subscriptions by hospital
             const hospitalMap = new Map<string, HospitalWithSubscription>();
 
-            // First, get all hospitals
-            try {
-                const hospitalsResponse = await SubscriptionService.getAllHospitals();
-                const hospitalsList = hospitalsResponse?.data || [];
-
-                for (const hospital of hospitalsList) {
-                    if (hospital?.id) {
-                        hospitalMap.set(hospital.id, {
-                            hospitalId: hospital.id,
-                            hospitalName: hospital.name || hospital.hospitalName || 'Không có tên',
-                            activeSubscription: null,
-                            allSubscriptions: [],
-                        });
-                    }
-                }
-            } catch (error: any) {
-                console.error('Failed to load hospitals:', error);
-                toast.error(error.message || 'Không thể tải danh sách bệnh viện');
-            }
-
-            // Group subscriptions by hospital
-            for (const subscription of allSubscriptions) {
-                const hospitalId = subscription.hospitalId;
-                if (!hospitalMap.has(hospitalId)) {
-                    // Try to get hospital name from subscription if available
-                    const hospitalName =
-                        (subscription as any).hospital?.name || 'Bệnh viện không xác định';
-                    hospitalMap.set(hospitalId, {
-                        hospitalId,
-                        hospitalName,
-                        activeSubscription: null,
-                        allSubscriptions: [],
-                    });
-                }
-
-                const hospital = hospitalMap.get(hospitalId)!;
-                hospital.allSubscriptions.push(subscription);
-
-                // Set active subscription if status is ACTIVE
-                if (subscription.status === 'ACTIVE' && !hospital.activeSubscription) {
-                    hospital.activeSubscription = subscription;
-                }
-            }
+            await loadHospitalsIntoMap(hospitalMap);
+            processSubscriptions(allSubscriptions, hospitalMap);
 
             setHospitals(Array.from(hospitalMap.values()));
         } catch (error: any) {
@@ -219,6 +228,208 @@ const ManageHospitalSubscriptions: React.FC = () => {
         }
     };
 
+    // Helper function to render subscription history item
+    const renderSubscriptionHistoryItem = (subscription: HospitalSubscription) => {
+        const isActive = subscription.status === 'ACTIVE';
+        const planName = subscription.subscriptionPlan?.name || 'Không xác định';
+        const planPrice = subscription.subscriptionPlan?.price;
+        const billingCycle = subscription.subscriptionPlan?.billingCycle || '';
+
+        return (
+            <div
+                key={subscription.hospitalSubscriptionId}
+                className="p-2 bg-light rounded border-start border-primary border-3"
+            >
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                    <div className="fw-semibold">
+                        {planName}
+                        {isActive && (
+                            <span className="badge bg-success ms-2 fs-11">(Hiện tại)</span>
+                        )}
+                    </div>
+                    <StatusBadge
+                        status={subscription.status}
+                        variant={getStatusColor(subscription.status)}
+                        customText={getStatusText(subscription.status)}
+                    />
+                </div>
+                <div className="row g-2 small">
+                    <div className="col-md-3">
+                        <strong>Giá:</strong>{' '}
+                        {planPrice
+                            ? formatPrice(planPrice) + ' / ' + getBillingCycleText(billingCycle)
+                            : 'N/A'}
+                    </div>
+                    <div className="col-md-3">
+                        <strong>Bắt đầu:</strong>{' '}
+                        <span className="badge badge-soft-info fs-12">
+                            {formatDate(subscription.startDate)}
+                        </span>
+                    </div>
+                    <div className="col-md-3">
+                        <strong>Hết hạn:</strong>{' '}
+                        <span className="badge badge-soft-warning fs-12">
+                            {formatDate(subscription.endDate)}
+                        </span>
+                    </div>
+                    <div className="col-md-3">
+                        <strong>Đăng ký:</strong>{' '}
+                        <span className="badge badge-soft-secondary fs-12">
+                            {formatDate(subscription.createdAt)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Helper function to render subscription history list
+    const renderSubscriptionHistory = (hospital: HospitalWithSubscription) => {
+        const sortedSubscriptions = [...hospital.allSubscriptions].sort(
+            (a: HospitalSubscription, b: HospitalSubscription) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        return (
+            <tr style={{ backgroundColor: '#f8f9fa' }}>
+                <td colSpan={6}>
+                    <div className="p-3 bg-white rounded border">
+                        <h6 className="fw-bold mb-3 pb-2 border-bottom">
+                            Lịch Sử Đăng Ký/Nâng Cấp Gói
+                        </h6>
+                        <div className="d-flex flex-column gap-2">
+                            {sortedSubscriptions.map(renderSubscriptionHistoryItem)}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        );
+    };
+
+    // Helper function to render main table row
+    const renderHospitalRow = (hospital: HospitalWithSubscription) => {
+        const isExpanded = expandedHospitals.has(hospital.hospitalId);
+        const hasHistory =
+            hospital.allSubscriptions.length > 1 ||
+            (hospital.allSubscriptions.length === 1 &&
+                hospital.allSubscriptions[0].status !== 'ACTIVE');
+        const activeSubscription = hospital.activeSubscription;
+
+        return (
+            <React.Fragment key={hospital.hospitalId}>
+                <tr>
+                    <td style={{ width: '30px' }}>
+                        {hasHistory && (
+                            <button
+                                onClick={() => toggleExpand(hospital.hospitalId)}
+                                className="btn btn-sm btn-link p-0"
+                                style={{ color: '#2e37a4' }}
+                            >
+                                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </button>
+                        )}
+                    </td>
+                    <td style={{ minWidth: '250px' }}>
+                        <div className="d-flex align-items-center">
+                            <div className="avatar me-2">
+                                <div className="avatar-title bg-primary-subtle text-primary rounded">
+                                    <i className="ti ti-building-hospital fs-5"></i>
+                                </div>
+                            </div>
+                            <div className="flex-grow-1">
+                                <h6 className="mb-0 fs-14 fw-semibold">{hospital.hospitalName}</h6>
+                            </div>
+                        </div>
+                    </td>
+                    <td style={{ minWidth: '200px' }}>
+                        {activeSubscription ? (
+                            <div>
+                                <div className="fw-semibold mb-1">
+                                    {activeSubscription.subscriptionPlan?.name || 'Không xác định'}
+                                </div>
+                                {activeSubscription.subscriptionPlan && (
+                                    <div className="small text-muted">
+                                        <span className="fw-bold text-primary">
+                                            {formatPrice(activeSubscription.subscriptionPlan.price)}
+                                        </span>{' '}
+                                        /{' '}
+                                        {getBillingCycleText(
+                                            activeSubscription.subscriptionPlan.billingCycle
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="text-muted small">Chưa có gói</span>
+                        )}
+                    </td>
+                    <td style={{ minWidth: '150px' }}>
+                        {activeSubscription ? (
+                            <div className="small">
+                                <div className="mb-1">
+                                    <strong>Bắt đầu:</strong> <br />
+                                    <span className="badge badge-soft-info fs-12">
+                                        {formatDate(activeSubscription.startDate)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong>Hết hạn:</strong> <br />
+                                    <span className="badge badge-soft-warning fs-12">
+                                        {formatDate(activeSubscription.endDate)}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <span className="text-muted small fst-italic">Chưa đăng ký gói</span>
+                        )}
+                    </td>
+                    <td style={{ minWidth: '120px' }}>
+                        {activeSubscription ? (
+                            <StatusBadge
+                                status={activeSubscription.status}
+                                variant={getStatusColor(activeSubscription.status)}
+                                customText={getStatusText(activeSubscription.status)}
+                            />
+                        ) : (
+                            <StatusBadge
+                                status="NO_SUBSCRIPTION"
+                                variant="secondary"
+                                customText="Chưa đăng ký"
+                            />
+                        )}
+                    </td>
+                    <td className="action-item" style={{ minWidth: '100px' }}>
+                        <button
+                            onClick={() => toggleExpand(hospital.hospitalId)}
+                            className="btn btn-sm btn-link p-0"
+                            title="Xem lịch sử"
+                            style={{ color: '#2e37a4', position: 'relative' }}
+                        >
+                            <i className="ti ti-eye fs-5"></i>
+                            {hasHistory && (
+                                <span
+                                    className="badge bg-danger rounded-pill"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '-5px',
+                                        right: '-5px',
+                                        fontSize: '0.65rem',
+                                        padding: '2px 5px',
+                                    }}
+                                >
+                                    {hospital.allSubscriptions.length}
+                                </span>
+                            )}
+                        </button>
+                    </td>
+                </tr>
+
+                {/* History rows */}
+                {isExpanded && hasHistory && renderSubscriptionHistory(hospital)}
+            </React.Fragment>
+        );
+    };
+
     // Render table body
     const renderTableBody = () => {
         if (loading) {
@@ -251,236 +462,7 @@ const ManageHospitalSubscriptions: React.FC = () => {
             );
         }
 
-        return paginatedHospitals.map((hospital) => {
-            const isExpanded = expandedHospitals.has(hospital.hospitalId);
-            const hasHistory =
-                hospital.allSubscriptions.length > 1 ||
-                (hospital.allSubscriptions.length === 1 &&
-                    hospital.allSubscriptions[0].status !== 'ACTIVE');
-
-            return (
-                <React.Fragment key={hospital.hospitalId}>
-                    <tr>
-                        <td style={{ width: '30px' }}>
-                            {hasHistory && (
-                                <button
-                                    onClick={() => toggleExpand(hospital.hospitalId)}
-                                    className="btn btn-sm btn-link p-0"
-                                    style={{ color: '#2e37a4' }}
-                                >
-                                    {isExpanded ? (
-                                        <ChevronUp size={18} />
-                                    ) : (
-                                        <ChevronDown size={18} />
-                                    )}
-                                </button>
-                            )}
-                        </td>
-                        <td style={{ minWidth: '250px' }}>
-                            <div className="d-flex align-items-center">
-                                <div className="avatar me-2">
-                                    <div className="avatar-title bg-primary-subtle text-primary rounded">
-                                        <i className="ti ti-building-hospital fs-5"></i>
-                                    </div>
-                                </div>
-                                <div className="flex-grow-1">
-                                    <h6 className="mb-0 fs-14 fw-semibold">
-                                        {hospital.hospitalName}
-                                    </h6>
-                                </div>
-                            </div>
-                        </td>
-                        <td style={{ minWidth: '200px' }}>
-                            {hospital.activeSubscription ? (
-                                <div>
-                                    <div className="fw-semibold mb-1">
-                                        {hospital.activeSubscription.subscriptionPlan?.name ||
-                                            'Không xác định'}
-                                    </div>
-                                    {hospital.activeSubscription.subscriptionPlan && (
-                                        <div className="small text-muted">
-                                            <span className="fw-bold text-primary">
-                                                {formatPrice(
-                                                    hospital.activeSubscription.subscriptionPlan
-                                                        .price
-                                                )}
-                                            </span>{' '}
-                                            /{' '}
-                                            {getBillingCycleText(
-                                                hospital.activeSubscription.subscriptionPlan
-                                                    .billingCycle
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <span className="text-muted small">Chưa có gói</span>
-                            )}
-                        </td>
-                        <td style={{ minWidth: '150px' }}>
-                            {hospital.activeSubscription ? (
-                                <div className="small">
-                                    <div className="mb-1">
-                                        <strong>Bắt đầu:</strong> <br />
-                                        <span className="badge badge-soft-info fs-12">
-                                            {formatDate(hospital.activeSubscription.startDate)}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <strong>Hết hạn:</strong> <br />
-                                        <span className="badge badge-soft-warning fs-12">
-                                            {formatDate(hospital.activeSubscription.endDate)}
-                                        </span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <span className="text-muted small fst-italic">
-                                    Chưa đăng ký gói
-                                </span>
-                            )}
-                        </td>
-                        <td style={{ minWidth: '120px' }}>
-                            {hospital.activeSubscription ? (
-                                <StatusBadge
-                                    status={hospital.activeSubscription.status}
-                                    variant={getStatusColor(hospital.activeSubscription.status)}
-                                    customText={getStatusText(hospital.activeSubscription.status)}
-                                />
-                            ) : (
-                                <StatusBadge
-                                    status="NO_SUBSCRIPTION"
-                                    variant="secondary"
-                                    customText="Chưa đăng ký"
-                                />
-                            )}
-                        </td>
-                        <td className="action-item" style={{ minWidth: '100px' }}>
-                            <button
-                                onClick={() => toggleExpand(hospital.hospitalId)}
-                                className="btn btn-sm btn-link p-0"
-                                title="Xem lịch sử"
-                                style={{ color: '#2e37a4', position: 'relative' }}
-                            >
-                                <i className="ti ti-eye fs-5"></i>
-                                {hasHistory && (
-                                    <span
-                                        className="badge bg-danger rounded-pill"
-                                        style={{
-                                            position: 'absolute',
-                                            top: '-5px',
-                                            right: '-5px',
-                                            fontSize: '0.65rem',
-                                            padding: '2px 5px',
-                                        }}
-                                    >
-                                        {hospital.allSubscriptions.length}
-                                    </span>
-                                )}
-                            </button>
-                        </td>
-                    </tr>
-
-                    {/* History rows */}
-                    {isExpanded && hasHistory && (
-                        <tr style={{ backgroundColor: '#f8f9fa' }}>
-                            <td colSpan={6}>
-                                <div className="p-3 bg-white rounded border">
-                                    <h6 className="fw-bold mb-3 pb-2 border-bottom">
-                                        Lịch Sử Đăng Ký/Nâng Cấp Gói
-                                    </h6>
-                                    <div className="d-flex flex-column gap-2">
-                                        {(() => {
-                                            const sortedSubscriptions = [
-                                                ...hospital.allSubscriptions,
-                                            ].sort(
-                                                (
-                                                    a: HospitalSubscription,
-                                                    b: HospitalSubscription
-                                                ) =>
-                                                    new Date(b.createdAt).getTime() -
-                                                    new Date(a.createdAt).getTime()
-                                            );
-                                            return sortedSubscriptions.map(
-                                                (subscription: HospitalSubscription) => (
-                                                    <div
-                                                        key={subscription.hospitalSubscriptionId}
-                                                        className="p-2 bg-light rounded border-start border-primary border-3"
-                                                    >
-                                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                                            <div className="fw-semibold">
-                                                                {subscription.subscriptionPlan
-                                                                    ?.name || 'Không xác định'}
-                                                                {subscription.status ===
-                                                                    'ACTIVE' && (
-                                                                    <span className="badge bg-success ms-2 fs-11">
-                                                                        (Hiện tại)
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <StatusBadge
-                                                                status={subscription.status}
-                                                                variant={getStatusColor(
-                                                                    subscription.status
-                                                                )}
-                                                                customText={getStatusText(
-                                                                    subscription.status
-                                                                )}
-                                                            />
-                                                        </div>
-                                                        <div className="row g-2 small">
-                                                            <div className="col-md-3">
-                                                                <strong>Giá:</strong>{' '}
-                                                                {subscription.subscriptionPlan
-                                                                    ? formatPrice(
-                                                                          subscription
-                                                                              .subscriptionPlan
-                                                                              .price
-                                                                      ) +
-                                                                      ' / ' +
-                                                                      getBillingCycleText(
-                                                                          subscription
-                                                                              .subscriptionPlan
-                                                                              .billingCycle
-                                                                      )
-                                                                    : 'N/A'}
-                                                            </div>
-                                                            <div className="col-md-3">
-                                                                <strong>Bắt đầu:</strong>{' '}
-                                                                <span className="badge badge-soft-info fs-12">
-                                                                    {formatDate(
-                                                                        subscription.startDate
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            <div className="col-md-3">
-                                                                <strong>Hết hạn:</strong>{' '}
-                                                                <span className="badge badge-soft-warning fs-12">
-                                                                    {formatDate(
-                                                                        subscription.endDate
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            <div className="col-md-3">
-                                                                <strong>Đăng ký:</strong>{' '}
-                                                                <span className="badge badge-soft-secondary fs-12">
-                                                                    {formatDate(
-                                                                        subscription.createdAt
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    )}
-                </React.Fragment>
-            );
-        });
+        return paginatedHospitals.map(renderHospitalRow);
     };
 
     return (

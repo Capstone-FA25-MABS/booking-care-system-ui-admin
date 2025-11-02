@@ -27,12 +27,14 @@ const SubscriptionPlanSkeletonCard = ({ highlighted }: SubscriptionPlanSkeletonC
 
             {/* Features list skeleton */}
             <ul className={styles.featuresList}>
-                {[...Array(6)].map((_, index) => (
-                    <li key={index} className={styles.featureItem}>
+                {[0, 1, 2, 3, 4, 5].map((featureIndex) => (
+                    <li key={`skeleton-feature-${featureIndex}`} className={styles.featureItem}>
                         <div className={styles.skeletonFeatureIcon}></div>
                         <div className={styles.featureContent}>
                             <div className={styles.skeletonFeatureText}></div>
-                            {index < 2 && <div className={styles.skeletonFeatureSubtext}></div>}
+                            {featureIndex < 2 && (
+                                <div className={styles.skeletonFeatureSubtext}></div>
+                            )}
                         </div>
                     </li>
                 ))}
