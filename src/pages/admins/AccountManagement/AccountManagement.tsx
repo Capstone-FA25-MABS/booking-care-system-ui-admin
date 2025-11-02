@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
-import { AppFooter } from '@/components/AppFooter';
 import { Account } from '@/types/auth.types';
 import {
     getAccountsByRole,
@@ -455,9 +454,6 @@ const AccountManagement: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-            {/* Footer Start */}
-            <AppFooter />
-            {/* Footer End */}
 
             {/* Skeleton Loading Animation */}
             <style>{`
