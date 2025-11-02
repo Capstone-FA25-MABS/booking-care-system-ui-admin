@@ -838,27 +838,29 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
     useEffect(() => {
         // Prevent body scroll when modal is open
         document.body.style.overflow = 'hidden';
+
+        // Handle Escape key to close modal (accessibility support)
+        const handleEscapeKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleEscapeKey);
+
         return () => {
             document.body.style.overflow = 'unset';
+            document.removeEventListener('keydown', handleEscapeKey);
         };
-    }, []);
-
-    // Handle keyboard events for accessibility
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClose();
-        }
-    };
+    }, [onClose]);
 
     return (
         <div
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-            aria-label="Đóng modal"
+            role="button"
+            aria-label="Modal backdrop"
         >
             <div
                 className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
