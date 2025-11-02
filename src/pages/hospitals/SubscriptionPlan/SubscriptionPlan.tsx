@@ -17,7 +17,7 @@ interface Feature {
     iconType?: 'check' | 'plus';
 }
 
-const SubscriptionPlan = () => {
+const SubscriptionPlan: React.FC = () => {
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
@@ -1021,4 +1021,4 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
     );
 };
 
-export default SubscriptionPlan;
+export default SubscriptionPlan as React.FC;

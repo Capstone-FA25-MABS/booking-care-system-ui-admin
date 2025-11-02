@@ -385,7 +385,7 @@ const AddSubscriptionPlan: React.FC = () => {
                                                             return (
                                                                 <div>
                                                                     <h6 className="fw-bold mb-2">
-                                                                        <i className="ti ti-star text-warning me-1"></i>
+                                                                        <i className="ti ti-star text-warning me-1"></i>{' '}
                                                                         Tính năng:
                                                                     </h6>
                                                                     <ul className="mb-0 ps-3">
@@ -408,7 +408,7 @@ const AddSubscriptionPlan: React.FC = () => {
                                                         }
                                                         return (
                                                             <div className="text-muted small">
-                                                                <i className="ti ti-arrow-up me-1"></i>
+                                                                <i className="ti ti-arrow-up me-1"></i>{' '}
                                                                 Tính năng từ form trên
                                                             </div>
                                                         );
@@ -420,7 +420,7 @@ const AddSubscriptionPlan: React.FC = () => {
                                                 {index > 0 ? (
                                                     <div>
                                                         <h6 className="fw-bold mb-2">
-                                                            <i className="ti ti-settings text-info me-1"></i>
+                                                            <i className="ti ti-settings text-info me-1"></i>{' '}
                                                             Tùy chỉnh giới hạn:
                                                         </h6>
                                                         <div className="small">
@@ -574,8 +574,8 @@ const AddSubscriptionPlan: React.FC = () => {
                                                     }}
                                                 />
                                                 <small className="text-muted d-block mt-2">
-                                                    <i className="ti ti-info-circle me-1"></i>
-                                                    Để trống = dùng tính năng gói tháng
+                                                    <i className="ti ti-info-circle me-1"></i> Để
+                                                    trống = dùng tính năng gói tháng
                                                 </small>
                                             </div>
                                         )}

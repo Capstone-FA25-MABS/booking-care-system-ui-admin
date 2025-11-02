@@ -136,8 +136,8 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                     className="form-check-label fw-semibold"
                                     htmlFor="autoCreateAllCycles"
                                 >
-                                    <i className="ti ti-copy me-2"></i>
-                                    Tự động tạo 3 gói (Tháng, Quý, Năm)
+                                    <i className="ti ti-copy me-2"></i> Tự động tạo 3 gói (Tháng,
+                                    Quý, Năm)
                                 </label>
                             </div>
                             <small className="text-muted d-block mt-2">
@@ -173,9 +173,8 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                             />
                             {autoCreateAllCycles && !isEdit && (
                                 <small className="text-muted">
-                                    <i className="ti ti-info-circle me-1"></i>
-                                    Giá gói Quý sẽ giảm 10%, gói Năm sẽ giảm 20% so với giá tổng các
-                                    tháng
+                                    <i className="ti ti-info-circle me-1"></i> Giá gói Quý sẽ giảm
+                                    10%, gói Năm sẽ giảm 20% so với giá tổng các tháng
                                 </small>
                             )}
                         </div>

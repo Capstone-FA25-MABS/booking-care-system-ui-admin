@@ -462,8 +462,8 @@ const EditSubscriptionPlan: React.FC = () => {
                                     className="form-check-label fw-semibold"
                                     htmlFor="syncWithRelatedPlans"
                                 >
-                                    <i className="ti ti-refresh me-2"></i>
-                                    Tự động cập nhật các gói liên quan
+                                    <i className="ti ti-refresh me-2"></i> Tự động cập nhật các gói
+                                    liên quan
                                 </label>
                             </div>
 
@@ -495,8 +495,8 @@ const EditSubscriptionPlan: React.FC = () => {
                                     onChange={(e) => setSyncSameLimits(e.target.checked)}
                                 />
                                 <label className="form-check-label" htmlFor="syncSameLimits">
-                                    <i className="ti ti-copy me-2"></i>
-                                    Đồng bộ cả Giới hạn và Tính năng từ gói tháng
+                                    <i className="ti ti-copy me-2"></i> Đồng bộ cả Giới hạn và Tính
+                                    năng từ gói tháng
                                 </label>
                             </div>
 
@@ -611,7 +611,7 @@ const EditSubscriptionPlan: React.FC = () => {
 
                                                                 return (
                                                                     <div className="text-muted small">
-                                                                        <i className="ti ti-alert-circle me-1"></i>
+                                                                        <i className="ti ti-alert-circle me-1"></i>{' '}
                                                                         Chưa có tính năng
                                                                     </div>
                                                                 );
