@@ -1,4 +1,5 @@
 import React from 'react';
+import './skeleton-animation.scss';
 
 interface SkeletonCellProps {
     height: string;

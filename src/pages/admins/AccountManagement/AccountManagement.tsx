@@ -12,14 +12,8 @@ import { Role } from '@/enums/common.enums';
 import Pagination from '@/components/Pagination';
 import ActionDropdown from '@/components/ActionDropdown';
 import { SkeletonTableRow } from '@/components/SkeletonLoading';
-import {
-    sortOptions,
-    getToggleActiveTitle,
-    getLockTitle,
-    getUnlockTitle,
-    getStatusBadgeClass,
-    getStatusLabel,
-} from '@/utils/account-management.utils';
+import { EmptyTableState, AccountTableRow } from '@/components/AccountTable';
+import { sortOptions } from '@/utils/account-management.utils';
 
 // Map URL role param to Role enum
 const getRoleFromParam = (roleParam: string | null): Role => {
@@ -186,85 +180,18 @@ const AccountManagement: React.FC = () => {
         }
 
         if (accounts.length === 0) {
-            return (
-                <tr>
-                    <td colSpan={7} className="text-center py-5">
-                        <div className="text-muted">
-                            <i className="ti ti-database-off fs-48 mb-2 d-block" />
-                            <p className="mb-0">Không có dữ liệu</p>
-                        </div>
-                    </td>
-                </tr>
-            );
+            return <EmptyTableState colSpan={7} />;
         }
 
         return accounts.map((account) => (
-            <tr key={account.accountId}>
-                <td>
-                    <div className="d-flex align-items-center">
-                        <span className="avatar me-2">
-                            {account.avatarUrl ? (
-                                <img
-                                    src={account.avatarUrl}
-                                    alt={account.fullName}
-                                    className="rounded-circle"
-                                />
-                            ) : (
-                                <div className="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                                    {account.fullName.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                        </span>
-                        <div>
-                            <h6 className="mb-1 fs-14 fw-semibold">
-                                <span className="text-dark">{account.fullName}</span>
-                            </h6>
-                        </div>
-                    </div>
-                </td>
-                <td>{account.email}</td>
-                <td>{account.phone || '-'}</td>
-                <td>{account.address || '-'}</td>
-
-                {/* Toggle Active/Inactive */}
-                <td>
-                    <div className="form-check form-switch">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id={`switch-active-${account.accountId}`}
-                            checked={account.status === 'ACTIVE'}
-                            onChange={() => handleToggleBanUnban(account.accountId)}
-                            disabled={account.isLocked}
-                            title={getToggleActiveTitle(account.isLocked, account.status)}
-                        />
-                    </div>
-                </td>
-                {/* Toggle Lock/Unlock */}
-                <td>
-                    <div className="form-check form-switch">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id={`switch-lock-${account.accountId}`}
-                            checked={account.isLocked}
-                            onChange={() =>
-                                account.isLocked
-                                    ? handleUnlockAccount(account.accountId)
-                                    : handleLockAccount(account.accountId)
-                            }
-                            title={account.isLocked ? getUnlockTitle() : getLockTitle()}
-                        />
-                    </div>
-                </td>
-                <td>
-                    <span className={getStatusBadgeClass(account.status)}>
-                        {getStatusLabel(account.status)}
-                    </span>
-                </td>
-            </tr>
+            <AccountTableRow
+                key={account.accountId}
+                account={account}
+                showPhoneColumn={true}
+                onToggleBanUnban={handleToggleBanUnban}
+                onLockAccount={handleLockAccount}
+                onUnlockAccount={handleUnlockAccount}
+            />
         ));
     };
 
@@ -363,18 +290,6 @@ const AccountManagement: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-
-            {/* Skeleton Loading Animation */}
-            <style>{`
-                @keyframes pulse {
-                    0%, 100% {
-                        opacity: 1;
-                    }
-                    50% {
-                        opacity: 0.5;
-                    }
-                }
-            `}</style>
         </div>
     );
 };
