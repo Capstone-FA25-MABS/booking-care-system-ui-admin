@@ -36,6 +36,7 @@ import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
+import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
 
 const routes: RouteObject[] = [
     {
@@ -132,6 +133,10 @@ const routes: RouteObject[] = [
                     { path: PATHS.HOSPITAL.DOCTORS.ADD, element: <AddDoctor /> },
                     { path: PATHS.HOSPITAL.DOCTORS.EDIT, element: <EditDoctor /> },
                 ],
+            },
+            {
+                path: PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT,
+                children: [{ index: true, element: <DoctorManagement /> }],
             },
             {
                 path: PATHS.HOSPITAL.APPOINTMENTS.ROOT,
