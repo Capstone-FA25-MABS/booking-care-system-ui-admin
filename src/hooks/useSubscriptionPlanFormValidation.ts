@@ -24,6 +24,22 @@ export interface SubscriptionPlanValidationErrors {
     status?: string;
 }
 
+export interface CustomPlanConfig {
+    maxDoctors: string;
+    maxSpecialties: string;
+    maxAppointments: string;
+    unlimitedDoctors: boolean;
+    unlimitedSpecialties: boolean;
+    unlimitedAppointments: boolean;
+    features?: string;
+    status?: 'ACTIVE' | 'INACTIVE';
+}
+
+export interface CustomPlansConfig {
+    quarterly?: CustomPlanConfig;
+    yearly?: CustomPlanConfig;
+}
+
 // Helper functions to reduce cognitive complexity
 const validateName = (name: string): string | undefined => {
     if (!name.trim()) {
@@ -414,6 +430,64 @@ export const useSubscriptionPlanFormValidation = () => {
         setFormData,
         setValidationErrors,
     };
+};
+
+export const validateSubscriptionPlanForm = (
+    formData: {
+        name: string;
+        price: string;
+        billingCycle?: string;
+        maxDoctors: string;
+        maxSpecialties: string;
+        maxAppointments: string;
+    },
+    isUnlimitedDoctors: boolean,
+    isUnlimitedSpecialties: boolean,
+    isUnlimitedAppointments: boolean,
+    requiresBillingCycle: boolean = true
+): string | null => {
+    if (!formData.name || !formData.name.trim()) {
+        return 'Vui lòng nhập tên gói dịch vụ';
+    }
+
+    if (!formData.price) {
+        return 'Vui lòng nhập giá gói';
+    }
+
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price <= 0) {
+        return 'Giá gói phải là số dương';
+    }
+
+    if (requiresBillingCycle && !formData.billingCycle) {
+        return 'Vui lòng chọn chu kỳ thanh toán';
+    }
+
+    if (!isUnlimitedDoctors && (!formData.maxDoctors || parseInt(formData.maxDoctors) <= 0)) {
+        return 'Vui lòng nhập số bác sĩ tối đa hoặc chọn không giới hạn';
+    }
+
+    if (
+        !isUnlimitedSpecialties &&
+        (!formData.maxSpecialties || parseInt(formData.maxSpecialties) <= 0)
+    ) {
+        return 'Vui lòng nhập số chuyên khoa tối đa hoặc chọn không giới hạn';
+    }
+
+    if (
+        !isUnlimitedAppointments &&
+        (!formData.maxAppointments || parseInt(formData.maxAppointments) <= 0)
+    ) {
+        return 'Vui lòng nhập số lịch hẹn tối đa hoặc chọn không giới hạn';
+    }
+
+    return null;
+};
+
+export const parseLimit = (value: string, unlimited: boolean): number | null => {
+    if (unlimited) return null;
+    const num = parseInt(value);
+    return num === -1 ? null : num;
 };
 
 export default useSubscriptionPlanFormValidation;

@@ -1,9 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import SubscriptionPlanFormFields from './SubscriptionPlanFormFields';
+import SubscriptionPlanFormFields from '../components/SubscriptionPlanFormFields';
+import PreviewLimitInput from '../components/PreviewLimitInput';
 import FeaturesInput from '@/components/FormComponents/FeaturesInput';
-import { useSubscriptionPlanFormValidation } from '@/hooks/useSubscriptionPlanFormValidation';
+import {
+    useSubscriptionPlanFormValidation,
+    CustomPlansConfig,
+    validateSubscriptionPlanForm,
+    parseLimit,
+} from '@/hooks/useSubscriptionPlanFormValidation';
 import { createSubscriptionPlan } from '@/services/subscription.service';
 import { CreateSubscriptionPlanRequest } from '@/services/subscription.service';
 
@@ -47,28 +53,7 @@ const AddSubscriptionPlan: React.FC = () => {
     } = useSubscriptionPlanFormValidation();
 
     // State để lưu custom config cho từng gói
-    const [customPlansConfig, setCustomPlansConfig] = useState<{
-        quarterly?: {
-            maxDoctors: string;
-            maxSpecialties: string;
-            maxAppointments: string;
-            unlimitedDoctors: boolean;
-            unlimitedSpecialties: boolean;
-            unlimitedAppointments: boolean;
-            features?: string;
-            status?: 'ACTIVE' | 'INACTIVE';
-        };
-        yearly?: {
-            maxDoctors: string;
-            maxSpecialties: string;
-            maxAppointments: string;
-            unlimitedDoctors: boolean;
-            unlimitedSpecialties: boolean;
-            unlimitedAppointments: boolean;
-            features?: string;
-            status?: 'ACTIVE' | 'INACTIVE';
-        };
-    }>({});
+    const [customPlansConfig, setCustomPlansConfig] = useState<CustomPlansConfig>({});
 
     // Preview 3 gói sẽ được tạo (chỉ khi autoCreateAllCycles = true)
     const plansPreviews = useMemo(() => {
@@ -157,61 +142,21 @@ const AddSubscriptionPlan: React.FC = () => {
         e.preventDefault();
 
         // Custom validation - không cần billing cycle vì tự động tạo 3 gói
-        // Validate tên và giá (bắt buộc)
-        if (!formData.name || !formData.name.trim()) {
-            toast.error('Vui lòng nhập tên gói dịch vụ');
-            return;
-        }
+        const validationError = validateSubscriptionPlanForm(
+            formData,
+            isUnlimitedDoctors,
+            isUnlimitedSpecialties,
+            isUnlimitedAppointments,
+            !autoCreateAllCycles
+        );
 
-        if (!formData.price) {
-            toast.error('Vui lòng nhập giá gói');
-            return;
-        }
-
-        // Validate giá
-        const price = parseFloat(formData.price);
-        if (isNaN(price) || price <= 0) {
-            toast.error('Giá gói phải là số dương');
-            return;
-        }
-
-        // Validate billing cycle (chỉ khi tạo 1 gói)
-        if (!autoCreateAllCycles && !formData.billingCycle) {
-            toast.error('Vui lòng chọn chu kỳ thanh toán');
-            return;
-        }
-
-        // Validate giới hạn (chỉ khi không unlimited)
-        if (!isUnlimitedDoctors && (!formData.maxDoctors || parseInt(formData.maxDoctors) <= 0)) {
-            toast.error('Vui lòng nhập số bác sĩ tối đa hoặc chọn không giới hạn');
-            return;
-        }
-
-        if (
-            !isUnlimitedSpecialties &&
-            (!formData.maxSpecialties || parseInt(formData.maxSpecialties) <= 0)
-        ) {
-            toast.error('Vui lòng nhập số chuyên khoa tối đa hoặc chọn không giới hạn');
-            return;
-        }
-
-        if (
-            !isUnlimitedAppointments &&
-            (!formData.maxAppointments || parseInt(formData.maxAppointments) <= 0)
-        ) {
-            toast.error('Vui lòng nhập số lịch hẹn tối đa hoặc chọn không giới hạn');
+        if (validationError) {
+            toast.error(validationError);
             return;
         }
 
         try {
             setIsSubmitting(true);
-
-            // Helper function to parse and convert -1 to null for unlimited
-            const parseLimit = (value: string, unlimited: boolean): number | null => {
-                if (unlimited) return null; // null = không giới hạn khi gửi lên server
-                const num = parseInt(value);
-                return num === -1 ? null : num;
-            };
 
             const basePrice = parseFloat(formData.price);
             const baseName = formData.name;
@@ -478,238 +423,66 @@ const AddSubscriptionPlan: React.FC = () => {
                                                         </h6>
                                                         <div className="small">
                                                             {/* Bác sĩ */}
-                                                            <div className="mb-2">
-                                                                <label className="form-label small mb-1">
-                                                                    Bác sĩ:
-                                                                </label>
-                                                                <div className="d-flex gap-1">
-                                                                    <input
-                                                                        type="number"
-                                                                        className="form-control form-control-sm"
-                                                                        placeholder={
-                                                                            formData.maxDoctors ||
-                                                                            '10'
-                                                                        }
-                                                                        value={
-                                                                            preview.unlimitedDoctors
-                                                                                ? ''
-                                                                                : preview.maxDoctors
-                                                                        }
-                                                                        disabled={
-                                                                            preview.unlimitedDoctors
-                                                                        }
-                                                                        onChange={(e) => {
-                                                                            const key =
-                                                                                preview.billingCycle ===
-                                                                                'QUARTERLY'
-                                                                                    ? 'quarterly'
-                                                                                    : 'yearly';
-                                                                            setCustomPlansConfig(
-                                                                                (prev) => ({
-                                                                                    ...prev,
-                                                                                    [key]: {
-                                                                                        ...prev[
-                                                                                            key as keyof typeof prev
-                                                                                        ],
-                                                                                        maxDoctors:
-                                                                                            e.target
-                                                                                                .value,
-                                                                                        unlimitedDoctors: false,
-                                                                                    },
-                                                                                })
-                                                                            );
-                                                                        }}
-                                                                    />
-                                                                    <div className="form-check">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="form-check-input"
-                                                                            checked={
-                                                                                preview.unlimitedDoctors
-                                                                            }
-                                                                            onChange={(e) => {
-                                                                                const key =
-                                                                                    preview.billingCycle ===
-                                                                                    'QUARTERLY'
-                                                                                        ? 'quarterly'
-                                                                                        : 'yearly';
-                                                                                setCustomPlansConfig(
-                                                                                    (prev) => ({
-                                                                                        ...prev,
-                                                                                        [key]: {
-                                                                                            ...prev[
-                                                                                                key as keyof typeof prev
-                                                                                            ],
-                                                                                            unlimitedDoctors:
-                                                                                                e
-                                                                                                    .target
-                                                                                                    .checked,
-                                                                                            maxDoctors:
-                                                                                                '',
-                                                                                        },
-                                                                                    })
-                                                                                );
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            <PreviewLimitInput
+                                                                label="Bác sĩ"
+                                                                type="doctors"
+                                                                billingCycle={
+                                                                    preview.billingCycle as
+                                                                        | 'QUARTERLY'
+                                                                        | 'YEARLY'
+                                                                }
+                                                                value={preview.maxDoctors}
+                                                                unlimited={preview.unlimitedDoctors}
+                                                                placeholder={
+                                                                    formData.maxDoctors || '10'
+                                                                }
+                                                                setCustomPlansConfig={
+                                                                    setCustomPlansConfig
+                                                                }
+                                                            />
 
                                                             {/* Chuyên khoa */}
-                                                            <div className="mb-2">
-                                                                <label className="form-label small mb-1">
-                                                                    Chuyên khoa:
-                                                                </label>
-                                                                <div className="d-flex gap-1">
-                                                                    <input
-                                                                        type="number"
-                                                                        className="form-control form-control-sm"
-                                                                        placeholder={
-                                                                            formData.maxSpecialties ||
-                                                                            '5'
-                                                                        }
-                                                                        value={
-                                                                            preview.unlimitedSpecialties
-                                                                                ? ''
-                                                                                : preview.maxSpecialties
-                                                                        }
-                                                                        disabled={
-                                                                            preview.unlimitedSpecialties
-                                                                        }
-                                                                        onChange={(e) => {
-                                                                            const key =
-                                                                                preview.billingCycle ===
-                                                                                'QUARTERLY'
-                                                                                    ? 'quarterly'
-                                                                                    : 'yearly';
-                                                                            setCustomPlansConfig(
-                                                                                (prev) => ({
-                                                                                    ...prev,
-                                                                                    [key]: {
-                                                                                        ...prev[
-                                                                                            key as keyof typeof prev
-                                                                                        ],
-                                                                                        maxSpecialties:
-                                                                                            e.target
-                                                                                                .value,
-                                                                                        unlimitedSpecialties: false,
-                                                                                    },
-                                                                                })
-                                                                            );
-                                                                        }}
-                                                                    />
-                                                                    <div className="form-check">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="form-check-input"
-                                                                            checked={
-                                                                                preview.unlimitedSpecialties
-                                                                            }
-                                                                            onChange={(e) => {
-                                                                                const key =
-                                                                                    preview.billingCycle ===
-                                                                                    'QUARTERLY'
-                                                                                        ? 'quarterly'
-                                                                                        : 'yearly';
-                                                                                setCustomPlansConfig(
-                                                                                    (prev) => ({
-                                                                                        ...prev,
-                                                                                        [key]: {
-                                                                                            ...prev[
-                                                                                                key as keyof typeof prev
-                                                                                            ],
-                                                                                            unlimitedSpecialties:
-                                                                                                e
-                                                                                                    .target
-                                                                                                    .checked,
-                                                                                            maxSpecialties:
-                                                                                                '',
-                                                                                        },
-                                                                                    })
-                                                                                );
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            <PreviewLimitInput
+                                                                label="Chuyên khoa"
+                                                                type="specialties"
+                                                                billingCycle={
+                                                                    preview.billingCycle as
+                                                                        | 'QUARTERLY'
+                                                                        | 'YEARLY'
+                                                                }
+                                                                value={preview.maxSpecialties}
+                                                                unlimited={
+                                                                    preview.unlimitedSpecialties
+                                                                }
+                                                                placeholder={
+                                                                    formData.maxSpecialties || '5'
+                                                                }
+                                                                setCustomPlansConfig={
+                                                                    setCustomPlansConfig
+                                                                }
+                                                            />
 
                                                             {/* Lịch hẹn */}
-                                                            <div className="mb-1">
-                                                                <label className="form-label small mb-1">
-                                                                    Lịch hẹn:
-                                                                </label>
-                                                                <div className="d-flex gap-1">
-                                                                    <input
-                                                                        type="number"
-                                                                        className="form-control form-control-sm"
-                                                                        placeholder={
-                                                                            formData.maxAppointments ||
-                                                                            '100'
-                                                                        }
-                                                                        value={
-                                                                            preview.unlimitedAppointments
-                                                                                ? ''
-                                                                                : preview.maxAppointments
-                                                                        }
-                                                                        disabled={
-                                                                            preview.unlimitedAppointments
-                                                                        }
-                                                                        onChange={(e) => {
-                                                                            const key =
-                                                                                preview.billingCycle ===
-                                                                                'QUARTERLY'
-                                                                                    ? 'quarterly'
-                                                                                    : 'yearly';
-                                                                            setCustomPlansConfig(
-                                                                                (prev) => ({
-                                                                                    ...prev,
-                                                                                    [key]: {
-                                                                                        ...prev[
-                                                                                            key as keyof typeof prev
-                                                                                        ],
-                                                                                        maxAppointments:
-                                                                                            e.target
-                                                                                                .value,
-                                                                                        unlimitedAppointments: false,
-                                                                                    },
-                                                                                })
-                                                                            );
-                                                                        }}
-                                                                    />
-                                                                    <div className="form-check">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="form-check-input"
-                                                                            checked={
-                                                                                preview.unlimitedAppointments
-                                                                            }
-                                                                            onChange={(e) => {
-                                                                                const key =
-                                                                                    preview.billingCycle ===
-                                                                                    'QUARTERLY'
-                                                                                        ? 'quarterly'
-                                                                                        : 'yearly';
-                                                                                setCustomPlansConfig(
-                                                                                    (prev) => ({
-                                                                                        ...prev,
-                                                                                        [key]: {
-                                                                                            ...prev[
-                                                                                                key as keyof typeof prev
-                                                                                            ],
-                                                                                            unlimitedAppointments:
-                                                                                                e
-                                                                                                    .target
-                                                                                                    .checked,
-                                                                                            maxAppointments:
-                                                                                                '',
-                                                                                        },
-                                                                                    })
-                                                                                );
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            <PreviewLimitInput
+                                                                label="Lịch hẹn"
+                                                                type="appointments"
+                                                                billingCycle={
+                                                                    preview.billingCycle as
+                                                                        | 'QUARTERLY'
+                                                                        | 'YEARLY'
+                                                                }
+                                                                value={preview.maxAppointments}
+                                                                unlimited={
+                                                                    preview.unlimitedAppointments
+                                                                }
+                                                                placeholder={
+                                                                    formData.maxAppointments ||
+                                                                    '100'
+                                                                }
+                                                                setCustomPlansConfig={
+                                                                    setCustomPlansConfig
+                                                                }
+                                                            />
 
                                                             <small className="text-muted">
                                                                 <i className="ti ti-check me-1"></i>{' '}

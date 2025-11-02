@@ -34,10 +34,8 @@ import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
 import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
-import {
-    ListSubscriptionPlans,
-    ManageHospitalSubscriptions,
-} from '@/pages/admins/SubscriptionPlans';
+import ListSubscriptionPlans from '@/pages/admins/SubscriptionPlans/ListSubscriptionPlans';
+import ManageHospitalSubscriptions from '@/pages/admins/SubscriptionPlans/ManageHospitalSubscriptions';
 import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptionPlan';
 import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscriptionPlan';
 
