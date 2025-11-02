@@ -105,7 +105,7 @@ const handleForceLogout = (reason?: string) => {
     }
 
     // Show toast notification if role mismatch detected
-    if (reason && reason.includes('Role mismatch')) {
+    if (reason?.includes('Role mismatch')) {
         toast.error(
             'CẢNH BÁO BẢO MẬT: Phát hiện thông tin đăng nhập không hợp lệ. Bạn sẽ được đăng xuất để bảo vệ hệ thống.',
             {
@@ -114,7 +114,7 @@ const handleForceLogout = (reason?: string) => {
                 draggable: false,
             }
         );
-    } else if (reason && reason.includes('Session expired')) {
+    } else if (reason?.includes('Session expired')) {
         toast.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', {
             autoClose: 3000,
         });
@@ -123,12 +123,12 @@ const handleForceLogout = (reason?: string) => {
     // Fallback redirect to login if not already there
     // Note: ProtectedRoute will handle redirect in most cases,
     // but this ensures redirect even from public routes
-    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    if (typeof globalThis !== 'undefined' && globalThis.location.pathname !== '/login') {
         // Use a longer timeout to avoid race condition with ProtectedRoute
         setTimeout(() => {
             // Double-check we're still not on login page (ProtectedRoute might have redirected)
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+            if (globalThis.location.pathname !== '/login') {
+                globalThis.location.href = '/login';
             }
         }, 1000); // 1 second delay to let React Router handle redirect first
     }

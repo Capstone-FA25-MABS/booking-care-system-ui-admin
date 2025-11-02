@@ -11,80 +11,15 @@ import {
 } from '@/services/auth.service';
 import Pagination from '@/components/Pagination';
 import ActionDropdown from '@/components/ActionDropdown';
-
-// Sort options for dropdown
-const sortOptions = [
-    { value: 'CreatedAt_desc', label: 'Mới nhất', direction: 'desc' as const },
-    { value: 'CreatedAt_asc', label: 'Cũ nhất', direction: 'asc' as const },
-    { value: 'FullName_asc', label: 'Tên A-Z', direction: 'asc' as const },
-    { value: 'FullName_desc', label: 'Tên Z-A', direction: 'desc' as const },
-    { value: 'Email_asc', label: 'Email A-Z', direction: 'asc' as const },
-    { value: 'Email_desc', label: 'Email Z-A', direction: 'desc' as const },
-];
-
-// Helper function to get toggle active title
-const getToggleActiveTitle = (isLocked: boolean, status: string): string => {
-    if (isLocked) {
-        return 'Không thể thay đổi trạng thái khi tài khoản đang bị khóa';
-    }
-    return status === 'ACTIVE'
-        ? 'Bật (Hoạt động) - Click để tắt'
-        : 'Tắt (Không hoạt động) - Click để bật';
-};
-
-const getLockTitle = (): string => 'Đang mở - Click để khóa tài khoản';
-const getUnlockTitle = (): string => 'Đang khóa - Click để mở khóa';
-
-// Skeleton cell component for loading state
-interface SkeletonCellProps {
-    height: string;
-    width: string;
-}
-
-const SkeletonCell: React.FC<SkeletonCellProps> = ({ height, width }) => {
-    const skeletonClass = 'bg-light rounded placeholder-glow';
-    const skeletonStyle = {
-        animation: 'pulse 1.5s ease-in-out infinite',
-    };
-
-    return (
-        <td>
-            <div className={skeletonClass} style={{ height, width, ...skeletonStyle }} />
-        </td>
-    );
-};
-
-// Skeleton row component for loading state
-const SkeletonRow: React.FC = () => {
-    const skeletonStyle = {
-        animation: 'pulse 1.5s ease-in-out infinite',
-    };
-
-    return (
-        <tr>
-            {/* Column 1: Name with Avatar */}
-            <td>
-                <div className="d-flex align-items-center">
-                    <div
-                        className="avatar me-2 bg-light rounded-circle placeholder-glow"
-                        style={{ width: '40px', height: '40px', ...skeletonStyle }}
-                    />
-                    <div className="flex-grow-1">
-                        <div
-                            className="bg-light rounded placeholder-glow mb-2"
-                            style={{ height: '14px', width: '120px', ...skeletonStyle }}
-                        />
-                    </div>
-                </div>
-            </td>
-            <SkeletonCell height="14px" width="180px" />
-            <SkeletonCell height="14px" width="150px" />
-            <SkeletonCell height="24px" width="50px" />
-            <SkeletonCell height="24px" width="50px" />
-            <SkeletonCell height="24px" width="80px" />
-        </tr>
-    );
-};
+import { SkeletonTableRow } from '@/components/SkeletonLoading';
+import {
+    sortOptions,
+    getToggleActiveTitle,
+    getLockTitle,
+    getUnlockTitle,
+    getStatusBadgeClass,
+    getStatusLabel,
+} from '@/utils/account-management.utils';
 
 const DoctorManagement: React.FC = () => {
     // Get hospital profile from Redux
@@ -195,28 +130,6 @@ const DoctorManagement: React.FC = () => {
         }
     };
 
-    const getStatusBadgeClass = (status: string) => {
-        switch (status) {
-            case 'ACTIVE':
-                return 'badge badge-soft-success';
-            case 'INACTIVE':
-                return 'badge badge-soft-danger';
-            default:
-                return 'badge badge-soft-secondary';
-        }
-    };
-
-    const getStatusLabel = (status: string) => {
-        switch (status.toUpperCase()) {
-            case 'ACTIVE':
-                return 'Hoạt động';
-            case 'INACTIVE':
-                return 'Không hoạt động';
-            default:
-                return 'Không xác định';
-        }
-    };
-
     const renderTableBody = () => {
         if (isLoading) {
             return (
@@ -225,7 +138,7 @@ const DoctorManagement: React.FC = () => {
                         { length: 5 },
                         (_, index) => `skeleton-row-${Date.now()}-${index}`
                     ).map((skeletonId) => (
-                        <SkeletonRow key={skeletonId} />
+                        <SkeletonTableRow key={skeletonId} showPhoneColumn={false} />
                     ))}
                 </>
             );
@@ -317,8 +230,8 @@ const DoctorManagement: React.FC = () => {
         return (
             <div className="content">
                 <div className="alert alert-danger" role="alert">
-                    <i className="ti ti-alert-circle me-2" />
-                    Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.
+                    <i className="ti ti-alert-circle me-2" /> Không tìm thấy thông tin bệnh viện.
+                    Vui lòng đăng nhập lại.
                 </div>
             </div>
         );
@@ -355,6 +268,7 @@ const DoctorManagement: React.FC = () => {
                     <h4 className="fw-bold mb-0">
                         Quản Lý Bác Sĩ
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                            {' '}
                             Tổng Bác Sĩ: {totalCount}
                         </span>
                     </h4>
