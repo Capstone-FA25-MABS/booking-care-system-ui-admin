@@ -858,13 +858,30 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
         <div
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={onClose}
-            role="button"
-            aria-label="Modal backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="terms-modal-title"
         >
+            {/* Hidden button overlay for backdrop click - accessible and SonarQube compliant */}
+            <button
+                type="button"
+                onClick={onClose}
+                aria-label="Đóng modal"
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    zIndex: 0,
+                }}
+            />
             <div
                 className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
-                onClick={(e) => e.stopPropagation()}
+                style={{ position: 'relative', zIndex: 1 }}
             >
                 <div className={`modal-content ${styles.modalContent}`}>
                     <div className="modal-header border-0 pb-0">
