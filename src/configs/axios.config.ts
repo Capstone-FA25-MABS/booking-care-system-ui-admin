@@ -1,4 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'react-toastify';
 import { API_CONFIG } from './api.config';
 import AuthService from '@/services/auth.service';
 import { resetAuthState } from '@/store/slices/authSlice';
@@ -72,9 +73,11 @@ const handleNetworkError = (error: AxiosError) => {
 };
 
 const handleForbiddenError = (err: any) => {
-    if (typeof window !== 'undefined') {
-        window.location.href = '/error-403';
-    }
+    console.error('[Security] 403 Forbidden - Possible role mismatch:', err);
+
+    // Force logout if forbidden error (likely role mismatch)
+    handleForceLogout('Role mismatch: 403 Forbidden');
+
     return Promise.reject(new Error(err?.message || 'Access forbidden'));
 };
 
@@ -86,7 +89,9 @@ const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
         .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
 };
 
-const handleForceLogout = () => {
+const handleForceLogout = (reason?: string) => {
+    console.warn('[Security] Force logout initiated:', reason || 'Unauthorized access');
+
     AuthService.clearAuthData();
 
     // Clear Redux state using injected store
@@ -99,9 +104,33 @@ const handleForceLogout = () => {
         console.error('Failed to clear Redux state:', error);
     }
 
-    // Redirect to login
+    // Show toast notification if role mismatch detected
+    if (reason && reason.includes('Role mismatch')) {
+        toast.error(
+            'CẢNH BÁO BẢO MẬT: Phát hiện thông tin đăng nhập không hợp lệ. Bạn sẽ được đăng xuất để bảo vệ hệ thống.',
+            {
+                autoClose: 5000,
+                closeOnClick: false,
+                draggable: false,
+            }
+        );
+    } else if (reason && reason.includes('Session expired')) {
+        toast.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', {
+            autoClose: 3000,
+        });
+    }
+
+    // Fallback redirect to login if not already there
+    // Note: ProtectedRoute will handle redirect in most cases,
+    // but this ensures redirect even from public routes
     if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        // Use a longer timeout to avoid race condition with ProtectedRoute
+        setTimeout(() => {
+            // Double-check we're still not on login page (ProtectedRoute might have redirected)
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
+        }, 1000); // 1 second delay to let React Router handle redirect first
     }
 };
 
@@ -118,7 +147,7 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         isRefreshing = false;
 
         // Force logout and clear all state
-        handleForceLogout();
+        handleForceLogout('Session expired or invalid token');
 
         return Promise.reject(new Error(String(refreshError)));
     }
