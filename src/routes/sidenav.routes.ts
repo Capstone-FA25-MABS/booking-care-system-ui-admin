@@ -7,6 +7,7 @@ import {
     createDoctorsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
+    createSubscriptionPlansMenuItem,
 } from './menu.items';
 
 export const listGroupMenuItemHospital: MenuConfig = [
@@ -153,6 +154,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
+            createSubscriptionPlansMenuItem(),
         ],
     },
     {
