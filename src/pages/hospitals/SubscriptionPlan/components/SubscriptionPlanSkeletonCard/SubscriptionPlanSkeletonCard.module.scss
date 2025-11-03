@@ -1,0 +1,139 @@
+.card {
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    position: relative;
+    transition: all 0.2s ease;
+
+    &.highlighted {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: 2px solid #dee2e6;
+    }
+
+    &.normal {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid #dee2e6;
+    }
+}
+
+.header {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.headerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.titleSection {
+    flex-grow: 1;
+}
+
+.skeletonTitle {
+    height: 1rem;
+    width: 60%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.priceContainer {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.skeletonPrice {
+    height: 2rem;
+    width: 40%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+}
+
+.skeletonPriceSubtext {
+    height: 1.25rem;
+    width: 30%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+}
+
+.skeletonButton {
+    width: 100%;
+    height: 2.5rem;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 50px;
+    margin-bottom: 1rem;
+}
+
+.featuresList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.featureItem {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.skeletonFeatureIcon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    margin-top: 0.125rem;
+}
+
+.featureContent {
+    flex-grow: 1;
+}
+
+.skeletonFeatureText {
+    height: 0.875rem;
+    width: 100%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.skeletonFeatureSubtext {
+    height: 0.75rem;
+    width: 70%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}

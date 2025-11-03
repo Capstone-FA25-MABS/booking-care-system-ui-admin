@@ -45,6 +45,12 @@ export const PATHS = {
         SERVICE_TYPES: {
             ROOT: 'service-types',
         },
+        SUBSCRIPTION_PLANS: {
+            ROOT: 'subscription-plans',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+            MANAGE_HOSPITALS: 'manage-hospital-subscriptions',
+        },
         HOSPITAL_REGISTRATIONS: {
             ROOT: 'hospital-registrations',
         },
@@ -58,6 +64,9 @@ export const PATHS = {
             ROOT: 'doctors',
             ADD: 'add',
             EDIT: 'edit/:id',
+        },
+        DOCTOR_MANAGEMENT: {
+            ROOT: 'doctor-management',
         },
         APPOINTMENTS: {
             ROOT: 'appointments',

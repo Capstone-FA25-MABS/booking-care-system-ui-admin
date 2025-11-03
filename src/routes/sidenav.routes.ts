@@ -7,6 +7,7 @@ import {
     createDoctorsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
+    createSubscriptionPlansMenuItem,
 } from './menu.items';
 
 export const listGroupMenuItemHospital: MenuConfig = [
@@ -14,6 +15,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
         title: 'Hospital',
         items: [
             createDoctorsMenuItem(),
+            createSimpleMenuItem(
+                'Quản lý bác sĩ',
+                'ti ti-users-group',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
+            ),
             createAppointmentsMenuItem('staff'),
             createSimpleMenuItem(
                 'Hoàn tiền',
@@ -153,6 +159,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
+            createSubscriptionPlansMenuItem(),
         ],
     },
     {

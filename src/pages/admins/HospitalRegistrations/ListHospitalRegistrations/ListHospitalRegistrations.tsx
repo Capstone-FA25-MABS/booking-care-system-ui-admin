@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import TableSkeleton from '@/components/TableSkeleton';
-import { AppFooter } from '@/components/AppFooter';
 import { HospitalRegistrationService } from '@/services/hospital-registration.service';
 import ApprovalModal from '@/pages/admins/HospitalRegistrations/Modals/ApprovalModal';
 import RejectionModal from '@/pages/admins/HospitalRegistrations/Modals/RejectionModal';
@@ -496,9 +495,6 @@ const ListHospitalRegistrations: React.FC = () => {
                 onClose={handleCloseRejection}
                 onSuccess={handleRejectionSuccess}
             />
-
-            {/* Footer */}
-            <AppFooter />
         </>
     );
 };
