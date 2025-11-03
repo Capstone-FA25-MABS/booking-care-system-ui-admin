@@ -41,15 +41,15 @@ export const createAppointmentsMenuItem = (role: 'staff' | 'doctor'): MenuItem =
 
     // Doctor role
     return {
-        label: 'Appointments',
+        label: 'Lịch hẹn khám',
         icon: 'ti ti-calendar-check',
         subItems: [
             {
-                label: 'My Appointments',
+                label: 'Lịch hẹn khám của tôi',
                 link: buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.APPOINTMENTS.ROOT),
             },
             {
-                label: 'Calendar',
+                label: 'Lịch',
                 link: buildPath(
                     PATHS.DOCTOR.ROOT,
                     PATHS.DOCTOR.APPOINTMENTS.ROOT,

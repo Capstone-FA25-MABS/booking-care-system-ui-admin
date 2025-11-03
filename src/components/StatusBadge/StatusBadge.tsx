@@ -44,11 +44,11 @@ const STATUS_CONFIG: Record<StatusKey, StatusConfig> = {
     },
     PENDING: {
         className: 'badge-soft-warning text-warning',
-        text: 'Đang xử lí',
+        text: 'Đang chờ xác nhận',
     },
     COMPLETED: {
         className: 'badge-soft-primary text-primary',
-        text: 'Hoàn thành',
+        text: 'Đã khám',
     },
     CANCELLED: {
         className: 'badge-soft-danger text-danger',
@@ -60,7 +60,7 @@ const STATUS_CONFIG: Record<StatusKey, StatusConfig> = {
     },
     CONFIRMED: {
         className: 'badge-soft-success text-success',
-        text: 'Đã xác nhận',
+        text: 'Sắp khám',
     },
 };
 
