@@ -21,6 +21,63 @@ interface AppointmentTableBodyProps {
     skeletonComponent: React.ReactNode;
 }
 
+// Helper function to parse attachment URLs
+const parseAttachmentUrls = (attachmentUrls: string[] | string | undefined): string[] => {
+    if (!attachmentUrls) {
+        return [];
+    }
+
+    if (Array.isArray(attachmentUrls)) {
+        return attachmentUrls;
+    }
+
+    if (typeof attachmentUrls === 'string') {
+        try {
+            // Try to parse as JSON if it's a string
+            const parsed = JSON.parse(attachmentUrls);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            // If not JSON, treat as comma-separated string
+            return attachmentUrls
+                .split(',')
+                .map((url: string) => url.trim())
+                .filter((url: string) => url.length > 0);
+        }
+    }
+
+    return [];
+};
+
+// Component to render attachment buttons
+const AttachmentButtons: React.FC<{
+    attachments: string[];
+    onPreviewFile: (fileUrl: string, fileName: string) => void;
+}> = ({ attachments, onPreviewFile }) => {
+    if (attachments.length === 0) {
+        return <span className="text-muted">Không có file</span>;
+    }
+
+    return (
+        <div className="d-flex gap-2 flex-wrap">
+            {attachments.map((url, index) => {
+                const fileName = `File ${index + 1}`;
+                const fileKey = `${url}-${index}`;
+                return (
+                    <button
+                        key={fileKey}
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => onPreviewFile(url, fileName)}
+                        title={`Xem ${fileName}`}
+                    >
+                        <i className="ti ti-file me-1"></i> {fileName}
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
 export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
     isLoading,
     apiError,
@@ -116,51 +173,10 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
                                 </div>
                             </td>
                             <td>
-                                {(() => {
-                                    let attachments: string[] = [];
-
-                                    // Handle different data types for attachmentUrls
-                                    if (appointment.attachmentUrls) {
-                                        if (Array.isArray(appointment.attachmentUrls)) {
-                                            attachments = appointment.attachmentUrls;
-                                        } else if (typeof appointment.attachmentUrls === 'string') {
-                                            const urlString: string = appointment.attachmentUrls;
-                                            try {
-                                                // Try to parse as JSON if it's a string
-                                                const parsed = JSON.parse(urlString);
-                                                attachments = Array.isArray(parsed) ? parsed : [];
-                                            } catch {
-                                                // If not JSON, treat as comma-separated string
-                                                attachments = urlString
-                                                    .split(',')
-                                                    .map((url: string) => url.trim())
-                                                    .filter((url: string) => url.length > 0);
-                                            }
-                                        }
-                                    }
-
-                                    return attachments && attachments.length > 0 ? (
-                                        <div className="d-flex gap-2 flex-wrap">
-                                            {attachments.map((url, index) => {
-                                                const fileName = `File ${index + 1}`;
-                                                return (
-                                                    <button
-                                                        key={index}
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-primary"
-                                                        onClick={() => onPreviewFile(url, fileName)}
-                                                        title={`Xem ${fileName}`}
-                                                    >
-                                                        <i className="ti ti-file me-1"></i>{' '}
-                                                        {fileName}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <span className="text-muted">Không có file</span>
-                                    );
-                                })()}
+                                <AttachmentButtons
+                                    attachments={parseAttachmentUrls(appointment.attachmentUrls)}
+                                    onPreviewFile={onPreviewFile}
+                                />
                             </td>
                         </>
                     )}

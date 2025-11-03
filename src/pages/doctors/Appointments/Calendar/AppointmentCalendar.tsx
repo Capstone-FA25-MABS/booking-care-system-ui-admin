@@ -76,7 +76,7 @@ const AppointmentCalendar: React.FC = () => {
                             // Extract start time (e.g., "08:00" from "08:00 - 08:30")
                             const startTime = timeText.split(' - ')[0] || '08:00';
                             const [hours, minutes] = startTime.split(':');
-                            date.setHours(parseInt(hours), parseInt(minutes));
+                            date.setHours(Number.parseInt(hours, 10), Number.parseInt(minutes, 10));
 
                             // Set end time (default 30 minutes duration)
                             const endDate = new Date(date);
