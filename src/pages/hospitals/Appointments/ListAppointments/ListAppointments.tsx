@@ -544,7 +544,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Chờ xử lý{' '}
+                            Đang chờ xác nhận{' '}
                             <span className={getStatusBadgeClass('waiting')}>
                                 {appointmentCounts.waiting}
                             </span>
@@ -556,7 +556,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Sắp Tới{' '}
+                            Sắp khám{' '}
                             <span className={getStatusBadgeClass('upcoming')}>
                                 {appointmentCounts.upcoming}
                             </span>
@@ -580,7 +580,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Hoàn Thành{' '}
+                            Đã khám{' '}
                             <span className={getStatusBadgeClass('completed')}>
                                 {appointmentCounts.completed}
                             </span>

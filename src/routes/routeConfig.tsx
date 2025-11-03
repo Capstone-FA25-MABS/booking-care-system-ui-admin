@@ -6,7 +6,7 @@ import DoctorDashboard from '@/pages/doctors/Dashboard';
 import NotFoundError from '@/pages/errors/NotFoundError';
 import ListDoctors from '@/pages/hospitals/Doctors/ListDoctors';
 import ListAppointments from '@/pages/hospitals/Appointments/ListAppointments';
-import MyAppointments from '@/pages/doctors/Appointments';
+import { MyAppointments } from '@/pages/doctors/Appointments/MyAppointments';
 import ListRefunds from '@/pages/hospitals/Refunds/ListRefunds';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
@@ -36,6 +36,7 @@ import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
+import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
 
 const routes: RouteObject[] = [
     {
@@ -107,7 +108,10 @@ const routes: RouteObject[] = [
             { path: PATHS.DOCTOR.DASHBOARD, element: <DoctorDashboard /> },
             {
                 path: PATHS.DOCTOR.APPOINTMENTS.ROOT,
-                element: <MyAppointments />,
+                children: [
+                    { index: true, element: <MyAppointments /> },
+                    { path: PATHS.DOCTOR.APPOINTMENTS.CALENDAR, element: <AppointmentCalendar /> },
+                ],
             },
             { path: PATHS.DOCTOR.SCHEDULE, element: <h1>Doctor Schedule</h1> },
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
