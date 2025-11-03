@@ -15,7 +15,6 @@ import {
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
 import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
-import { AppFooter } from '@/components/AppFooter';
 import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
 import { StatusTabButton } from './MyAppointments/components/StatusTabButton';
 import { AppointmentTableBody } from './MyAppointments/components/AppointmentTableBody';
@@ -349,10 +348,6 @@ const MyAppointments: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-
-            {/* Footer Start */}
-            <AppFooter />
-            {/* Footer End */}
 
             {/* Filter Modal */}
             <ModalFilter

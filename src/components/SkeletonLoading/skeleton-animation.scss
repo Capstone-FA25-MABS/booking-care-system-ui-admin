@@ -1,0 +1,13 @@
+/**
+ * Skeleton loading animation
+ * Used by SkeletonCell and SkeletonTableRow components
+ */
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

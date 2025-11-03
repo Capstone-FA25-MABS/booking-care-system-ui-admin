@@ -65,6 +65,9 @@ export const PATHS = {
             ADD: 'add',
             EDIT: 'edit/:id',
         },
+        DOCTOR_MANAGEMENT: {
+            ROOT: 'doctor-management',
+        },
         APPOINTMENTS: {
             ROOT: 'appointments',
             NEW: 'new',

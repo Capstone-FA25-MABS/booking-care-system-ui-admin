@@ -7,6 +7,7 @@ import MainHeader from '../components/MainHeader';
 import Sidenav from '../components/Sidenav';
 import { useSidebarToggle } from '@/hooks/useSidebarToggle';
 import styles from './MainLayout.module.scss';
+import { AppFooter } from '@/components/AppFooter';
 
 interface MainLayoutProps {
     listGroupMenuItem: MenuConfig;
@@ -50,6 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) 
                 </div>
                 <div className="page-wrapper">
                     <main className={styles.contentContainer}>{children ?? <Outlet />}</main>
+                    <AppFooter />
                 </div>
             </div>
             <div className="sidebar-overlay" ref={sidebarOverlayRef}></div>
