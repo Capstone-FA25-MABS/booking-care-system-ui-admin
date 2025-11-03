@@ -34,6 +34,10 @@ import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
 import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
+import ListSubscriptionPlans from '@/pages/admins/SubscriptionPlans/ListSubscriptionPlans';
+import ManageHospitalSubscriptions from '@/pages/admins/SubscriptionPlans/ManageHospitalSubscriptions';
+import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptionPlan';
+import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
@@ -88,6 +92,21 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.SERVICE_TYPES.ROOT,
                 children: [{ index: true, element: <ListServiceTypes /> }],
+            },
+            {
+                path: PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT,
+                children: [
+                    { index: true, element: <ListSubscriptionPlans /> },
+                    { path: PATHS.ADMIN.SUBSCRIPTION_PLANS.ADD, element: <AddSubscriptionPlan /> },
+                    {
+                        path: PATHS.ADMIN.SUBSCRIPTION_PLANS.EDIT,
+                        element: <EditSubscriptionPlan />,
+                    },
+                    {
+                        path: PATHS.ADMIN.SUBSCRIPTION_PLANS.MANAGE_HOSPITALS,
+                        element: <ManageHospitalSubscriptions />,
+                    },
+                ],
             },
             {
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
