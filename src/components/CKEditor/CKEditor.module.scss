@@ -34,7 +34,8 @@
                     width: 80%;
                     max-width: 800px;
 
-                    oembed {
+                    // CKEditor custom element for media embeds
+                    & oembed {
                         display: block;
                         padding: 2rem;
                         background: #f0f0f0;

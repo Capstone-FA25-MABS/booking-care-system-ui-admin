@@ -60,8 +60,8 @@ const YearsOfExperienceField: React.FC<YearsOfExperienceFieldProps> = ({
             {error && <div className="invalid-feedback d-block">{error}</div>}
             {!error && value > 80 && (
                 <small className="text-warning d-block mt-1">
-                    <i className="feather-alert-triangle me-1"></i>
-                    Số năm kinh nghiệm tối đa là 80 năm
+                    <i className="feather-alert-triangle me-1"></i> Số năm kinh nghiệm tối đa là 80
+                    năm
                 </small>
             )}
         </div>

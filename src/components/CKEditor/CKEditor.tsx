@@ -112,6 +112,14 @@ const CKEditor: React.FC<CKEditorProps> = ({
         return icon.startsWith('ti-') ? `ti ${icon}` : `ti ti-${icon}`;
     };
 
+    // Helper function to generate heading options
+    const createHeadingOption = (level: number) => ({
+        model: `heading${level}` as const,
+        view: `h${level}` as const,
+        title: `Heading ${level}`,
+        class: `ck-heading_heading${level}`,
+    });
+
     const editorConfig = {
         toolbar: {
             items: [
@@ -224,42 +232,7 @@ const CKEditor: React.FC<CKEditorProps> = ({
         heading: {
             options: [
                 { model: 'paragraph' as const, title: 'Paragraph', class: 'ck-heading_paragraph' },
-                {
-                    model: 'heading1' as const,
-                    view: 'h1' as const,
-                    title: 'Heading 1',
-                    class: 'ck-heading_heading1',
-                },
-                {
-                    model: 'heading2' as const,
-                    view: 'h2' as const,
-                    title: 'Heading 2',
-                    class: 'ck-heading_heading2',
-                },
-                {
-                    model: 'heading3' as const,
-                    view: 'h3' as const,
-                    title: 'Heading 3',
-                    class: 'ck-heading_heading3',
-                },
-                {
-                    model: 'heading4' as const,
-                    view: 'h4' as const,
-                    title: 'Heading 4',
-                    class: 'ck-heading_heading4',
-                },
-                {
-                    model: 'heading5' as const,
-                    view: 'h5' as const,
-                    title: 'Heading 5',
-                    class: 'ck-heading_heading5',
-                },
-                {
-                    model: 'heading6' as const,
-                    view: 'h6' as const,
-                    title: 'Heading 6',
-                    class: 'ck-heading_heading6',
-                },
+                ...Array.from({ length: 6 }, (_, i) => createHeadingOption(i + 1)),
             ],
         },
         image: {
