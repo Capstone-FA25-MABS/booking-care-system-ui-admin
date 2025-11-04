@@ -161,7 +161,19 @@ const handleResponseError = async (error: AxiosError) => {
         data: err,
     });
 
-    return Promise.reject(new Error(err?.message || error.message || 'An error occurred'));
+    // Extract error message with priority: error field > message field > errors array > default
+    let errorMessage = 'An error occurred';
+    if (err?.error) {
+        errorMessage = err.error;
+    } else if (err?.message) {
+        errorMessage = err.message;
+    } else if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
+        errorMessage = err.errors[0];
+    } else if (error.message) {
+        errorMessage = error.message;
+    }
+
+    return Promise.reject(new Error(errorMessage));
 };
 
 // Response interceptor for handling responses and errors

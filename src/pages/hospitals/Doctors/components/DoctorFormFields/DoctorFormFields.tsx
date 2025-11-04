@@ -2,7 +2,7 @@ import React from 'react';
 import Select from 'react-select';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Textarea from '@/components/Textarea';
+import CKEditor from '@/components/CKEditor';
 import Spinner from '@/components/Spinner';
 import { DoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
@@ -15,6 +15,7 @@ import YearsOfExperienceField from '../shared/YearsOfExperienceField';
 import PositionSpecialtySelects from '../shared/PositionSpecialtySelects';
 import LanguagesSection from '../shared/LanguagesSection';
 import ServicePricesSection from '../shared/ServicePricesSection';
+import { prepareBioForSave } from '@/utils/bioHtmlProcessor';
 
 // Sub-components to reduce cognitive complexity
 const AvatarSection: React.FC<{
@@ -174,7 +175,8 @@ const BasicInfoFields: React.FC<{
         Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
     >;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-}> = ({ formData, errors, onInputChange }) => (
+    isEdit?: boolean;
+}> = ({ formData, errors, onInputChange, isEdit = false }) => (
     <div className="col-md-9">
         <div className="row">
             <Input
@@ -213,6 +215,8 @@ const BasicInfoFields: React.FC<{
                 onChange={onInputChange}
                 placeholder="Nhập email"
                 error={errors.email}
+                disabled={isEdit}
+                readOnly={isEdit}
             />
             <div className="col-md-6 mb-3">
                 <label htmlFor="gender" className="form-label">
@@ -265,19 +269,6 @@ const BasicInfoFields: React.FC<{
                 value={formData.yearsOfExperience}
                 onChange={onInputChange}
                 error={errors.yearsOfExperience}
-            />
-            <Textarea
-                wrapperClassName="col-12 mb-3"
-                label="Tiểu sử"
-                icon="file-text"
-                iconPrefix="feather"
-                required
-                name="bio"
-                value={formData.bio}
-                onChange={onInputChange}
-                rows={4}
-                placeholder="Mô tả về bác sĩ"
-                error={errors.bio}
             />
         </div>
     </div>
@@ -392,7 +383,33 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                             formData={formData}
                             errors={errors}
                             onInputChange={onInputChange}
+                            isEdit={isEdit}
                         />
+                    </div>
+                    <div className="row">
+                        <div className="col-12">
+                            <CKEditor
+                                wrapperClassName="mb-3"
+                                label="Tiểu sử"
+                                icon="file-text"
+                                iconPrefix="feather"
+                                required
+                                name="bio"
+                                value={formData.bio}
+                                onChange={(data) => {
+                                    // Process HTML to add responsive classes
+                                    const processedHtml = prepareBioForSave(data);
+                                    onInputChange({
+                                        target: {
+                                            name: 'bio',
+                                            value: processedHtml,
+                                        },
+                                    } as React.ChangeEvent<HTMLTextAreaElement>);
+                                }}
+                                placeholder="Mô tả về bác sĩ"
+                                error={errors.bio}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

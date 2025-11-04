@@ -58,7 +58,7 @@ const AddDoctor: React.FC = () => {
 
         // Check if doctor profile is loaded
         if (primaryRole === Role.STAFF && !hospitalProfile) {
-            console.warn('Hospital profile not loaded yet');
+            // Hospital profile not loaded yet - will be handled by component state
         }
     }, [roles, hospitalProfile]);
 
@@ -107,11 +107,66 @@ const AddDoctor: React.FC = () => {
                 );
                 navigate('/hospitals/doctors');
             } else {
-                toast.error(response.message || 'Có lỗi xảy ra khi thêm bác sĩ');
+                // Extract and display detailed error message
+                const errorMessage = response.message || 'Có lỗi xảy ra khi thêm bác sĩ';
+
+                // Check if it's an email duplicate error
+                const errorLower = errorMessage.toLowerCase();
+                if (
+                    errorLower.includes('email') &&
+                    (errorLower.includes('already exists') ||
+                        errorLower.includes('đã tồn tại') ||
+                        errorLower.includes('already exist'))
+                ) {
+                    toast.error('Email này đã được sử dụng. Vui lòng chọn email khác.', {
+                        autoClose: 5000,
+                    });
+                } else {
+                    toast.error(errorMessage, { autoClose: 5000 });
+                }
             }
         } catch (error: any) {
-            console.error('Error registering doctor:', error);
-            toast.error(error.message || 'Có lỗi xảy ra khi thêm bác sĩ');
+            // Extract detailed error message
+            let errorMessage = error.message || 'Có lỗi xảy ra khi thêm bác sĩ';
+
+            // Check if error.response.data has more details
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                // Priority: error field > message field > errors array
+                if (errorData.error) {
+                    errorMessage = errorData.error;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (
+                    errorData.errors &&
+                    Array.isArray(errorData.errors) &&
+                    errorData.errors.length > 0
+                ) {
+                    errorMessage = errorData.errors[0];
+                }
+            }
+
+            // Normalize error message to lowercase for detection
+            const errorLower = errorMessage.toLowerCase();
+
+            // Check if it's an email duplicate error (multiple patterns)
+            const isEmailDuplicate =
+                errorLower.includes('email') &&
+                (errorLower.includes('already exists') ||
+                    errorLower.includes('already exist') ||
+                    errorLower.includes('đã tồn tại') ||
+                    errorLower.includes('already exists') ||
+                    errorLower.includes('account with email') ||
+                    (errorLower.includes('email') && errorLower.includes('already')));
+
+            if (isEmailDuplicate) {
+                toast.error('Email này đã được sử dụng. Vui lòng chọn email khác.', {
+                    autoClose: 5000,
+                });
+            } else {
+                // Display the error message (may be in English or Vietnamese)
+                toast.error(errorMessage, { autoClose: 5000 });
+            }
         } finally {
             setIsSubmitting(false);
         }
