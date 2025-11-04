@@ -66,8 +66,26 @@
     flex-shrink: 0;
 }
 
+// Emoji Picker Overlay - positioned absolutely above input to avoid layout shift
+.emojiPickerOverlay {
+    position: absolute;
+    bottom: 100%; // Position above the input container
+    left: 50px;
+    margin-bottom: 8px;
+    z-index: 1050;
+
+    // Ensure it doesn't affect parent layout
+    width: auto;
+    max-width: calc(100vw - 100px);
+}
+
 // Responsive adjustments
 @media (max-width: 768px) {
+    .emojiPickerOverlay {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
     .quickEmojiWrapper {
         gap: 2px;
     }

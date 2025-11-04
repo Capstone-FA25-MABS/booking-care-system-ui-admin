@@ -1,58 +1,57 @@
-import React, { useState } from 'react';
-import { mockUsers, mockMessages } from './mockData';
-
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { ChatProvider } from '@/providers/ChatProvider';
 import ChatHeader from './components/ChatHeader';
 import ChatUserNav from './components/ChatUserNav';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
-import EmojiPicker from './components/MessageInput/EmojiPicker';
 import VideoCall from './components/VideoCall';
-import { User, Message } from './types';
-import user02 from '@/assets/img/users/user-02.jpg';
+import { RootState, AppDispatch } from '@/store';
+import { fetchProfileByRole } from '@/store/slices/userSlice';
+import { Role } from '@/enums/common.enums';
 import clsx from 'clsx';
 import styles from './Messages.module.scss';
 
 const Messages: React.FC = () => {
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const [messageInput, setMessageInput] = useState('');
+    const dispatch = useDispatch<AppDispatch>();
     const [isVideoCallVisible, setIsVideoCallVisible] = useState(false);
-    const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
 
-    // Use imported mock data with type annotations
-    const users: User[] = mockUsers;
-    const messages: Message[] = mockMessages;
+    // Get current user info from auth state
+    const { isAuthenticated, roles } = useSelector((state: RootState) => state.auth);
+    const { adminProfile, doctorProfile, hospitalProfile, isLoading } = useSelector(
+        (state: RootState) => state.user
+    );
 
-    const handleSendMessage = () => {
-        if (messageInput.trim()) {
-            console.log('Đang gửi tin nhắn:', messageInput);
-            setMessageInput('');
+    // Get primary role from roles array
+    const role = roles && roles.length > 0 ? roles[0] : null;
+
+    // Fetch profile if not loaded yet
+    useEffect(() => {
+        const userProfile = adminProfile || doctorProfile || hospitalProfile;
+
+        console.log('[Messages] Profile check:', {
+            isAuthenticated,
+            roles,
+            role,
+            hasProfile: !!userProfile,
+            isLoading,
+        });
+
+        // Only dispatch if role is a management role (not PATIENT)
+        if (isAuthenticated && role && role !== Role.PATIENT && !userProfile && !isLoading) {
+            console.log('[Messages] 🔄 Dispatching fetchProfileByRole for role:', role);
+            dispatch(fetchProfileByRole({ role: role as Role.ADMIN | Role.DOCTOR | Role.STAFF }));
         }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        // Close emoji picker when Escape is pressed
-        if (e.key === 'Escape' && isEmojiPickerVisible) {
-            setIsEmojiPickerVisible(false);
-            e.preventDefault();
-            return;
-        }
-
-        if (e.key === 'Enter') {
-            handleSendMessage();
-        }
-    };
-
-    const handleMessageAction = (action: string) => {
-        console.log('Thao tác tin nhắn:', action);
-    };
-
-    const handleSearchChange = (value: string) => {
-        setSearchKeyword(value);
-    };
-
-    const handleInputChange = (value: string) => {
-        setMessageInput(value);
-    };
+    }, [
+        isAuthenticated,
+        roles,
+        role,
+        adminProfile,
+        doctorProfile,
+        hospitalProfile,
+        isLoading,
+        dispatch,
+    ]);
 
     const handleVideoCallStart = () => {
         setIsVideoCallVisible(true);
@@ -67,84 +66,86 @@ const Messages: React.FC = () => {
         console.log('Bắt đầu cuộc gọi thoại');
     };
 
-    const handleEmojiSelect = (emoji: string) => {
-        // For now, just append to the end of the message
-        // In a real implementation, you might want to handle cursor position
-        setMessageInput((prev) => prev + emoji);
-    };
-
-    const handleEmojiButtonClick = () => {
-        setIsEmojiPickerVisible(!isEmojiPickerVisible);
-    };
-
-    const handleEmojiPickerClose = () => {
-        setIsEmojiPickerVisible(false);
-    };
-
-    return (
-        <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
-            {/* Start Content */}
-            <div className={clsx(styles.content, 'content')}>
-                {/* Page Header */}
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-                    <div className="flex-grow-1">
-                        <h4 className="fs-18 fw-semibold mb-0">Tin nhắn</h4>
-                    </div>
-                    <div className="text-end">
-                        <ol className="breadcrumb m-0 py-0">
-                            <li className="breadcrumb-item">
-                                <a href="index.html">Trang chủ</a>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Tin nhắn
-                            </li>
-                        </ol>
+    // Show loading state while profile is being fetched
+    const userProfile = adminProfile || doctorProfile || hospitalProfile;
+    if (!userProfile && isLoading) {
+        return (
+            <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
+                <div className={clsx(styles.content, 'content')}>
+                    <div
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ minHeight: '400px' }}
+                    >
+                        <div className="text-center">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p className="mt-3 text-muted">Đang tải thông tin người dùng...</p>
+                        </div>
                     </div>
                 </div>
-                {/* End Page Header */}
+            </div>
+        );
+    }
 
-                <div className="card shadow-none mb-0">
-                    <div className="card-body p-0">
-                        <div className="d-md-flex">
-                            {/* Chat User Navigation */}
-                            <ChatUserNav
-                                users={users}
-                                searchKeyword={searchKeyword}
-                                onSearchChange={handleSearchChange}
-                            />
+    return (
+        <ChatProvider>
+            <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
+                {/* Start Content */}
+                <div className={clsx(styles.content, 'content')}>
+                    {/* Page Header */}
+                    <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
+                        <div className="flex-grow-1">
+                            <h4 className="fs-18 fw-semibold mb-0">Tin nhắn</h4>
+                        </div>
+                        <div className="text-end">
+                            <ol className="breadcrumb m-0 py-0">
+                                <li className="breadcrumb-item">
+                                    <a href="index.html">Trang chủ</a>
+                                </li>
+                                <li className="breadcrumb-item active" aria-current="page">
+                                    Tin nhắn
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                    {/* End Page Header */}
 
-                            {/* Chat Messages Area */}
-                            <div
-                                className={clsx(styles.chatMessagesArea, 'flex-fill chat-messages')}
-                            >
-                                <div className="card border-0 mb-0 h-100 d-flex flex-column">
-                                    {/* Chat Header */}
-                                    <div className={styles.chatHeader}>
-                                        <ChatHeader
-                                            onVideoCallStart={handleVideoCallStart}
-                                            onVoiceCallStart={handleVoiceCallStart}
-                                        />
-                                    </div>
+                    <div className="card shadow-none mb-0">
+                        <div className="card-body p-0">
+                            <div className="d-md-flex">
+                                {/* Chat User Navigation */}
+                                <ChatUserNav />
 
-                                    {/* Messages Container */}
-                                    <div
-                                        className={clsx(styles.messagesContainer, 'card-body p-0')}
-                                    >
-                                        <MessageList
-                                            messages={messages}
-                                            onMessageAction={handleMessageAction}
-                                        />
-
-                                        {/* Message Input Footer */}
-                                        <div className={styles.messageInput}>
-                                            <MessageInput
-                                                messageInput={messageInput}
-                                                onInputChange={handleInputChange}
-                                                onSendMessage={handleSendMessage}
-                                                onKeyDown={handleKeyDown}
-                                                onEmojiSelect={handleEmojiSelect}
-                                                onEmojiButtonClick={handleEmojiButtonClick}
+                                {/* Chat Messages Area */}
+                                <div
+                                    className={clsx(
+                                        styles.chatMessagesArea,
+                                        'flex-fill chat-messages'
+                                    )}
+                                >
+                                    <div className="card border-0 mb-0 h-100 d-flex flex-column">
+                                        {/* Chat Header */}
+                                        <div className={styles.chatHeader}>
+                                            <ChatHeader
+                                                onVideoCallStart={handleVideoCallStart}
+                                                onVoiceCallStart={handleVoiceCallStart}
                                             />
+                                        </div>
+
+                                        {/* Messages Container */}
+                                        <div
+                                            className={clsx(
+                                                styles.messagesContainer,
+                                                'card-body p-0'
+                                            )}
+                                        >
+                                            <MessageList />
+
+                                            {/* Message Input Footer */}
+                                            <div className={styles.messageInput}>
+                                                <MessageInput />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -152,28 +153,19 @@ const Messages: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-            {/* End Content */}
+                {/* End Content */}
 
-            {/* Emoji Picker - Positioned absolutely to avoid layout issues */}
-            {isEmojiPickerVisible && (
-                <div className={styles.emojiPickerOverlay}>
-                    <EmojiPicker
-                        isVisible={isEmojiPickerVisible}
-                        onEmojiSelect={handleEmojiSelect}
-                        onClose={handleEmojiPickerClose}
+                {/* Video Call Component */}
+                {isVideoCallVisible && (
+                    <VideoCall
+                        isVisible={isVideoCallVisible}
+                        onClose={handleVideoCallClose}
+                        participantName="User"
+                        participantAvatar="/default-avatar.png"
                     />
-                </div>
-            )}
-
-            {/* Video Call Component */}
-            <VideoCall
-                isVisible={isVideoCallVisible}
-                onClose={handleVideoCallClose}
-                participantName="Nguyễn Văn An"
-                participantAvatar={user02}
-            />
-        </div>
+                )}
+            </div>
+        </ChatProvider>
     );
 };
 

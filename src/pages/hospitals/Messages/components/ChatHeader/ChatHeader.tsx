@@ -1,31 +1,48 @@
 import React from 'react';
-import user01 from '@/assets/img/users/user-02.jpg';
+import { useSelector } from 'react-redux';
+import { useChat } from '@/providers/ChatProvider';
+import { RootState } from '@/store';
 
 interface ChatHeaderProps {
-    userName?: string;
-    userStatus?: string;
-    userAvatar?: string;
     onVideoCallStart?: () => void;
     onVoiceCallStart?: () => void;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({
-    userName = 'Nguyễn Văn An',
-    userStatus = 'Đang hoạt động',
-    userAvatar = user01,
-    onVideoCallStart,
-    onVoiceCallStart,
-}) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallStart }) => {
+    const { activeConversation, onlineUsers } = useChat();
+
+    // Get current user profile
+    const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
+        (state: RootState) => state.user
+    );
+    const userProfile = adminProfile || doctorProfile || hospitalProfile;
+    const currentUserId = (userProfile?.accountId || '').toUpperCase();
+
+    // Get other participant info
+    const otherParticipant = activeConversation?.participantDetails?.find(
+        (p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId
+    );
+
+    // Check online status - normalize to UPPERCASE
+    const isOnline = otherParticipant
+        ? onlineUsers.has((otherParticipant.id || otherParticipant.accountId || '').toUpperCase())
+        : false;
+
     return (
         <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 p-3">
             <div className="d-flex align-items-center">
                 <span className="avatar me-2 flex-shrink-0">
-                    <img src={userAvatar} alt="user" />
+                    <img src={otherParticipant?.avatarUrl || '/default-avatar.png'} alt="user" />
                 </span>
                 <div>
-                    <h6 className="fs-14 fw-semibold mb-1">{userName}</h6>
+                    <h6 className="fs-14 fw-semibold mb-1">
+                        {otherParticipant?.fullName || 'Chọn hội thoại'}
+                    </h6>
                     <p className="mb-0 d-inline-flex align-items-center">
-                        <i className="ti ti-point-filled text-success"></i> {userStatus}
+                        <i
+                            className={`ti ti-point-filled ${isOnline ? 'text-success' : 'text-muted'}`}
+                        ></i>
+                        {isOnline ? 'Đang hoạt động' : 'Offline'}
                     </p>
                 </div>
             </div>
@@ -37,6 +54,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     data-bs-original-title="Cuộc gọi thoại"
                     type="button"
                     onClick={onVoiceCallStart}
+                    disabled={!activeConversation}
                 >
                     <i className="ti ti-phone"></i>
                 </button>
@@ -47,6 +65,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     data-bs-original-title="Cuộc gọi video"
                     type="button"
                     onClick={onVideoCallStart}
+                    disabled={!activeConversation}
                 >
                     <i className="ti ti-video"></i>
                 </button>
@@ -56,6 +75,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     data-bs-placement="top"
                     data-bs-original-title="Thông tin"
                     type="button"
+                    disabled={!activeConversation}
                 >
                     <i className="ti ti-info-circle"></i>
                 </button>

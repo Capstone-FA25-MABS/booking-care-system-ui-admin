@@ -1,122 +1,635 @@
-import React from 'react';
+import { useEffect, useRef, Fragment, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useChat } from '@/providers/ChatProvider';
+import { RootState } from '@/store';
+import { MessageResponse, MessageType } from '@/types/communication.types';
 import clsx from 'clsx';
-import MessageDropdown from './MessageDropdown';
-import { Message } from '../../types';
 import styles from '../../Messages.module.scss';
 
-interface MessageListProps {
-    messages: Message[];
-    onMessageAction: (action: string) => void;
-}
+const MessageList = () => {
+    const {
+        messages,
+        activeConversation,
+        isLoadingMessages,
+        typingUsers,
+        loadMoreOldMessages,
+        hasMoreOldMessages,
+        isLoadingMoreMessages,
+    } = useChat();
 
-const MessageList: React.FC<MessageListProps> = ({ messages, onMessageAction }) => {
+    // Get current user profile
+    const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
+        (state: RootState) => state.user
+    );
+    const userProfile = adminProfile || doctorProfile || hospitalProfile;
+    const currentUserId = (userProfile?.accountId || '').toUpperCase();
+
+    // State for image preview modal
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const prevMessagesLengthRef = useRef<number>(0);
+    const prevScrollHeightRef = useRef<number>(0);
+    const isLoadingOldMessagesRef = useRef<boolean>(false);
+
+    // Scroll to bottom helper function
+    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
+    };
+
+    // Auto scroll to bottom when switching conversation (instant scroll)
+    useEffect(() => {
+        if (activeConversation) {
+            setTimeout(() => scrollToBottom('auto'), 100);
+        }
+    }, [activeConversation?.id]);
+
+    // Auto scroll when new messages arrive (smooth scroll)
+    useEffect(() => {
+        const currentLength = messages.length;
+        const prevLength = prevMessagesLengthRef.current;
+
+        if (currentLength > 0) {
+            if (prevLength === 0) {
+                // Initial load - scroll instantly to bottom
+                setTimeout(() => scrollToBottom('auto'), 100);
+            } else if (currentLength > prevLength && !isLoadingOldMessagesRef.current) {
+                // New message arrived (NOT from loading old messages) - smooth scroll
+                console.log('[MessageList] 📥 New message detected, scrolling to bottom');
+                scrollToBottom('smooth');
+            } else if (isLoadingOldMessagesRef.current) {
+                console.log('[MessageList] 🚫 Skipping auto-scroll (loading old messages)');
+            }
+        }
+
+        prevMessagesLengthRef.current = currentLength;
+    }, [messages]);
+
+    // Auto scroll when typing indicator appears
+    useEffect(() => {
+        const typingUserId = activeConversation ? typingUsers.get(activeConversation.id) : null;
+        if (typingUserId) {
+            scrollToBottom('smooth');
+        }
+    }, [typingUsers, activeConversation]);
+
+    // Helper to get scrollable container
+    const getScrollContainer = () => {
+        const messagesDiv = messagesContainerRef.current;
+        const scrollContainer = messagesDiv?.parentElement;
+
+        if (!scrollContainer) {
+            console.warn('[MessageList] Could not find scroll container');
+            return null;
+        }
+
+        return scrollContainer;
+    };
+
+    // Preserve scroll position when loading more old messages
+    useEffect(() => {
+        if (isLoadingMoreMessages) {
+            isLoadingOldMessagesRef.current = true;
+
+            const container = getScrollContainer();
+            if (container) {
+                prevScrollHeightRef.current = container.scrollHeight;
+                console.log('[MessageList] 📏 Stored scroll height:', container.scrollHeight);
+            }
+        } else if (prevScrollHeightRef.current > 0) {
+            setTimeout(() => {
+                const container = getScrollContainer();
+                if (container) {
+                    const heightDiff = container.scrollHeight - prevScrollHeightRef.current;
+                    if (heightDiff > 0) {
+                        container.scrollTop = heightDiff;
+                        console.log('[MessageList] ✅ Restored scroll position:', {
+                            oldHeight: prevScrollHeightRef.current,
+                            newHeight: container.scrollHeight,
+                            heightDiff,
+                            newScrollTop: container.scrollTop,
+                        });
+                    }
+                    prevScrollHeightRef.current = 0;
+                }
+
+                isLoadingOldMessagesRef.current = false;
+                console.log('[MessageList] ✅ Reset loading flag, auto-scroll re-enabled');
+            }, 150);
+        }
+    }, [isLoadingMoreMessages]);
+
+    // Infinite scroll: Load more old messages when scrolling to top
+    useEffect(() => {
+        const container = getScrollContainer();
+        if (!container) {
+            console.warn('[MessageList] ⚠️ No scroll container, infinite scroll disabled');
+            return;
+        }
+
+        console.log('[MessageList] ✅ Infinite scroll enabled on:', container.className);
+
+        const handleScroll = () => {
+            const scrollTop = container.scrollTop;
+
+            // Check if scrolled near the top (within 100px)
+            if (scrollTop < 100 && hasMoreOldMessages && !isLoadingMoreMessages) {
+                console.log('[MessageList] 🚀 TRIGGERING load more old messages!');
+                loadMoreOldMessages();
+            }
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => {
+            console.log('[MessageList] 🧹 Cleaning up scroll listener');
+            container.removeEventListener('scroll', handleScroll);
+        };
+    }, [hasMoreOldMessages, isLoadingMoreMessages, loadMoreOldMessages]);
+
+    // Get typing user info
+    const typingUserId = activeConversation ? typingUsers.get(activeConversation.id) : null;
+    const typingUser =
+        typingUserId && activeConversation
+            ? activeConversation.participantDetails?.find(
+                  (p) => (p.id || p.accountId || '').toUpperCase() === typingUserId.toUpperCase()
+              )
+            : null;
+
+    // Helper: Format timestamp smartly (like WhatsApp)
+    const formatMessageTimestamp = (createdAt: string): string => {
+        const messageDate = new Date(createdAt);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const lastWeek = new Date(today);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+
+        const timeStr = messageDate.toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        // Today: just time
+        if (messageDate >= today) {
+            return timeStr;
+        }
+
+        // Yesterday
+        if (messageDate >= yesterday) {
+            return `Hôm qua ${timeStr}`;
+        }
+
+        // This week: day name
+        if (messageDate >= lastWeek) {
+            const dayName = messageDate.toLocaleDateString('vi-VN', { weekday: 'long' });
+            return `${dayName} ${timeStr}`;
+        }
+
+        // Older: full date
+        const dateStr = messageDate.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+        return `${dateStr} ${timeStr}`;
+    };
+
+    // Helper: Get date label for separator
+    const getDateLabel = (dateStr: string): string => {
+        const messageDate = new Date(dateStr);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (messageDate >= today) {
+            return 'Hôm nay';
+        }
+        if (messageDate >= yesterday) {
+            return 'Hôm qua';
+        }
+        return messageDate.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+    };
+
+    // Helper: Check if we need date separator
+    const needsDateSeparator = (
+        currentMsg: MessageResponse,
+        previousMsg: MessageResponse | null
+    ): boolean => {
+        if (!previousMsg) return true;
+
+        const currentDate = new Date(currentMsg.createdAt).toDateString();
+        const previousDate = new Date(previousMsg.createdAt).toDateString();
+
+        return currentDate !== previousDate;
+    };
+
+    if (!activeConversation) {
+        return (
+            <div className={clsx(styles.messageListEmpty, 'text-center p-4')}>
+                <p className="text-muted">Chọn một hội thoại để bắt đầu nhắn tin</p>
+            </div>
+        );
+    }
+
+    if (isLoadingMessages) {
+        return (
+            <div className={clsx(styles.messageListEmpty, 'text-center p-4')}>
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Đang tải tin nhắn...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className={clsx(styles.messageBody, 'message-body')}>
-            {messages.map((message, index) => (
-                <React.Fragment key={message.id}>
-                    {/* Today separator */}
-                    {index === 3 && (
-                        <div className={styles.dateSeparator}>
-                            <span className={clsx(styles.dateBadge, 'badge rounded-pill')}>
-                                Today
-                            </span>
-                        </div>
-                    )}
+        <div className={clsx(styles.messageList, 'messages')} ref={messagesContainerRef}>
+            {/* Loading indicator for old messages */}
+            {isLoadingMoreMessages && (
+                <div className="text-center py-2">
+                    <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Đang tải tin nhắn cũ...</span>
+                    </div>
+                    <p className="text-muted small mt-1">Đang tải tin nhắn cũ...</p>
+                </div>
+            )}
 
-                    <div
-                        className={clsx(
-                            styles.messageItem,
-                            message.isOwn ? styles.ownMessage : styles.receivedMessage
+            {messages.map((message: MessageResponse, index) => {
+                const previousMsg = index > 0 ? messages[index - 1] : null;
+                const showDateSeparator = needsDateSeparator(message, previousMsg);
+                const isOwn = message.senderId?.toUpperCase() === currentUserId;
+
+                return (
+                    <Fragment key={message.id}>
+                        {/* Date Separator */}
+                        {showDateSeparator && (
+                            <div className="text-center my-3">
+                                <span className="badge bg-light text-dark px-3 py-2 rounded-pill shadow-sm">
+                                    {getDateLabel(message.createdAt)}
+                                </span>
+                            </div>
                         )}
-                    >
+
+                        {/* Message */}
                         <div
-                            className={`d-flex align-items-start ${
-                                message.isOwn ? 'justify-content-end' : ''
-                            }`}
+                            className="mb-3"
+                            style={{
+                                display: 'flex',
+                                gap: '0.75rem',
+                                alignItems: 'flex-end',
+                                justifyContent: isOwn ? 'flex-end' : 'flex-start',
+                            }}
                         >
-                            {!message.isOwn && (
-                                <span className="avatar online me-2 flex-shrink-0">
-                                    <img src={message.avatar} alt="user" />
+                            {!isOwn && (
+                                <span
+                                    className="avatar flex-shrink-0"
+                                    style={{
+                                        width: '36px',
+                                        height: '36px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <img
+                                        src={message.senderInfo?.avatarUrl || '/default-avatar.png'}
+                                        alt="avatar"
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                        }}
+                                    />
                                 </span>
                             )}
-
-                            <div className="flex-grow-1">
+                            <div style={{ maxWidth: '70%' }}>
                                 <div
-                                    className={`d-flex align-items-center mb-1 ${
-                                        message.isOwn ? 'justify-content-end' : ''
-                                    }`}
+                                    style={{
+                                        padding: '0.625rem 0.875rem',
+                                        borderRadius: '0.5rem',
+                                        backgroundColor: isOwn ? '#007bff' : '#f8f9fa',
+                                        color: isOwn ? 'white' : '#212529',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'normal',
+                                        display: 'inline-block',
+                                        minWidth: 'fit-content',
+                                        ...(isOwn
+                                            ? { borderBottomRightRadius: '0.25rem' }
+                                            : { borderBottomLeftRadius: '0.25rem' }),
+                                    }}
                                 >
-                                    {message.isOwn && (
-                                        <p className="mb-0 d-inline-flex align-items-center text-muted small">
-                                            <i className="ti ti-checks text-success me-1"></i>
-                                            {message.time}
-                                            <i className="ti ti-point-filled mx-2"></i>
+                                    {/* Text Content */}
+                                    {message.content && message.content.trim() && (
+                                        <p
+                                            style={{
+                                                margin: '0 0 0.25rem 0',
+                                                lineHeight: 1.5,
+                                                whiteSpace: 'normal',
+                                            }}
+                                        >
+                                            {message.content}
                                         </p>
                                     )}
 
-                                    <h6 className={clsx(styles.userNameMessage, 'fs-14 mb-0')}>
-                                        {message.sender}
-                                    </h6>
+                                    {/* Attachments */}
+                                    {message.attachments && message.attachments.length > 0 && (
+                                        <div
+                                            style={{ marginTop: message.content ? '0.5rem' : '0' }}
+                                        >
+                                            {message.attachments.map((att, idx) => {
+                                                const fileUrl = att.url || att.fileUrl;
+                                                const fileName = att.name || att.fileName || 'File';
+                                                const mimeType = att.mimeType || att.contentType;
 
-                                    {!message.isOwn && (
-                                        <p className="mb-0 d-inline-flex align-items-center text-muted small">
-                                            <i className="ti ti-point-filled mx-2"></i>
-                                            {message.time}
-                                        </p>
-                                    )}
-                                </div>
+                                                // Image attachments
+                                                if (
+                                                    message.type === MessageType.IMAGE ||
+                                                    mimeType?.startsWith('image/')
+                                                ) {
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            style={{
+                                                                marginTop: idx > 0 ? '0.5rem' : '0',
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={fileUrl}
+                                                                alt={fileName}
+                                                                onClick={() =>
+                                                                    setSelectedImage(fileUrl)
+                                                                }
+                                                                style={{
+                                                                    maxWidth: '250px',
+                                                                    maxHeight: '250px',
+                                                                    borderRadius: '0.5rem',
+                                                                    display: 'block',
+                                                                    objectFit: 'cover',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'opacity 0.2s',
+                                                                }}
+                                                                onMouseOver={(e) =>
+                                                                    (e.currentTarget.style.opacity =
+                                                                        '0.8')
+                                                                }
+                                                                onMouseOut={(e) =>
+                                                                    (e.currentTarget.style.opacity =
+                                                                        '1')
+                                                                }
+                                                            />
+                                                        </div>
+                                                    );
+                                                }
 
-                                <div
-                                    className={`d-flex align-items-start ${message.isOwn ? 'justify-content-end' : ''}`}
-                                >
-                                    {message.isOwn && (
-                                        <div className="me-2 align-self-end">
-                                            <button
-                                                data-bs-toggle="dropdown"
-                                                type="button"
-                                                className="btn btn-sm border-0 bg-transparent p-1"
-                                            >
-                                                <i className="ti ti-dots-vertical"></i>
-                                            </button>
-                                            <MessageDropdown onAction={onMessageAction} />
+                                                // Video attachments
+                                                if (
+                                                    message.type === MessageType.VIDEO ||
+                                                    mimeType?.startsWith('video/')
+                                                ) {
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            style={{
+                                                                marginTop: idx > 0 ? '0.5rem' : '0',
+                                                            }}
+                                                        >
+                                                            <video
+                                                                controls
+                                                                style={{
+                                                                    maxWidth: '250px',
+                                                                    maxHeight: '250px',
+                                                                    borderRadius: '0.5rem',
+                                                                    display: 'block',
+                                                                }}
+                                                            >
+                                                                <source
+                                                                    src={fileUrl}
+                                                                    type={mimeType}
+                                                                />
+                                                                Your browser does not support the
+                                                                video tag.
+                                                            </video>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                // Audio attachments
+                                                if (
+                                                    message.type === MessageType.AUDIO ||
+                                                    mimeType?.startsWith('audio/')
+                                                ) {
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            style={{
+                                                                marginTop: idx > 0 ? '0.5rem' : '0',
+                                                            }}
+                                                        >
+                                                            <audio
+                                                                controls
+                                                                style={{ maxWidth: '100%' }}
+                                                            >
+                                                                <source
+                                                                    src={fileUrl}
+                                                                    type={mimeType}
+                                                                />
+                                                                Your browser does not support the
+                                                                audio tag.
+                                                            </audio>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                // Other file attachments
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        style={{
+                                                            marginTop: idx > 0 ? '0.25rem' : '0',
+                                                        }}
+                                                    >
+                                                        <a
+                                                            href={fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{
+                                                                color: 'inherit',
+                                                                textDecoration: 'none',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.25rem',
+                                                                fontSize: '0.875rem',
+                                                            }}
+                                                        >
+                                                            📎 {fileName}
+                                                        </a>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
 
-                                    <div
-                                        className={clsx(
-                                            styles.messageBox,
-                                            message.isOwn
-                                                ? styles.sentMessage
-                                                : styles.receiveMessage
-                                        )}
+                                    <span
+                                        style={{
+                                            display: 'block',
+                                            fontSize: '0.75rem',
+                                            marginTop: '0.25rem',
+                                            opacity: 0.7,
+                                            whiteSpace: 'nowrap',
+                                        }}
                                     >
-                                        <p className="mb-0">{message.content}</p>
-                                    </div>
-
-                                    {!message.isOwn && (
-                                        <div className="ms-2 align-self-end">
-                                            <button
-                                                data-bs-toggle="dropdown"
-                                                type="button"
-                                                className="btn btn-sm border-0 bg-transparent p-1"
-                                            >
-                                                <i className="ti ti-dots-vertical"></i>
-                                            </button>
-                                            <MessageDropdown onAction={onMessageAction} />
-                                        </div>
-                                    )}
+                                        {formatMessageTimestamp(message.createdAt)}
+                                    </span>
                                 </div>
                             </div>
-
-                            {message.isOwn && (
-                                <span className="avatar ms-2 online flex-shrink-0">
-                                    <img src={message.avatar} alt="user" />
+                            {isOwn && (
+                                <span
+                                    className="avatar flex-shrink-0"
+                                    style={{
+                                        width: '36px',
+                                        height: '36px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <img
+                                        src={
+                                            adminProfile?.avatarUrl ||
+                                            doctorProfile?.avatarUrl ||
+                                            hospitalProfile?.avatarUrl ||
+                                            '/default-avatar.png'
+                                        }
+                                        alt="avatar"
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                        }}
+                                    />
                                 </span>
                             )}
                         </div>
+                    </Fragment>
+                );
+            })}
+
+            {/* Typing indicator */}
+            {typingUser && (
+                <div
+                    className="mb-3"
+                    style={{
+                        display: 'flex',
+                        gap: '0.75rem',
+                        alignItems: 'flex-end',
+                        justifyContent: 'flex-start',
+                    }}
+                >
+                    <span
+                        className="avatar flex-shrink-0"
+                        style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <img
+                            src={typingUser.avatarUrl || '/default-avatar.png'}
+                            alt="avatar"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    </span>
+                    <div style={{ maxWidth: '70%' }}>
+                        <div
+                            style={{
+                                padding: '0.625rem 0.875rem',
+                                borderRadius: '0.5rem',
+                                backgroundColor: '#f8f9fa',
+                                color: '#212529',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'normal',
+                                display: 'inline-block',
+                                borderBottomLeftRadius: '0.25rem',
+                            }}
+                        >
+                            <p style={{ margin: 0, lineHeight: 1.5, whiteSpace: 'normal' }}>
+                                <i>{typingUser.fullName} đang nhập...</i>
+                            </p>
+                        </div>
                     </div>
-                </React.Fragment>
-            ))}
+                </div>
+            )}
+
+            <div ref={messagesEndRef} />
+
+            {/* Image Preview Modal */}
+            {selectedImage && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        cursor: 'pointer',
+                    }}
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <button
+                        style={{
+                            position: 'absolute',
+                            top: '1rem',
+                            right: '1rem',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            color: 'white',
+                            fontSize: '1.5rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'background 0.2s',
+                            zIndex: 10000,
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(null);
+                        }}
+                        onMouseOver={(e) =>
+                            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')
+                        }
+                        onMouseOut={(e) =>
+                            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')
+                        }
+                    >
+                        ×
+                    </button>
+                    <img
+                        src={selectedImage}
+                        alt="Preview"
+                        style={{
+                            maxWidth: '90vw',
+                            maxHeight: '90vh',
+                            objectFit: 'contain',
+                            borderRadius: '0.5rem',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </div>
     );
 };
