@@ -41,7 +41,7 @@ const ListLanguages: React.FC = () => {
     // Applied filters (after clicking "Lọc" button)
     const [appliedLanguages, setAppliedLanguages] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
+    const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [languageToDelete, setLanguageToDelete] = useState<Language | null>(null);
@@ -119,7 +119,7 @@ const ListLanguages: React.FC = () => {
         clearAllValidationErrors();
     }, [clearAllValidationErrors]);
 
-    const title = modalMode === 'add' ? 'Thêm Ngôn Ngữ Mới' : 'Sửa Ngôn Ngữ';
+    const title = modalMode === 'add' ? 'Thêm ngôn ngữ mới' : 'Sửa ngôn ngữ';
 
     // Form data change handlers
     const handleNameChange = (value: string) => {
@@ -469,9 +469,9 @@ const ListLanguages: React.FC = () => {
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Ngôn Ngữ{' '}
+                            Danh sách ngôn ngữ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Ngôn Ngữ:{' '}
+                                Tổng ngôn ngữ:{' '}
                                 {appliedLanguages.length > 0
                                     ? filteredLanguages.length
                                     : pagination?.totalCount || 0}
@@ -515,7 +515,7 @@ const ListLanguages: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={handleAddClick}
                         >
-                            Thêm Ngôn Ngữ
+                            Thêm ngôn ngữ
                         </Button>
                     </div>
                 </div>
@@ -611,10 +611,10 @@ const ListLanguages: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên Ngôn Ngữ</th>
-                                <th>Ngày Tạo</th>
-                                <th>Ngày Cập Nhật</th>
-                                <th>Trạng Thái</th>
+                                <th>Tên ngôn ngữ</th>
+                                <th>Ngày tạo</th>
+                                <th>Ngày cập nhật</th>
+                                <th>Trạng thái</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -646,7 +646,7 @@ const ListLanguages: React.FC = () => {
                 onSubmit={handleLanguageSubmit}
                 onNameChange={handleNameChange}
                 onStatusChange={handleStatusChange}
-                entityName="Ngôn Ngữ"
+                entityName="Ngôn ngữ"
                 hasImageUpload={false}
                 styles={{
                     modal: styles.modal,
@@ -666,7 +666,7 @@ const ListLanguages: React.FC = () => {
                 fields={[
                     {
                         name: 'languages',
-                        label: 'Ngôn Ngữ',
+                        label: 'Ngôn ngữ',
                         type: 'multiselect',
                         options: (allLanguages || []).map((language) => ({
                             value: language.id,
@@ -678,7 +678,7 @@ const ListLanguages: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động' },

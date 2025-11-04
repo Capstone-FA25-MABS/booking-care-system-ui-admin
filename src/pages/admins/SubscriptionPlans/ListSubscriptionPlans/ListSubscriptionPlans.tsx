@@ -30,7 +30,7 @@ const ListSubscriptionPlans: React.FC = () => {
     const [appliedPlans, setAppliedPlans] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
     const [appliedBillingCycles, setAppliedBillingCycles] = useState<string[]>([]);
-    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
+    const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [planToDelete, setPlanToDelete] = useState<SubscriptionPlan | null>(null);
@@ -121,9 +121,9 @@ const ListSubscriptionPlans: React.FC = () => {
 
     // Filter theo tab
     const tabs = [
-        { key: 'MONTHLY', label: 'Gói theo Tháng' },
-        { key: 'QUARTERLY', label: 'Gói theo Quý' },
-        { key: 'YEARLY', label: 'Gói theo Năm' },
+        { key: 'MONTHLY', label: 'Gói theo tháng' },
+        { key: 'QUARTERLY', label: 'Gói theo quý' },
+        { key: 'YEARLY', label: 'Gói theo năm' },
     ];
 
     const tabbedPlans = filteredPlans.filter((p) => p.billingCycle === tab);
@@ -231,12 +231,12 @@ const ListSubscriptionPlans: React.FC = () => {
             return (
                 <TableSkeleton
                     columns={[
-                        { type: 'avatar', width: 150 }, // Tên & Mô tả
+                        { type: 'avatar', width: 150 }, // Tên & mô tả
                         { type: 'text', width: 100 }, // Giá
-                        { type: 'text', width: 150, lines: 3 }, // Giới Hạn
-                        { type: 'text', width: 200, lines: 4 }, // Tính Năng
-                        { type: 'badge', width: 90 }, // Trạng Thái
-                        { type: 'actions', items: 2 }, // Thao Tác
+                        { type: 'text', width: 150, lines: 3 }, // Giới hạn
+                        { type: 'text', width: 200, lines: 4 }, // Tính năng
+                        { type: 'badge', width: 90 }, // Trạng thái
+                        { type: 'actions', items: 2 }, // Thao tác
                     ]}
                     rows={itemsPerPage}
                 />
@@ -387,9 +387,9 @@ const ListSubscriptionPlans: React.FC = () => {
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Gói Dịch Vụ{' '}
+                            Danh sách gói dịch vụ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Gói Dịch Vụ:{' '}
+                                Tổng gói dịch vụ:{' '}
                                 {appliedPlans.length > 0
                                     ? filteredPlans.length
                                     : subscriptionPlans.length}
@@ -433,7 +433,7 @@ const ListSubscriptionPlans: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={handleAddClick}
                         >
-                            Thêm Gói Dịch Vụ
+                            Thêm gói dịch vụ
                         </Button>
                     </div>
                 </div>
@@ -600,16 +600,16 @@ const ListSubscriptionPlans: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th style={{ minWidth: '180px' }}>Tên Gói</th>
+                                <th style={{ minWidth: '180px' }}>Tên gói</th>
                                 <th style={{ minWidth: '140px' }}>Giá</th>
-                                <th style={{ minWidth: '150px' }}>Giới Hạn</th>
+                                <th style={{ minWidth: '150px' }}>Giới hạn</th>
                                 <th
                                     style={{ minWidth: '200px', width: '250px', maxWidth: '300px' }}
                                 >
-                                    Tính Năng
+                                    Tính năng
                                 </th>
-                                <th style={{ minWidth: '100px' }}>Trạng Thái</th>
-                                <th style={{ minWidth: '80px' }}>Thao Tác</th>
+                                <th style={{ minWidth: '100px' }}>Trạng thái</th>
+                                <th style={{ minWidth: '80px' }}>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>{renderTableBody()}</tbody>
@@ -635,7 +635,7 @@ const ListSubscriptionPlans: React.FC = () => {
                 onConfirm={handleDeleteConfirm}
                 title="Xóa gói dịch vụ"
                 message={`Bạn có chắc chắn muốn xóa gói dịch vụ "${planToDelete?.name}"? Hành động này không thể hoàn tác.`}
-                confirmText="Có, Xóa"
+                confirmText="Có, xóa"
                 cancelText="Hủy"
             />
 
@@ -649,7 +649,7 @@ const ListSubscriptionPlans: React.FC = () => {
                 fields={[
                     {
                         name: 'plans',
-                        label: 'Gói Dịch Vụ',
+                        label: 'Gói dịch vụ',
                         type: 'multiselect',
                         options: (allPlans || []).map((plan) => ({
                             value: plan.id,
@@ -661,7 +661,7 @@ const ListSubscriptionPlans: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động' },
@@ -673,7 +673,7 @@ const ListSubscriptionPlans: React.FC = () => {
                     },
                     {
                         name: 'billingCycles',
-                        label: 'Chu Kỳ Thanh Toán',
+                        label: 'Chu kỳ thanh toán',
                         type: 'multiselect',
                         options: [
                             { value: 'MONTHLY', label: 'Hàng tháng' },

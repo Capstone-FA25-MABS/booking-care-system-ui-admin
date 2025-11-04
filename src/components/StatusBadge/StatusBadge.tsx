@@ -60,7 +60,7 @@ const STATUS_CONFIG: Record<StatusKey, StatusConfig> = {
     },
     CONFIRMED: {
         className: 'badge-soft-success text-success',
-        text: 'Sắp khám',
+        text: 'Sắp tới',
     },
 };
 

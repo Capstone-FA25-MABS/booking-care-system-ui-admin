@@ -225,7 +225,7 @@ const AppointmentCalendar: React.FC = () => {
             {/* Start Page Header */}
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
                 <div className="flex-grow-1">
-                    <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
+                    <h4 className="fw-semibold mb-0">Lịch hẹn</h4>
                 </div>
             </div>
             {/* End Page Header */}

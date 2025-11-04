@@ -295,7 +295,7 @@ const ManageHospitalSubscriptions: React.FC = () => {
                 <td colSpan={6}>
                     <div className="p-3 bg-white rounded border">
                         <h6 className="fw-bold mb-3 pb-2 border-bottom">
-                            Lịch Sử Đăng Ký/Nâng Cấp Gói
+                            Lịch sử đăng ký/nâng cấp gói
                         </h6>
                         <div className="d-flex flex-column gap-2">
                             {sortedSubscriptions.map(renderSubscriptionHistoryItem)}
@@ -470,9 +470,9 @@ const ManageHospitalSubscriptions: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Đăng Ký Gói Của Bệnh Viện{' '}
+                        Đăng ký gói của bệnh viện{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng Bệnh Viện: {filteredHospitals.length}
+                            Tổng bệnh viện: {filteredHospitals.length}
                         </span>
                     </h4>
                 </div>
@@ -566,11 +566,11 @@ const ManageHospitalSubscriptions: React.FC = () => {
                     <thead className="thead-light">
                         <tr>
                             <th style={{ width: '30px' }}></th>
-                            <th style={{ minWidth: '250px' }}>Bệnh Viện</th>
-                            <th style={{ minWidth: '200px' }}>Gói Đang Sử Dụng</th>
-                            <th style={{ minWidth: '150px' }}>Thời Gian</th>
-                            <th style={{ minWidth: '120px' }}>Trạng Thái</th>
-                            <th style={{ minWidth: '100px' }}>Thao Tác</th>
+                            <th style={{ minWidth: '250px' }}>Bệnh viện</th>
+                            <th style={{ minWidth: '200px' }}>Gói đang sử dụng</th>
+                            <th style={{ minWidth: '150px' }}>Thời gian</th>
+                            <th style={{ minWidth: '120px' }}>Trạng thái</th>
+                            <th style={{ minWidth: '100px' }}>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>{renderTableBody()}</tbody>

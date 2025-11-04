@@ -263,7 +263,7 @@ const AddSubscriptionPlan: React.FC = () => {
 
             if (successCount === plansToCreate.length) {
                 if (autoCreateAllCycles) {
-                    toast.success('Đã tạo thành công 3 gói dịch vụ (Tháng, Quý, Năm)!');
+                    toast.success('Đã tạo thành công 3 gói dịch vụ (tháng, quý, năm)!');
                 } else {
                     toast.success('Tạo gói dịch vụ thành công!');
                 }
@@ -292,7 +292,7 @@ const AddSubscriptionPlan: React.FC = () => {
         <div className="content">
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
-                    <h4 className="fw-bold mb-0">Thêm Gói Dịch Vụ</h4>
+                    <h4 className="fw-bold mb-0">Thêm gói dịch vụ</h4>
                 </div>
             </div>
             <div className="row">
@@ -331,7 +331,7 @@ const AddSubscriptionPlan: React.FC = () => {
                 <div className="mb-3 mt-4">
                     <div className="alert alert-info">
                         <i className="ti ti-info-circle me-2"></i>
-                        <strong>Lưu ý:</strong> Khi nhấn "Tạo Gói Dịch Vụ", hệ thống sẽ tự động tạo
+                        <strong>Lưu ý:</strong> Khi nhấn "Tạo gói dịch vụ", hệ thống sẽ tự động tạo
                         3 gói sau. Bạn có thể tùy chỉnh giới hạn và tính năng cho từng gói:
                     </div>
                     <div className="d-flex flex-column gap-3">
@@ -606,7 +606,7 @@ const AddSubscriptionPlan: React.FC = () => {
                             onClick={handleSubmit}
                         >
                             <i className="ti ti-plus me-2"></i>
-                            {isSubmitting ? 'Đang tạo...' : 'Tạo Gói Dịch Vụ'}
+                            {isSubmitting ? 'Đang tạo...' : 'Tạo gói dịch vụ'}
                         </button>
                     </div>
                 </div>

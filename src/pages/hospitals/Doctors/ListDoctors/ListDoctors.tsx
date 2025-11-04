@@ -207,9 +207,9 @@ const ListDoctors: React.FC = () => {
                 return sorted.sort((a, b) =>
                     `${b.lastName} ${b.firstName}`.localeCompare(`${a.lastName} ${a.firstName}`)
                 );
-            case 'Kinh nghiệm (Cao-Thấp)':
+            case 'Kinh nghiệm (cao - thấp)':
                 return sorted.sort((a, b) => b.yearsOfExperience - a.yearsOfExperience);
-            case 'Kinh nghiệm (Thấp-Cao)':
+            case 'Kinh nghiệm (thấp - cao)':
                 return sorted.sort((a, b) => a.yearsOfExperience - b.yearsOfExperience);
             default:
                 return sorted;
@@ -486,7 +486,7 @@ const ListDoctors: React.FC = () => {
             <div className="content">
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">Danh Sách Bác Sĩ</h4>
+                        <h4 className="fw-bold mb-0">Danh sách bác sĩ</h4>
                     </div>
                 </div>
 
@@ -540,9 +540,9 @@ const ListDoctors: React.FC = () => {
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Bác Sĩ{' '}
+                            Danh sách bác sĩ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Bác Sĩ: {pagination.totalCount}
+                                Tổng bác sĩ: {pagination.totalCount}
                             </span>
                         </h4>
                     </div>
@@ -583,7 +583,7 @@ const ListDoctors: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={() => (globalThis.location.href = '/hospitals/doctors/add')}
                         >
-                            Thêm Bác Sĩ
+                            Thêm bác sĩ
                         </Button>
                     </div>
                 </div>
@@ -634,12 +634,12 @@ const ListDoctors: React.FC = () => {
                                 { value: 'Tên A-Z', label: 'Tên A-Z' },
                                 { value: 'Tên Z-A', label: 'Tên Z-A' },
                                 {
-                                    value: 'Kinh nghiệm (Cao-Thấp)',
-                                    label: 'Kinh nghiệm (Cao-Thấp)',
+                                    value: 'Kinh nghiệm (cao - thấp)',
+                                    label: 'Kinh nghiệm (cao - thấp)',
                                 },
                                 {
-                                    value: 'Kinh nghiệm (Thấp-Cao)',
-                                    label: 'Kinh nghiệm (Thấp-Cao)',
+                                    value: 'Kinh nghiệm (thấp - cao)',
+                                    label: 'Kinh nghiệm (thấp - cao)',
                                 },
                             ]}
                             selectedValue={sortBy}
@@ -653,10 +653,10 @@ const ListDoctors: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên & Học vị</th>
+                                <th>Tên & học vị</th>
                                 <th>Chuyên khoa</th>
                                 <th>Kinh nghiệm</th>
-                                <th>Dịch vụ & Giá</th>
+                                <th>Dịch vụ & giá</th>
                                 <th>Ngôn ngữ</th>
                                 <th>Trạng thái</th>
                                 <th></th>
@@ -681,7 +681,7 @@ const ListDoctors: React.FC = () => {
                         <Link to="/" className="link-primary">
                             Preclinic
                         </Link>
-                        , Tất Cả Quyền Được Bảo Lưu
+                        , Tất cả quyền được bảo lưu
                     </p>
                 </div>
             </div>
@@ -692,11 +692,11 @@ const ListDoctors: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc Bác Sĩ"
+                title="Lọc bác sĩ"
                 fields={[
                     {
                         name: 'doctors',
-                        label: 'Bác Sĩ',
+                        label: 'Bác sĩ',
                         type: 'multiselect',
                         options: originalDoctors.map((doctor) => ({
                             value: doctor.id,
@@ -722,7 +722,7 @@ const ListDoctors: React.FC = () => {
                     },
                     {
                         name: 'specialties',
-                        label: 'Chuyên Khoa',
+                        label: 'Chuyên khoa',
                         type: 'multiselect',
                         options: filterSpecialties.map((specialty, index) => ({
                             value: specialty.name,
@@ -735,7 +735,7 @@ const ListDoctors: React.FC = () => {
                     },
                     {
                         name: 'serviceTypes',
-                        label: 'Loại Dịch Vụ',
+                        label: 'Loại dịch vụ',
                         type: 'multiselect',
                         options: filterServiceTypes.map((serviceType, index) => ({
                             value: serviceType.name,
@@ -765,7 +765,7 @@ const ListDoctors: React.FC = () => {
                     },
                     {
                         name: 'languages',
-                        label: 'Ngôn Ngữ',
+                        label: 'Ngôn ngữ',
                         type: 'multiselect',
                         options: filterLanguages.map((language, index) => ({
                             value: language.name,
@@ -778,7 +778,7 @@ const ListDoctors: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động', key: 'status-active' },
@@ -800,8 +800,8 @@ const ListDoctors: React.FC = () => {
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xác Nhận Xóa"
-                message="Bạn có chắc chắn muốn xóa bác sĩ này không?"
+                title="Xác nhận xóa"
+                message="Bạn có chắc chắn muốn xóa bác sĩ này?"
                 itemName={
                     doctorToDelete ? `${doctorToDelete.lastName} ${doctorToDelete.firstName}` : ''
                 }

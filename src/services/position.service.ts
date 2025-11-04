@@ -30,8 +30,8 @@ export class PositionService extends BaseEntityService<
     PositionSearchParams
 > {
     protected endpoints = POSITION_ENDPOINTS;
-    protected entityName = 'Chức Vụ';
-    protected entityNamePlural = 'Chức Vụ';
+    protected entityName = 'Chức vụ';
+    protected entityNamePlural = 'Chức vụ';
 }
 
 // Export individual methods for convenience

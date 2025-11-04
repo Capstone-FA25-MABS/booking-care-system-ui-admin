@@ -38,11 +38,11 @@ export const ModalFilter: React.FC<ModalFilterProps> = ({
     onHide,
     onApply,
     onReset,
-    title = 'Lọc Dữ Liệu',
+    title = 'Lọc dữ liệu',
     fields,
     loading = false,
     applyText = 'Lọc',
-    resetText = 'Xóa Tất Cả',
+    resetText = 'Xóa tất cả',
     cancelText = 'Đóng',
 }) => {
     const [showDateRangePicker, setShowDateRangePicker] = useState(false);

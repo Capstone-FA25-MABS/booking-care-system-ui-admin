@@ -202,7 +202,7 @@ const FeaturesInput: React.FC<FeaturesInputProps> = ({
                 onClick={handleAddFeature}
             >
                 <Plus size={16} />
-                Thêm Tính Năng
+                Thêm tính năng
             </button>
 
             {/* Validation Error */}

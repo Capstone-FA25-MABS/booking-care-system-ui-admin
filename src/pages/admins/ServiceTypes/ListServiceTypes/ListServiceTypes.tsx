@@ -25,7 +25,7 @@ import styles from './ListServiceTypes.module.scss';
 
 // Skeleton columns for service type table
 const serviceTypeTableColumns = [
-    { label: 'Loại Dịch Vụ', hasAvatar: true, type: 'text' as const },
+    { label: 'Loại dịch vụ', hasAvatar: true, type: 'text' as const },
     { label: 'Hình ảnh', hasAvatar: false, type: 'text' as const },
     { label: 'Mô tả', hasAvatar: false, type: 'text' as const },
     { label: 'Ngày tạo', hasAvatar: false, type: 'text' as const },
@@ -55,7 +55,7 @@ const ListServiceTypes: React.FC = () => {
     // Applied filters (after clicking "Lọc" button)
     const [appliedServiceTypes, setAppliedServiceTypes] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
+    const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [serviceTypeToDelete, setServiceTypeToDelete] = useState<ServiceType | null>(null);
@@ -162,7 +162,7 @@ const ListServiceTypes: React.FC = () => {
         setServiceTypeToEdit(null);
     }, [handleCancel]);
 
-    const title = modalMode === 'add' ? 'Thêm Loại Dịch Vụ Mới' : 'Sửa Loại Dịch Vụ';
+    const title = modalMode === 'add' ? 'Thêm loại dịch vụ mới' : 'Sửa loại dịch vụ';
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
@@ -575,9 +575,9 @@ const ListServiceTypes: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Danh Sách Loại Dịch Vụ{' '}
+                        Danh sách loại dịch vụ{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng Loại Dịch Vụ:{' '}
+                            Tổng loại dịch vụ:{' '}
                             {appliedServiceTypes.length > 0 || appliedStatuses.length > 0
                                 ? filteredServiceTypes.length
                                 : pagination?.totalCount || 0}
@@ -607,7 +607,7 @@ const ListServiceTypes: React.FC = () => {
                         icon="ti ti-plus"
                         onClick={handleAddClick}
                     >
-                        Thêm Loại Dịch Vụ
+                        Thêm loại dịch vụ
                     </Button>
                 </div>
             </div>
@@ -706,12 +706,12 @@ const ListServiceTypes: React.FC = () => {
                 <table className="table table-nowrap datatable">
                     <thead className="thead-light">
                         <tr>
-                            <th>Tên Loại Dịch Vụ</th>
-                            <th>Hình Ảnh</th>
-                            <th>Mô Tả</th>
-                            <th>Ngày Tạo</th>
-                            <th>Ngày Cập Nhật</th>
-                            <th>Trạng Thái</th>
+                            <th>Tên loại dịch vụ</th>
+                            <th>Hình ảnh</th>
+                            <th>Mô tả</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày cập nhật</th>
+                            <th>Trạng thái</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -746,7 +746,7 @@ const ListServiceTypes: React.FC = () => {
                 onRemoveImage={handleRemoveImage}
                 onStatusChange={handleStatusChange}
                 imagePreview={imagePreview}
-                entityName="Loại Dịch Vụ"
+                entityName="Loại dịch vụ"
                 hasImageUpload={true}
                 hasDescription={true}
                 styles={{
@@ -777,7 +777,7 @@ const ListServiceTypes: React.FC = () => {
                 fields={[
                     {
                         name: 'serviceTypes',
-                        label: 'Loại Dịch Vụ',
+                        label: 'Loại dịch vụ',
                         type: 'multiselect',
                         options: (allServiceTypes || []).map((serviceType) => ({
                             value: serviceType.id,
@@ -789,7 +789,7 @@ const ListServiceTypes: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động' },
