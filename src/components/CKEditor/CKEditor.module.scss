@@ -34,8 +34,9 @@
                     width: 80%;
                     max-width: 800px;
 
-                    // CKEditor custom element for media embeds
-                    & oembed {
+                    // CKEditor custom element for media embeds (oembed with url attribute)
+                    // Using attribute selector to avoid "unknown type selector" linter error
+                    & *[url] {
                         display: block;
                         padding: 2rem;
                         background: #f0f0f0;
