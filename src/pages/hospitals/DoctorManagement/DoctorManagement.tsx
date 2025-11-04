@@ -1,87 +1,63 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { Account } from '@/types/auth.types';
 import {
-    getAccountsByRole,
+    getDoctorsByHospital,
     toggleBanUnbanAccount,
     lockAccount,
     unlockAccount,
 } from '@/services/auth.service';
-import { Role } from '@/enums/common.enums';
 import Pagination from '@/components/Pagination';
 import ActionDropdown from '@/components/ActionDropdown';
 import { SkeletonTableRow } from '@/components/SkeletonLoading';
 import { EmptyTableState, AccountTableRow } from '@/components/AccountTable';
 import { sortOptions } from '@/utils/account-management.utils';
 
-// Map URL role param to Role enum
-const getRoleFromParam = (roleParam: string | null): Role => {
-    switch (roleParam) {
-        case 'Patient':
-            return Role.PATIENT;
-        case 'Doctor':
-            return Role.DOCTOR;
-        case 'Staff':
-            return Role.STAFF;
-        default:
-            return Role.PATIENT;
-    }
-};
-
-// Get role label in Vietnamese
-const getRoleLabel = (role: Role): string => {
-    switch (role) {
-        case Role.PATIENT:
-            return 'Bệnh Nhân';
-        case Role.DOCTOR:
-            return 'Bác Sĩ';
-        case Role.STAFF:
-            return 'Bệnh Viện';
-        default:
-            return 'Tài Khoản';
-    }
-};
-
-const AccountManagement: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const roleParam = searchParams.get('role');
-    const currentRole = getRoleFromParam(roleParam);
+const DoctorManagement: React.FC = () => {
+    // Get hospital profile from Redux
+    const { hospitalProfile } = useSelector((state: RootState) => state.user);
 
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-    const [selectedSort, setSelectedSort] = useState('CreatedAt_desc');
+    const [searchInput, setSearchInput] = useState('');
+    const [sortBy, setSortBy] = useState('CreatedAt_desc');
     const pageSize = 10;
 
-    // Debounce search term
+    // Debounce search
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm);
-            setCurrentPage(1); // Reset to first page when searching
+        const timeoutId = setTimeout(() => {
+            setSearchTerm(searchInput);
+            setCurrentPage(1); // Reset to page 1 when search changes
         }, 500);
 
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
+        return () => clearTimeout(timeoutId);
+    }, [searchInput]);
 
-    // Fetch accounts by role
-    const fetchAccounts = useCallback(
-        async (role: Role, page: number = 1, search?: string, sort?: string) => {
+    // Fetch doctors by hospital
+    const fetchDoctors = useCallback(
+        async (page: number = 1, search?: string, sort?: string) => {
+            if (!hospitalProfile?.id) {
+                toast.error('Không tìm thấy thông tin bệnh viện');
+                return;
+            }
+
             setIsLoading(true);
             try {
                 // Parse sort value (format: "field_order")
-                const [sortBy, sortOrder] = sort ? sort.split('_') : ['CreatedAt', 'desc'];
+                const [sortField, sortOrder] = sort ? sort.split('_') : ['CreatedAt', 'desc'];
 
-                const response = await getAccountsByRole(
-                    role,
+                const response = await getDoctorsByHospital(
+                    hospitalProfile.id,
                     page,
                     pageSize,
                     search || undefined,
-                    sortBy,
+                    sortField,
                     sortOrder as 'asc' | 'desc'
                 );
 
@@ -91,80 +67,63 @@ const AccountManagement: React.FC = () => {
                     setTotalPages(response.data.totalPages);
                 }
             } catch (error: any) {
-                console.error('Error fetching accounts:', error);
-                toast.error(error?.message || 'Không thể tải danh sách tài khoản');
+                console.error('Error fetching doctors:', error);
+                toast.error(error?.message || 'Không thể tải danh sách bác sĩ');
             } finally {
                 setIsLoading(false);
             }
         },
-        [pageSize]
+        [hospitalProfile?.id, pageSize]
     );
 
-    // Effect to fetch accounts when dependencies change
+    // Fetch on mount and when dependencies change
     useEffect(() => {
-        fetchAccounts(currentRole, currentPage, debouncedSearchTerm, selectedSort);
-    }, [currentRole, currentPage, debouncedSearchTerm, selectedSort, fetchAccounts]);
+        fetchDoctors(currentPage, searchTerm, sortBy);
+    }, [currentPage, searchTerm, sortBy, fetchDoctors]);
 
-    // Handlers
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
+        setSearchInput(e.target.value);
     };
 
     const handleSortChange = (value: string) => {
-        setSelectedSort(value);
-        setCurrentPage(1); // Reset to first page when sorting
+        setSortBy(value);
+        setCurrentPage(1); // Reset to page 1 when sort changes
     };
 
-    // Handle ban/unban account
     const handleToggleBanUnban = async (accountId: string) => {
         try {
-            const response = await toggleBanUnbanAccount(accountId);
-            if (response.success) {
-                toast.success(response.message || 'Cập nhật trạng thái tài khoản thành công');
-                // Refresh accounts list
-                fetchAccounts(currentRole, currentPage, debouncedSearchTerm, selectedSort);
-            }
+            await toggleBanUnbanAccount(accountId);
+            toast.success('Cập nhật trạng thái tài khoản thành công');
+            fetchDoctors(currentPage, searchTerm, sortBy);
         } catch (error: any) {
-            console.error('Error toggling ban/unban:', error);
             toast.error(error?.message || 'Không thể cập nhật trạng thái tài khoản');
         }
     };
 
-    // Handle lock account
     const handleLockAccount = async (accountId: string) => {
         try {
-            const response = await lockAccount(accountId);
-            if (response.success) {
-                toast.success(response.message || 'Khóa tài khoản thành công');
-                // Refresh accounts list
-                fetchAccounts(currentRole, currentPage, debouncedSearchTerm, selectedSort);
-            }
+            await lockAccount(accountId);
+            toast.success('Khóa tài khoản thành công');
+            fetchDoctors(currentPage, searchTerm, sortBy);
         } catch (error: any) {
-            console.error('Error locking account:', error);
             toast.error(error?.message || 'Không thể khóa tài khoản');
         }
     };
 
-    // Handle unlock account
     const handleUnlockAccount = async (accountId: string) => {
         try {
-            const response = await unlockAccount(accountId);
-            if (response.success) {
-                toast.success(response.message || 'Mở khóa tài khoản thành công');
-                // Refresh accounts list
-                fetchAccounts(currentRole, currentPage, debouncedSearchTerm, selectedSort);
-            }
+            await unlockAccount(accountId);
+            toast.success('Mở khóa tài khoản thành công');
+            fetchDoctors(currentPage, searchTerm, sortBy);
         } catch (error: any) {
-            console.error('Error unlocking account:', error);
             toast.error(error?.message || 'Không thể mở khóa tài khoản');
         }
     };
 
-    // Helper function to render table body content
     const renderTableBody = () => {
         if (isLoading) {
             return (
@@ -173,21 +132,21 @@ const AccountManagement: React.FC = () => {
                         { length: 5 },
                         (_, index) => `skeleton-row-${Date.now()}-${index}`
                     ).map((skeletonId) => (
-                        <SkeletonTableRow key={skeletonId} showPhoneColumn={true} />
+                        <SkeletonTableRow key={skeletonId} showPhoneColumn={false} />
                     ))}
                 </>
             );
         }
 
         if (accounts.length === 0) {
-            return <EmptyTableState colSpan={7} />;
+            return <EmptyTableState colSpan={6} />;
         }
 
         return accounts.map((account) => (
             <AccountTableRow
                 key={account.accountId}
                 account={account}
-                showPhoneColumn={true}
+                showPhoneColumn={false}
                 onToggleBanUnban={handleToggleBanUnban}
                 onLockAccount={handleLockAccount}
                 onUnlockAccount={handleUnlockAccount}
@@ -195,28 +154,39 @@ const AccountManagement: React.FC = () => {
         ));
     };
 
+    if (!hospitalProfile?.id) {
+        return (
+            <div className="content">
+                <div className="alert alert-danger" role="alert">
+                    <i className="ti ti-alert-circle me-2" /> Không tìm thấy thông tin bệnh viện.
+                    Vui lòng đăng nhập lại.
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="content" id="profilePage">
+        <div className="content" id="doctorManagementPage">
             <style>
                 {`
                     /* Custom toggle switch colors */
                     .form-check-input:checked {
-                    background-color: #22C55E !important; /* Xanh tươi hơn */
-                    border-color: #22C55E !important;
+                        background-color: #22C55E !important; /* Xanh tươi hơn */
+                        border-color: #22C55E !important;
                     }
 
                     .form-check-input:not(:checked) {
-                    background-color: #D1D5DB !important; /* Xám sáng hơn */
-                    border-color: #9CA3AF !important;
+                        background-color: #D1D5DB !important; /* Xám sáng hơn */
+                        border-color: #9CA3AF !important;
                     }
 
                     .form-check-input:not(:checked):hover {
-                    background-color: #E5E7EB !important;
+                        background-color: #E5E7EB !important;
                     }
 
                     .form-check-input:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
+                        opacity: 0.6;
+                        cursor: not-allowed;
                     }
                 `}
             </style>
@@ -224,9 +194,9 @@ const AccountManagement: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản Lý Tài Khoản - {getRoleLabel(currentRole)}
+                        Quản Lý Bác Sĩ{' '}
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                            Tổng {getRoleLabel(currentRole)}: {totalCount}
+                            Tổng Bác Sĩ: {totalCount}
                         </span>
                     </h4>
                 </div>
@@ -238,13 +208,13 @@ const AccountManagement: React.FC = () => {
                     <div className="d-flex align-items-center flex-wrap gap-2">
                         <div className="table-search d-flex align-items-center mb-0">
                             <div className="search-input">
-                                <label htmlFor="accountSearch" aria-label="Search accounts">
+                                <label htmlFor="doctorSearch" aria-label="Search doctors">
                                     <input
-                                        id="accountSearch"
+                                        id="doctorSearch"
                                         type="search"
                                         className="form-control form-control-sm"
-                                        placeholder="Tìm kiếm tài khoản..."
-                                        value={searchTerm}
+                                        placeholder="Tìm kiếm bác sĩ..."
+                                        value={searchInput}
                                         onChange={handleSearchChange}
                                         aria-controls="DataTables_Table_0"
                                     />
@@ -259,7 +229,7 @@ const AccountManagement: React.FC = () => {
                     <ActionDropdown
                         type="sort"
                         options={sortOptions}
-                        selectedValue={selectedSort}
+                        selectedValue={sortBy}
                         onSelect={handleSortChange}
                         placeholder="Sắp xếp:"
                         size="sm"
@@ -272,9 +242,8 @@ const AccountManagement: React.FC = () => {
                 <table className="table table-nowrap datatable">
                     <thead className="thead-light">
                         <tr>
-                            <th>{getRoleLabel(currentRole)}</th>
+                            <th>Bác Sĩ</th>
                             <th>Email</th>
-                            <th>Số Điện Thoại</th>
                             <th>Địa Chỉ</th>
                             <th>Kích Hoạt</th>
                             <th>Khóa Tài Khoản</th>
@@ -294,4 +263,4 @@ const AccountManagement: React.FC = () => {
     );
 };
 
-export default AccountManagement;
+export default DoctorManagement;

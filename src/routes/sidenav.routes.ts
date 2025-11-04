@@ -15,6 +15,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
         title: 'Hospital',
         items: [
             createDoctorsMenuItem(),
+            createSimpleMenuItem(
+                'Quản lý bác sĩ',
+                'ti ti-users-group',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
+            ),
             createAppointmentsMenuItem('staff'),
             createSimpleMenuItem(
                 'Hoàn tiền',

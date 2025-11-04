@@ -27,7 +27,6 @@ import {
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
 import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
-import { AppFooter } from '@/components/AppFooter';
 import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
@@ -544,7 +543,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Chờ xử lý{' '}
+                            Đang chờ xác nhận{' '}
                             <span className={getStatusBadgeClass('waiting')}>
                                 {appointmentCounts.waiting}
                             </span>
@@ -556,7 +555,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Sắp Tới{' '}
+                            Sắp khám{' '}
                             <span className={getStatusBadgeClass('upcoming')}>
                                 {appointmentCounts.upcoming}
                             </span>
@@ -580,7 +579,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Hoàn Thành{' '}
+                            Đã khám{' '}
                             <span className={getStatusBadgeClass('completed')}>
                                 {appointmentCounts.completed}
                             </span>
@@ -640,10 +639,6 @@ const ListAppointments: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-
-            {/* Footer Start */}
-            <AppFooter />
-            {/* Footer End */}
 
             {/* Filter Modal */}
             <ModalFilter

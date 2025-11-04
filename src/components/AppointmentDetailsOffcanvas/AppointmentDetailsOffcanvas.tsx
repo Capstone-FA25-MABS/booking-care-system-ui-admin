@@ -60,12 +60,6 @@ export const AppointmentDetailsOffcanvas: React.FC<AppointmentDetailsOffcanvasPr
                         </span>
                     </p>
                     <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                        Địa Điểm{' '}
-                        <span className="text-body fw-normal">
-                            {appointment?.hospitalInfo?.address || 'Hà Nội, Việt Nam'}{' '}
-                        </span>
-                    </p>
-                    <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
                         Loại Khám{' '}
                         <span className="text-body fw-normal">
                             {' '}

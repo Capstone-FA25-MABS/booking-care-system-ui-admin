@@ -56,6 +56,8 @@ export interface AppointmentResponse {
     status: AppointmentStatus;
     reason?: string;
     result?: string;
+    symptoms?: string;
+    attachmentUrls?: string[];
     createdAt: string;
     updatedAt: string;
     consultationFees?: number; // From backend for refund option check
@@ -94,6 +96,7 @@ export interface AppointmentQueryRequest {
     serviceId?: string;
     appointmentType?: AppointmentType;
     status?: AppointmentStatus;
+    statuses?: AppointmentStatus[]; // For filtering multiple statuses
     fromDate?: string;
     toDate?: string;
     searchTerm?: string;
@@ -128,6 +131,8 @@ export interface AppointmentCardData {
     status: AppointmentStatus;
     reason?: string;
     result?: string;
+    symptoms?: string;
+    attachmentUrls?: string[];
     isNew?: boolean;
     hasReview?: boolean;
     specialtyId?: string; // For fetching available doctors
@@ -198,7 +203,7 @@ export const getAppointmentStatusText = (status: AppointmentStatus): string => {
 export const getAppointmentTypeText = (type: AppointmentType): string => {
     switch (type) {
         case AppointmentType.TELEHEALTH:
-            return 'Trực tuyến';
+            return 'Tư vấn online';
         case AppointmentType.IN_PERSON:
             return 'Trực tiếp';
         default:
@@ -324,6 +329,8 @@ export const transformToCardData = (apiResponse: AppointmentResponse): Appointme
         status: apiResponse.status,
         reason: apiResponse.reason,
         result: apiResponse.result,
+        symptoms: apiResponse.symptoms,
+        attachmentUrls: apiResponse.attachmentUrls,
         consultationFees: apiResponse.consultationFees, // For refund option check
         isNew: false, // Can be calculated based on createdAt
         hasReview: false, // Needs review data from another endpoint
