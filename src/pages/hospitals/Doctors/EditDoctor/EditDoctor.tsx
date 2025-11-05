@@ -113,10 +113,9 @@ const EditDoctor: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Prepare common payload
+            // Prepare common payload (email is excluded from update)
             const basePayload = prepareDoctorUpdatePayload({
                 id,
-                email: formData.email,
                 doctorData,
                 languageIds: formData.languageIds,
                 doctorPrices,

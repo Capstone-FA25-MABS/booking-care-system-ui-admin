@@ -2,7 +2,7 @@ import React from 'react';
 import Select from 'react-select';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Textarea from '@/components/Textarea';
+import CKEditor from '@/components/CKEditor';
 import Spinner from '@/components/Spinner';
 import { AddDoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
@@ -10,6 +10,7 @@ import { selectCustomStyles } from '@/constants/select.styles';
 import styles from '../components/DoctorFormFields/DoctorFormFields.module.scss';
 import FullScreenSpinner from '@/components/FullScreenSpinner';
 import { Gender } from '@/enums/common.enums';
+import { prepareBioForSave } from '@/utils/bioHtmlProcessor';
 // Import shared components to reduce duplication
 import ServicePricesSection from '../components/shared/ServicePricesSection';
 import LanguagesSection from '../components/shared/LanguagesSection';
@@ -156,20 +157,35 @@ const AddDoctorFormFields: React.FC<AddDoctorFormFieldsProps> = ({
                                     onChange={onInputChange}
                                     error={errors.yearsOfExperience}
                                 />
-                                <Textarea
-                                    wrapperClassName="col-6 mb-3"
-                                    label="Tiểu sử"
-                                    icon="file-text"
-                                    iconPrefix="feather"
-                                    required
-                                    name="bio"
-                                    value={formData.bio}
-                                    onChange={onInputChange}
-                                    rows={4}
-                                    placeholder="Mô tả về bác sĩ"
-                                    error={errors.bio}
-                                />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Bio Section - Full width */}
+                    <div className="row">
+                        <div className="col-12">
+                            <CKEditor
+                                label="Tiểu sử"
+                                icon="file-text"
+                                iconPrefix="feather"
+                                required
+                                name="bio"
+                                value={formData.bio}
+                                onChange={(data) => {
+                                    // Process HTML before saving
+                                    const processedHtml = prepareBioForSave(data);
+
+                                    // Create synthetic event to maintain compatibility
+                                    onInputChange({
+                                        target: {
+                                            name: 'bio',
+                                            value: processedHtml,
+                                        },
+                                    } as React.ChangeEvent<HTMLTextAreaElement>);
+                                }}
+                                placeholder="Mô tả về bác sĩ (hỗ trợ định dạng văn bản, hình ảnh, video...)"
+                                error={errors.bio}
+                            />
                         </div>
                     </div>
                 </div>

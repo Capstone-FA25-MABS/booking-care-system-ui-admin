@@ -50,8 +50,20 @@ const YearsOfExperienceField: React.FC<YearsOfExperienceFieldProps> = ({
                 thousandSeparator=""
                 allowNegative={false}
                 decimalScale={0}
+                isAllowed={(values) => {
+                    const { floatValue } = values;
+                    // Allow empty value or value between 0 and 80
+                    return floatValue === undefined || (floatValue >= 0 && floatValue <= 80);
+                }}
+                placeholder="Nhập số năm kinh nghiệm (0-80)"
             />
-            {error && <div className="invalid-feedback">{error}</div>}
+            {error && <div className="invalid-feedback d-block">{error}</div>}
+            {!error && value > 80 && (
+                <small className="text-warning d-block mt-1">
+                    <i className="feather-alert-triangle me-1"></i> Số năm kinh nghiệm tối đa là 80
+                    năm
+                </small>
+            )}
         </div>
     );
 };

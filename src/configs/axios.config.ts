@@ -43,7 +43,7 @@ instance.interceptors.request.use(
         return config;
     },
     (error) => {
-        return Promise.reject(error);
+        throw error;
     }
 );
 
@@ -69,7 +69,7 @@ const handleNetworkError = (error: AxiosError) => {
         method: error.config?.method,
         network: true,
     });
-    return Promise.reject(new Error('Không thể kết nối đến máy chủ!'));
+    throw new Error('Không thể kết nối đến máy chủ!');
 };
 
 const handleForbiddenError = (err: any) => {
@@ -78,7 +78,7 @@ const handleForbiddenError = (err: any) => {
     // Force logout if forbidden error (likely role mismatch)
     handleForceLogout('Role mismatch: 403 Forbidden');
 
-    return Promise.reject(new Error(err?.message || 'Access forbidden'));
+    throw new Error(err?.message || 'Access forbidden');
 };
 
 const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
@@ -86,7 +86,9 @@ const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
         failedQueue.push({ resolve, reject });
     })
         .then(() => instance(originalRequest))
-        .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
+        .catch((queueErr) => {
+            throw new Error(String(queueErr));
+        });
 };
 
 const handleForceLogout = (reason?: string) => {
@@ -149,7 +151,7 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         // Force logout and clear all state
         handleForceLogout('Session expired or invalid token');
 
-        return Promise.reject(new Error(String(refreshError)));
+        throw new Error(String(refreshError));
     }
 };
 
@@ -190,7 +192,19 @@ const handleResponseError = async (error: AxiosError) => {
         data: err,
     });
 
-    return Promise.reject(new Error(err?.message || error.message || 'An error occurred'));
+    // Extract error message with priority: error field > message field > errors array > default
+    let errorMessage = 'An error occurred';
+    if (err?.error) {
+        errorMessage = err.error;
+    } else if (err?.message) {
+        errorMessage = err.message;
+    } else if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
+        errorMessage = err.errors[0];
+    } else if (error.message) {
+        errorMessage = error.message;
+    }
+
+    throw new Error(errorMessage);
 };
 
 // Response interceptor for handling responses and errors

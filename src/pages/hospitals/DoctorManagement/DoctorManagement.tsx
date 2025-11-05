@@ -194,7 +194,7 @@ const DoctorManagement: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản Lý Bác Sĩ{' '}
+                        Quản lý tài khoản{' '}
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                             Tổng Bác Sĩ: {totalCount}
                         </span>

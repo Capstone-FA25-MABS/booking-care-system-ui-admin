@@ -111,9 +111,11 @@ export const useAddDoctorForm = ({ initialData }: UseAddDoctorFormProps) => {
 
         // Password validation removed - backend will auto-generate secure password
 
-        // Validate years of experience
+        // Validate years of experience (0-80)
         if (formData.yearsOfExperience < 0) {
             newErrors.yearsOfExperience = 'Số năm kinh nghiệm phải lớn hơn hoặc bằng 0';
+        } else if (formData.yearsOfExperience > 80) {
+            newErrors.yearsOfExperience = 'Số năm kinh nghiệm không được vượt quá 80 năm';
         }
 
         // Validate languages
