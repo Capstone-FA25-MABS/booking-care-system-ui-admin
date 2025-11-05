@@ -78,6 +78,7 @@ export const PATHS = {
         },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
+        PROFILE_SETTINGS: 'profile-settings',
     },
 
     // Doctor paths

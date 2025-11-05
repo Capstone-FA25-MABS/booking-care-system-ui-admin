@@ -1,6 +1,44 @@
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import SettingsSidebar from '@/pages/settings/components/SettingsSidebar';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import { Role } from '@/enums/common.enums';
+import DoctorProfileSettings from './DoctorProfileSettings';
+import HospitalProfileSettings from './HospitalProfileSettings';
+import Spinner from '@/components/Spinner';
+import { AppDispatch } from '@/store';
+import { fetchProfileByRole } from '@/store/slices/userSlice';
 
 const ProfileSettings = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { role, isLoading, profile } = useCurrentUserProfile();
+
+    // Auto-fetch profile if not loaded
+    useEffect(() => {
+        if (role && !profile && role !== Role.PATIENT) {
+            dispatch(fetchProfileByRole({ role }));
+        }
+    }, [role, profile, dispatch]);
+
+    if (isLoading) {
+        return (
+            <div className="content" id="profilePage">
+                <div className="mb-3 border-bottom pb-3">
+                    <h4 className="fw-bold mb-0">Settings</h4>
+                </div>
+                <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ minHeight: '400px' }}
+                >
+                    <Spinner size="large" variant="primary" />
+                </div>
+            </div>
+        );
+    }
+
+    // For DOCTOR and STAFF roles, hide the sidebar and show full-width form
+    const shouldShowSidebar = role !== Role.DOCTOR && role !== Role.STAFF;
+
     return (
         <div className="content" id="profilePage">
             {/* Page Header */}
@@ -10,293 +48,21 @@ const ProfileSettings = () => {
 
             <div className="card">
                 <div className="card-body p-0">
-                    <div className="settings-wrapper d-flex">
-                        {/* Settings Sidebar */}
-                        <SettingsSidebar activeMenu="profile" />
+                    <div className={shouldShowSidebar ? 'settings-wrapper d-flex' : ''}>
+                        {/* Settings Sidebar - Only show for non-DOCTOR and non-STAFF roles */}
+                        {shouldShowSidebar && <SettingsSidebar activeMenu="profile" />}
 
                         {/* Main Content */}
-                        <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
-                            <div className="card-header border-bottom px-0 mx-3">
-                                <h5 className="fw-bold">Basic Information</h5>
-                            </div>
-                            <div className="card-body px-0 mx-3">
-                                <form>
-                                    {/* Profile Image Section */}
-                                    <div className="row border-bottom mb-3">
-                                        <div className="col-lg-12">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-2">
-                                                    <label
-                                                        htmlFor="profileUpload"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Profile Image{' '}
-                                                        <span className="text-danger ms-1">*</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-10">
-                                                    <div className="profile-container">
-                                                        <img
-                                                            src="/src/assets/img/users/user-01.jpg"
-                                                            alt="Profile"
-                                                        />
-                                                        <div className="overlay-btn">
-                                                            <a
-                                                                href="#"
-                                                                className="text-white"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    document
-                                                                        .getElementById(
-                                                                            'profileUpload'
-                                                                        )
-                                                                        ?.click();
-                                                                }}
-                                                            >
-                                                                <i className="ti ti-photo fs-10"></i>
-                                                            </a>
-                                                        </div>
-                                                        <input
-                                                            type="file"
-                                                            id="profileUpload"
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Name Fields */}
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="firstName"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        First Name{' '}
-                                                        <span className="text-danger ms-1">*</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="text"
-                                                        id="firstName"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="lastName"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Last Name{' '}
-                                                        <span className="text-danger ms-1">*</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="text"
-                                                        id="lastName"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Contact Fields */}
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="email"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Email{' '}
-                                                        <span className="text-danger ms-1">*</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="email"
-                                                        id="email"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="phoneNumber"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Phone Number{' '}
-                                                        <span className="text-danger ms-1">*</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="tel"
-                                                        id="phoneNumber"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Address Information Section */}
-                                    <div className="row border-bottom mb-3">
-                                        <div className="mb-3">
-                                            <h5 className="fw-bold mb-0">Address Information</h5>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="addressLine1"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Address Line 1
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="text"
-                                                        id="addressLine1"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="addressLine2"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Address Line 2
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="text"
-                                                        id="addressLine2"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="country"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Country
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <select id="country" className="form-select">
-                                                        <option>Select</option>
-                                                        <option>USA</option>
-                                                        <option>Canada</option>
-                                                        <option>UK</option>
-                                                        <option>Germany</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="state"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        State
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <select id="state" className="form-select">
-                                                        <option>Select</option>
-                                                        <option>California</option>
-                                                        <option>Ontario</option>
-                                                        <option>England</option>
-                                                        <option>Bavaria</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="city"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        City
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <select id="city" className="form-select">
-                                                        <option>Select</option>
-                                                        <option>Los Angeles</option>
-                                                        <option>Toronto</option>
-                                                        <option>London</option>
-                                                        <option>Munich</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-lg-6">
-                                            <div className="row align-items-center mb-3">
-                                                <div className="col-lg-4">
-                                                    <label
-                                                        htmlFor="pincode"
-                                                        className="form-label mb-0"
-                                                    >
-                                                        Pincode
-                                                    </label>
-                                                </div>
-                                                <div className="col-lg-8">
-                                                    <input
-                                                        type="text"
-                                                        id="pincode"
-                                                        className="form-control"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="d-flex align-items-center justify-content-end">
-                                        <button type="button" className="btn btn-light me-3">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                        <div
+                            className={`card ${shouldShowSidebar ? 'flex-fill' : 'w-100'} mb-0 border-0 bg-light-500 shadow-none`}
+                        >
+                            {role === Role.DOCTOR && <DoctorProfileSettings />}
+                            {role === Role.STAFF && <HospitalProfileSettings />}
+                            {shouldShowSidebar && (
+                                <div className="card-header border-bottom px-0 mx-3">
+                                    <h5 className="fw-bold">Basic Information</h5>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

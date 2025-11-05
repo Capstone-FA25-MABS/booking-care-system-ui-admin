@@ -142,7 +142,7 @@ export const createDashboardMenuItem = (): MenuItem => ({
  * Create Account Settings menu item (shared across all roles)
  */
 export const createAccountSettingsMenuItem = (): MenuItem => ({
-    label: 'Account Settings',
+    label: 'Cài đặt tài khoản',
     icon: 'ti ti-user-cog',
     subItems: [
         {

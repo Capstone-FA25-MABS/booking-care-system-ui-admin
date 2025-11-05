@@ -45,7 +45,14 @@ export const listGroupMenuItemHospital: MenuConfig = [
     },
     {
         title: 'Settings',
-        items: [createAccountSettingsMenuItem()],
+        items: [
+            createAccountSettingsMenuItem(),
+            createSimpleMenuItem(
+                'Thông tin bệnh viện',
+                'ti ti-building-hospital',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.PROFILE_SETTINGS)
+            ),
+        ],
     },
 ];
 

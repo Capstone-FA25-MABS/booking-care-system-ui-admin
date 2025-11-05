@@ -19,6 +19,7 @@ import { logoutAsync } from '@/store/slices/authSlice';
 import { fetchProfileByRole, clearAllUserProfiles } from '@/store/slices/userSlice';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { Role } from '@/enums/common.enums';
+import styles from './MainHeader.module.scss';
 
 const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -408,8 +409,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                         >
                             <img
                                 src={getAvatarUrl()}
-                                width="32"
-                                className="rounded-circle d-flex"
+                                className={`${styles.headerAvatar} rounded-circle d-flex`}
                                 alt="user-image"
                             />
                             <span className="online text-success">
@@ -420,9 +420,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                                 <img
                                     src={getAvatarUrl()}
-                                    className="rounded-circle"
-                                    width="42"
-                                    height="42"
+                                    className={`${styles.dropdownAvatar} rounded-circle`}
                                     alt=""
                                 />
                                 <div className="ms-2">
@@ -440,7 +438,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             {/* Item */}
                             <a href="account-settings.html" className="dropdown-item">
                                 <i className="ti ti-settings me-1 align-middle"></i>
-                                <span className="align-middle">Account Settings</span>
+                                <span className="align-middle">Cài đặt tài khoản</span>
                             </a>
 
                             {/* Item */}

@@ -42,6 +42,7 @@ import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
 import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
+import HospitalProfileSetting from '@/pages/settings/HospitalProfileSetting';
 
 const routes: RouteObject[] = [
     {
@@ -171,6 +172,7 @@ const routes: RouteObject[] = [
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlan /> },
+            { path: PATHS.HOSPITAL.PROFILE_SETTINGS, element: <HospitalProfileSetting /> },
         ],
     },
     // Shared Account Settings - Accessible by all authenticated users

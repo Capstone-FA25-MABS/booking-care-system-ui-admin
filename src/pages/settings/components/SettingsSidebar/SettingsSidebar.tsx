@@ -64,7 +64,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = () => {
                                 }}
                             >
                                 <i className="ti ti-user-cog me-2"></i>
-                                <span>Account Settings</span>
+                                <span>Cài đặt tài khoản</span>
                                 <span className="menu-arrow"></span>
                             </a>
                             <ul className={clsx(styles.subMenuList, isOpen && styles.open)}>
