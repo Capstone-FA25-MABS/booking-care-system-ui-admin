@@ -5,10 +5,13 @@ import {
     createAppointmentsMenuItem,
     createDashboardMenuItem,
     createDoctorsMenuItem,
+    createDoctorAccountSettingsMenuItem,
+    createHospitalAccountSettingsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
     createSubscriptionPlansMenuItem,
 } from './menu.items';
+import { Role } from '@/enums/common.enums';
 
 export const listGroupMenuItemHospital: MenuConfig = [
     {
@@ -21,6 +24,21 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
             ),
             createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem(
+                'Quản lí chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SPECIALTIES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Quản lý dịch vụ bác sĩ',
+                'ti ti-medical-cross',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_TYPES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Quản lý dịch vụ bệnh viện',
+                'ti ti-building-hospital',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
+            ),
             createSimpleMenuItem(
                 'Hoàn tiền',
                 'ti ti-receipt-refund',
@@ -45,14 +63,7 @@ export const listGroupMenuItemHospital: MenuConfig = [
     },
     {
         title: 'Settings',
-        items: [
-            createAccountSettingsMenuItem(),
-            createSimpleMenuItem(
-                'Thông tin bệnh viện',
-                'ti ti-building-hospital',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.PROFILE_SETTINGS)
-            ),
-        ],
+        items: [createHospitalAccountSettingsMenuItem()],
     },
 ];
 
@@ -84,7 +95,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
     },
     {
         title: 'Settings',
-        items: [createAccountSettingsMenuItem()],
+        items: [createDoctorAccountSettingsMenuItem()],
     },
 ];
 
@@ -174,3 +185,22 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         items: [createAccountSettingsMenuItem()],
     },
 ];
+
+/**
+ * Get menu items based on user role
+ * @param role - User's role (ADMIN, DOCTOR, or STAFF)
+ * @returns Menu configuration for the specified role
+ */
+export const getMenuItemsByRole = (role: Role | null): MenuConfig => {
+    switch (role) {
+        case Role.ADMIN:
+            return listGroupMenuItemAdmin;
+        case Role.DOCTOR:
+            return listGroupMenuItemDoctor;
+        case Role.STAFF:
+            return listGroupMenuItemHospital;
+        default:
+            // Fallback to admin menu if role is not determined
+            return listGroupMenuItemAdmin;
+    }
+};

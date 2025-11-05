@@ -139,27 +139,79 @@ export const createDashboardMenuItem = (): MenuItem => ({
 });
 
 /**
- * Create Account Settings menu item (shared across all roles)
+ * Create Account Settings menu item for Admin (with all tabs)
  */
 export const createAccountSettingsMenuItem = (): MenuItem => ({
     label: 'Cài đặt tài khoản',
     icon: 'ti ti-user-cog',
     subItems: [
         {
-            label: 'Profile',
-            link: PATHS.COMMON.ACCOUNT_SETTINGS.PROFILE,
+            label: 'Thông tin tài khoản',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.PROFILE
+            ),
         },
         {
-            label: 'Security',
-            link: PATHS.COMMON.ACCOUNT_SETTINGS.SECURITY,
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.SECURITY
+            ),
         },
         {
-            label: 'Notifications',
-            link: PATHS.COMMON.ACCOUNT_SETTINGS.NOTIFICATIONS,
+            label: 'Thông báo',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.NOTIFICATIONS
+            ),
         },
         {
-            label: 'Integrations',
-            link: PATHS.COMMON.ACCOUNT_SETTINGS.INTEGRATIONS,
+            label: 'Tích hợp',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.INTEGRATIONS
+            ),
+        },
+    ],
+});
+
+/**
+ * Create Account Settings menu item for Doctor (only Profile tab)
+ */
+export const createDoctorAccountSettingsMenuItem = (): MenuItem => ({
+    label: 'Cài đặt tài khoản',
+    icon: 'ti ti-user-cog',
+    subItems: [
+        {
+            label: 'Thông tin tài khoản',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SETTINGS.ROOT,
+                PATHS.DOCTOR.SETTINGS.PROFILE
+            ),
+        },
+    ],
+});
+
+/**
+ * Create Account Settings menu item for Staff/Hospital (only Profile tab)
+ */
+export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
+    label: 'Cài đặt tài khoản',
+    icon: 'ti ti-user-cog',
+    subItems: [
+        {
+            label: 'Thông tin tài khoản',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SETTINGS.ROOT,
+                PATHS.HOSPITAL.SETTINGS.PROFILE
+            ),
         },
     ],
 });

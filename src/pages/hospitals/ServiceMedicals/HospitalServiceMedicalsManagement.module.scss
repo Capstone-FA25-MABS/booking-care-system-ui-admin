@@ -1,0 +1,214 @@
+// Page container with background
+.pageContainer {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+
+    // Subtle pattern overlay
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    // Ensure content is above background
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.contentWrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 1;
+}
+
+// Search bar styles
+.searchBar {
+    margin-bottom: 1.5rem;
+}
+
+.searchInput {
+    position: relative;
+    min-width: 300px;
+    flex: 0 0 auto;
+}
+
+.inputIconStart {
+    position: relative;
+
+    .inputIconAddon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        z-index: 2;
+        font-size: 18px;
+    }
+
+    .formControl {
+        padding-left: 40px;
+        padding-right: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        height: 40px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+
+        &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        &::placeholder {
+            color: #9ca3af;
+        }
+    }
+}
+
+.selectedCount {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+// Service medicals grid - smaller cards
+.serviceMedicalsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.serviceMedicalCard {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    position: relative;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        border-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+}
+
+.serviceMedicalCardContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.checkboxWrapper {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+
+    input[type='checkbox'] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #3b82f6;
+    }
+}
+
+.serviceMedicalImage {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    flex-shrink: 0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.serviceMedicalName {
+    font-weight: 600;
+    font-size: 13px;
+    color: #212529;
+    line-height: 1.4;
+    word-break: break-word;
+    margin: 0;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+    .searchInput {
+        min-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .searchBar {
+        flex-direction: column;
+        align-items: stretch !important;
+
+        .selectedCount {
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+    }
+
+    .serviceMedicalsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .serviceMedicalCard {
+        padding: 0.75rem;
+        min-height: 120px;
+    }
+
+    .serviceMedicalImage {
+        width: 50px;
+        height: 50px;
+    }
+
+    .serviceMedicalName {
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .serviceMedicalsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}

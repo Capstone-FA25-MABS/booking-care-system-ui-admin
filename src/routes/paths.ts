@@ -10,23 +10,18 @@ export const PATHS = {
     RESET_PASSWORD: '/reset-password',
     DASHBOARD: '/dashboard',
 
-    // Common paths (shared across roles)
-    COMMON: {
-        ACCOUNT_SETTINGS: {
-            ROOT: '/settings',
-            PROFILE: '/settings/profile',
-            SECURITY: '/settings/security',
-            NOTIFICATIONS: '/settings/notifications',
-            INTEGRATIONS: '/settings/integrations',
-        },
-    },
-
     // Admin paths
     ADMIN: {
         ROOT: '/admin',
         DASHBOARD: 'dashboard',
         USERS: 'users',
-        SETTINGS: 'settings',
+        SETTINGS: {
+            ROOT: 'settings',
+            PROFILE: 'profile',
+            SECURITY: 'security',
+            NOTIFICATIONS: 'notifications',
+            INTEGRATIONS: 'integrations',
+        },
         POSITIONS: {
             ROOT: 'positions',
         },
@@ -73,12 +68,25 @@ export const PATHS = {
             NEW: 'new',
             CALENDAR: 'calendar',
         },
+        SPECIALTIES: {
+            ROOT: 'specialties',
+        },
+        SERVICE_TYPES: {
+            ROOT: 'service-types',
+        },
+        SERVICE_MEDICALS: {
+            ROOT: 'service-medicals',
+        },
         REFUNDS: {
             ROOT: 'refunds',
         },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
         PROFILE_SETTINGS: 'profile-settings',
+        SETTINGS: {
+            ROOT: 'settings',
+            PROFILE: 'profile',
+        },
     },
 
     // Doctor paths
@@ -92,6 +100,10 @@ export const PATHS = {
         SCHEDULE: 'schedule',
         PATIENTS: 'patients',
         MESSAGES: 'messages',
+        SETTINGS: {
+            ROOT: 'settings',
+            PROFILE: 'profile',
+        },
     },
 
     // Not Found path

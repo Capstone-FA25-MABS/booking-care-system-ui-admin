@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import SettingsSidebar from '@/pages/settings/components/SettingsSidebar';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { Role } from '@/enums/common.enums';
 import DoctorProfileSettings from './DoctorProfileSettings';
@@ -36,9 +35,6 @@ const ProfileSettings = () => {
         );
     }
 
-    // For DOCTOR and STAFF roles, hide the sidebar and show full-width form
-    const shouldShowSidebar = role !== Role.DOCTOR && role !== Role.STAFF;
-
     return (
         <div className="content" id="profilePage">
             {/* Page Header */}
@@ -48,22 +44,14 @@ const ProfileSettings = () => {
 
             <div className="card">
                 <div className="card-body p-0">
-                    <div className={shouldShowSidebar ? 'settings-wrapper d-flex' : ''}>
-                        {/* Settings Sidebar - Only show for non-DOCTOR and non-STAFF roles */}
-                        {shouldShowSidebar && <SettingsSidebar activeMenu="profile" />}
-
-                        {/* Main Content */}
-                        <div
-                            className={`card ${shouldShowSidebar ? 'flex-fill' : 'w-100'} mb-0 border-0 bg-light-500 shadow-none`}
-                        >
-                            {role === Role.DOCTOR && <DoctorProfileSettings />}
-                            {role === Role.STAFF && <HospitalProfileSettings />}
-                            {shouldShowSidebar && (
-                                <div className="card-header border-bottom px-0 mx-3">
-                                    <h5 className="fw-bold">Basic Information</h5>
-                                </div>
-                            )}
-                        </div>
+                    <div className="card w-100 mb-0 border-0 bg-light-500 shadow-none">
+                        {role === Role.DOCTOR && <DoctorProfileSettings />}
+                        {role === Role.STAFF && <HospitalProfileSettings />}
+                        {role === Role.ADMIN && (
+                            <div className="card-header border-bottom px-0 mx-3">
+                                <h5 className="fw-bold">Basic Information</h5>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
