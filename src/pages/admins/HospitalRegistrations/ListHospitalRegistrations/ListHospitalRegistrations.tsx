@@ -396,7 +396,7 @@ const ListHospitalRegistrations: React.FC = () => {
                 {/* Page Header */}
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
                     <div className="flex-grow-1">
-                        <h4 className="fw-semibold mb-0">Đăng Ký Hợp Tác Bệnh Viện</h4>
+                        <h4 className="fw-semibold mb-0">Đăng ký hợp tác bệnh viện</h4>
                     </div>
                 </div>
 
@@ -447,15 +447,15 @@ const ListHospitalRegistrations: React.FC = () => {
                     <table className="table datatable table-nowrap">
                         <thead>
                             <tr>
-                                <th>Tên Bệnh Viện</th>
-                                <th>Liên Hệ</th>
-                                <th>Mã Số Thuế</th>
-                                <th>Hồ Sơ Đính Kèm</th>
-                                <th>Hợp Đồng</th>
-                                <th>Ngày Gửi</th>
+                                <th>Tên bệnh viện</th>
+                                <th>Liên hệ</th>
+                                <th>Mã số thuế</th>
+                                <th>Hồ sơ đính kèm</th>
+                                <th>Hợp đồng</th>
+                                <th>Ngày gửi</th>
                                 {activeStatusTab === 'cancelled' && <th>Nguyên nhân</th>}
-                                <th>Trạng Thái</th>
-                                {activeStatusTab === 'pending' && <th>Thao Tác</th>}
+                                <th>Trạng thái</th>
+                                {activeStatusTab === 'pending' && <th>Thao tác</th>}
                             </tr>
                         </thead>
                         <tbody>{renderTableBody()}</tbody>

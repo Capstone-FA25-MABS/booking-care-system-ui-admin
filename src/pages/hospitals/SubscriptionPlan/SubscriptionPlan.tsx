@@ -686,7 +686,7 @@ const SubscriptionPlan: React.FC = () => {
                 isCurrentPlan && currentActiveSubscription ? currentActiveSubscription : null;
 
             // Determine button text and behavior
-            let buttonText = isCurrentPlan ? 'Gói hiện tại' : `Nâng cấp gói ${plan.name}`;
+            let buttonText = isCurrentPlan ? 'Gói hiện tại' : `Nâng cấp gói`;
 
             if (isDowngradeAttempt && !isCurrentPlan) {
                 buttonText = 'Không thể hạ cấp xuống gói này';
@@ -744,7 +744,7 @@ const SubscriptionPlan: React.FC = () => {
 
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <h1 className={styles.title}>Gói Dịch Vụ</h1>
+                    <h1 className={styles.title}>Gói dịch vụ</h1>
                     <p className={styles.subtitle}>Lựa chọn gói phù hợp với nhu cầu của bạn</p>
                     <p className={styles.subtitleSecond}>Nâng cao trải nghiệm quản lý bệnh viện</p>
 

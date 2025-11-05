@@ -36,10 +36,10 @@ export const mapDoctorFormOptions = (responses: {
 
 /**
  * Prepares doctor update payload
+ * Note: Email is not included in update payload as it should not be changed
  */
 export const prepareDoctorUpdatePayload = (params: {
     id: string;
-    email: string;
     doctorData: {
         firstName: string;
         lastName: string;
@@ -58,11 +58,11 @@ export const prepareDoctorUpdatePayload = (params: {
         amount: number;
     }>;
 }) => {
-    const { id, email, doctorData, languageIds, doctorPrices } = params;
+    const { id, doctorData, languageIds, doctorPrices } = params;
 
     return {
         id,
-        email,
+        // Email is intentionally excluded to prevent updates
         firstName: doctorData.firstName,
         lastName: doctorData.lastName,
         address: doctorData.address,

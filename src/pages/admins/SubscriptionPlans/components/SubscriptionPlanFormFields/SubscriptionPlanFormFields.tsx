@@ -91,7 +91,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         <div className="col-md-12">
                             <Input
                                 wrapperClassName="mb-3"
-                                label="Tên Gói Dịch Vụ"
+                                label="Tên gói dịch vụ"
                                 required
                                 name="name"
                                 value={formData.name}
@@ -136,8 +136,8 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                     className="form-check-label fw-semibold"
                                     htmlFor="autoCreateAllCycles"
                                 >
-                                    <i className="ti ti-copy me-2"></i> Tự động tạo 3 gói (Tháng,
-                                    Quý, Năm)
+                                    <i className="ti ti-copy me-2"></i> Tự động tạo 3 gói (tháng,
+                                    quý, năm)
                                 </label>
                             </div>
                             <small className="text-muted d-block mt-2">
@@ -154,7 +154,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 wrapperClassName="mb-3"
                                 label={
                                     autoCreateAllCycles && !isEdit
-                                        ? 'Giá Gói Tháng (VNĐ)'
+                                        ? 'Giá gói tháng (VNĐ)'
                                         : 'Giá (VNĐ)'
                                 }
                                 type="number"
@@ -183,7 +183,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         {(!autoCreateAllCycles || isEdit) && onBillingCycleChange && (
                             <div className="col-md-6 mb-3">
                                 <label htmlFor="billingCycle" className="form-label">
-                                    Chu Kỳ Thanh Toán <span className="text-danger">*</span>
+                                    Chu kỳ thanh toán <span className="text-danger">*</span>
                                 </label>
                                 <Select
                                     inputId="billingCycle"
@@ -226,7 +226,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
 
                         <div className="col-md-4">
                             <label htmlFor="maxDoctors" className="form-label">
-                                Số Bác Sĩ Tối Đa
+                                Số bác sĩ tối đa
                             </label>
                             <div className="d-flex align-items-center">
                                 <Input
@@ -264,7 +264,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         </div>
                         <div className="col-md-4">
                             <label htmlFor="maxSpecialties" className="form-label">
-                                Số Chuyên Khoa Tối Đa
+                                Số chuyên khoa tối đa
                             </label>
                             <div className="d-flex align-items-center">
                                 <Input
@@ -304,7 +304,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         </div>
                         <div className="col-md-4">
                             <label htmlFor="maxAppointments" className="form-label">
-                                Số Lịch Hẹn Tối Đa
+                                Số lịch hẹn tối đa
                             </label>
                             <div className="d-flex align-items-center">
                                 <Input
@@ -351,7 +351,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
             {/* Features Card */}
             <div className="card mb-4">
                 <div className="card-body">
-                    <h5 className="card-title mb-3">Tính Năng</h5>
+                    <h5 className="card-title mb-3">Tính năng</h5>
                     <div className="mb-3">
                         <FeaturesInput
                             value={formData.features || ''}
@@ -370,7 +370,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                         {onStatusChange && (
                             <div className="col-md-6">
                                 <label htmlFor="status" className="form-label">
-                                    Trạng Thái <span className="text-danger">*</span>
+                                    Trạng thái <span className="text-danger">*</span>
                                 </label>
                                 <StatusSelect
                                     value={formData.status}

@@ -354,7 +354,7 @@ const MyAppointments: React.FC = () => {
                 {/* Start Page Header */}
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
                     <div className="flex-grow-1">
-                        <h4 className="fw-semibold mb-0">Lịch Hẹn Của Tôi</h4>
+                        <h4 className="fw-semibold mb-0">Lịch hẹn của tôi</h4>
                         {doctorProfile && (
                             <p className="text-muted mb-0">
                                 BS. {doctorProfile.firstName} {doctorProfile.lastName}
@@ -378,7 +378,7 @@ const MyAppointments: React.FC = () => {
                     {/* Status Tabs */}
                     <div className="d-flex gap-2">
                         <StatusTabButton
-                            label="Sắp khám"
+                            label="Sắp tới"
                             count={appointmentCounts.upcoming}
                             isActive={activeStatusTab === 'upcoming'}
                             onClick={() => {
@@ -387,7 +387,7 @@ const MyAppointments: React.FC = () => {
                             }}
                         />
                         <StatusTabButton
-                            label="Đã Hủy"
+                            label="Đã hủy"
                             count={appointmentCounts.cancelled}
                             isActive={activeStatusTab === 'cancelled'}
                             onClick={() => {
@@ -413,15 +413,15 @@ const MyAppointments: React.FC = () => {
                     <table className="table datatable table-nowrap">
                         <thead>
                             <tr>
-                                <th className="no-sort">Ngày & Giờ</th>
-                                <th>Bệnh Nhân</th>
-                                <th>Hình Thức</th>
-                                {activeStatusTab === 'upcoming' && <th>Triệu Chứng</th>}
-                                {activeStatusTab === 'upcoming' && <th>File Đính Kèm</th>}
-                                {activeStatusTab === 'cancelled' && <th>Lý Do Hủy</th>}
-                                {activeStatusTab === 'completed' && <th>Kết Quả</th>}
-                                <th>Trạng Thái</th>
-                                {activeStatusTab === 'upcoming' && <th>Thao Tác</th>}
+                                <th className="no-sort">Ngày & giờ</th>
+                                <th>Bệnh nhân</th>
+                                <th>Hình thức</th>
+                                {activeStatusTab === 'upcoming' && <th>Triệu chứng</th>}
+                                {activeStatusTab === 'upcoming' && <th>File đính kèm</th>}
+                                {activeStatusTab === 'cancelled' && <th>Lý do hủy</th>}
+                                {activeStatusTab === 'completed' && <th>Kết quả</th>}
+                                <th>Trạng thái</th>
+                                {activeStatusTab === 'upcoming' && <th>Thao tác</th>}
                                 {activeStatusTab !== 'upcoming' && <th></th>}
                             </tr>
                         </thead>
@@ -466,7 +466,7 @@ const MyAppointments: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc Lịch Hẹn"
+                title="Lọc lịch hẹn"
                 fields={[
                     createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
                     {
@@ -552,7 +552,7 @@ const CompleteConfirmationModal: React.FC<CompleteConfirmationModalProps> = ({
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content">
                     <div className="modal-header">
-                        <h5 className="modal-title">Xác Nhận Đã Khám</h5>
+                        <h5 className="modal-title">Xác nhận đã khám</h5>
                         <button
                             type="button"
                             className="btn-close"
@@ -594,7 +594,7 @@ const CompleteConfirmationModal: React.FC<CompleteConfirmationModalProps> = ({
 
                         <div className="mb-3">
                             <label htmlFor="completionResult" className="form-label">
-                                Kết Quả Khám <span className="text-danger">*</span>
+                                Kết quả khám <span className="text-danger">*</span>
                             </label>
                             <textarea
                                 id="completionResult"
@@ -637,7 +637,7 @@ const CompleteConfirmationModal: React.FC<CompleteConfirmationModalProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <i className="ti ti-check me-2"></i> Xác Nhận Đã Khám
+                                    <i className="ti ti-check me-2"></i> Xác nhận đã khám
                                 </>
                             )}
                         </button>

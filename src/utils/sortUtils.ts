@@ -16,15 +16,15 @@ export const getSortParams = (sortOption: string): SortParams => {
             return { sortBy: 'name', sortOrder: 'asc' as const };
         case 'Tên Z-A':
             return { sortBy: 'name', sortOrder: 'desc' as const };
-        case 'Ngày Tạo (Mới Nhất)':
+        case 'Ngày tạo (mới nhất)':
             return { sortBy: 'createdat', sortOrder: 'desc' as const };
-        case 'Ngày Tạo (Cũ Nhất)':
+        case 'Ngày tạo (cũ nhất)':
             return { sortBy: 'createdat', sortOrder: 'asc' as const };
-        case 'Ngày Sửa (Mới Nhất)':
+        case 'Ngày sửa (mới nhất)':
             return { sortBy: 'updatedat', sortOrder: 'desc' as const };
-        case 'Ngày Sửa (Cũ Nhất)':
+        case 'Ngày sửa (cũ nhất)':
             return { sortBy: 'updatedat', sortOrder: 'asc' as const };
-        case 'Mới Thêm Gần Đây':
+        case 'Mới thêm gần đây':
         default:
             return { sortBy: 'createdat', sortOrder: 'desc' as const };
     }
@@ -34,11 +34,11 @@ export const getSortParams = (sortOption: string): SortParams => {
  * Common sort options for dropdowns
  */
 export const SORT_OPTIONS = [
-    { value: 'Mới Thêm Gần Đây', label: 'Mới Thêm Gần Đây' },
+    { value: 'Mới thêm gần đây', label: 'Mới thêm gần đây' },
     { value: 'Tên A-Z', label: 'Tên A-Z' },
     { value: 'Tên Z-A', label: 'Tên Z-A' },
-    { value: 'Ngày Tạo (Mới Nhất)', label: 'Ngày Tạo (Mới Nhất)' },
-    { value: 'Ngày Tạo (Cũ Nhất)', label: 'Ngày Tạo (Cũ Nhất)' },
-    { value: 'Ngày Sửa (Mới Nhất)', label: 'Ngày Sửa (Mới Nhất)' },
-    { value: 'Ngày Sửa (Cũ Nhất)', label: 'Ngày Sửa (Cũ Nhất)' },
+    { value: 'Ngày tạo (mới nhất)', label: 'Ngày tạo (mới nhất)' },
+    { value: 'Ngày tạo (cũ nhất)', label: 'Ngày tạo (cũ nhất)' },
+    { value: 'Ngày sửa (mới nhất)', label: 'Ngày sửa (mới nhất)' },
+    { value: 'Ngày sửa (cũ nhất)', label: 'Ngày sửa (cũ nhất)' },
 ];

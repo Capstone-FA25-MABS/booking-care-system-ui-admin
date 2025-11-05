@@ -12,7 +12,7 @@ import { buildPath, PATHS } from './paths';
 export const createAppointmentsMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
     if (role === 'staff') {
         return {
-            label: 'Lịch hẹn',
+            label: 'Quản lý lịch hẹn',
             icon: 'ti ti-calendar-check',
             subItems: [
                 {
@@ -77,7 +77,7 @@ export const createMessagesMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
  * Create Doctors menu item (Hospital only)
  */
 export const createDoctorsMenuItem = (): MenuItem => ({
-    label: 'Bác sĩ',
+    label: 'Quản lý bác sĩ',
     icon: 'ti ti-user-plus',
     subItems: [
         {

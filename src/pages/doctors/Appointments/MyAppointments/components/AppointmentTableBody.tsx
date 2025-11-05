@@ -212,7 +212,7 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
                                 onClick={() => onCompleteAppointment(appointment)}
                                 title="Đánh dấu đã khám"
                             >
-                                <i className="ti ti-check me-1"></i> Đã Khám
+                                <i className="ti ti-check me-1"></i> Đã khám
                             </button>
                         </td>
                     )}

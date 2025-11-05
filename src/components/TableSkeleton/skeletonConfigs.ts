@@ -42,57 +42,57 @@ const COMMON_COLUMNS = {
 } as const;
 
 // Configuration for Appointment Table Skeleton
-// Columns: Ngày & Giờ | Bệnh Nhân | Bác Sĩ | Hình Thức | Trạng Thái | Actions
+// Columns: Ngày & giờ | Bệnh nhân | Bác sĩ | Hình thức | Trạng thái | Actions
 export const appointmentTableColumns: SkeletonColumn[] = [
-    COMMON_COLUMNS.special.date, // Ngày & Giờ
-    COMMON_COLUMNS.avatar.medium, // Bệnh Nhân
-    COMMON_COLUMNS.avatar.large, // Bác Sĩ
-    COMMON_COLUMNS.text.small, // Hình Thức
-    COMMON_COLUMNS.badge.medium, // Trạng Thái
+    COMMON_COLUMNS.special.date, // Ngày & giờ
+    COMMON_COLUMNS.avatar.medium, // Bệnh nhân
+    COMMON_COLUMNS.avatar.large, // Bác sĩ
+    COMMON_COLUMNS.text.small, // Hình thức
+    COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
 // Configuration for Doctor Table Skeleton
-// Columns: Tên & Học vị | Chuyên khoa | Kinh nghiệm | Dịch vụ & Giá | Ngôn ngữ | Trạng thái | Actions
+// Columns: Tên & học vị | Chuyên khoa | Kinh nghiệm | Dịch vụ & giá | Ngôn ngữ | Trạng thái | Actions
 export const doctorTableColumns: SkeletonColumn[] = [
-    COMMON_COLUMNS.avatar.medium, // Tên & Học vị
+    COMMON_COLUMNS.avatar.medium, // Tên & học vị
     COMMON_COLUMNS.badge.large, // Chuyên khoa
     COMMON_COLUMNS.badge.small, // Kinh nghiệm
-    COMMON_COLUMNS.special.services, // Dịch vụ & Giá
+    COMMON_COLUMNS.special.services, // Dịch vụ & giá
     COMMON_COLUMNS.special.languages, // Ngôn ngữ
     COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.double, // Actions
 ];
 
 // Configuration for Refund Table Skeleton
-// Columns: Mã Hoàn Tiền | Ngày Tạo | Số Tiền | Lý Do | Thông Tin Ngân Hàng | Trạng Thái | Actions
+// Columns: Mã hoàn tiền | Ngày tạo | Số tiền | Lý do | Thông tin ngân hàng | Trạng thái | Actions
 export const refundTableColumns: SkeletonColumn[] = [
-    COMMON_COLUMNS.text.medium, // Mã Hoàn Tiền
-    COMMON_COLUMNS.text.large, // Ngày Tạo
-    { type: 'text', width: 110, height: 24 }, // Số Tiền (custom size)
-    COMMON_COLUMNS.text.xxlarge, // Lý Do
-    COMMON_COLUMNS.text.multiline, // Thông Tin Ngân Hàng
-    COMMON_COLUMNS.badge.medium, // Trạng Thái
+    COMMON_COLUMNS.text.medium, // Mã hoàn tiền
+    COMMON_COLUMNS.text.large, // Ngày tạo
+    { type: 'text', width: 110, height: 24 }, // Số tiền (custom size)
+    COMMON_COLUMNS.text.xxlarge, // Lý do
+    COMMON_COLUMNS.text.multiline, // Thông tin ngân hàng
+    COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
 // Configuration for Position Table Skeleton
-// Columns: Tên Chức Vụ | Ngày Tạo | Ngày Cập Nhật | Trạng Thái | Actions
+// Columns: Tên chức vụ | Ngày tạo | Ngày cập nhật | Trạng thái | Actions
 export const positionTableColumns: SkeletonColumn[] = [
-    COMMON_COLUMNS.avatar.medium, // Tên Chức Vụ (with icon)
-    COMMON_COLUMNS.text.large, // Ngày Tạo
-    COMMON_COLUMNS.text.large, // Ngày Cập Nhật
-    COMMON_COLUMNS.badge.medium, // Trạng Thái
+    COMMON_COLUMNS.avatar.medium, // Tên chức vụ (with icon)
+    COMMON_COLUMNS.text.large, // Ngày tạo
+    COMMON_COLUMNS.text.large, // Ngày cập nhật
+    COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
 // Configuration for Language Table Skeleton
-// Columns: Tên Ngôn Ngữ | Ngày Tạo | Ngày Cập Nhật | Trạng Thái | Actions
+// Columns: Tên ngôn ngữ | Ngày tạo | Ngày cập nhật | Trạng thái | Actions
 export const languageTableColumns: SkeletonColumn[] = [
-    COMMON_COLUMNS.avatar.medium, // Tên Ngôn Ngữ (with flag)
-    COMMON_COLUMNS.text.large, // Ngày Tạo
-    COMMON_COLUMNS.text.large, // Ngày Cập Nhật
-    COMMON_COLUMNS.badge.medium, // Trạng Thái
+    COMMON_COLUMNS.avatar.medium, // Tên ngôn ngữ (with flag)
+    COMMON_COLUMNS.text.large, // Ngày tạo
+    COMMON_COLUMNS.text.large, // Ngày cập nhật
+    COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.single, // Actions
 ];
 

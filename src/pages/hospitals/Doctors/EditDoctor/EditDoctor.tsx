@@ -113,10 +113,9 @@ const EditDoctor: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Prepare common payload
+            // Prepare common payload (email is excluded from update)
             const basePayload = prepareDoctorUpdatePayload({
                 id,
-                email: formData.email,
                 doctorData,
                 languageIds: formData.languageIds,
                 doctorPrices,
@@ -193,7 +192,7 @@ const EditDoctor: React.FC = () => {
         <div className="content">
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
-                    <h4 className="fw-bold mb-0">Chỉnh sửa Bác Sĩ</h4>
+                    <h4 className="fw-bold mb-0">Chỉnh sửa bác sĩ</h4>
                 </div>
             </div>
             <div className="row">

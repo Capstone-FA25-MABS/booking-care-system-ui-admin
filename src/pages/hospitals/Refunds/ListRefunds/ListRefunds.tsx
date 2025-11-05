@@ -360,7 +360,7 @@ const ListRefunds: React.FC = () => {
                 {/* Start Page Header */}
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
                     <div className="flex-grow-1">
-                        <h4 className="fw-semibold mb-0">Danh Sách Hoàn Tiền</h4>
+                        <h4 className="fw-semibold mb-0">Danh sách hoàn tiền</h4>
                     </div>
                     <div className="text-end d-flex">
                         <ActionDropdown
@@ -469,12 +469,12 @@ const ListRefunds: React.FC = () => {
                     <table className="table datatable table-nowrap">
                         <thead>
                             <tr>
-                                <th>Mã Hoàn Tiền</th>
-                                <th>Ngày Tạo</th>
-                                <th>Số Tiền</th>
-                                <th>Lý Do</th>
-                                <th>Thông Tin Ngân Hàng</th>
-                                <th>Trạng Thái</th>
+                                <th>Mã hoàn tiền</th>
+                                <th>Ngày tạo</th>
+                                <th>Số tiền</th>
+                                <th>Lý do</th>
+                                <th>Thông tin ngân hàng</th>
+                                <th>Trạng thái</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -723,7 +723,7 @@ const ListRefunds: React.FC = () => {
                     <Link to="/" className="link-primary">
                         Preclinic
                     </Link>
-                    , Tất Cả Quyền Được Bảo Lưu
+                    , Tất cả quyền được bảo lưu
                 </p>
             </div>
             {/* Footer End */}

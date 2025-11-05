@@ -194,9 +194,9 @@ const DoctorManagement: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản Lý Bác Sĩ{' '}
+                        Quản lý tài khoản{' '}
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                            Tổng Bác Sĩ: {totalCount}
+                            Tổng bác sĩ: {totalCount}
                         </span>
                     </h4>
                 </div>
@@ -242,12 +242,12 @@ const DoctorManagement: React.FC = () => {
                 <table className="table table-nowrap datatable">
                     <thead className="thead-light">
                         <tr>
-                            <th>Bác Sĩ</th>
+                            <th>Bác sĩ</th>
                             <th>Email</th>
-                            <th>Địa Chỉ</th>
-                            <th>Kích Hoạt</th>
-                            <th>Khóa Tài Khoản</th>
-                            <th>Trạng Thái</th>
+                            <th>Địa chỉ</th>
+                            <th>Kích hoạt</th>
+                            <th>Khóa tài khoản</th>
+                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>{renderTableBody()}</tbody>
