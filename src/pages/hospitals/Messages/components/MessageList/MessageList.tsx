@@ -344,7 +344,7 @@ const MessageList = () => {
                                             {message.attachments.map((att, idx) => {
                                                 const fileUrl = att.url || att.fileUrl;
                                                 const fileName = att.name || att.fileName || 'File';
-                                                const mimeType = att.mimeType || att.contentType;
+                                                const mimeType = att.mimeType;
 
                                                 // Image attachments
                                                 if (
@@ -362,7 +362,9 @@ const MessageList = () => {
                                                                 src={fileUrl}
                                                                 alt={fileName}
                                                                 onClick={() =>
-                                                                    setSelectedImage(fileUrl)
+                                                                    setSelectedImage(
+                                                                        fileUrl || null
+                                                                    )
                                                                 }
                                                                 style={{
                                                                     maxWidth: '250px',

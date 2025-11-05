@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
-
+import trustcare from '@/assets/img/icons/trustcare.svg';
 interface ChatHeaderProps {
     onVideoCallStart?: () => void;
     onVoiceCallStart?: () => void;
@@ -31,20 +31,24 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
     return (
         <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 p-3">
             <div className="d-flex align-items-center">
-                <span className="avatar me-2 flex-shrink-0">
-                    <img src={otherParticipant?.avatarUrl || '/default-avatar.png'} alt="user" />
-                </span>
-                <div>
-                    <h6 className="fs-14 fw-semibold mb-1">
-                        {otherParticipant?.fullName || 'Chọn hội thoại'}
-                    </h6>
-                    <p className="mb-0 d-inline-flex align-items-center">
-                        <i
-                            className={`ti ti-point-filled ${isOnline ? 'text-success' : 'text-muted'}`}
-                        ></i>
-                        {isOnline ? 'Đang hoạt động' : 'Offline'}
-                    </p>
-                </div>
+                {activeConversation && otherParticipant ? (
+                    <>
+                        <span className="avatar me-2 flex-shrink-0">
+                            <img src={otherParticipant.avatarUrl || trustcare} alt="user" />
+                        </span>
+                        <div>
+                            <h6 className="fs-14 fw-semibold mb-1">{otherParticipant.fullName}</h6>
+                            <p className="mb-0 d-inline-flex align-items-center">
+                                <i
+                                    className={`ti ti-point-filled ${isOnline ? 'text-success' : 'text-muted'}`}
+                                ></i>
+                                {isOnline ? 'Đang hoạt động' : 'Offline'}
+                            </p>
+                        </div>
+                    </>
+                ) : (
+                    <h6 className="fs-14 fw-semibold mb-0">Chọn hội thoại</h6>
+                )}
             </div>
             <div className="gap-2 d-flex align-items-center flex-wrap">
                 <button

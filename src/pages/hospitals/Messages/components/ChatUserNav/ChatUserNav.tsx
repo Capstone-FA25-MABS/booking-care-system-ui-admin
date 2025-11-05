@@ -19,22 +19,35 @@ const ChatUserNav: React.FC = () => {
     const userProfile = adminProfile || doctorProfile || hospitalProfile;
     const currentUserId = (userProfile?.accountId || '').toUpperCase();
 
-    // Filter conversations based on search
+    // Filter and sort conversations based on search
     const filteredConversations = useMemo(() => {
-        if (!searchKeyword) return conversations || [];
+        // Ensure conversations is always an array
+        const convs = conversations || [];
 
-        return (conversations || []).filter((conv) => {
-            // Search in participant names or last message
-            const participantName = conv.participantDetails
-                ?.filter((p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId)
-                .map((p) => p.fullName)
-                .join(', ');
-            const lastMessageContent = conv.lastMessage?.content || '';
+        // Filter by search keyword
+        const filtered = !searchKeyword
+            ? convs
+            : convs.filter((conv) => {
+                  // Search in participant names or last message
+                  const participantName = conv.participantDetails
+                      ?.filter((p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId)
+                      .map((p) => p.fullName)
+                      .join(', ');
+                  const lastMessageContent = conv.lastMessage?.content || '';
 
-            return (
-                participantName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-                lastMessageContent.toLowerCase().includes(searchKeyword.toLowerCase())
-            );
+                  return (
+                      participantName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                      lastMessageContent.toLowerCase().includes(searchKeyword.toLowerCase())
+                  );
+              });
+
+        // Sort by most recent message (newest first)
+        // Use updatedAt or lastMessage.createdAt as fallback
+        return filtered.sort((a, b) => {
+            const timeA = a.lastMessage?.createdAt || a.updatedAt || a.createdAt;
+            const timeB = b.lastMessage?.createdAt || b.updatedAt || b.createdAt;
+
+            return new Date(timeB).getTime() - new Date(timeA).getTime();
         });
     }, [conversations, searchKeyword, currentUserId]);
 

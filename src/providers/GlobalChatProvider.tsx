@@ -50,7 +50,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
                 // 2. User is NOT on the Messages page (to avoid duplicate notifications)
                 const isOnMessagesPage = location.pathname.toLowerCase().includes('/messages');
 
-                if (message.senderId !== userId && !isOnMessagesPage) {
+                if (message.senderId.toUpperCase() !== userId.toUpperCase() && !isOnMessagesPage) {
                     toast.info('💬 Bạn có tin nhắn mới!', {
                         onClick: () => {
                             // Navigate to messages page
