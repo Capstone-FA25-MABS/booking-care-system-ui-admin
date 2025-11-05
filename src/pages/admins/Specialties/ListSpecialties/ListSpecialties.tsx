@@ -51,7 +51,7 @@ const ListSpecialties: React.FC = () => {
     // Applied filters (after clicking "Lọc" button)
     const [appliedSpecialties, setAppliedSpecialties] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
+    const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [specialtyToDelete, setSpecialtyToDelete] = useState<Specialty | null>(null);
@@ -146,7 +146,7 @@ const ListSpecialties: React.FC = () => {
         setSpecialtyToEdit(null);
     }, [handleCancel]);
 
-    const title = modalMode === 'add' ? 'Thêm Chuyên Khoa Mới' : 'Sửa Chuyên Khoa';
+    const title = modalMode === 'add' ? 'Thêm chuyên khoa mới' : 'Sửa chuyên khoa';
 
     // Use pagination from Redux state
     const totalPages = pagination?.totalPages || 0;
@@ -532,9 +532,9 @@ const ListSpecialties: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Danh Sách Chuyên Khoa{' '}
+                        Danh sách chuyên khoa{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng Chuyên Khoa:{' '}
+                            Tổng chuyên khoa:{' '}
                             {appliedSpecialties.length > 0
                                 ? filteredSpecialties.length
                                 : pagination?.totalCount || 0}
@@ -564,7 +564,7 @@ const ListSpecialties: React.FC = () => {
                         icon="ti ti-plus"
                         onClick={handleAddClick}
                     >
-                        Thêm Chuyên Khoa
+                        Thêm chuyên khoa
                     </Button>
                 </div>
             </div>
@@ -660,11 +660,11 @@ const ListSpecialties: React.FC = () => {
                 <table className="table table-nowrap datatable">
                     <thead className="thead-light">
                         <tr>
-                            <th>Tên Chuyên Khoa</th>
-                            <th>Hình Ảnh</th>
-                            <th>Ngày Tạo</th>
-                            <th>Ngày Cập Nhật</th>
-                            <th>Trạng Thái</th>
+                            <th>Tên chuyên khoa</th>
+                            <th>Hình ảnh</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày cập nhật</th>
+                            <th>Trạng thái</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -698,7 +698,7 @@ const ListSpecialties: React.FC = () => {
                 onRemoveImage={handleRemoveImage}
                 onStatusChange={handleStatusChange}
                 imagePreview={imagePreview}
-                entityName="Chuyên Khoa"
+                entityName="Chuyên khoa"
                 hasImageUpload={true}
                 styles={{
                     modal: styles.modal,
@@ -728,7 +728,7 @@ const ListSpecialties: React.FC = () => {
                 fields={[
                     {
                         name: 'specialties',
-                        label: 'Chuyên Khoa',
+                        label: 'Chuyên khoa',
                         type: 'multiselect',
                         options: (allSpecialties || []).map((specialty) => ({
                             value: specialty.id,
@@ -740,7 +740,7 @@ const ListSpecialties: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động' },

@@ -27,7 +27,7 @@ interface EntityModalProps {
     onStatusChange: (value: 'ACTIVE' | 'INACTIVE') => void;
     onRemoveImage?: () => void;
     imagePreview?: string;
-    entityName: string; // e.g., 'Học Vị', 'Ngôn Ngữ', 'Chuyên Khoa'
+    entityName: string; // e.g., 'Học vị', 'Ngôn ngữ', 'Chuyên khoa'
     hasImageUpload?: boolean; // Flag to show/hide image upload section
     hasDescription?: boolean; // Flag to show/hide description field
     styles: {
@@ -229,7 +229,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                                             htmlFor={`${entityName.toLowerCase()}-status`}
                                             className="form-label fw-semibold text-dark mb-2"
                                         >
-                                            Trạng Thái <span className="text-danger">*</span>
+                                            Trạng thái <span className="text-danger">*</span>
                                         </label>
                                         <StatusSelect
                                             value={formData.status}

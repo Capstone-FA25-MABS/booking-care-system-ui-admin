@@ -100,7 +100,7 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = (props) => {
                         </>
                     ) : (
                         <>
-                            Xuất Dữ Liệu <i className="ti ti-chevron-down ms-2"></i>
+                            Xuất dữ liệu <i className="ti ti-chevron-down ms-2"></i>
                         </>
                     )}
                 </button>

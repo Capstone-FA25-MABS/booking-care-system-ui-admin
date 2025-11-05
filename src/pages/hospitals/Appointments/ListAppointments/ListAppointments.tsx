@@ -500,7 +500,7 @@ const ListAppointments: React.FC = () => {
                 {/* Start Page Header */}
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
                     <div className="flex-grow-1">
-                        <h4 className="fw-semibold mb-0">Lịch Hẹn</h4>
+                        <h4 className="fw-semibold mb-0">Lịch hẹn</h4>
                     </div>
                     <div className="text-end d-flex">
                         <ActionDropdown
@@ -526,7 +526,7 @@ const ListAppointments: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={() => setShowNewAppointment(true)}
                         >
-                            Lịch Hẹn Mới
+                            Lịch hẹn mới
                         </Button>
                     </div>
                 </div>
@@ -567,7 +567,7 @@ const ListAppointments: React.FC = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Đã Hủy{' '}
+                            Đã hủy{' '}
                             <span className={getStatusBadgeClass('cancelled')}>
                                 {appointmentCounts.cancelled}
                             </span>
@@ -618,11 +618,11 @@ const ListAppointments: React.FC = () => {
                     <table className="table datatable table-nowrap">
                         <thead className="">
                             <tr>
-                                <th className="no-sort">Ngày & Giờ</th>
-                                <th>Bệnh Nhân</th>
-                                <th>Bác Sĩ</th>
-                                <th>Hình Thức</th>
-                                <th>Trạng Thái</th>
+                                <th className="no-sort">Ngày & giờ</th>
+                                <th>Bệnh nhân</th>
+                                <th>Bác sĩ</th>
+                                <th>Hình thức</th>
+                                <th>Trạng thái</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -646,11 +646,11 @@ const ListAppointments: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc Lịch Hẹn"
+                title="Lọc lịch hẹn"
                 fields={[
                     {
                         name: 'patients',
-                        label: 'Bệnh Nhân',
+                        label: 'Bệnh nhân',
                         type: 'multiselect',
                         value: selectedPatients,
                         onChange: (value) => setSelectedPatients(value as string[]),
@@ -664,7 +664,7 @@ const ListAppointments: React.FC = () => {
                     createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
                     {
                         name: 'doctors',
-                        label: 'Bác Sĩ',
+                        label: 'Bác sĩ',
                         type: 'multiselect',
                         value: selectedDoctors,
                         onChange: (value) => setSelectedDoctors(value as string[]),
@@ -695,7 +695,7 @@ const ListAppointments: React.FC = () => {
             >
                 <div className="offcanvas-header d-block pb-0 px-0">
                     <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold">Lịch Hẹn Mới</h5>
+                        <h5 className="offcanvas-title fs-18 fw-bold">Lịch hẹn mới</h5>
                         <button
                             type="button"
                             className="btn-close opacity-100"
@@ -714,7 +714,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-id"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Mã Lịch Hẹn <span className="text-danger">*</span>
+                                        Mã lịch hẹn <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-group">
                                         <input
@@ -739,7 +739,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="patient-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Bệnh Nhân<span className="text-danger">*</span>
+                                        Bệnh nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -774,7 +774,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-type-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Loại Khám <span className="text-danger">*</span>
+                                        Loại khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -856,7 +856,7 @@ const ListAppointments: React.FC = () => {
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
                                         {' '}
-                                        Ngày Khám <span className="text-danger">*</span>
+                                        Ngày khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-icon-end position-relative">
                                         <input
@@ -916,7 +916,7 @@ const ListAppointments: React.FC = () => {
                                             htmlFor="appointment-reason"
                                             className="form-label mb-1 text-dark fs-14 fw-medium"
                                         >
-                                            Lý Do Khám
+                                            Lý do khám
                                         </label>
                                         <textarea
                                             id="appointment-reason"
@@ -940,7 +940,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-status-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Trạng Thái<span className="text-danger">*</span>
+                                        Trạng thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -987,7 +987,7 @@ const ListAppointments: React.FC = () => {
                             id="filter-submit"
                             onClick={() => setShowNewAppointment(false)}
                         >
-                            Tạo Lịch Hẹn
+                            Tạo lịch hẹn
                         </button>
                     </div>
                 </div>
@@ -1003,7 +1003,7 @@ const ListAppointments: React.FC = () => {
             >
                 <div className="offcanvas-header d-block pb-0 px-0">
                     <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold"> Sửa Lịch Hẹn</h5>
+                        <h5 className="offcanvas-title fs-18 fw-bold"> Sửa lịch hẹn</h5>
                         <button
                             type="button"
                             className="btn-close opacity-100"
@@ -1022,7 +1022,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-code"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Mã Lịch Hẹn <span className="text-danger">*</span>
+                                        Mã lịch hẹn <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-group">
                                         <input
@@ -1047,7 +1047,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="patient-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Bệnh Nhân<span className="text-danger">*</span>
+                                        Bệnh nhân<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -1082,7 +1082,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-type-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Loại Khám <span className="text-danger">*</span>
+                                        Loại khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -1168,7 +1168,7 @@ const ListAppointments: React.FC = () => {
                                 <div className="mb-3">
                                     <label className="form-label mb-1 text-dark fs-14 fw-medium">
                                         {' '}
-                                        Ngày Khám <span className="text-danger">*</span>
+                                        Ngày khám <span className="text-danger">*</span>
                                     </label>
                                     <div className="input-icon-end position-relative">
                                         <input
@@ -1226,7 +1226,7 @@ const ListAppointments: React.FC = () => {
                                             htmlFor="appointment-reason"
                                             className="form-label mb-1 text-dark fs-14 fw-medium"
                                         >
-                                            Lý Do Khám
+                                            Lý do khám
                                         </label>
                                         <textarea
                                             id="appointment-reason"
@@ -1250,7 +1250,7 @@ const ListAppointments: React.FC = () => {
                                         htmlFor="appointment-status-dropdown"
                                         className="form-label mb-1 text-dark fs-14 fw-medium"
                                     >
-                                        Trạng Thái<span className="text-danger">*</span>
+                                        Trạng thái<span className="text-danger">*</span>
                                     </label>
                                     <div className="dropdown">
                                         <button
@@ -1297,7 +1297,7 @@ const ListAppointments: React.FC = () => {
                             id="filter-submit2"
                             onClick={() => setShowEditAppointment(false)}
                         >
-                            Cập Nhật Lịch Hẹn
+                            Cập nhật lịch hẹn
                         </button>
                     </div>
                 </div>
@@ -1317,11 +1317,11 @@ const ListAppointments: React.FC = () => {
                 style={{ display: showViewDetails ? 'block' : 'none' }}
             >
                 <div className="offcanvas-body pt-0 px-0">
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Chi Tiết Lịch Hẹn </h6>
+                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Chi tiết lịch hẹn </h6>
                     <div className="px-3 my-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                             <div className="d-flex align-items-center">
-                                Khám Từ Xa{' '}
+                                Khám từ xa{' '}
                                 <label
                                     htmlFor="remote-consultation"
                                     className="d-flex align-items-center form-switch ps-1"
@@ -1346,7 +1346,7 @@ const ListAppointments: React.FC = () => {
                         </div>
                         <div className="row align-items-center">
                             <div className="col-lg-6 col-md-6">
-                                <p className="text-dark"> Trạng Thái </p>
+                                <p className="text-dark"> Trạng thái </p>
                             </div>
 
                             <div className="col-lg-6 col-md-6">
@@ -1417,7 +1417,7 @@ const ListAppointments: React.FC = () => {
                 }}
                 onConfirm={handleCancelConfirm}
                 onAssignDoctor={handleAssignDoctorFromCancel}
-                title="Xác Nhận Hủy Lịch Hẹn"
+                title="Xác nhận hủy lịch hẹn"
                 message="Bạn có chắc chắn muốn hủy lịch hẹn"
                 confirmText="Xác nhận hủy"
                 cancelText="Đóng"

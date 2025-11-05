@@ -41,7 +41,7 @@ const ListPositions: React.FC = () => {
     // Applied filters (after clicking "Lọc" button)
     const [appliedPositions, setAppliedPositions] = useState<string[]>([]);
     const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-    const [sortBy, setSortBy] = useState<string>('Mới Thêm Gần Đây');
+    const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [positionToDelete, setPositionToDelete] = useState<Position | null>(null);
@@ -119,7 +119,7 @@ const ListPositions: React.FC = () => {
         clearAllValidationErrors();
     }, [clearAllValidationErrors]);
 
-    const title = modalMode === 'add' ? 'Thêm Học Vị Mới' : 'Sửa Học Vị';
+    const title = modalMode === 'add' ? 'Thêm học vị mới' : 'Sửa học vị';
 
     // Form data change handlers
     const handleNameChange = (value: string) => {
@@ -462,9 +462,9 @@ const ListPositions: React.FC = () => {
                 <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                     <div className="flex-grow-1">
                         <h4 className="fw-bold mb-0">
-                            Danh Sách Học Vị{' '}
+                            Danh sách học vị{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng Học Vị:{' '}
+                                Tổng học vị:{' '}
                                 {appliedPositions.length > 0
                                     ? filteredPositions.length
                                     : pagination?.totalCount || 0}
@@ -508,7 +508,7 @@ const ListPositions: React.FC = () => {
                             icon="ti ti-plus"
                             onClick={handleAddClick}
                         >
-                            Thêm Học Vị
+                            Thêm học vị
                         </Button>
                     </div>
                 </div>
@@ -604,10 +604,10 @@ const ListPositions: React.FC = () => {
                     <table className="table table-nowrap datatable">
                         <thead className="thead-light">
                             <tr>
-                                <th>Tên Học Vị</th>
-                                <th>Ngày Tạo</th>
-                                <th>Ngày Cập Nhật</th>
-                                <th>Trạng Thái</th>
+                                <th>Tên học vị</th>
+                                <th>Ngày tạo</th>
+                                <th>Ngày cập nhật</th>
+                                <th>Trạng thái</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -639,7 +639,7 @@ const ListPositions: React.FC = () => {
                 onSubmit={handlePositionSubmit}
                 onNameChange={handleNameChange}
                 onStatusChange={handleStatusChange}
-                entityName="Học Vị"
+                entityName="Học vị"
                 hasImageUpload={false}
                 styles={{
                     modal: styles.modal,
@@ -669,7 +669,7 @@ const ListPositions: React.FC = () => {
                 fields={[
                     {
                         name: 'positions',
-                        label: 'Học Vị',
+                        label: 'Học vị',
                         type: 'multiselect',
                         options: (allPositions || []).map((position) => ({
                             value: position.id,
@@ -681,7 +681,7 @@ const ListPositions: React.FC = () => {
                     },
                     {
                         name: 'statuses',
-                        label: 'Trạng Thái',
+                        label: 'Trạng thái',
                         type: 'multiselect',
                         options: [
                             { value: 'ACTIVE', label: 'Hoạt động' },

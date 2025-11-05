@@ -85,7 +85,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
     return (
         <BaseModal
             isOpen={isOpen}
-            title="Phê Duyệt Đơn Đăng Ký"
+            title="Phê duyệt đơn đăng ký"
             titleId="approval-modal-title"
             onClose={handleClose}
         >
@@ -144,7 +144,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({
                             </>
                         ) : (
                             <>
-                                <i className="ti ti-check me-2"></i> Phê Duyệt
+                                <i className="ti ti-check me-2"></i> Phê duyệt
                             </>
                         )}
                     </button>

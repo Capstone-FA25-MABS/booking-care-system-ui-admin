@@ -27,7 +27,7 @@ export const AppointmentDetailsOffcanvas: React.FC<AppointmentDetailsOffcanvasPr
             <div className="offcanvas-header d-block pb-0 px-0">
                 <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
                     <h5 className="offcanvas-title fs-18 fw-bold">
-                        Chi Tiết Lịch Hẹn{' '}
+                        Chi tiết lịch hẹn{' '}
                         <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2">
                             #{appointment?.appointmentId?.substring(0, 8) || 'AP544658'}
                         </span>
@@ -41,10 +41,10 @@ export const AppointmentDetailsOffcanvas: React.FC<AppointmentDetailsOffcanvasPr
                 </div>
             </div>
             <div className="offcanvas-body pt-0 px-0">
-                <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Khi Nào & Ở Đâu </h6>
+                <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Khi nào & ở đâu </h6>
                 <div className="px-3 my-4">
                     <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                        Ngày Khám{' '}
+                        Ngày khám{' '}
                         <span className="text-body fw-normal">
                             {' '}
                             {appointment
@@ -60,7 +60,7 @@ export const AppointmentDetailsOffcanvas: React.FC<AppointmentDetailsOffcanvasPr
                         </span>
                     </p>
                     <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                        Loại Khám{' '}
+                        Loại khám{' '}
                         <span className="text-body fw-normal">
                             {' '}
                             {appointment
@@ -69,7 +69,7 @@ export const AppointmentDetailsOffcanvas: React.FC<AppointmentDetailsOffcanvasPr
                         </span>
                     </p>
                     <div className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-                        Thông Tin Bệnh Nhân
+                        Thông tin bệnh nhân
                         <div className="text-body fw-normal d-flex align-items-center">
                             <span className="avatar avatar-sm">
                                 <img

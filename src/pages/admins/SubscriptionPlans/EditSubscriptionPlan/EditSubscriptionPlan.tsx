@@ -467,7 +467,7 @@ const EditSubscriptionPlan: React.FC = () => {
         <div className="content">
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
-                    <h4 className="fw-bold mb-0">Chỉnh Sửa Gói Dịch Vụ</h4>
+                    <h4 className="fw-bold mb-0">Chỉnh sửa gói dịch vụ</h4>
                 </div>
             </div>
             <div className="row">
@@ -535,7 +535,7 @@ const EditSubscriptionPlan: React.FC = () => {
                         <>
                             <div className="alert alert-info mt-3">
                                 <i className="ti ti-info-circle me-2"></i>
-                                <strong>Lưu ý:</strong> Khi nhấn "Cập Nhật Gói Dịch Vụ", hệ thống sẽ
+                                <strong>Lưu ý:</strong> Khi nhấn "Cập nhật gói dịch vụ", hệ thống sẽ
                                 tự động cập nhật {relatedPlansPreviews.length} gói liên quan. Bạn có
                                 thể tùy chỉnh giới hạn và tính năng cho từng gói:
                             </div>
@@ -888,7 +888,7 @@ const EditSubscriptionPlan: React.FC = () => {
                                 onClick={handleSubmit}
                             >
                                 <i className="ti ti-edit me-2"></i>
-                                {isSubmitting ? 'Đang cập nhật...' : 'Cập Nhật Gói Dịch Vụ'}
+                                {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật gói dịch vụ'}
                             </button>
                         </div>
                     </div>

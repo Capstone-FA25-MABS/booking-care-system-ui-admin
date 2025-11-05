@@ -33,13 +33,13 @@ const getRoleFromParam = (roleParam: string | null): Role => {
 const getRoleLabel = (role: Role): string => {
     switch (role) {
         case Role.PATIENT:
-            return 'Bệnh Nhân';
+            return 'Bệnh nhân';
         case Role.DOCTOR:
-            return 'Bác Sĩ';
+            return 'Bác sĩ';
         case Role.STAFF:
-            return 'Bệnh Viện';
+            return 'Bệnh viện';
         default:
-            return 'Tài Khoản';
+            return 'Tài khoản';
     }
 };
 
@@ -224,7 +224,7 @@ const AccountManagement: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản Lý Tài Khoản - {getRoleLabel(currentRole)}
+                        Quản lý tài khoản - {getRoleLabel(currentRole)}
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                             Tổng {getRoleLabel(currentRole)}: {totalCount}
                         </span>
@@ -274,11 +274,11 @@ const AccountManagement: React.FC = () => {
                         <tr>
                             <th>{getRoleLabel(currentRole)}</th>
                             <th>Email</th>
-                            <th>Số Điện Thoại</th>
-                            <th>Địa Chỉ</th>
-                            <th>Kích Hoạt</th>
-                            <th>Khóa Tài Khoản</th>
-                            <th>Trạng Thái</th>
+                            <th>Số điện thoại</th>
+                            <th>Địa chỉ</th>
+                            <th>Kích hoạt</th>
+                            <th>Khóa tài khoản</th>
+                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>{renderTableBody()}</tbody>

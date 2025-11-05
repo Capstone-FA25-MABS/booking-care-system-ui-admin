@@ -346,7 +346,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content">
                         <div className="modal-header border-bottom">
-                            <h5 className="modal-title fw-bold">Gán Bác Sĩ Mới</h5>
+                            <h5 className="modal-title fw-bold">Gán bác sĩ mới</h5>
                             <button
                                 type="button"
                                 className="btn-close"
