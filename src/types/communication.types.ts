@@ -141,6 +141,22 @@ export interface CreateMessageWithFilesRequest {
     files: File[];
 }
 
+export interface CreateCallLogRequest {
+    conversationId: string;
+    callerId: string;
+    receiverId: string;
+    callType: CallType;
+    callStatus?: CallStatus;
+    startTime: string;
+}
+
+export interface UpdateCallLogRequest {
+    id: string;
+    callStatus: CallStatus;
+    endTime: string;
+    duration?: number;
+}
+
 export interface GetConversationsQueryParameters {
     before?: string;
     after?: string;

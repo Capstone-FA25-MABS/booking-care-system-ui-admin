@@ -1,55 +1,126 @@
 import React, { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
+import { useSelector } from 'react-redux';
 
 import styles from './VideoCall.module.scss';
 import videojpg from '@/assets/img/media/video.jpg';
+import { useWebRTC } from '@/hooks/useWebRTC';
+import type { RootState } from '@/store';
+
 interface VideoCallProps {
     isVisible: boolean;
     onClose: () => void;
+    participantId: string;
+    conversationId: string;
     participantName?: string;
     participantAvatar?: string;
+    callType?: 'video' | 'audio';
+    isIncoming?: boolean; // true if receiving call, false if initiating
 }
 
 const VideoCall: React.FC<VideoCallProps> = ({
     isVisible,
     onClose,
+    participantId,
+    conversationId,
     participantName = 'Nguyễn Văn An',
     participantAvatar = '/src/assets/img/users/user-01.jpg',
+    callType: _callType = 'video', // Reserved for future use (audio/video mode)
+    isIncoming = false,
 }) => {
+    // Get current user ID from Redux
+    const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
+        (state: RootState) => state.user
+    );
+    const userProfile = adminProfile || doctorProfile || hospitalProfile;
+    const userId = userProfile?.accountId || '';
+
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [isMicMuted, setIsMicMuted] = useState(false);
-    const [isVideoOff, setIsVideoOff] = useState(false);
     const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
     const [callDuration, setCallDuration] = useState(0);
-    const [isCallActive, setIsCallActive] = useState(false);
 
     // Draggable state for local video
     const [isDragging, setIsDragging] = useState(false);
-    const [localVideoPosition, setLocalVideoPosition] = useState({ x: 0, y: 0 }); // Transform offset from initial position
+    const [localVideoPosition, setLocalVideoPosition] = useState({ x: 0, y: 0 });
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    // Refs for video elements - will be used for WebRTC integration
+    // Refs for video elements
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const localVideoContainerRef = useRef<HTMLButtonElement>(null);
 
-    // WebRTC related refs for future integration
-    // const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    // const localStreamRef = useRef<MediaStream | null>(null);
+    // WebRTC Hook Integration
+    const {
+        callState,
+        remoteStream,
+        isMuted,
+        isVideoOff,
+        startCall,
+        acceptCall,
+        endCall,
+        toggleMute,
+        toggleVideo,
+        cleanup,
+    } = useWebRTC(
+        userId,
+        {
+            onCallStateChange: (state) => {
+                console.log('[VideoCall] Call state changed:', state);
 
-    // Call duration timer
+                if (
+                    state === 'ended' ||
+                    state === 'declined' ||
+                    state === 'failed' ||
+                    state === 'busy'
+                ) {
+                    onClose();
+                }
+            },
+            onRemoteStream: (stream) => {
+                console.log('[VideoCall] Remote stream received');
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = stream;
+                }
+            },
+            onLocalStream: (stream) => {
+                console.log('[VideoCall] Local stream received');
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = stream;
+                }
+            },
+            onError: (error) => {
+                console.error('[VideoCall] ❌ WebRTC error:', error);
+                // Don't show alert popup as it's annoying, just log to console
+                // User will see the call failed through UI state changes
+            },
+        },
+        {
+            name:
+                userProfile && 'fullName' in userProfile
+                    ? (userProfile.fullName as string | undefined)
+                    : userProfile && 'name' in userProfile
+                      ? (userProfile.name as string | undefined)
+                      : undefined,
+            avatar: userProfile?.avatarUrl,
+        }
+    );
+
+    // Call duration timer - use callState instead of isCallActive
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (isCallActive) {
+        const isActive = callState === 'connected' || callState === 'connecting';
+        if (isActive) {
             interval = setInterval(() => {
                 setCallDuration((prev) => prev + 1);
             }, 1000);
+        } else {
+            setCallDuration(0);
         }
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isCallActive]);
+    }, [callState]);
 
     // Format call duration
     const formatDuration = (seconds: number): string => {
@@ -77,62 +148,50 @@ const VideoCall: React.FC<VideoCallProps> = ({
         }, 100);
     };
 
-    // Handle mic toggle
-    const toggleMic = () => {
-        setIsMicMuted(!isMicMuted);
-        // Future WebRTC integration:
-        // if (localStreamRef.current) {
-        //     localStreamRef.current.getAudioTracks().forEach(track => {
-        //         track.enabled = isMicMuted;
-        //     });
-        // }
-    };
-
-    // Handle video toggle
-    const toggleVideo = () => {
-        setIsVideoOff(!isVideoOff);
-        // Future WebRTC integration:
-        // if (localStreamRef.current) {
-        //     localStreamRef.current.getVideoTracks().forEach(track => {
-        //         track.enabled = isVideoOff;
-        //     });
-        // }
-    };
-
     // Handle speaker toggle
     const toggleSpeaker = () => {
         setIsSpeakerMuted(!isSpeakerMuted);
-        // Future WebRTC integration:
-        // if (remoteVideoRef.current) {
-        //     remoteVideoRef.current.muted = !isSpeakerMuted;
-        // }
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.muted = !isSpeakerMuted;
+        }
     };
 
     // Handle end call
     const handleEndCall = () => {
-        setIsCallActive(false);
-        setCallDuration(0);
-        // Future WebRTC cleanup:
-        // if (peerConnectionRef.current) {
-        //     peerConnectionRef.current.close();
-        // }
-        // if (localStreamRef.current) {
-        //     localStreamRef.current.getTracks().forEach(track => track.stop());
-        // }
+        console.log('[VideoCall] Ending call with:', participantId);
+        endCall(participantId, 'User ended call');
+        cleanup();
         onClose();
     };
 
-    // Start call (placeholder for WebRTC initialization)
-    const startCall = () => {
-        setIsCallActive(true);
-        // Future WebRTC initialization will go here
-    };
-
+    // Initialize call when component becomes visible
     useEffect(() => {
-        if (isVisible && !isCallActive) {
-            startCall();
+        if (!isVisible || !participantId || !conversationId || callState !== 'idle') {
+            return;
         }
-    }, [isVisible]);
+
+        console.log('[VideoCall] Initializing call, isIncoming:', isIncoming);
+
+        if (isIncoming) {
+            // Accept incoming call
+            console.log('[VideoCall] Accepting call from:', participantId);
+            acceptCall(participantId, conversationId);
+        } else {
+            // Start outgoing call
+            console.log('[VideoCall] Starting call to:', participantId);
+            startCall(participantId, conversationId);
+        }
+    }, [isVisible, participantId, conversationId, isIncoming, callState, acceptCall, startCall]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (callState !== 'idle' && callState !== 'ended') {
+                console.log('[VideoCall] Component unmounting, cleaning up');
+                cleanup();
+            }
+        };
+    }, [callState, cleanup]);
 
     // Drag & Drop handlers for local video
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -334,7 +393,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
                             {/* Fallback image when no remote video */}
                             <div
                                 className={clsx(styles.videoPlaceholder, {
-                                    [styles.hidden]: isCallActive,
+                                    [styles.hidden]:
+                                        callState === 'connected' || remoteStream !== null,
                                 })}
                             >
                                 <img
@@ -433,15 +493,16 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                 >
                                     {/* Microphone Toggle */}
                                     <button
-                                        onClick={toggleMic}
+                                        onClick={toggleMute}
                                         className={clsx(
                                             'btn-icon btn-sm d-flex justify-content-center align-items-center rounded me-2',
-                                            isMicMuted ? 'bg-danger text-white' : 'bg-light'
+                                            isMuted ? 'bg-danger text-white' : 'bg-light'
                                         )}
                                         type="button"
+                                        aria-label={isMuted ? 'Bật mic' : 'Tắt mic'}
                                     >
                                         <i
-                                            className={`ti ${isMicMuted ? 'ti-microphone-off' : 'ti-microphone'}`}
+                                            className={`ti ${isMuted ? 'ti-microphone-off' : 'ti-microphone'}`}
                                         ></i>
                                     </button>
 

@@ -9,6 +9,9 @@ import {
     GetMessagesQueryParameters,
     MarkMessageAsReadRequest,
     MarkAllMessagesAsReadRequest,
+    CreateCallLogRequest,
+    UpdateCallLogRequest,
+    CallLogResponse,
     ApiResponse,
     CursorPaginationResponse,
     MessageAttachment,
@@ -131,6 +134,9 @@ const COMMUNICATION_ENDPOINTS = {
     DELETE_MESSAGE: (messageId: string) => `/communications/messages/${messageId.toUpperCase()}`,
     BLOCK_CONVERSATION: `/communications/conversations/block`,
     UNBLOCK_CONVERSATION: `/communications/conversations/unblock`,
+    // Call Log endpoints
+    CREATE_CALL_LOG: `/communications/call-logs`,
+    UPDATE_CALL_LOG: (callLogId: string) => `/communications/call-logs/${callLogId.toUpperCase()}`,
 } as const;
 
 export class ChatService {
@@ -620,6 +626,48 @@ export class ChatService {
             throw new Error(error.message || 'Failed to unblock conversation');
         }
     }
+
+    /**
+     * Create a call log
+     */
+    static async createCallLog(
+        request: CreateCallLogRequest
+    ): Promise<ApiResponse<CallLogResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                COMMUNICATION_ENDPOINTS.CREATE_CALL_LOG,
+                transformToPascalCase(request)
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Call log created successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to create call log');
+        }
+    }
+
+    /**
+     * Update a call log
+     */
+    static async updateCallLog(
+        request: UpdateCallLogRequest
+    ): Promise<ApiResponse<CallLogResponse>> {
+        try {
+            const response: any = await axiosInstance.put(
+                COMMUNICATION_ENDPOINTS.UPDATE_CALL_LOG(request.id),
+                transformToPascalCase(request)
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Call log updated successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to update call log');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -641,6 +689,8 @@ export const {
     deleteMessage,
     blockConversation,
     unblockConversation,
+    createCallLog,
+    updateCallLog,
 } = ChatService;
 
 // Default export

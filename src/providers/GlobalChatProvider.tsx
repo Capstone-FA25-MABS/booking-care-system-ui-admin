@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { RootState } from '@/store';
 import { useSharedChatHub } from '@/hooks/useSharedChatHub';
-import { ChatHubCallbacks } from '@/hooks/useChatHub';
+import { ChatHubCallbacks, IncomingCallData } from '@/hooks/useChatHub';
 import { SignalRMessageReceived } from '@/types/communication.types';
+import IncomingCallNotification from '@/components/IncomingCallNotification';
 
 interface GlobalChatContextValue {
     isConnected: boolean;
     connection: any;
     onlineUsers: Set<string>;
     isUserOnline: (userId: string) => boolean;
+    incomingCall: IncomingCallData | null;
+    acceptIncomingCall: () => void;
+    declineIncomingCall: () => void;
+    clearIncomingCall: () => void;
 }
 
 const GlobalChatContext = createContext<GlobalChatContextValue | undefined>(undefined);
@@ -27,6 +32,7 @@ interface GlobalChatProviderProps {
  * - Shows toast notifications when NOT on Messages page
  */
 export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children }) => {
+    const navigate = useNavigate();
     // Admin side - get profile from any available source
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
         (state: RootState) => state.user
@@ -38,6 +44,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     const location = useLocation();
 
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+    const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
 
     // Global notification callbacks
     const hubCallbacks: ChatHubCallbacks = {
@@ -95,10 +102,45 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
             console.error('[GlobalChat] ❌ SignalR error:', error);
             // Don't show error toast for connection issues - too noisy
         }, []),
+
+        onIncomingCall: useCallback((data: IncomingCallData) => {
+            console.log('[GlobalChat] 📞 Incoming call:', data);
+            setIncomingCall(data);
+        }, []),
     };
 
     // Use shared ChatHub connection
     const chatHub = useSharedChatHub(hubCallbacks);
+
+    // Handle accepting incoming call
+    const acceptIncomingCall = useCallback(() => {
+        if (!incomingCall) return;
+        console.log('[GlobalChat] ✅ Accepting call, navigating to messages...');
+        const callData = { ...incomingCall }; // Copy call data before clearing
+        setIncomingCall(null); // Clear immediately to prevent duplicate notifications
+        // Navigate to messages page - the Messages component will handle the call
+        navigate('/hospitals/messages', { state: { incomingCall: callData } });
+    }, [incomingCall, navigate]);
+
+    // Handle declining incoming call
+    const declineIncomingCall = useCallback(async () => {
+        if (!incomingCall) return;
+        console.log('[GlobalChat] ❌ Declining call from:', incomingCall.callerId);
+
+        try {
+            await chatHub.declineCall(incomingCall.callerId, 'User declined');
+            setIncomingCall(null);
+        } catch (error) {
+            console.error('[GlobalChat] Error declining call:', error);
+            setIncomingCall(null);
+        }
+    }, [incomingCall, chatHub]);
+
+    // Clear incoming call (used by Messages when it takes over the call)
+    const clearIncomingCall = useCallback(() => {
+        console.log('[GlobalChat] Clearing incoming call');
+        setIncomingCall(null);
+    }, []);
 
     // Helper function to check if user is online (case-insensitive)
     const isUserOnline = useCallback(
@@ -115,9 +157,26 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         connection: chatHub.connection,
         onlineUsers,
         isUserOnline,
+        incomingCall,
+        acceptIncomingCall,
+        declineIncomingCall,
+        clearIncomingCall,
     };
 
-    return <GlobalChatContext.Provider value={value}>{children}</GlobalChatContext.Provider>;
+    return (
+        <GlobalChatContext.Provider value={value}>
+            {children}
+            {/* Global Incoming Call Notification */}
+            {incomingCall && (
+                <IncomingCallNotification
+                    callerName={incomingCall.callerName || 'Unknown'}
+                    callerAvatar={incomingCall.callerAvatar}
+                    onAccept={acceptIncomingCall}
+                    onDecline={declineIncomingCall}
+                />
+            )}
+        </GlobalChatContext.Provider>
+    );
 };
 
 /**
