@@ -21,6 +21,9 @@ const MessagesContent: React.FC = () => {
     const [isVideoCallVisible, setIsVideoCallVisible] = useState(false);
     const [currentCall, setCurrentCall] = useState<IncomingCallData | null>(null);
 
+    // ✅ Track if a call is currently being handled to prevent duplicates
+    const handlingCallRef = React.useRef<string | null>(null);
+
     // Get active conversation from ChatProvider
     const { activeConversation } = useChat();
 
@@ -37,16 +40,28 @@ const MessagesContent: React.FC = () => {
     );
 
     // Get incoming call from global context
-    const { incomingCall, clearIncomingCall } = useGlobalChat();
+    const { clearIncomingCall } = useGlobalChat();
 
     // Handle incoming call from navigation state (when accepting from notification)
     useEffect(() => {
         const navState = location.state as { incomingCall?: IncomingCallData };
         if (navState?.incomingCall) {
+            const callId = `${navState.incomingCall.callerId}-${navState.incomingCall.conversationId}`;
+
+            // ✅ Check if already handling this call
+            if (handlingCallRef.current === callId) {
+                console.log('[Messages] ⏭️ Already handling this call, ignoring');
+                return;
+            }
+
             console.log(
                 '[Messages] 📞 Received incoming call from navigation:',
                 navState.incomingCall
             );
+
+            // ✅ Mark as handling
+            handlingCallRef.current = callId;
+
             setCurrentCall(navState.incomingCall);
             setIsVideoCallVisible(true);
             // Clear global incoming call to prevent duplicate
@@ -56,17 +71,9 @@ const MessagesContent: React.FC = () => {
         }
     }, [location, clearIncomingCall]);
 
-    // Auto-show call window if there's an incoming call and user is ALREADY on messages page
-    // Only show if we don't already have a currentCall to avoid duplicates
-    useEffect(() => {
-        if (incomingCall && !currentCall && !isVideoCallVisible) {
-            console.log('[Messages] 📞 Auto-accepting call on messages page:', incomingCall);
-            setCurrentCall(incomingCall);
-            setIsVideoCallVisible(true);
-            // Clear global incoming call to prevent it from triggering again
-            clearIncomingCall();
-        }
-    }, [incomingCall, currentCall, isVideoCallVisible, clearIncomingCall]);
+    // ✅ REMOVED: Auto-accept logic
+    // Now GlobalChatProvider will always show IncomingCallNotification
+    // User can choose to Accept (navigate here) or Decline
 
     const handleVideoCallStart = () => {
         if (!activeConversation || !otherParticipant) {
@@ -81,6 +88,8 @@ const MessagesContent: React.FC = () => {
         console.log('[Messages] Closing video call');
         setIsVideoCallVisible(false);
         setCurrentCall(null);
+        // ✅ Reset handling ref when call closes
+        handlingCallRef.current = null;
     };
 
     const handleVoiceCallStart = () => {

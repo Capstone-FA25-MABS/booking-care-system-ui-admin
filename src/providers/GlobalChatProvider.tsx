@@ -17,6 +17,7 @@ interface GlobalChatContextValue {
     acceptIncomingCall: () => void;
     declineIncomingCall: () => void;
     clearIncomingCall: () => void;
+    clearProcessedCall: (callerId: string, conversationId: string) => void; // ✅ Add new function
 }
 
 const GlobalChatContext = createContext<GlobalChatContextValue | undefined>(undefined);
@@ -45,6 +46,10 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
     const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
+
+    // ✅ Track processed calls to prevent spam/duplicates
+    const processedCallsRef = React.useRef<Set<string>>(new Set());
+    const callTimeoutRef = React.useRef<NodeJS.Timeout>();
 
     // Global notification callbacks
     const hubCallbacks: ChatHubCallbacks = {
@@ -105,19 +110,70 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
         onIncomingCall: useCallback((data: IncomingCallData) => {
             console.log('[GlobalChat] 📞 Incoming call:', data);
+
+            // ✅ Create unique call ID from caller and conversation
+            const callId = `${data.callerId}-${data.conversationId}`;
+
+            // ✅ Check if this call has already been processed/dismissed
+            if (processedCallsRef.current.has(callId)) {
+                console.log('[GlobalChat] ⏭️ Call already processed, ignoring:', callId);
+                return;
+            }
+
+            // ✅ Clear any existing timeout
+            if (callTimeoutRef.current) {
+                clearTimeout(callTimeoutRef.current);
+            }
+
+            // ✅ Mark call as processed immediately to prevent duplicates
+            processedCallsRef.current.add(callId);
+
+            // ✅ Set incoming call state
             setIncomingCall(data);
+
+            // ✅ Auto-cleanup after 60 seconds (in case call is abandoned)
+            callTimeoutRef.current = setTimeout(() => {
+                console.log('[GlobalChat] ⏰ Auto-clearing abandoned call:', callId);
+                processedCallsRef.current.delete(callId);
+                setIncomingCall((prev) => {
+                    // Only clear if it's the same call
+                    if (prev && `${prev.callerId}-${prev.conversationId}` === callId) {
+                        return null;
+                    }
+                    return prev;
+                });
+            }, 60000);
         }, []),
     };
 
     // Use shared ChatHub connection
     const chatHub = useSharedChatHub(hubCallbacks);
 
+    // ✅ Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (callTimeoutRef.current) {
+                clearTimeout(callTimeoutRef.current);
+            }
+        };
+    }, []);
+
     // Handle accepting incoming call
     const acceptIncomingCall = useCallback(() => {
         if (!incomingCall) return;
         console.log('[GlobalChat] ✅ Accepting call, navigating to messages...');
+
+        // ✅ Clear timeout
+        if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+        }
+
         const callData = { ...incomingCall }; // Copy call data before clearing
         setIncomingCall(null); // Clear immediately to prevent duplicate notifications
+
+        // ✅ Keep the call in processed set to prevent re-showing
+        // (It will be cleaned up by Messages component or auto-timeout)
+
         // Navigate to messages page - the Messages component will handle the call
         navigate('/hospitals/messages', { state: { incomingCall: callData } });
     }, [incomingCall, navigate]);
@@ -127,11 +183,36 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         if (!incomingCall) return;
         console.log('[GlobalChat] ❌ Declining call from:', incomingCall.callerId);
 
+        // ✅ Clear timeout
+        if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+        }
+
         try {
+            // ✅ Send decline signal to backend
             await chatHub.declineCall(incomingCall.callerId, 'User declined');
+
+            // ✅ Clear from processed set to allow same user to call again
+            const callId = `${incomingCall.callerId}-${incomingCall.conversationId}`;
+            console.log('[GlobalChat] Clearing declined call from processed set:', callId);
+            processedCallsRef.current.delete(callId);
+
+            // ✅ Clear state
             setIncomingCall(null);
         } catch (error) {
             console.error('[GlobalChat] Error declining call:', error);
+
+            // ✅ Clear from processed set even on error
+            if (incomingCall) {
+                const callId = `${incomingCall.callerId}-${incomingCall.conversationId}`;
+                console.log(
+                    '[GlobalChat] Clearing declined call from processed set (error):',
+                    callId
+                );
+                processedCallsRef.current.delete(callId);
+            }
+
+            // Clear state even if decline fails
             setIncomingCall(null);
         }
     }, [incomingCall, chatHub]);
@@ -139,7 +220,21 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     // Clear incoming call (used by Messages when it takes over the call)
     const clearIncomingCall = useCallback(() => {
         console.log('[GlobalChat] Clearing incoming call');
+
+        // ✅ Clear timeout
+        if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+        }
+
         setIncomingCall(null);
+        // ✅ Note: We keep the call in processed set to prevent re-showing
+    }, []);
+
+    // ✅ Clear processed call (allows same user to call again)
+    const clearProcessedCall = useCallback((callerId: string, conversationId: string) => {
+        const callId = `${callerId}-${conversationId}`;
+        console.log('[GlobalChat] Clearing processed call from set:', callId);
+        processedCallsRef.current.delete(callId);
     }, []);
 
     // Helper function to check if user is online (case-insensitive)
@@ -161,6 +256,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         acceptIncomingCall,
         declineIncomingCall,
         clearIncomingCall,
+        clearProcessedCall, // ✅ Add new function
     };
 
     return (
