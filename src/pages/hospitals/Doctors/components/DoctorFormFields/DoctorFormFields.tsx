@@ -9,165 +9,13 @@ import { DoctorPrice } from '@/types/serviceType.types';
 // Options are provided from parent via props instead of using mock data
 import { selectCustomStyles } from '@/constants/select.styles';
 import styles from './DoctorFormFields.module.scss';
-import badgeCheck from '@/assets/img/icons/badge-check.svg';
 // Shared components to reduce duplication
 import YearsOfExperienceField from '../shared/YearsOfExperienceField';
 import PositionSpecialtySelects from '../shared/PositionSpecialtySelects';
 import LanguagesSection from '../shared/LanguagesSection';
 import ServicePricesSection from '../shared/ServicePricesSection';
 import { prepareBioForSave } from '@/utils/bioHtmlProcessor';
-
-// Sub-components to reduce cognitive complexity
-const AvatarSection: React.FC<{
-    formData: DoctorFormData;
-    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}> = ({ formData, onFileChange }) => {
-    const [isDragOver, setIsDragOver] = React.useState(false);
-    const [isUploading, setIsUploading] = React.useState(false);
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const file = files[0];
-            if (file.type.startsWith('image/')) {
-                setIsUploading(true);
-                // Simulate upload delay
-                setTimeout(() => {
-                    // Create a mock event object that matches the expected interface
-                    const mockEvent = {
-                        target: {
-                            files: [file],
-                            name: 'avatar',
-                            value: '',
-                        },
-                    } as unknown as React.ChangeEvent<HTMLInputElement>;
-                    onFileChange(mockEvent);
-                    setIsUploading(false);
-                }, 500);
-            }
-        }
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setIsUploading(true);
-        setTimeout(() => {
-            onFileChange(e);
-            setIsUploading(false);
-        }, 500);
-    };
-
-    const getAvatarSrc = (): string => {
-        if (typeof formData.avatar === 'string') {
-            return formData.avatar;
-        }
-        if (formData.avatar) {
-            return URL.createObjectURL(formData.avatar);
-        }
-        return '';
-    };
-
-    const renderAvatarContent = (): React.ReactNode => {
-        if (isUploading) {
-            return (
-                <output className="d-flex flex-column align-items-center">
-                    <div className={`spinner-border text-primary ${styles.uploadSpinner}`}>
-                        <span className="visually-hidden">Uploading...</span>
-                    </div>
-                    <small className="text-primary mt-2">Đang tải...</small>
-                </output>
-            );
-        }
-
-        if (formData.avatar) {
-            return <img src={getAvatarSrc()} alt="Profile" className={styles.avatarImage} />;
-        }
-
-        return (
-            <div className="d-flex flex-column align-items-center">
-                <i className="feather-user fs-1 text-muted mb-2"></i>
-                <small className="text-muted">Chọn ảnh</small>
-            </div>
-        );
-    };
-
-    return (
-        <div className="col-md-3 mb-4">
-            <div className="text-center">
-                <div className="position-relative d-inline-block">
-                    <div
-                        className={`bg-light rounded-circle d-flex align-items-center justify-content-center ${styles.avatarContainer} ${isDragOver ? styles.dragOver : ''}`}
-                        style={{ width: '140px', height: '140px' }}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                    >
-                        {renderAvatarContent()}
-
-                        {/* Upload overlay */}
-                        <div
-                            className={`${styles.uploadOverlay} ${isDragOver ? styles.overlayVisible : ''}`}
-                        >
-                            <div className="d-flex flex-column align-items-center">
-                                <i className="feather-upload fs-2 text-white mb-2"></i>
-                                <small className="text-white">Thả ảnh vào đây</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Badge Check Icon */}
-                    <div
-                        className={`${styles.badgeIcon} ${isUploading ? styles.badgeIconDisabled : ''}`}
-                    >
-                        <img
-                            src={badgeCheck}
-                            alt="Verified Badge"
-                            className={styles.badgeIconImage}
-                        />
-                    </div>
-
-                    <input
-                        type="file"
-                        accept="image/*"
-                        name="avatar"
-                        id="profileImage"
-                        onChange={handleFileChange}
-                        className="d-none"
-                    />
-                    <label
-                        htmlFor="profileImage"
-                        className={`position-absolute top-0 start-0 w-100 h-100 ${styles.uploadLabel}`}
-                        aria-label="Kéo thả hoặc nhấp để chọn ảnh đại diện"
-                    ></label>
-                </div>
-
-                <div className="mt-3">
-                    <p className="mb-1 fw-semibold text-dark">Ảnh đại diện</p>
-                    <small className="text-muted">
-                        {isDragOver ? 'Thả ảnh vào đây' : 'Kéo thả hoặc nhấp để chọn ảnh'}
-                    </small>
-                    <div className="mt-2">
-                        <small className="text-muted">
-                            <i className="feather-info me-1"></i> JPG, PNG, GIF (tối đa 5MB)
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
+import AvatarUpload from '@/components/AvatarUpload';
 
 const BasicInfoFields: React.FC<{
     formData: DoctorFormData;
@@ -378,7 +226,13 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                 <div className={`card-body ${styles.sectionBorder}`}>
                     <h5 className="card-title mb-4">Thông tin cơ bản</h5>
                     <div className="row">
-                        <AvatarSection formData={formData} onFileChange={onFileChange} />
+                        <AvatarUpload
+                            avatar={formData.avatar}
+                            onFileChange={onFileChange}
+                            iconClassName="feather-user"
+                            label="Ảnh đại diện"
+                            placeholderText="Kéo thả hoặc nhấp để chọn ảnh"
+                        />
                         <BasicInfoFields
                             formData={formData}
                             errors={errors}

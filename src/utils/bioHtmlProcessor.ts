@@ -4,6 +4,23 @@
  */
 
 /**
+ * Strip HTML tags from text safely to prevent ReDoS attacks
+ * @param html - The HTML string to strip tags from
+ * @param maxLength - Maximum length of input to process (default: 1MB)
+ * @returns Text content without HTML tags
+ */
+export const stripHtmlTags = (html: string, maxLength: number = 1024 * 1024): string => {
+    // Limit input length to prevent ReDoS attacks
+    if (html.length > maxLength) {
+        html = html.substring(0, maxLength);
+    }
+
+    // Use a more efficient regex that avoids excessive backtracking
+    // Using + instead of * ensures at least one character, reducing backtracking
+    return html.replace(/<[^>]+>/g, '').trim();
+};
+
+/**
  * Normalize font sizes to 15px for all text elements
  * @param doc - DOM Document
  */

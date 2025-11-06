@@ -5,7 +5,11 @@ import DoctorFormFields from '../components/DoctorFormFields';
 import { DoctorFormData } from '@/types/doctor.types';
 import { useDoctorFormLogic } from '@/hooks/useDoctorFormLogic';
 import { useDoctorFormOptions } from '@/hooks/useDoctorFormOptions';
-import { prepareDoctorUpdatePayload } from '@/utils/doctor.utils';
+import {
+    prepareDoctorUpdatePayload,
+    fetchDoctorDataForForm,
+    handleDoctorFormError,
+} from '@/utils/doctor.utils';
 import {
     getDoctorById,
     getDoctorPrices,
@@ -67,33 +71,7 @@ const EditDoctor: React.FC = () => {
             if (!id) return;
             try {
                 setIsLoadingDoctor(true);
-                const [doctorRes, pricesRes] = await Promise.all([
-                    getDoctorById(id),
-                    getDoctorPrices(id),
-                ]);
-
-                const d = doctorRes.data as any; // DoctorByIdResponse
-                const formMapped: DoctorFormData = {
-                    firstName: d.firstName || '',
-                    lastName: d.lastName || '',
-                    email: d.email || '',
-                    phone: '',
-                    dateOfBirth: '',
-                    address: d.address || '',
-                    gender: (d.gender as any) || '',
-                    bio: d.bio || '',
-                    yearsOfExperience: d.yearsOfExperience || 0,
-                    avatar: d.avatarUrl || null,
-                    positionId: d.position?.id || '',
-                    specialtyId: d.specialty?.id || '',
-                    hospitalId: d.hospital?.id || '',
-                    languageIds: (d.languages || []).map((l: any) => l.id),
-                    servicePrices: (pricesRes.data || []).map((p: any) => ({
-                        id: p.id,
-                        serviceTypeId: p.serviceTypeId,
-                        amount: Number(p.amount),
-                    })),
-                };
+                const formMapped = await fetchDoctorDataForForm(id, getDoctorById, getDoctorPrices);
                 setFormData(formMapped);
             } catch {
                 // fallback silently; could show toast
@@ -134,50 +112,11 @@ const EditDoctor: React.FC = () => {
             toast.success('Cập nhật bác sĩ thành công!');
             navigate('/hospitals/doctors');
         } catch (err: any) {
-            const server = err?.response?.data;
-            const errorMessages: string[] = server?.errors || [];
-
-            if (Array.isArray(errorMessages) && errorMessages.length) {
-                const fieldErrorMap: Record<string, string> = {};
-                errorMessages.forEach((msg: string) => {
-                    const [field, ...rest] = msg.split(':');
-                    const message = rest.join(':').trim() || msg;
-                    const key = (field || '').trim().toLowerCase();
-                    if (key.includes('email')) fieldErrorMap.email = message;
-                    if (key.includes('firstname')) fieldErrorMap.firstName = message;
-                    if (key.includes('lastname')) fieldErrorMap.lastName = message;
-                    if (key.includes('address')) fieldErrorMap.address = message;
-                    if (key.includes('gender')) fieldErrorMap.gender = message;
-                    if (key.includes('bio')) fieldErrorMap.bio = message;
-                    if (key.includes('years')) fieldErrorMap.yearsOfExperience = message;
-                    if (key.includes('position')) fieldErrorMap.positionId = message;
-                    if (key.includes('specialty')) fieldErrorMap.specialtyId = message;
-                    if (key.includes('hospital')) fieldErrorMap.hospitalId = message;
-                    if (key.includes('language')) fieldErrorMap.languageIds = message;
-                    if (key.includes('price') || key.includes('amount'))
-                        fieldErrorMap.servicePrices = message;
-                });
-                if (Object.keys(fieldErrorMap).length) {
-                    setErrors(fieldErrorMap as any);
-                }
-
-                // Check for email conflict error specifically
-                const emailConflictError = errorMessages.find(
-                    (msg: string) =>
-                        msg.toLowerCase().includes('email') &&
-                        (msg.toLowerCase().includes('đã tồn tại') ||
-                            msg.toLowerCase().includes('already exists'))
-                );
-                if (emailConflictError) {
-                    toast.error(emailConflictError);
-                    return;
-                }
-
-                toast.error(server?.message || 'Cập nhật thất bại. Vui lòng kiểm tra dữ liệu.');
-                return;
+            try {
+                handleDoctorFormError(err, setErrors, 'Cập nhật bác sĩ thất bại');
+            } catch (error: any) {
+                toast.error(error.message || 'Cập nhật bác sĩ thất bại');
             }
-
-            toast.error(err?.message || 'Cập nhật bác sĩ thất bại');
         } finally {
             setIsSubmitting(false);
         }

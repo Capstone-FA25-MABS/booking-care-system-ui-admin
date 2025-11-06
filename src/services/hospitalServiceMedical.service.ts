@@ -19,118 +19,92 @@ const HOSPITAL_SERVICE_MEDICAL_ENDPOINTS = {
  */
 export class HospitalServiceMedicalService {
     /**
-     * Get all active service categories
+     * Helper method to extract array from response with multiple possible structures
      */
-    static async getActiveCategories(): Promise<ApiResponse<ServiceCategory[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_CATEGORIES_ACTIVE
-            );
+    private static extractArrayFromResponse<T>(response: any, arrayKey?: string): T[] {
+        if (Array.isArray(response)) {
+            return response;
+        }
+        if (response?.data && Array.isArray(response.data)) {
+            return response.data;
+        }
+        if (arrayKey && response?.[arrayKey] && Array.isArray(response[arrayKey])) {
+            return response[arrayKey];
+        }
+        return [];
+    }
 
-            // Handle response structure - axios interceptor returns response.data directly
-            let categoriesList: ServiceCategory[] = [];
-            if (Array.isArray(response)) {
-                categoriesList = response;
-            } else if (response?.data && Array.isArray(response.data)) {
-                categoriesList = response.data;
-            } else if (response?.categories && Array.isArray(response.categories)) {
-                categoriesList = response.categories;
-            }
+    /**
+     * Helper method to handle API call with standardized response and error handling
+     */
+    private static async handleApiCall<T>(
+        apiCall: () => Promise<any>,
+        extractArrayKey: string | undefined,
+        successMessage: string,
+        errorMessage: string
+    ): Promise<ApiResponse<T[]>> {
+        try {
+            const response = await apiCall();
+            const dataList = this.extractArrayFromResponse<T>(response, extractArrayKey);
 
             return {
                 success: true,
-                data: categoriesList,
-                message: 'Service categories retrieved successfully',
+                data: dataList,
+                message: successMessage,
             };
         } catch (error: any) {
-            throw new Error(error.message || 'Failed to get service categories');
+            throw new Error(error.message || errorMessage);
         }
+    }
+
+    /**
+     * Get all active service categories
+     */
+    static async getActiveCategories(): Promise<ApiResponse<ServiceCategory[]>> {
+        return this.handleApiCall<ServiceCategory>(
+            () => axiosInstance.get(HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_CATEGORIES_ACTIVE),
+            'categories',
+            'Service categories retrieved successfully',
+            'Failed to get service categories'
+        );
     }
 
     /**
      * Get parent service categories (categories without parent)
      */
     static async getParentCategories(): Promise<ApiResponse<ServiceCategory[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_CATEGORIES_PARENTS
-            );
-
-            // Handle response structure
-            let categoriesList: ServiceCategory[] = [];
-            if (Array.isArray(response)) {
-                categoriesList = response;
-            } else if (response?.data && Array.isArray(response.data)) {
-                categoriesList = response.data;
-            } else if (response?.categories && Array.isArray(response.categories)) {
-                categoriesList = response.categories;
-            }
-
-            return {
-                success: true,
-                data: categoriesList,
-                message: 'Parent service categories retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get parent service categories');
-        }
+        return this.handleApiCall<ServiceCategory>(
+            () => axiosInstance.get(HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_CATEGORIES_PARENTS),
+            'categories',
+            'Parent service categories retrieved successfully',
+            'Failed to get parent service categories'
+        );
     }
 
     /**
      * Get all active services
      */
     static async getActiveServices(): Promise<ApiResponse<Service[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_SERVICES_ACTIVE
-            );
-
-            // Handle response structure
-            let servicesList: Service[] = [];
-            if (Array.isArray(response)) {
-                servicesList = response;
-            } else if (response?.data && Array.isArray(response.data)) {
-                servicesList = response.data;
-            } else if (response?.services && Array.isArray(response.services)) {
-                servicesList = response.services;
-            }
-
-            return {
-                success: true,
-                data: servicesList,
-                message: 'Services retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get services');
-        }
+        return this.handleApiCall<Service>(
+            () => axiosInstance.get(HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_SERVICES_ACTIVE),
+            'services',
+            'Services retrieved successfully',
+            'Failed to get services'
+        );
     }
 
     /**
      * Get services by hospital ID
      */
     static async getServicesByHospital(hospitalId: string): Promise<ApiResponse<Service[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_SERVICES_BY_HOSPITAL(hospitalId)
-            );
-
-            // Handle response structure
-            let servicesList: Service[] = [];
-            if (Array.isArray(response)) {
-                servicesList = response;
-            } else if (response?.data && Array.isArray(response.data)) {
-                servicesList = response.data;
-            } else if (response?.services && Array.isArray(response.services)) {
-                servicesList = response.services;
-            }
-
-            return {
-                success: true,
-                data: servicesList,
-                message: 'Hospital services retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get hospital services');
-        }
+        return this.handleApiCall<Service>(
+            () =>
+                axiosInstance.get(
+                    HOSPITAL_SERVICE_MEDICAL_ENDPOINTS.GET_SERVICES_BY_HOSPITAL(hospitalId)
+                ),
+            'services',
+            'Hospital services retrieved successfully',
+            'Failed to get hospital services'
+        );
     }
 }

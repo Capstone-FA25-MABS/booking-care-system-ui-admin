@@ -11,6 +11,263 @@ import { HospitalServiceMedicalService } from '@/services/hospitalServiceMedical
 import { ServiceCategory, Service } from '@/types/hospitalServiceMedical.types';
 import styles from './HospitalServiceMedicalsManagement.module.scss';
 
+// Helper functions to reduce nesting depth
+
+/**
+ * Extract category IDs from services
+ */
+const extractCategoryIdsFromServices = (services: Service[]): Set<string> => {
+    const categoryIds = new Set<string>();
+    for (const service of services) {
+        const categoryId = service.serviceCategoryId || service.serviceCategory?.id;
+        if (categoryId) {
+            categoryIds.add(categoryId);
+        }
+    }
+    return categoryIds;
+};
+
+/**
+ * Build categories to show (parent categories if children have services)
+ */
+const buildCategoriesToShow = (
+    categoriesWithServices: ServiceCategory[],
+    allCategories: ServiceCategory[]
+): ServiceCategory[] => {
+    const categoriesToShow = new Map<string, ServiceCategory>();
+
+    for (const cat of categoriesWithServices) {
+        if (cat.parentId) {
+            const parent = allCategories.find((c) => c.id === cat.parentId);
+            if (parent) {
+                categoriesToShow.set(parent.id, parent);
+            } else {
+                categoriesToShow.set(cat.id, cat);
+            }
+        } else {
+            categoriesToShow.set(cat.id, cat);
+        }
+    }
+
+    return Array.from(categoriesToShow.values());
+};
+
+/**
+ * Group services by category ID (using parent category if service belongs to child)
+ */
+const groupServicesByCategory = (
+    services: Service[],
+    allCategories: ServiceCategory[]
+): Map<string, Service[]> => {
+    const servicesMap = new Map<string, Service[]>();
+
+    for (const service of services) {
+        let categoryId = service.serviceCategoryId || service.serviceCategory?.id;
+        if (categoryId) {
+            const category = allCategories.find((c) => c.id === categoryId);
+            if (category?.parentId) {
+                categoryId = category.parentId;
+            }
+
+            if (!servicesMap.has(categoryId)) {
+                servicesMap.set(categoryId, []);
+            }
+            servicesMap.get(categoryId)!.push(service);
+        }
+    }
+
+    return servicesMap;
+};
+
+/**
+ * Extract hospital service IDs from profile
+ */
+const extractHospitalServiceIds = (hospitalProfile: any): string[] => {
+    const serviceIds: string[] = [];
+    if (hospitalProfile?.serviceMedicals) {
+        for (const sm of hospitalProfile.serviceMedicals) {
+            const id = sm.serviceMedicalId || sm.id;
+            if (id) {
+                serviceIds.push(id);
+            }
+        }
+    }
+    return serviceIds;
+};
+
+/**
+ * Check if category matches search term
+ */
+const categoryMatchesSearch = (
+    category: ServiceCategory,
+    categoryServices: Service[],
+    searchTerm: string
+): boolean => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    if (category.name.toLowerCase().includes(lowerSearchTerm)) {
+        return true;
+    }
+    return categoryServices.some((service) => service.name.toLowerCase().includes(lowerSearchTerm));
+};
+
+/**
+ * Filter services by search term
+ */
+const filterServicesBySearch = (services: Service[], searchTerm: string): Service[] => {
+    if (!searchTerm) {
+        return services;
+    }
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return services.filter((service) => service.name.toLowerCase().includes(lowerSearchTerm));
+};
+
+/**
+ * Service Card Component
+ */
+interface ServiceCardProps {
+    service: Service;
+    isSelected: boolean;
+    onToggle: (serviceId: string) => void;
+}
+
+const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onToggle }) => {
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        e.currentTarget.src = 'https://via.placeholder.com/80x80?text=No+Image';
+    };
+
+    const handleCheckboxChange = () => {
+        onToggle(service.id);
+    };
+
+    const handleCheckboxClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+    };
+
+    const handleCardClick = () => {
+        onToggle(service.id);
+    };
+
+    const imageUrl =
+        service.imageUrl ||
+        service.serviceCategory?.imageUrl ||
+        'https://via.placeholder.com/80x80?text=No+Image';
+
+    return (
+        <div
+            className={`${styles.serviceCard} ${isSelected ? styles.selected : ''}`}
+            onClick={handleCardClick}
+        >
+            <div className={styles.serviceCardContent}>
+                <div className={styles.checkboxWrapper}>
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={handleCheckboxChange}
+                        onClick={handleCheckboxClick}
+                    />
+                </div>
+                <div className={styles.serviceImage}>
+                    <img src={imageUrl} alt={service.name} onError={handleImageError} />
+                </div>
+                <div className={styles.serviceName}>{service.name}</div>
+            </div>
+        </div>
+    );
+};
+
+/**
+ * Category Section Component
+ */
+interface CategorySectionProps {
+    category: ServiceCategory;
+    services: Service[];
+    selectedServiceIds: string[];
+    expandedCategories: Set<string>;
+    searchTerm: string;
+    onCategoryToggle: (categoryId: string) => void;
+    onServiceToggle: (serviceId: string) => void;
+}
+
+const CategorySection: React.FC<CategorySectionProps> = ({
+    category,
+    services,
+    selectedServiceIds,
+    expandedCategories,
+    searchTerm,
+    onCategoryToggle,
+    onServiceToggle,
+}) => {
+    const filteredServices = filterServicesBySearch(services, searchTerm);
+
+    if (filteredServices.length === 0 && searchTerm) {
+        return null;
+    }
+
+    const selectedCount = filteredServices.filter((service) =>
+        selectedServiceIds.includes(service.id)
+    ).length;
+    const totalCount = filteredServices.length;
+    const isExpanded = expandedCategories.has(category.id);
+
+    const handleCategoryClick = () => {
+        onCategoryToggle(category.id);
+    };
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        e.currentTarget.style.display = 'none';
+    };
+
+    return (
+        <div className={styles.categorySection}>
+            <div className={styles.categoryHeader} onClick={handleCategoryClick}>
+                <div className={styles.categoryInfo}>
+                    {category.imageUrl && (
+                        <img
+                            src={category.imageUrl}
+                            alt={category.name}
+                            className={styles.categoryImage}
+                            onError={handleImageError}
+                        />
+                    )}
+                    <div>
+                        <h5 className={styles.categoryName}>{category.name}</h5>
+                        {category.description && (
+                            <p className={styles.categoryDescription}>{category.description}</p>
+                        )}
+                    </div>
+                </div>
+                <div className={styles.categoryActions}>
+                    <span className={styles.categoryServiceCount}>
+                        Đã chọn {selectedCount}/{totalCount} dịch vụ
+                    </span>
+                    <i
+                        className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} ${styles.expandIcon}`}
+                    ></i>
+                </div>
+            </div>
+
+            {isExpanded && (
+                <div className={styles.servicesGrid}>
+                    {filteredServices.length === 0 ? (
+                        <div className={styles.emptyCategoryState}>
+                            <p className="text-muted">Không có dịch vụ nào</p>
+                        </div>
+                    ) : (
+                        filteredServices.map((service) => (
+                            <ServiceCard
+                                key={service.id}
+                                service={service}
+                                isSelected={selectedServiceIds.includes(service.id)}
+                                onToggle={onServiceToggle}
+                            />
+                        ))
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const HospitalServiceMedicalsManagement: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { profile, hospitalProfile, role } = useCurrentUserProfile();
@@ -65,79 +322,32 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
                 );
 
                 // Get unique category IDs from services
-                const categoryIdsFromServices = new Set<string>();
-                activeServices.forEach((service) => {
-                    const categoryId = service.serviceCategoryId || service.serviceCategory?.id;
-                    if (categoryId) {
-                        categoryIdsFromServices.add(categoryId);
-                    }
-                });
+                const categoryIdsFromServices = extractCategoryIdsFromServices(activeServices);
 
                 // Filter categories to only include those that have services
                 const categoriesWithServices = activeCategories.filter((cat) =>
                     categoryIdsFromServices.has(cat.id)
                 );
 
-                // Combine: show parent categories if they have children with services, otherwise show the category itself
-                const categoriesToShow = new Map<string, ServiceCategory>();
-
-                categoriesWithServices.forEach((cat) => {
-                    if (cat.parentId) {
-                        // This is a child category, find its parent
-                        const parent = activeCategories.find((c) => c.id === cat.parentId);
-                        if (parent) {
-                            // Show parent category
-                            categoriesToShow.set(parent.id, parent);
-                        } else {
-                            // No parent found, show the category itself
-                            categoriesToShow.set(cat.id, cat);
-                        }
-                    } else {
-                        // This is a parent category, show it
-                        categoriesToShow.set(cat.id, cat);
-                    }
-                });
-
-                const finalCategories = Array.from(categoriesToShow.values());
+                // Build categories to show (parent categories if children have services)
+                const finalCategories = buildCategoriesToShow(
+                    categoriesWithServices,
+                    activeCategories
+                );
                 setCategories(finalCategories);
 
-                // Group services by categoryId (use parent category if service belongs to child category)
-                const servicesMap = new Map<string, Service[]>();
-                activeServices.forEach((service) => {
-                    let categoryId = service.serviceCategoryId || service.serviceCategory?.id;
-                    if (categoryId) {
-                        // Find if this category has a parent
-                        const category = activeCategories.find((c) => c.id === categoryId);
-                        if (category?.parentId) {
-                            // Use parent category ID for grouping
-                            categoryId = category.parentId;
-                        }
-
-                        if (!servicesMap.has(categoryId)) {
-                            servicesMap.set(categoryId, []);
-                        }
-                        servicesMap.get(categoryId)!.push(service);
-                    }
-                });
-
+                // Group services by categoryId
+                const servicesMap = groupServicesByCategory(activeServices, activeCategories);
                 setServicesByCategory(servicesMap);
 
-                // Load current hospital services - check via hospitalProfile.serviceMedicals
-                // But also check services with hospitalId = current hospitalId as fallback
-                const hospitalProfileServiceIds: string[] = [];
-                if (hospitalProfile?.serviceMedicals) {
-                    hospitalProfile.serviceMedicals.forEach((sm: any) => {
-                        const id = sm.serviceMedicalId || sm.id;
-                        if (id) hospitalProfileServiceIds.push(id);
-                    });
-                }
-
+                // Load current hospital services
+                const hospitalProfileServiceIds = extractHospitalServiceIds(hospitalProfile);
                 const hospitalServices = activeServices.filter(
                     (s) => s.hospitalId === hospitalId || hospitalProfileServiceIds.includes(s.id)
                 );
                 const currentServiceIds = hospitalServices.map((s) => s.id);
                 setSelectedServiceIds(currentServiceIds);
-                setInitialServiceIds(currentServiceIds); // Store initial state for comparison
+                setInitialServiceIds(currentServiceIds);
             } catch (error: any) {
                 console.error('Error loading service medicals:', error);
                 toast.error(
@@ -152,19 +362,12 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
     }, [hospitalProfile, hospitalId]);
 
     // Filter categories and services by search term
-    // If search term is empty, show all categories that have services
-    // If search term exists, filter categories that match or have matching services
     const filteredCategories = searchTerm
         ? categories.filter((category) => {
               const categoryServices = servicesByCategory.get(category.id) || [];
-              return (
-                  category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  categoryServices.some((service) =>
-                      service.name.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-              );
+              return categoryMatchesSearch(category, categoryServices, searchTerm);
           })
-        : categories; // Show all categories when no search term
+        : categories;
 
     // Handle service toggle
     const handleServiceToggle = (serviceId: string) => {
@@ -235,20 +438,21 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
     };
 
     // Check if there are any changes by comparing with initial state
-    const hasChanges = (() => {
+    const checkHasChanges = (): boolean => {
         if (initialServiceIds.length === 0 && selectedServiceIds.length === 0) {
-            return false; // No changes if both are empty
+            return false;
         }
         if (selectedServiceIds.length !== initialServiceIds.length) {
-            return true; // Different lengths means changes
+            return true;
         }
-        // Check if all selected IDs are in initial and vice versa
         const hasNewSelection = selectedServiceIds.some((id) => !initialServiceIds.includes(id));
         const hasRemovedSelection = initialServiceIds.some(
             (id) => !selectedServiceIds.includes(id)
         );
         return hasNewSelection || hasRemovedSelection;
-    })();
+    };
+
+    const hasChanges = checkHasChanges();
 
     if (isLoading) {
         return (
@@ -308,140 +512,17 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
                     ) : (
                         filteredCategories.map((category) => {
                             const categoryServices = servicesByCategory.get(category.id) || [];
-                            const filteredCategoryServices = categoryServices.filter((service) =>
-                                searchTerm
-                                    ? service.name.toLowerCase().includes(searchTerm.toLowerCase())
-                                    : true
-                            );
-
-                            // Always show category, even if no services (when no search term)
-                            // Only hide when search term exists and no matches
-                            if (filteredCategoryServices.length === 0 && searchTerm) {
-                                return null; // Hide category if no matching services when searching
-                            }
-
-                            // Calculate selected count for this category
-                            const selectedCount = filteredCategoryServices.filter((service) =>
-                                selectedServiceIds.includes(service.id)
-                            ).length;
-                            const totalCount = filteredCategoryServices.length;
-                            const isExpanded = expandedCategories.has(category.id);
-
                             return (
-                                <div key={category.id} className={styles.categorySection}>
-                                    <div
-                                        className={styles.categoryHeader}
-                                        onClick={() => handleCategoryToggle(category.id)}
-                                    >
-                                        <div className={styles.categoryInfo}>
-                                            {category.imageUrl && (
-                                                <img
-                                                    src={category.imageUrl}
-                                                    alt={category.name}
-                                                    className={styles.categoryImage}
-                                                    onError={(e) => {
-                                                        (
-                                                            e.target as HTMLImageElement
-                                                        ).style.display = 'none';
-                                                    }}
-                                                />
-                                            )}
-                                            <div>
-                                                <h5 className={styles.categoryName}>
-                                                    {category.name}
-                                                </h5>
-                                                {category.description && (
-                                                    <p className={styles.categoryDescription}>
-                                                        {category.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className={styles.categoryActions}>
-                                            <span className={styles.categoryServiceCount}>
-                                                Đã chọn {selectedCount}/{totalCount} dịch vụ
-                                            </span>
-                                            <i
-                                                className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} ${styles.expandIcon}`}
-                                            ></i>
-                                        </div>
-                                    </div>
-
-                                    {/* Services grid */}
-                                    {isExpanded && (
-                                        <div className={styles.servicesGrid}>
-                                            {filteredCategoryServices.length === 0 ? (
-                                                <div className={styles.emptyCategoryState}>
-                                                    <p className="text-muted">
-                                                        Không có dịch vụ nào
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                filteredCategoryServices.map((service) => {
-                                                    const isSelected = selectedServiceIds.includes(
-                                                        service.id
-                                                    );
-                                                    return (
-                                                        <div
-                                                            key={service.id}
-                                                            className={`${styles.serviceCard} ${isSelected ? styles.selected : ''}`}
-                                                            onClick={() =>
-                                                                handleServiceToggle(service.id)
-                                                            }
-                                                        >
-                                                            <div
-                                                                className={
-                                                                    styles.serviceCardContent
-                                                                }
-                                                            >
-                                                                <div
-                                                                    className={
-                                                                        styles.checkboxWrapper
-                                                                    }
-                                                                >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={isSelected}
-                                                                        onChange={() =>
-                                                                            handleServiceToggle(
-                                                                                service.id
-                                                                            )
-                                                                        }
-                                                                        onClick={(e) =>
-                                                                            e.stopPropagation()
-                                                                        }
-                                                                    />
-                                                                </div>
-                                                                <div
-                                                                    className={styles.serviceImage}
-                                                                >
-                                                                    <img
-                                                                        src={
-                                                                            service.imageUrl ||
-                                                                            service.serviceCategory
-                                                                                ?.imageUrl ||
-                                                                            'https://via.placeholder.com/80x80?text=No+Image'
-                                                                        }
-                                                                        alt={service.name}
-                                                                        onError={(e) => {
-                                                                            (
-                                                                                e.target as HTMLImageElement
-                                                                            ).src =
-                                                                                'https://via.placeholder.com/80x80?text=No+Image';
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <div className={styles.serviceName}>
-                                                                    {service.name}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                <CategorySection
+                                    key={category.id}
+                                    category={category}
+                                    services={categoryServices}
+                                    selectedServiceIds={selectedServiceIds}
+                                    expandedCategories={expandedCategories}
+                                    searchTerm={searchTerm}
+                                    onCategoryToggle={handleCategoryToggle}
+                                    onServiceToggle={handleServiceToggle}
+                                />
                             );
                         })
                     )}
