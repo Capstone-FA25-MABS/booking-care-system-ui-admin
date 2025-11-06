@@ -63,8 +63,8 @@ export const useCurrentUserProfile = () => {
         if (currentRole === Role.DOCTOR && doctorProfile?.avatarUrl) {
             return doctorProfile.avatarUrl;
         }
-        if (currentRole === Role.STAFF && hospitalProfile?.logoUrl) {
-            return hospitalProfile.logoUrl;
+        if (currentRole === Role.STAFF && hospitalProfile?.avatarUrl) {
+            return hospitalProfile.avatarUrl;
         }
         return null;
     };

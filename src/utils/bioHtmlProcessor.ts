@@ -4,6 +4,43 @@
  */
 
 /**
+ * Strip HTML tags from text safely to prevent ReDoS attacks
+ * @param html - The HTML string to strip tags from
+ * @param maxLength - Maximum length of input to process (default: 1MB)
+ * @returns Text content without HTML tags
+ */
+export const stripHtmlTags = (html: string, maxLength: number = 1024 * 1024): string => {
+    // Limit input length to prevent ReDoS attacks
+    if (html.length > maxLength) {
+        html = html.substring(0, maxLength);
+    }
+
+    // Use DOM parser instead of regex to avoid ReDoS vulnerabilities
+    // This approach is safer and more reliable than regex-based tag removal
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        return doc.body.textContent || doc.body.innerText || '';
+    } catch {
+        // Fallback to simple string manipulation if DOM parser fails
+        // Avoid regex to prevent ReDoS vulnerabilities
+        let result = '';
+        let inTag = false;
+        for (let i = 0; i < html.length; i++) {
+            const char = html[i];
+            if (char === '<') {
+                inTag = true;
+            } else if (char === '>') {
+                inTag = false;
+            } else if (!inTag) {
+                result += char;
+            }
+        }
+        return result.trim();
+    }
+};
+
+/**
  * Normalize font sizes to 15px for all text elements
  * @param doc - DOM Document
  */
