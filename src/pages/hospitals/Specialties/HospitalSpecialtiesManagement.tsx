@@ -30,10 +30,6 @@ const HospitalSpecialtiesManagement: React.FC = () => {
             try {
                 // Load all active specialties using getAllSpecialtiesSimple (no pagination)
                 const specialtiesResponse = await getAllSpecialtiesSimple();
-                console.log('Specialties response:', specialtiesResponse);
-                console.log('Response data:', specialtiesResponse.data);
-                console.log('Response data type:', typeof specialtiesResponse.data);
-                console.log('Is array?', Array.isArray(specialtiesResponse.data));
 
                 // Handle both response structures: array directly or wrapped in data
                 let specialtiesList: Specialty[] = [];
@@ -41,31 +37,19 @@ const HospitalSpecialtiesManagement: React.FC = () => {
 
                 if (Array.isArray(responseData)) {
                     specialtiesList = responseData;
-                    console.log('Found specialties as direct array:', specialtiesList.length);
                 } else if (responseData?.items && Array.isArray(responseData.items)) {
                     specialtiesList = responseData.items;
-                    console.log('Found specialties in items:', specialtiesList.length);
                 } else if (responseData?.specialties && Array.isArray(responseData.specialties)) {
                     specialtiesList = responseData.specialties;
-                    console.log('Found specialties in specialties:', specialtiesList.length);
-                } else {
-                    console.warn('Unknown response structure:', responseData);
                 }
-
-                console.log('All specialties before filter:', specialtiesList);
-                console.log('Sample specialty:', specialtiesList[0]);
 
                 // Filter only ACTIVE specialties (or show all if status field doesn't exist)
                 const activeSpecialties = specialtiesList.filter(
                     (s: Specialty) => !s.status || s.status === 'ACTIVE'
                 );
 
-                console.log('Active specialties count:', activeSpecialties.length);
-                console.log('Active specialties:', activeSpecialties);
-
                 // If no ACTIVE specialties but we have data, show all
                 if (activeSpecialties.length === 0 && specialtiesList.length > 0) {
-                    console.log('No ACTIVE specialties found, showing all specialties');
                     setAllSpecialties(specialtiesList);
                 } else {
                     setAllSpecialties(activeSpecialties);
@@ -79,10 +63,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                             return s.specialtyId || s.id;
                         })
                         .filter(Boolean); // Remove any undefined/null values
-                    console.log('Current hospital specialty IDs:', currentSpecialtyIds);
                     setSelectedSpecialtyIds(currentSpecialtyIds);
-                } else {
-                    console.log('No hospital specialties found');
                 }
             } catch (error: any) {
                 console.error('Error loading specialties:', error);

@@ -444,7 +444,7 @@ const BasicInfoFields: React.FC<{
     </div>
 );
 
-const HospitalProfileSetting: React.FC = () => {
+const HospitalProfileSettings: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { hospitalProfile, isLoading } = useSelector((state: RootState) => state.user);
 
@@ -686,128 +686,117 @@ const HospitalProfileSetting: React.FC = () => {
         return (
             <div
                 className="d-flex justify-content-center align-items-center"
-                style={{
-                    minHeight: 'calc(100vh - 300px)',
-                    width: '100%',
-                }}
+                style={{ minHeight: '400px' }}
             >
-                <div className="text-center">
-                    <Spinner size="large" variant="primary" />
-                    <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
-                </div>
+                <Spinner size="large" variant="primary" />
             </div>
         );
     }
 
     return (
-        <div className="content">
-            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                <div className="flex-grow-1">
-                    <h4 className="fw-bold mb-0">Cập nhật thông tin bệnh viện</h4>
-                </div>
+        <>
+            <div className="card-header border-bottom px-0 mx-3">
+                <h5 className="fw-bold">Thông tin bệnh viện</h5>
             </div>
-            <div className="row">
-                <div className="col-sm-12">
-                    <form onSubmit={handleSubmit}>
-                        <div className="card mb-4">
-                            <div className={`card-body ${styles.sectionBorder}`}>
-                                <h5 className="card-title mb-4">Thông tin cơ bản</h5>
-                                <div className="row">
-                                    <AvatarSection
-                                        avatarUrl={formData.avatarUrl || ''}
-                                        avatarFile={avatarFile}
-                                        onFileChange={handleAvatarFileChange}
-                                    />
-                                    <BasicInfoFields
-                                        formData={formData}
-                                        errors={errors}
-                                        onInputChange={handleInputChange}
-                                        isEdit={true}
-                                    />
-                                </div>
-                                <div className="row">
-                                    <div className="col-12">
-                                        <CKEditor
-                                            wrapperClassName="mb-3"
-                                            label="Mô tả"
-                                            icon="file-text"
-                                            iconPrefix="feather"
-                                            required
-                                            name="description"
-                                            value={formData.description || ''}
-                                            onChange={(data) => {
-                                                const processedHtml = prepareBioForSave(data);
-                                                handleInputChange({
-                                                    target: {
-                                                        name: 'description',
-                                                        value: processedHtml,
-                                                    },
-                                                } as React.ChangeEvent<HTMLTextAreaElement>);
-                                            }}
-                                            placeholder="Mô tả về bệnh viện"
-                                            error={errors.description}
-                                        />
-                                    </div>
-                                </div>
+            <div className="card-body px-0 mx-3">
+                <form onSubmit={handleSubmit}>
+                    <div className="card mb-4">
+                        <div className={`card-body ${styles.sectionBorder}`}>
+                            <h5 className="card-title mb-4">Thông tin cơ bản</h5>
+                            <div className="row">
+                                <AvatarSection
+                                    avatarUrl={formData.avatarUrl || ''}
+                                    avatarFile={avatarFile}
+                                    onFileChange={handleAvatarFileChange}
+                                />
+                                <BasicInfoFields
+                                    formData={formData}
+                                    errors={errors}
+                                    onInputChange={handleInputChange}
+                                    isEdit={true}
+                                />
                             </div>
-                        </div>
-
-                        {/* Background Image Section */}
-                        <BackgroundImageSection
-                            backgroundUrl={formData.backgroundUrl || ''}
-                            backgroundFile={backgroundFile}
-                            onFileChange={handleBackgroundFileChange}
-                        />
-
-                        {/* Hospital Images Section */}
-                        <HospitalImagesSection
-                            images={hospitalImages}
-                            newImages={newHospitalImages}
-                            onAddImages={handleAddHospitalImages}
-                            onRemoveImage={handleRemoveHospitalImage}
-                        />
-
-                        <div className="card mb-4">
-                            <div className={`card-body ${styles.sectionBorder}`}>
-                                <div className="text-end">
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        size="md"
-                                        className="btn btn-light btn-md me-2"
-                                        onClick={() => {
-                                            // Navigate back or reset form
-                                            if (hospitalProfile) {
-                                                setFormData({
-                                                    name: hospitalProfile.name || '',
-                                                    email: hospitalProfile.email || '',
-                                                    phone: hospitalProfile.phone || '',
-                                                    address: hospitalProfile.address || '',
-                                                    description: hospitalProfile.description || '',
-                                                    avatarUrl: hospitalProfile.avatarUrl || '',
-                                                    backgroundUrl:
-                                                        hospitalProfile.backgroundUrl || '',
-                                                });
-                                                setAvatarFile(null);
-                                                setBackgroundFile(null);
-                                                setErrors({});
-                                            }
+                            <div className="row">
+                                <div className="col-12">
+                                    <CKEditor
+                                        wrapperClassName="mb-3"
+                                        label="Mô tả"
+                                        icon="file-text"
+                                        iconPrefix="feather"
+                                        required
+                                        name="description"
+                                        value={formData.description || ''}
+                                        onChange={(data) => {
+                                            const processedHtml = prepareBioForSave(data);
+                                            handleInputChange({
+                                                target: {
+                                                    name: 'description',
+                                                    value: processedHtml,
+                                                },
+                                            } as React.ChangeEvent<HTMLTextAreaElement>);
                                         }}
-                                        disabled={isSubmitting}
-                                    >
-                                        Hủy
-                                    </Button>
-                                    <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                        {renderSubmitButtonText()}
-                                    </Button>
+                                        placeholder="Mô tả về bệnh viện"
+                                        error={errors.description}
+                                    />
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    {/* Background Image Section */}
+                    <BackgroundImageSection
+                        backgroundUrl={formData.backgroundUrl || ''}
+                        backgroundFile={backgroundFile}
+                        onFileChange={handleBackgroundFileChange}
+                    />
+
+                    {/* Hospital Images Section */}
+                    <HospitalImagesSection
+                        images={hospitalImages}
+                        newImages={newHospitalImages}
+                        onAddImages={handleAddHospitalImages}
+                        onRemoveImage={handleRemoveHospitalImage}
+                    />
+
+                    <div className="card mb-4">
+                        <div className={`card-body ${styles.sectionBorder}`}>
+                            <div className="text-end">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="md"
+                                    className="btn btn-light btn-md me-2"
+                                    onClick={() => {
+                                        // Navigate back or reset form
+                                        if (hospitalProfile) {
+                                            setFormData({
+                                                name: hospitalProfile.name || '',
+                                                email: hospitalProfile.email || '',
+                                                phone: hospitalProfile.phone || '',
+                                                address: hospitalProfile.address || '',
+                                                description: hospitalProfile.description || '',
+                                                avatarUrl: hospitalProfile.avatarUrl || '',
+                                                backgroundUrl: hospitalProfile.backgroundUrl || '',
+                                            });
+                                            setAvatarFile(null);
+                                            setBackgroundFile(null);
+                                            setErrors({});
+                                        }
+                                    }}
+                                    disabled={isSubmitting}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button type="submit" variant="primary" disabled={isSubmitting}>
+                                    {renderSubmitButtonText()}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </div>
+        </>
     );
 };
 
-export default HospitalProfileSetting;
+export default HospitalProfileSettings;

@@ -30,7 +30,6 @@ const HospitalServiceTypesManagement: React.FC = () => {
             try {
                 // Load all active service types using getAllServiceTypesSimple (no pagination)
                 const serviceTypesResponse = await getAllServiceTypesSimple();
-                console.log('Service types response:', serviceTypesResponse);
 
                 // Handle both response structures: array directly or wrapped in data
                 let serviceTypesList: ServiceType[] = [];
@@ -38,47 +37,25 @@ const HospitalServiceTypesManagement: React.FC = () => {
 
                 if (Array.isArray(responseData)) {
                     serviceTypesList = responseData;
-                    console.log('Found service types as direct array:', serviceTypesList.length);
                 } else if (responseData?.items && Array.isArray(responseData.items)) {
                     serviceTypesList = responseData.items;
-                    console.log('Found service types in items:', serviceTypesList.length);
                 } else if (responseData?.serviceTypes && Array.isArray(responseData.serviceTypes)) {
                     serviceTypesList = responseData.serviceTypes;
-                    console.log('Found service types in serviceTypes:', serviceTypesList.length);
-                } else {
-                    console.warn('Unknown response structure:', responseData);
                 }
-
-                console.log('All service types before filter:', serviceTypesList);
-                console.log('Sample service type:', serviceTypesList[0]);
 
                 // Filter only ACTIVE service types (or show all if status field doesn't exist)
                 const activeServiceTypes = serviceTypesList.filter(
                     (s: ServiceType) => !s.status || s.status === 'ACTIVE'
                 );
 
-                console.log('Active service types count:', activeServiceTypes.length);
-                console.log('Active service types:', activeServiceTypes);
-
                 // If no ACTIVE service types but we have data, show all
                 if (activeServiceTypes.length === 0 && serviceTypesList.length > 0) {
-                    console.log('No ACTIVE service types found, showing all service types');
                     setAllServiceTypes(serviceTypesList);
                 } else {
                     setAllServiceTypes(activeServiceTypes);
                 }
 
                 // Load current hospital service types
-                console.log('=== Loading Hospital Service Types ===');
-                console.log(
-                    'Hospital profile full object:',
-                    JSON.stringify(hospitalProfile, null, 2)
-                );
-                console.log('Hospital profile serviceTypes:', hospitalProfile?.serviceTypes);
-                console.log('serviceTypes type:', typeof hospitalProfile?.serviceTypes);
-                console.log('serviceTypes is array:', Array.isArray(hospitalProfile?.serviceTypes));
-                console.log('serviceTypes length:', hospitalProfile?.serviceTypes?.length);
-
                 // Try multiple ways to access serviceTypes
                 const serviceTypes =
                     hospitalProfile?.serviceTypes ||
@@ -86,30 +63,16 @@ const HospitalServiceTypesManagement: React.FC = () => {
                     (hospitalProfile as any)?.service_types ||
                     [];
 
-                console.log('ServiceTypes after fallback:', serviceTypes);
-
                 if (serviceTypes && serviceTypes.length > 0) {
                     const currentServiceTypeIds = serviceTypes
                         .map((s: any) => {
                             // Handle both structures: { serviceTypeId: string } or { id: string }
                             const id = s.serviceTypeId || s.id || s.ServiceTypeId || s.Id;
-                            console.log('Mapping service type object:', s, '-> extracted id:', id);
                             return id;
                         })
                         .filter(Boolean); // Remove any undefined/null values
 
-                    console.log('Current hospital service type IDs:', currentServiceTypeIds);
-                    console.log('Setting selected service type IDs:', currentServiceTypeIds);
                     setSelectedServiceTypeIds(currentServiceTypeIds);
-                } else {
-                    console.warn('=== NO SERVICE TYPES FOUND ===');
-                    console.log('hospitalProfile exists:', !!hospitalProfile);
-                    console.log(
-                        'hospitalProfile keys:',
-                        hospitalProfile ? Object.keys(hospitalProfile) : 'null'
-                    );
-                    console.log('serviceTypes:', serviceTypes);
-                    console.log('serviceTypes array:', hospitalProfile?.serviceTypes);
                 }
             } catch (error: any) {
                 console.error('Error loading service types:', error);

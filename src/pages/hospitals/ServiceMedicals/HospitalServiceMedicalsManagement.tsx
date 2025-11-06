@@ -7,108 +7,137 @@ import { updateHospitalProfile, fetchProfileByRole } from '@/store/slices/userSl
 import { Role } from '@/enums/common.enums';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
-import axiosInstance from '@/configs/axios.config';
+import { HospitalServiceMedicalService } from '@/services/hospitalServiceMedical.service';
+import { ServiceCategory, Service } from '@/types/hospitalServiceMedical.types';
 import styles from './HospitalServiceMedicalsManagement.module.scss';
-
-interface ServiceMedicalCategory {
-    id: string;
-    name: string;
-    description?: string;
-    imageUrl?: string;
-    status?: string;
-}
 
 const HospitalServiceMedicalsManagement: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { profile, hospitalProfile } = useCurrentUserProfile();
+    const { profile, hospitalProfile, role } = useCurrentUserProfile();
     const hospitalId = hospitalProfile?.id || (profile as any)?.id;
 
+    // Auto-fetch profile if not loaded
+    useEffect(() => {
+        if (role === Role.STAFF && !hospitalProfile) {
+            dispatch(fetchProfileByRole({ role }));
+        }
+    }, [role, hospitalProfile, dispatch]);
+
     // State
-    const [allServiceMedicals, setAllServiceMedicals] = useState<ServiceMedicalCategory[]>([]);
-    const [selectedServiceMedicalIds, setSelectedServiceMedicalIds] = useState<string[]>([]);
+    const [categories, setCategories] = useState<ServiceCategory[]>([]);
+    const [servicesByCategory, setServicesByCategory] = useState<Map<string, Service[]>>(new Map());
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+    const [initialServiceIds, setInitialServiceIds] = useState<string[]>([]); // Store initial selected IDs
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-    // Load all service medicals and current hospital service medicals
+    // Initialize all categories as expanded by default
+    useEffect(() => {
+        if (categories.length > 0) {
+            setExpandedCategories(new Set(categories.map((cat) => cat.id)));
+        }
+    }, [categories]);
+
+    // Load all service categories and services
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                // Load all active service medical categories
-                const response = await axiosInstance.get('/service-categories/active');
-                console.log('Service medicals response:', response);
+                // Load all active service categories
+                const categoriesResponse =
+                    await HospitalServiceMedicalService.getActiveCategories();
+                const categoriesList = categoriesResponse.data || [];
 
-                let serviceMedicalsList: ServiceMedicalCategory[] = [];
-                const responseData = response.data as any;
-
-                if (Array.isArray(responseData)) {
-                    serviceMedicalsList = responseData;
-                    console.log(
-                        'Found service medicals as direct array:',
-                        serviceMedicalsList.length
-                    );
-                } else if (responseData?.data && Array.isArray(responseData.data)) {
-                    serviceMedicalsList = responseData.data;
-                    console.log('Found service medicals in data:', serviceMedicalsList.length);
-                } else if (responseData?.categories && Array.isArray(responseData.categories)) {
-                    serviceMedicalsList = responseData.categories;
-                    console.log(
-                        'Found service medicals in categories:',
-                        serviceMedicalsList.length
-                    );
-                } else {
-                    console.warn('Unknown response structure:', responseData);
-                }
-
-                console.log('All service medicals before filter:', serviceMedicalsList);
-
-                // Filter only ACTIVE service medicals (or show all if status field doesn't exist)
-                const activeServiceMedicals = serviceMedicalsList.filter(
-                    (s: ServiceMedicalCategory) => !s.status || s.status === 'ACTIVE'
+                // Filter only ACTIVE categories
+                const activeCategories = categoriesList.filter(
+                    (cat) => !cat.status || cat.status === 'ACTIVE'
                 );
 
-                console.log('Active service medicals count:', activeServiceMedicals.length);
+                // Load all active services
+                const servicesResponse = await HospitalServiceMedicalService.getActiveServices();
+                const servicesList = servicesResponse.data || [];
 
-                // If no ACTIVE service medicals but we have data, show all
-                if (activeServiceMedicals.length === 0 && serviceMedicalsList.length > 0) {
-                    console.log('No ACTIVE service medicals found, showing all service medicals');
-                    setAllServiceMedicals(serviceMedicalsList);
-                } else {
-                    setAllServiceMedicals(activeServiceMedicals);
+                // Filter only ACTIVE services
+                const activeServices = servicesList.filter(
+                    (s) => !s.status || s.status === 'ACTIVE'
+                );
+
+                // Get unique category IDs from services
+                const categoryIdsFromServices = new Set<string>();
+                activeServices.forEach((service) => {
+                    const categoryId = service.serviceCategoryId || service.serviceCategory?.id;
+                    if (categoryId) {
+                        categoryIdsFromServices.add(categoryId);
+                    }
+                });
+
+                // Filter categories to only include those that have services
+                const categoriesWithServices = activeCategories.filter((cat) =>
+                    categoryIdsFromServices.has(cat.id)
+                );
+
+                // Combine: show parent categories if they have children with services, otherwise show the category itself
+                const categoriesToShow = new Map<string, ServiceCategory>();
+
+                categoriesWithServices.forEach((cat) => {
+                    if (cat.parentId) {
+                        // This is a child category, find its parent
+                        const parent = activeCategories.find((c) => c.id === cat.parentId);
+                        if (parent) {
+                            // Show parent category
+                            categoriesToShow.set(parent.id, parent);
+                        } else {
+                            // No parent found, show the category itself
+                            categoriesToShow.set(cat.id, cat);
+                        }
+                    } else {
+                        // This is a parent category, show it
+                        categoriesToShow.set(cat.id, cat);
+                    }
+                });
+
+                const finalCategories = Array.from(categoriesToShow.values());
+                setCategories(finalCategories);
+
+                // Group services by categoryId (use parent category if service belongs to child category)
+                const servicesMap = new Map<string, Service[]>();
+                activeServices.forEach((service) => {
+                    let categoryId = service.serviceCategoryId || service.serviceCategory?.id;
+                    if (categoryId) {
+                        // Find if this category has a parent
+                        const category = activeCategories.find((c) => c.id === categoryId);
+                        if (category?.parentId) {
+                            // Use parent category ID for grouping
+                            categoryId = category.parentId;
+                        }
+
+                        if (!servicesMap.has(categoryId)) {
+                            servicesMap.set(categoryId, []);
+                        }
+                        servicesMap.get(categoryId)!.push(service);
+                    }
+                });
+
+                setServicesByCategory(servicesMap);
+
+                // Load current hospital services - check via hospitalProfile.serviceMedicals
+                // But also check services with hospitalId = current hospitalId as fallback
+                const hospitalProfileServiceIds: string[] = [];
+                if (hospitalProfile?.serviceMedicals) {
+                    hospitalProfile.serviceMedicals.forEach((sm: any) => {
+                        const id = sm.serviceMedicalId || sm.id;
+                        if (id) hospitalProfileServiceIds.push(id);
+                    });
                 }
 
-                // Load current hospital service medicals
-                console.log('=== Loading Hospital Service Medicals ===');
-                console.log('Hospital profile serviceMedicals:', hospitalProfile?.serviceMedicals);
-
-                const serviceMedicals =
-                    hospitalProfile?.serviceMedicals ||
-                    (hospitalProfile as any)?.ServiceMedicals ||
-                    (hospitalProfile as any)?.service_medicals ||
-                    [];
-
-                console.log('ServiceMedicals after fallback:', serviceMedicals);
-
-                if (serviceMedicals && serviceMedicals.length > 0) {
-                    const currentServiceMedicalIds = serviceMedicals
-                        .map((s: any) => {
-                            const id = s.serviceMedicalId || s.id || s.ServiceMedicalId || s.Id;
-                            console.log(
-                                'Mapping service medical object:',
-                                s,
-                                '-> extracted id:',
-                                id
-                            );
-                            return id;
-                        })
-                        .filter(Boolean);
-
-                    console.log('Current hospital service medical IDs:', currentServiceMedicalIds);
-                    setSelectedServiceMedicalIds(currentServiceMedicalIds);
-                } else {
-                    console.warn('=== NO SERVICE MEDICALS FOUND ===');
-                }
+                const hospitalServices = activeServices.filter(
+                    (s) => s.hospitalId === hospitalId || hospitalProfileServiceIds.includes(s.id)
+                );
+                const currentServiceIds = hospitalServices.map((s) => s.id);
+                setSelectedServiceIds(currentServiceIds);
+                setInitialServiceIds(currentServiceIds); // Store initial state for comparison
             } catch (error: any) {
                 console.error('Error loading service medicals:', error);
                 toast.error(
@@ -120,21 +149,44 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
         };
 
         loadData();
-    }, [hospitalProfile]);
+    }, [hospitalProfile, hospitalId]);
 
-    // Filter service medicals by search term
-    const filteredServiceMedicals = allServiceMedicals.filter((serviceMedical) =>
-        serviceMedical.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter categories and services by search term
+    // If search term is empty, show all categories that have services
+    // If search term exists, filter categories that match or have matching services
+    const filteredCategories = searchTerm
+        ? categories.filter((category) => {
+              const categoryServices = servicesByCategory.get(category.id) || [];
+              return (
+                  category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  categoryServices.some((service) =>
+                      service.name.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+              );
+          })
+        : categories; // Show all categories when no search term
 
-    // Handle service medical toggle
-    const handleServiceMedicalToggle = (serviceMedicalId: string) => {
-        setSelectedServiceMedicalIds((prev) => {
-            if (prev.includes(serviceMedicalId)) {
-                return prev.filter((id) => id !== serviceMedicalId);
+    // Handle service toggle
+    const handleServiceToggle = (serviceId: string) => {
+        setSelectedServiceIds((prev) => {
+            if (prev.includes(serviceId)) {
+                return prev.filter((id) => id !== serviceId);
             } else {
-                return [...prev, serviceMedicalId];
+                return [...prev, serviceId];
             }
+        });
+    };
+
+    // Handle category expand/collapse
+    const handleCategoryToggle = (categoryId: string) => {
+        setExpandedCategories((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(categoryId)) {
+                newSet.delete(categoryId);
+            } else {
+                newSet.add(categoryId);
+            }
+            return newSet;
         });
     };
 
@@ -160,13 +212,16 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
                         name: hospitalProfile.name,
                         address: hospitalProfile.address || '',
                         description: hospitalProfile.description || '',
-                        serviceMedicalIds: selectedServiceMedicalIds,
+                        serviceMedicalIds: selectedServiceIds, // Save ServiceIds, not CategoryIds
                     },
                 })
             ).unwrap();
 
             // Reload hospital profile to get updated data
             await dispatch(fetchProfileByRole({ role: Role.STAFF }));
+
+            // Update initial state to match current selection
+            setInitialServiceIds(selectedServiceIds);
 
             toast.success('Cập nhật dịch vụ bệnh viện thành công!');
         } catch (error: any) {
@@ -179,15 +234,21 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
         }
     };
 
-    // Check if has changes
-    const currentServiceMedicalIds =
-        hospitalProfile?.serviceMedicals
-            ?.map((s: any) => s.serviceMedicalId || s.id)
-            .filter(Boolean) || [];
-    const hasChanges =
-        selectedServiceMedicalIds.length !== currentServiceMedicalIds.length ||
-        selectedServiceMedicalIds.some((id) => !currentServiceMedicalIds.includes(id)) ||
-        currentServiceMedicalIds.some((id) => !selectedServiceMedicalIds.includes(id));
+    // Check if there are any changes by comparing with initial state
+    const hasChanges = (() => {
+        if (initialServiceIds.length === 0 && selectedServiceIds.length === 0) {
+            return false; // No changes if both are empty
+        }
+        if (selectedServiceIds.length !== initialServiceIds.length) {
+            return true; // Different lengths means changes
+        }
+        // Check if all selected IDs are in initial and vice versa
+        const hasNewSelection = selectedServiceIds.some((id) => !initialServiceIds.includes(id));
+        const hasRemovedSelection = initialServiceIds.some(
+            (id) => !selectedServiceIds.includes(id)
+        );
+        return hasNewSelection || hasRemovedSelection;
+    })();
 
     if (isLoading) {
         return (
@@ -232,57 +293,154 @@ const HospitalServiceMedicalsManagement: React.FC = () => {
                     {/* Selected count */}
                     <div className={styles.selectedCount}>
                         <span className="badge badge-soft-primary fs-13 fw-medium">
-                            Đã chọn: {selectedServiceMedicalIds.length} /{' '}
-                            {allServiceMedicals.length} dịch vụ
+                            Đã chọn: {selectedServiceIds.length} /{' '}
+                            {Array.from(servicesByCategory.values()).flat().length} dịch vụ
                         </span>
                     </div>
                 </div>
 
-                {/* Service medicals grid */}
-                <div className={styles.serviceMedicalsGrid}>
-                    {filteredServiceMedicals.length === 0 ? (
-                        <div className="text-center py-5">
+                {/* Categories with Services */}
+                <div className={styles.categoriesContainer}>
+                    {filteredCategories.length === 0 ? (
+                        <div className={styles.emptyState}>
                             <p className="text-muted">Không tìm thấy dịch vụ bệnh viện nào</p>
                         </div>
                     ) : (
-                        filteredServiceMedicals.map((serviceMedical) => {
-                            const isSelected = selectedServiceMedicalIds.includes(
-                                serviceMedical.id
+                        filteredCategories.map((category) => {
+                            const categoryServices = servicesByCategory.get(category.id) || [];
+                            const filteredCategoryServices = categoryServices.filter((service) =>
+                                searchTerm
+                                    ? service.name.toLowerCase().includes(searchTerm.toLowerCase())
+                                    : true
                             );
+
+                            // Always show category, even if no services (when no search term)
+                            // Only hide when search term exists and no matches
+                            if (filteredCategoryServices.length === 0 && searchTerm) {
+                                return null; // Hide category if no matching services when searching
+                            }
+
+                            // Calculate selected count for this category
+                            const selectedCount = filteredCategoryServices.filter((service) =>
+                                selectedServiceIds.includes(service.id)
+                            ).length;
+                            const totalCount = filteredCategoryServices.length;
+                            const isExpanded = expandedCategories.has(category.id);
+
                             return (
-                                <div
-                                    key={serviceMedical.id}
-                                    className={`${styles.serviceMedicalCard} ${isSelected ? styles.selected : ''}`}
-                                    onClick={() => handleServiceMedicalToggle(serviceMedical.id)}
-                                >
-                                    <div className={styles.serviceMedicalCardContent}>
-                                        <div className={styles.checkboxWrapper}>
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() =>
-                                                    handleServiceMedicalToggle(serviceMedical.id)
-                                                }
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
+                                <div key={category.id} className={styles.categorySection}>
+                                    <div
+                                        className={styles.categoryHeader}
+                                        onClick={() => handleCategoryToggle(category.id)}
+                                    >
+                                        <div className={styles.categoryInfo}>
+                                            {category.imageUrl && (
+                                                <img
+                                                    src={category.imageUrl}
+                                                    alt={category.name}
+                                                    className={styles.categoryImage}
+                                                    onError={(e) => {
+                                                        (
+                                                            e.target as HTMLImageElement
+                                                        ).style.display = 'none';
+                                                    }}
+                                                />
+                                            )}
+                                            <div>
+                                                <h5 className={styles.categoryName}>
+                                                    {category.name}
+                                                </h5>
+                                                {category.description && (
+                                                    <p className={styles.categoryDescription}>
+                                                        {category.description}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className={styles.serviceMedicalImage}>
-                                            <img
-                                                src={
-                                                    serviceMedical.imageUrl ||
-                                                    'https://via.placeholder.com/80x80?text=No+Image'
-                                                }
-                                                alt={serviceMedical.name}
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src =
-                                                        'https://via.placeholder.com/80x80?text=No+Image';
-                                                }}
-                                            />
-                                        </div>
-                                        <div className={styles.serviceMedicalName}>
-                                            {serviceMedical.name}
+                                        <div className={styles.categoryActions}>
+                                            <span className={styles.categoryServiceCount}>
+                                                Đã chọn {selectedCount}/{totalCount} dịch vụ
+                                            </span>
+                                            <i
+                                                className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} ${styles.expandIcon}`}
+                                            ></i>
                                         </div>
                                     </div>
+
+                                    {/* Services grid */}
+                                    {isExpanded && (
+                                        <div className={styles.servicesGrid}>
+                                            {filteredCategoryServices.length === 0 ? (
+                                                <div className={styles.emptyCategoryState}>
+                                                    <p className="text-muted">
+                                                        Không có dịch vụ nào
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                filteredCategoryServices.map((service) => {
+                                                    const isSelected = selectedServiceIds.includes(
+                                                        service.id
+                                                    );
+                                                    return (
+                                                        <div
+                                                            key={service.id}
+                                                            className={`${styles.serviceCard} ${isSelected ? styles.selected : ''}`}
+                                                            onClick={() =>
+                                                                handleServiceToggle(service.id)
+                                                            }
+                                                        >
+                                                            <div
+                                                                className={
+                                                                    styles.serviceCardContent
+                                                                }
+                                                            >
+                                                                <div
+                                                                    className={
+                                                                        styles.checkboxWrapper
+                                                                    }
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={isSelected}
+                                                                        onChange={() =>
+                                                                            handleServiceToggle(
+                                                                                service.id
+                                                                            )
+                                                                        }
+                                                                        onClick={(e) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div
+                                                                    className={styles.serviceImage}
+                                                                >
+                                                                    <img
+                                                                        src={
+                                                                            service.imageUrl ||
+                                                                            service.serviceCategory
+                                                                                ?.imageUrl ||
+                                                                            'https://via.placeholder.com/80x80?text=No+Image'
+                                                                        }
+                                                                        alt={service.name}
+                                                                        onError={(e) => {
+                                                                            (
+                                                                                e.target as HTMLImageElement
+                                                                            ).src =
+                                                                                'https://via.placeholder.com/80x80?text=No+Image';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className={styles.serviceName}>
+                                                                    {service.name}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })
