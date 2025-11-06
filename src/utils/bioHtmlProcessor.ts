@@ -22,9 +22,21 @@ export const stripHtmlTags = (html: string, maxLength: number = 1024 * 1024): st
         const doc = parser.parseFromString(html, 'text/html');
         return doc.body.textContent || doc.body.innerText || '';
     } catch {
-        // Fallback to simple regex with non-greedy matching if DOM parser fails
-        // Using non-greedy quantifier (+?) to minimize backtracking
-        return html.replace(/<[^>]+?>/g, '').trim();
+        // Fallback to simple string manipulation if DOM parser fails
+        // Avoid regex to prevent ReDoS vulnerabilities
+        let result = '';
+        let inTag = false;
+        for (let i = 0; i < html.length; i++) {
+            const char = html[i];
+            if (char === '<') {
+                inTag = true;
+            } else if (char === '>') {
+                inTag = false;
+            } else if (!inTag) {
+                result += char;
+            }
+        }
+        return result.trim();
     }
 };
 
