@@ -201,11 +201,22 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                     ) : (
                         filteredSpecialties.map((specialty) => {
                             const isSelected = selectedSpecialtyIds.includes(specialty.id);
+                            const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleSpecialtyToggle(specialty.id);
+                                }
+                            };
                             return (
                                 <div
                                     key={specialty.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
+                                    aria-pressed={isSelected}
                                     className={`${styles.specialtyCard} ${isSelected ? styles.selected : ''}`}
                                     onClick={() => handleSpecialtyToggle(specialty.id)}
+                                    onKeyDown={handleKeyDown}
                                 >
                                     <div className={styles.specialtyCardContent}>
                                         <div className={styles.checkboxWrapper}>
@@ -214,6 +225,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                                                 checked={isSelected}
                                                 onChange={() => handleSpecialtyToggle(specialty.id)}
                                                 onClick={(e) => e.stopPropagation()}
+                                                aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
                                             />
                                         </div>
                                         <div className={styles.specialtyImage}>

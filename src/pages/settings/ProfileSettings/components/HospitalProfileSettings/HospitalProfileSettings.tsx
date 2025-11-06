@@ -40,14 +40,14 @@ const HospitalImagesSection: React.FC<{
                         />
 
                         {/* Existing Images */}
-                        {images && images.length > 0 && (
+                        {images?.length > 0 && (
                             <div className="row mb-3 mt-4">
                                 {images.map((image) => (
                                     <div key={image.id} className="col-md-3 mb-3">
                                         <div className="position-relative">
                                             <img
                                                 src={image.imageUrl}
-                                                alt="Hospital image"
+                                                alt="Bệnh viện"
                                                 className="img-fluid rounded"
                                                 style={{
                                                     width: '100%',
@@ -65,9 +65,10 @@ const HospitalImagesSection: React.FC<{
                                                     height: '32px',
                                                     padding: 0,
                                                 }}
+                                                aria-label="Xóa ảnh"
                                                 title="Xóa ảnh"
                                             >
-                                                <X size={18} />
+                                                <X size={18} aria-hidden="true" />
                                             </button>
                                         </div>
                                     </div>
@@ -77,7 +78,7 @@ const HospitalImagesSection: React.FC<{
 
                         {/* Note: New images preview is handled by CustomFileInput component */}
 
-                        {(!images || images.length === 0) && newImages.length === 0 && (
+                        {!images?.length && newImages.length === 0 && (
                             <p className="text-muted text-center mt-3">
                                 Chưa có ảnh nào. Hãy thêm ảnh để hiển thị.
                             </p>
@@ -126,7 +127,7 @@ const BackgroundImageSection: React.FC<{
 
         const src = getBackgroundSrc();
         if (src) {
-            return <img src={src} alt="Background" className={styles.backgroundImage} />;
+            return <img src={src} alt="Nền bệnh viện" className={styles.backgroundImage} />;
         }
 
         return (
@@ -145,6 +146,8 @@ const BackgroundImageSection: React.FC<{
                     <div className="col-12">
                         <div className="position-relative">
                             <div
+                                role="region"
+                                aria-label="Khu vực kéo thả ảnh nền"
                                 className={`bg-light ${styles.backgroundContainer} ${isDragOver ? styles.dragOver : ''}`}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
@@ -154,9 +157,13 @@ const BackgroundImageSection: React.FC<{
 
                                 <div
                                     className={`${styles.backgroundUploadOverlay} ${isDragOver ? styles.overlayVisible : ''}`}
+                                    aria-hidden="true"
                                 >
                                     <div className="d-flex flex-column align-items-center">
-                                        <i className="feather-upload fs-2 text-white mb-2"></i>
+                                        <i
+                                            className="feather-upload fs-2 text-white mb-2"
+                                            aria-hidden="true"
+                                        ></i>
                                         <small className="text-white">Thả ảnh vào đây</small>
                                     </div>
                                 </div>
@@ -309,7 +316,7 @@ const HospitalProfileSettings: React.FC = () => {
     const loadHospitalProfile = async () => {
         try {
             const response = await HospitalService.getHospitalProfilesByAccountId();
-            if (response.data && response.data.length > 0) {
+            if (response.data?.length > 0) {
                 dispatch({ type: 'user/setHospitalProfile', payload: response.data[0] });
             }
         } catch (error: any) {
@@ -333,13 +340,13 @@ const HospitalProfileSettings: React.FC = () => {
     };
 
     const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
+        if (e.target.files?.[0]) {
             setAvatarFile(e.target.files[0]);
         }
     };
 
     const handleBackgroundFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
+        if (e.target.files?.[0]) {
             setBackgroundFile(e.target.files[0]);
         }
     };
@@ -355,15 +362,10 @@ const HospitalProfileSettings: React.FC = () => {
         setImagesToDelete((prev) => [...prev, id]);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!hospitalProfile?.id) {
-            toast.error('Không tìm thấy thông tin bệnh viện');
-            return;
-        }
-
-        // Validate required fields
+    // Validate form data
+    const validateForm = (): Partial<Record<keyof UpdateHospitalRequest, string>> | null => {
         const newErrors: Partial<Record<keyof UpdateHospitalRequest, string>> = {};
+
         if (!formData.name?.trim()) {
             newErrors.name = 'Tên bệnh viện là bắt buộc! Vui lòng nhập tên bệnh viện';
         }
@@ -371,113 +373,138 @@ const HospitalProfileSettings: React.FC = () => {
             newErrors.address = 'Địa chỉ là bắt buộc! Vui lòng nhập địa chỉ';
         }
 
-        // Validate description (strip HTML tags and check if there's actual content)
         const descriptionText = formData.description ? stripHtmlTags(formData.description) : '';
         if (!descriptionText) {
             newErrors.description = 'Mô tả là bắt buộc! Vui lòng nhập mô tả';
         }
 
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
+        return Object.keys(newErrors).length > 0 ? newErrors : null;
+    };
+
+    // Delete hospital images
+    const deleteHospitalImages = async (hospitalId: string): Promise<void> => {
+        if (imagesToDelete.length === 0) return;
+
+        for (const imageId of imagesToDelete) {
+            try {
+                await HospitalService.deleteHospitalImage(hospitalId, imageId);
+            } catch (error: any) {
+                console.error(`Failed to delete image ${imageId}:`, error);
+            }
+        }
+    };
+
+    // Upload new hospital images
+    const uploadNewHospitalImages = async (
+        hospitalId: string
+    ): Promise<Array<{ id: string; imageUrl: string }>> => {
+        if (newHospitalImages.length === 0) return [];
+
+        try {
+            const uploadResponse = await HospitalService.uploadHospitalImages(
+                hospitalId,
+                newHospitalImages
+            );
+            if (uploadResponse.data?.Images) {
+                const uploadedImages = uploadResponse.data.Images;
+                setHospitalImages((prev) => [...prev, ...uploadedImages]);
+                setNewHospitalImages([]);
+                return uploadedImages;
+            }
+        } catch (error: any) {
+            console.error('Failed to upload hospital images:', error);
+            toast.warning('Một số ảnh không thể upload. Vui lòng thử lại.');
+        }
+        return [];
+    };
+
+    // Update hospital profile with files
+    const updateProfileWithFiles = async (hospitalId: string): Promise<HospitalProfile | null> => {
+        if (avatarFile && backgroundFile) {
+            const response = await HospitalService.updateHospitalProfileWithFiles(
+                hospitalId,
+                formData,
+                avatarFile,
+                backgroundFile
+            );
+            setAvatarFile(null);
+            setBackgroundFile(null);
+            return response.data;
+        }
+
+        if (avatarFile) {
+            const response = await HospitalService.updateHospitalProfileWithAvatar(
+                hospitalId,
+                formData,
+                avatarFile
+            );
+            setAvatarFile(null);
+            return response.data;
+        }
+
+        if (backgroundFile) {
+            const response = await HospitalService.updateHospitalProfileWithBackground(
+                hospitalId,
+                formData,
+                backgroundFile
+            );
+            setBackgroundFile(null);
+            return response.data;
+        }
+
+        return await dispatch(
+            updateHospitalProfile({
+                hospitalId,
+                updateData: formData,
+            })
+        ).unwrap();
+    };
+
+    // Update Redux store with final profile data
+    const updateReduxProfile = (
+        updatedProfile: HospitalProfile | null,
+        uploadedImages: Array<{ id: string; imageUrl: string }>
+    ): void => {
+        if (!updatedProfile) {
+            loadHospitalProfile();
+            return;
+        }
+
+        const finalProfile = {
+            ...updatedProfile,
+            images:
+                uploadedImages.length > 0 || imagesToDelete.length > 0
+                    ? hospitalImages
+                          .filter((img) => !imagesToDelete.includes(img.id))
+                          .concat(uploadedImages)
+                    : updatedProfile?.images,
+        };
+        dispatch(setHospitalProfile(finalProfile));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!hospitalProfile?.id) {
+            toast.error('Không tìm thấy thông tin bệnh viện');
+            return;
+        }
+
+        const validationErrors = validateForm();
+        if (validationErrors) {
+            setErrors(validationErrors);
             return;
         }
 
         setIsSubmitting(true);
         try {
-            // Step 1: Delete images if needed
-            if (imagesToDelete.length > 0) {
-                for (const imageId of imagesToDelete) {
-                    try {
-                        await HospitalService.deleteHospitalImage(hospitalProfile.id, imageId);
-                    } catch (error: any) {
-                        console.error(`Failed to delete image ${imageId}:`, error);
-                        // Continue with other operations
-                    }
-                }
-            }
-
-            // Step 2: Upload new hospital images if any
-            let uploadedImages: Array<{ id: string; imageUrl: string }> = [];
-            if (newHospitalImages.length > 0) {
-                try {
-                    const uploadResponse = await HospitalService.uploadHospitalImages(
-                        hospitalProfile.id,
-                        newHospitalImages
-                    );
-                    if (uploadResponse.data?.Images) {
-                        uploadedImages = uploadResponse.data.Images;
-                        setHospitalImages((prev) => [...prev, ...uploadedImages]);
-                        setNewHospitalImages([]);
-                    }
-                } catch (error: any) {
-                    console.error('Failed to upload hospital images:', error);
-                    toast.warning('Một số ảnh không thể upload. Vui lòng thử lại.');
-                }
-            }
-
-            // Step 3: Update profile with avatar/background if needed
-            let updatedProfile: HospitalProfile | null = null;
-            if (avatarFile && backgroundFile) {
-                // Upload both avatar and background together
-                const response = await HospitalService.updateHospitalProfileWithFiles(
-                    hospitalProfile.id,
-                    formData,
-                    avatarFile,
-                    backgroundFile
-                );
-                updatedProfile = response.data;
-                setAvatarFile(null);
-                setBackgroundFile(null);
-            } else if (avatarFile) {
-                // Upload avatar and update profile
-                const response = await HospitalService.updateHospitalProfileWithAvatar(
-                    hospitalProfile.id,
-                    formData,
-                    avatarFile
-                );
-                updatedProfile = response.data;
-                setAvatarFile(null);
-            } else if (backgroundFile) {
-                // Upload background and update profile
-                const response = await HospitalService.updateHospitalProfileWithBackground(
-                    hospitalProfile.id,
-                    formData,
-                    backgroundFile
-                );
-                updatedProfile = response.data;
-                setBackgroundFile(null);
-            } else {
-                // Just update profile without file upload
-                updatedProfile = await dispatch(
-                    updateHospitalProfile({
-                        hospitalId: hospitalProfile.id,
-                        updateData: formData,
-                    })
-                ).unwrap();
-            }
-
-            // Update Redux store with latest profile data
-            if (updatedProfile) {
-                // Update images in profile if they were modified
-                const finalProfile = {
-                    ...updatedProfile,
-                    images:
-                        uploadedImages.length > 0 || imagesToDelete.length > 0
-                            ? hospitalImages
-                                  .filter((img) => !imagesToDelete.includes(img.id))
-                                  .concat(uploadedImages)
-                            : updatedProfile.images,
-                };
-                dispatch(setHospitalProfile(finalProfile));
-            } else {
-                // Fallback: reload profile if updatedProfile is null
-                await loadHospitalProfile();
-            }
+            await deleteHospitalImages(hospitalProfile.id);
+            const uploadedImages = await uploadNewHospitalImages(hospitalProfile.id);
+            const updatedProfile = await updateProfileWithFiles(hospitalProfile.id);
+            updateReduxProfile(updatedProfile, uploadedImages);
 
             toast.success('Cập nhật thông tin bệnh viện thành công!');
-            // Clear all file states after successful update
             setImagesToDelete([]);
-            setNewHospitalImages([]); // Clear uploaded files from CustomFileInput
+            setNewHospitalImages([]);
         } catch (error: any) {
             toast.error(error.message || 'Không thể cập nhật thông tin bệnh viện');
         } finally {

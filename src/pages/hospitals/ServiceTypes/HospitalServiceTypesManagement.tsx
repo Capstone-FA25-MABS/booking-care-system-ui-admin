@@ -211,11 +211,22 @@ const HospitalServiceTypesManagement: React.FC = () => {
                     ) : (
                         filteredServiceTypes.map((serviceType) => {
                             const isSelected = selectedServiceTypeIds.includes(serviceType.id);
+                            const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleServiceTypeToggle(serviceType.id);
+                                }
+                            };
                             return (
                                 <div
                                     key={serviceType.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${serviceType.name}`}
+                                    aria-pressed={isSelected}
                                     className={`${styles.serviceTypeCard} ${isSelected ? styles.selected : ''}`}
                                     onClick={() => handleServiceTypeToggle(serviceType.id)}
+                                    onKeyDown={handleKeyDown}
                                 >
                                     <div className={styles.serviceTypeCardContent}>
                                         <div className={styles.checkboxWrapper}>
@@ -226,6 +237,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                                                     handleServiceTypeToggle(serviceType.id)
                                                 }
                                                 onClick={(e) => e.stopPropagation()}
+                                                aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${serviceType.name}`}
                                             />
                                         </div>
                                         <div className={styles.serviceTypeImage}>

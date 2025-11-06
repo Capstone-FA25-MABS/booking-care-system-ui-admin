@@ -15,9 +15,17 @@ export const stripHtmlTags = (html: string, maxLength: number = 1024 * 1024): st
         html = html.substring(0, maxLength);
     }
 
-    // Use a more efficient regex that avoids excessive backtracking
-    // Using + instead of * ensures at least one character, reducing backtracking
-    return html.replace(/<[^>]+>/g, '').trim();
+    // Use DOM parser instead of regex to avoid ReDoS vulnerabilities
+    // This approach is safer and more reliable than regex-based tag removal
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        return doc.body.textContent || doc.body.innerText || '';
+    } catch {
+        // Fallback to simple regex with non-greedy matching if DOM parser fails
+        // Using non-greedy quantifier (+?) to minimize backtracking
+        return html.replace(/<[^>]+?>/g, '').trim();
+    }
 };
 
 /**

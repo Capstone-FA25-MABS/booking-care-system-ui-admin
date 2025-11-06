@@ -147,6 +147,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onToggle
         onToggle(service.id);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle(service.id);
+        }
+    };
+
     const imageUrl =
         service.imageUrl ||
         service.serviceCategory?.imageUrl ||
@@ -154,8 +161,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onToggle
 
     return (
         <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${service.name}`}
+            aria-pressed={isSelected}
             className={`${styles.serviceCard} ${isSelected ? styles.selected : ''}`}
             onClick={handleCardClick}
+            onKeyDown={handleKeyDown}
         >
             <div className={styles.serviceCardContent}>
                 <div className={styles.checkboxWrapper}>
@@ -164,6 +176,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onToggle
                         checked={isSelected}
                         onChange={handleCheckboxChange}
                         onClick={handleCheckboxClick}
+                        aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${service.name}`}
                     />
                 </div>
                 <div className={styles.serviceImage}>
@@ -213,13 +226,28 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         onCategoryToggle(category.id);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onCategoryToggle(category.id);
+        }
+    };
+
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.style.display = 'none';
     };
 
     return (
         <div className={styles.categorySection}>
-            <div className={styles.categoryHeader} onClick={handleCategoryClick}>
+            <div
+                role="button"
+                tabIndex={0}
+                aria-label={`${isExpanded ? 'Thu gọn' : 'Mở rộng'} danh mục ${category.name}`}
+                aria-expanded={isExpanded}
+                className={styles.categoryHeader}
+                onClick={handleCategoryClick}
+                onKeyDown={handleKeyDown}
+            >
                 <div className={styles.categoryInfo}>
                     {category.imageUrl && (
                         <img
@@ -242,6 +270,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                     </span>
                     <i
                         className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} ${styles.expandIcon}`}
+                        aria-hidden="true"
                     ></i>
                 </div>
             </div>

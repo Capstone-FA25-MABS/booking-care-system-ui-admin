@@ -89,10 +89,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
         return (
             <div className="d-flex flex-column align-items-center">
-                <i className={`${iconClassName} fs-1 text-muted mb-2`}></i>
+                <i className={`${iconClassName} fs-1 text-muted mb-2`} aria-hidden="true"></i>
                 <small className="text-muted">Chọn ảnh</small>
             </div>
         );
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const fileInput = document.getElementById(id);
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
     };
 
     return (
@@ -100,20 +110,28 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             <div className="text-center">
                 <div className="position-relative d-inline-block">
                     <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label={placeholderText}
                         className={`bg-light rounded-circle d-flex align-items-center justify-content-center ${styles.avatarContainer} ${isDragOver ? styles.dragOver : ''}`}
                         style={{ width: '140px', height: '140px' }}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
+                        onKeyDown={handleKeyDown}
                     >
                         {renderAvatarContent()}
 
                         {/* Upload overlay */}
                         <div
                             className={`${styles.uploadOverlay} ${isDragOver ? styles.overlayVisible : ''}`}
+                            aria-hidden="true"
                         >
                             <div className="d-flex flex-column align-items-center">
-                                <i className="feather-upload fs-2 text-white mb-2"></i>
+                                <i
+                                    className="feather-upload fs-2 text-white mb-2"
+                                    aria-hidden="true"
+                                ></i>
                                 <small className="text-white">Thả ảnh vào đây</small>
                             </div>
                         </div>
@@ -123,6 +141,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
                     {showBadge && (
                         <div
                             className={`${styles.badgeIcon} ${isUploading ? styles.badgeIconDisabled : ''}`}
+                            aria-hidden="true"
                         >
                             <img
                                 src={badgeIconSrc}
@@ -139,12 +158,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
                         id={id}
                         onChange={handleFileChange}
                         className="d-none"
+                        aria-label={placeholderText}
                     />
                     <label
                         htmlFor={id}
                         className={`position-absolute top-0 start-0 w-100 h-100 ${styles.uploadLabel}`}
                         aria-label={placeholderText}
-                    ></label>
+                    >
+                        <span className="visually-hidden">{placeholderText}</span>
+                    </label>
                 </div>
 
                 <div className="mt-3">
