@@ -6,7 +6,7 @@ import DoctorDashboard from '@/pages/doctors/Dashboard';
 import NotFoundError from '@/pages/errors/NotFoundError';
 import ListDoctors from '@/pages/hospitals/Doctors/ListDoctors';
 import ListAppointments from '@/pages/hospitals/Appointments/ListAppointments';
-import MyAppointments from '@/pages/doctors/Appointments';
+import { MyAppointments } from '@/pages/doctors/Appointments/MyAppointments';
 import ListRefunds from '@/pages/hospitals/Refunds/ListRefunds';
 import MainLayout from '@/layouts/MainLayout';
 import AuthLayout from '@/layouts/AuthLayout';
@@ -36,9 +36,18 @@ import ListServiceCategories from '@/pages/admins/ServiceCategories/ListServiceC
 import ListServices from '@/pages/admins/Services/ListServices';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
+import ListSubscriptionPlans from '@/pages/admins/SubscriptionPlans/ListSubscriptionPlans';
+import ManageHospitalSubscriptions from '@/pages/admins/SubscriptionPlans/ManageHospitalSubscriptions';
+import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptionPlan';
+import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 import ListServicesStaff from '@/pages/hospitals/Services/ListServices';
+import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
+import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
+import HospitalSpecialtiesManagement from '@/pages/hospitals/Specialties';
+import HospitalServiceTypesManagement from '@/pages/hospitals/ServiceTypes';
+import HospitalServiceMedicalsManagement from '@/pages/hospitals/ServiceMedicals';
 
 const routes: RouteObject[] = [
     {
@@ -59,14 +68,29 @@ const routes: RouteObject[] = [
     {
         path: PATHS.ADMIN.ROOT,
         element: (
-            // <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            // </ProtectedRoute>
+            <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+                <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
+            </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.ADMIN.DASHBOARD} replace /> },
             { path: PATHS.ADMIN.DASHBOARD, element: <AdminDashboard /> },
-            { path: PATHS.ADMIN.SETTINGS, element: <h1>Setting</h1> },
+            {
+                path: PATHS.ADMIN.SETTINGS.ROOT,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to={PATHS.ADMIN.SETTINGS.PROFILE} replace />,
+                    },
+                    { path: PATHS.ADMIN.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    { path: PATHS.ADMIN.SETTINGS.SECURITY, element: <SecuritySettings /> },
+                    {
+                        path: PATHS.ADMIN.SETTINGS.NOTIFICATIONS,
+                        element: <NotificationsSettings />,
+                    },
+                    { path: PATHS.ADMIN.SETTINGS.INTEGRATIONS, element: <IntegrationsSettings /> },
+                ],
+            },
             {
                 path: PATHS.ADMIN.POSITIONS.ROOT,
                 children: [{ index: true, element: <ListPositions /> }],
@@ -98,6 +122,19 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.SERVICES.ROOT,
                 children: [{ index: true, element: <ListServices /> }],
+                path: PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT,
+                children: [
+                    { index: true, element: <ListSubscriptionPlans /> },
+                    { path: PATHS.ADMIN.SUBSCRIPTION_PLANS.ADD, element: <AddSubscriptionPlan /> },
+                    {
+                        path: PATHS.ADMIN.SUBSCRIPTION_PLANS.EDIT,
+                        element: <EditSubscriptionPlan />,
+                    },
+                    {
+                        path: PATHS.ADMIN.SUBSCRIPTION_PLANS.MANAGE_HOSPITALS,
+                        element: <ManageHospitalSubscriptions />,
+                    },
+                ],
             },
             {
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
@@ -118,11 +155,24 @@ const routes: RouteObject[] = [
             { path: PATHS.DOCTOR.DASHBOARD, element: <DoctorDashboard /> },
             {
                 path: PATHS.DOCTOR.APPOINTMENTS.ROOT,
-                element: <MyAppointments />,
+                children: [
+                    { index: true, element: <MyAppointments /> },
+                    { path: PATHS.DOCTOR.APPOINTMENTS.CALENDAR, element: <AppointmentCalendar /> },
+                ],
             },
             { path: PATHS.DOCTOR.SCHEDULE, element: <h1>Doctor Schedule</h1> },
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
             { path: PATHS.DOCTOR.MESSAGES, element: <Messages /> },
+            {
+                path: PATHS.DOCTOR.SETTINGS.ROOT,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to={PATHS.DOCTOR.SETTINGS.PROFILE} replace />,
+                    },
+                    { path: PATHS.DOCTOR.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                ],
+            },
         ],
     },
     // Hospital/Staff routes - Only accessible by STAFF role
@@ -145,6 +195,10 @@ const routes: RouteObject[] = [
                 ],
             },
             {
+                path: PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT,
+                children: [{ index: true, element: <DoctorManagement /> }],
+            },
+            {
                 path: PATHS.HOSPITAL.APPOINTMENTS.ROOT,
                 children: [
                     { index: true, element: <ListAppointments /> },
@@ -154,29 +208,28 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.HOSPITAL.SERVICES.ROOT,
                 children: [{ index: true, element: <ListServicesStaff /> }],
+            { path: PATHS.HOSPITAL.SPECIALTIES.ROOT, element: <HospitalSpecialtiesManagement /> },
+            {
+                path: PATHS.HOSPITAL.SERVICE_TYPES.ROOT,
+                element: <HospitalServiceTypesManagement />,
+            },
+            {
+                path: PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT,
+                element: <HospitalServiceMedicalsManagement />,
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlan /> },
-        ],
-    },
-    // Shared Account Settings - Accessible by all authenticated users
-    {
-        path: PATHS.COMMON.ACCOUNT_SETTINGS.ROOT,
-        element: (
-            // <ProtectedRoute allowedRoles={[Role.ADMIN, Role.DOCTOR, Role.STAFF]}>
-            <MainLayout listGroupMenuItem={listGroupMenuItemAdmin} />
-            // </ProtectedRoute>
-        ),
-        children: [
             {
-                index: true,
-                element: <Navigate to={PATHS.COMMON.ACCOUNT_SETTINGS.PROFILE} replace />,
+                path: PATHS.HOSPITAL.SETTINGS.ROOT,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to={PATHS.HOSPITAL.SETTINGS.PROFILE} replace />,
+                    },
+                    { path: PATHS.HOSPITAL.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                ],
             },
-            { path: 'profile', element: <ProfileSettings /> },
-            { path: 'security', element: <SecuritySettings /> },
-            { path: 'notifications', element: <NotificationsSettings /> },
-            { path: 'integrations', element: <IntegrationsSettings /> },
         ],
     },
     {

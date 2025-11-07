@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { UserService } from '@/services/user.service';
+import { HospitalService } from '@/services/hospital.service';
 import {
     AdminProfile,
     DoctorProfile,
@@ -84,7 +85,7 @@ export const fetchHospitalProfiles = createAsyncThunk(
     'user/fetchHospitalProfiles',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await UserService.getHospitalProfilesByAccountId();
+            const response = await HospitalService.getHospitalProfilesByAccountId();
             // Return first hospital profile (or null if empty)
             const profiles = response.data;
             return profiles && profiles.length > 0 ? profiles[0] : null;
@@ -101,7 +102,7 @@ export const updateHospitalProfile = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const response = await UserService.updateHospitalProfile(hospitalId, updateData);
+            const response = await HospitalService.updateHospitalProfile(hospitalId, updateData);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error?.message || 'Failed to update hospital profile');
@@ -128,7 +129,7 @@ export const fetchProfileByRole = createAsyncThunk<
             const response = await UserService.getDoctorProfileByAccountId();
             return { role, profile: response.data };
         } else if (role === Role.STAFF) {
-            const response = await UserService.getHospitalProfilesByAccountId();
+            const response = await HospitalService.getHospitalProfilesByAccountId();
             const profiles = response.data;
             return { role, profile: profiles && profiles.length > 0 ? profiles[0] : null };
         }

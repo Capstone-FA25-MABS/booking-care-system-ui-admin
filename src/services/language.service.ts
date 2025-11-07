@@ -30,8 +30,8 @@ export class LanguageService extends BaseEntityService<
     LanguageSearchParams
 > {
     protected endpoints = LANGUAGE_ENDPOINTS;
-    protected entityName = 'Ngôn Ngữ';
-    protected entityNamePlural = 'Ngôn Ngữ';
+    protected entityName = 'Ngôn ngữ';
+    protected entityNamePlural = 'Ngôn ngữ';
 }
 
 // Export individual methods for convenience

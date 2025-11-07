@@ -28,8 +28,8 @@ export class ServiceTypeService extends BaseEntityService<
     ServiceTypeSearchParams
 > {
     protected endpoints = SERVICE_TYPE_ENDPOINTS;
-    protected entityName = 'Loại Dịch Vụ';
-    protected entityNamePlural = 'Loại Dịch Vụ';
+    protected entityName = 'Loại dịch vụ';
+    protected entityNamePlural = 'Loại dịch vụ';
 
     /**
      * Override validateEntityData to include imageUrl validation

@@ -1,4 +1,5 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'react-toastify';
 import { API_CONFIG } from './api.config';
 import AuthService from '@/services/auth.service';
 import { resetAuthState } from '@/store/slices/authSlice';
@@ -42,7 +43,7 @@ instance.interceptors.request.use(
         return config;
     },
     (error) => {
-        return Promise.reject(error);
+        throw error;
     }
 );
 
@@ -68,14 +69,16 @@ const handleNetworkError = (error: AxiosError) => {
         method: error.config?.method,
         network: true,
     });
-    return Promise.reject(new Error('Không thể kết nối đến máy chủ!'));
+    throw new Error('Không thể kết nối đến máy chủ!');
 };
 
 const handleForbiddenError = (err: any) => {
-    if (typeof window !== 'undefined') {
-        window.location.href = '/error-403';
-    }
-    return Promise.reject(new Error(err?.message || 'Access forbidden'));
+    console.error('[Security] 403 Forbidden - Possible role mismatch:', err);
+
+    // Force logout if forbidden error (likely role mismatch)
+    handleForceLogout('Role mismatch: 403 Forbidden');
+
+    throw new Error(err?.message || 'Access forbidden');
 };
 
 const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
@@ -83,10 +86,14 @@ const queueFailedRequest = (originalRequest: ExtendedAxiosRequestConfig) => {
         failedQueue.push({ resolve, reject });
     })
         .then(() => instance(originalRequest))
-        .catch((queueErr) => Promise.reject(new Error(String(queueErr))));
+        .catch((queueErr) => {
+            throw new Error(String(queueErr));
+        });
 };
 
-const handleForceLogout = () => {
+const handleForceLogout = (reason?: string) => {
+    console.warn('[Security] Force logout initiated:', reason || 'Unauthorized access');
+
     AuthService.clearAuthData();
 
     // Clear Redux state using injected store
@@ -99,9 +106,33 @@ const handleForceLogout = () => {
         console.error('Failed to clear Redux state:', error);
     }
 
-    // Redirect to login
-    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+    // Show toast notification if role mismatch detected
+    if (reason?.includes('Role mismatch')) {
+        toast.error(
+            'CẢNH BÁO BẢO MẬT: Phát hiện thông tin đăng nhập không hợp lệ. Bạn sẽ được đăng xuất để bảo vệ hệ thống.',
+            {
+                autoClose: 5000,
+                closeOnClick: false,
+                draggable: false,
+            }
+        );
+    } else if (reason?.includes('Session expired')) {
+        toast.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', {
+            autoClose: 3000,
+        });
+    }
+
+    // Fallback redirect to login if not already there
+    // Note: ProtectedRoute will handle redirect in most cases,
+    // but this ensures redirect even from public routes
+    if (typeof globalThis !== 'undefined' && globalThis.location.pathname !== '/login') {
+        // Use a longer timeout to avoid race condition with ProtectedRoute
+        setTimeout(() => {
+            // Double-check we're still not on login page (ProtectedRoute might have redirected)
+            if (globalThis.location.pathname !== '/login') {
+                globalThis.location.href = '/login';
+            }
+        }, 1000); // 1 second delay to let React Router handle redirect first
     }
 };
 
@@ -118,9 +149,9 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         isRefreshing = false;
 
         // Force logout and clear all state
-        handleForceLogout();
+        handleForceLogout('Session expired or invalid token');
 
-        return Promise.reject(new Error(String(refreshError)));
+        throw new Error(String(refreshError));
     }
 };
 
@@ -161,7 +192,19 @@ const handleResponseError = async (error: AxiosError) => {
         data: err,
     });
 
-    return Promise.reject(new Error(err?.message || error.message || 'An error occurred'));
+    // Extract error message with priority: error field > message field > errors array > default
+    let errorMessage = 'An error occurred';
+    if (err?.error) {
+        errorMessage = err.error;
+    } else if (err?.message) {
+        errorMessage = err.message;
+    } else if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
+        errorMessage = err.errors[0];
+    } else if (error.message) {
+        errorMessage = error.message;
+    }
+
+    throw new Error(errorMessage);
 };
 
 // Response interceptor for handling responses and errors

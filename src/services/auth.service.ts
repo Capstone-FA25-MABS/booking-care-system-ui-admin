@@ -23,6 +23,7 @@ const AUTH_ENDPOINTS = {
     FACEBOOK_LOGIN: '/auth/facebook-login',
     HEALTH: '/auth/health',
     ADMIN_ACCOUNTS: '/auth/admin/accounts',
+    HOSPITAL_DOCTORS: (hospitalId: string) => `/auth/hospital/${hospitalId}/doctors`,
     BAN_UNBAN_ACCOUNT: (id: string) => `/auth/accounts/${id}/ban-unban`,
     LOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/lock`,
     UNLOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/unlock`,
@@ -252,6 +253,47 @@ export class AuthService {
     }
 
     /**
+     * Get doctors by hospital ID (for Staff role to manage their hospital's doctors)
+     * @param hospitalId - Hospital ID
+     * @param pageNumber - Page number for pagination (default: 1)
+     * @param pageSize - Number of items per page (default: 10)
+     * @param searchTerm - Search term for filtering by name or email
+     * @param sortBy - Sort field (FullName/Email/CreatedAt/Status)
+     * @param sortOrder - Sort order (asc/desc)
+     */
+    static async getDoctorsByHospital(
+        hospitalId: string,
+        pageNumber: number = 1,
+        pageSize: number = 10,
+        searchTerm?: string,
+        sortBy: string = 'CreatedAt',
+        sortOrder: 'asc' | 'desc' = 'desc'
+    ): Promise<ApiResponse<AccountManagementResponse>> {
+        try {
+            const response: any = await axiosInstance.get(
+                AUTH_ENDPOINTS.HOSPITAL_DOCTORS(hospitalId),
+                {
+                    params: {
+                        pageNumber,
+                        pageSize,
+                        searchTerm,
+                        sortBy,
+                        sortOrder,
+                    },
+                }
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Doctors retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch doctors');
+        }
+    }
+
+    /**
      * Ban/Unban account (toggle ACTIVE/INACTIVE status)
      * @param accountId - Account ID to ban/unban
      */
@@ -314,15 +356,58 @@ export class AuthService {
      */
     static async registerDoctor(request: RegisterDoctorRequest): Promise<ApiResponse> {
         try {
-            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.REGISTER_DOCTOR, request);
+            const axiosResponse: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.REGISTER_DOCTOR,
+                request
+            );
+
+            // Axios wraps response in .data property
+            const response = axiosResponse.data || axiosResponse;
+
+            // Check if saga failed (status: "Failed")
+            if (response.status === 'Failed' || response.success === false) {
+                // Extract detailed error message from response
+                // Priority: error field > message field > default
+                const errorMessage =
+                    response.error || response.message || 'Đăng ký bác sĩ thất bại';
+
+                return {
+                    success: false,
+                    data: response,
+                    message: errorMessage,
+                };
+            }
 
             return {
                 success: response.success ?? true,
-                data: response.data || response,
+                data: response,
                 message: response.message || 'Doctor registered successfully',
             };
         } catch (error: any) {
-            throw new Error(error.message || 'Doctor registration failed');
+            // Extract error message from axios error response
+            // Axios interceptor already extracts error message, but we can also check response.data
+            let errorMessage = error.message || 'Đăng ký bác sĩ thất bại';
+
+            // Double check error.response.data in case interceptor didn't extract correctly
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                // Priority: error field > message field > errors array > status field
+                if (errorData.error) {
+                    errorMessage = errorData.error;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (
+                    errorData.errors &&
+                    Array.isArray(errorData.errors) &&
+                    errorData.errors.length > 0
+                ) {
+                    errorMessage = errorData.errors[0];
+                } else if (errorData.status) {
+                    errorMessage = errorData.status;
+                }
+            }
+
+            throw new Error(errorMessage);
         }
     }
 }
@@ -342,6 +427,7 @@ export const {
     validatePassword,
     clearAuthData,
     getAccountsByRole,
+    getDoctorsByHospital,
     toggleBanUnbanAccount,
     lockAccount,
     unlockAccount,

@@ -35,8 +35,8 @@ export class SpecialtyService extends BaseEntityService<
     SpecialtySearchParams
 > {
     protected endpoints = SPECIALTY_ENDPOINTS;
-    protected entityName = 'Chuyên Khoa';
-    protected entityNamePlural = 'Chuyên Khoa';
+    protected entityName = 'Chuyên khoa';
+    protected entityNamePlural = 'Chuyên khoa';
 
     /**
      * Override validateEntityData to include imageUrl validation

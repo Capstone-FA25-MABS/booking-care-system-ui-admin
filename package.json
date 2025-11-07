@@ -14,8 +14,14 @@
         "prepare": "husky"
     },
     "dependencies": {
+        "@ckeditor/ckeditor5-react": "^11.0.0",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
+        "@fullcalendar/core": "^6.1.19",
+        "@fullcalendar/daygrid": "^6.1.19",
+        "@fullcalendar/interaction": "^6.1.19",
+        "@fullcalendar/react": "^6.1.19",
+        "@fullcalendar/timegrid": "^6.1.19",
         "@microsoft/signalr": "^9.0.6",
         "@mui/material": "^7.3.1",
         "@mui/x-date-pickers": "^8.10.2",
@@ -26,6 +32,8 @@
         "aos": "^2.3.4",
         "axios": "^1.8.4",
         "bootstrap": "^5.3.7",
+        "ckeditor5": "^47.1.0",
+        "ckeditor5-premium-features": "^47.1.0",
         "date-fns": "^4.1.0",
         "jwt-decode": "^4.0.0",
         "lucide-react": "^0.541.0",

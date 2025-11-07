@@ -48,11 +48,13 @@ export interface HospitalProfile {
     email: string;
     phone?: string;
     address?: string;
-    logoUrl?: string;
+    avatarUrl?: string;
+    backgroundUrl?: string;
     description?: string;
-    website?: string;
-    establishedYear?: number;
-    totalBeds?: number;
+    specialties?: Array<{ specialtyId: string; specialtyName?: string }>;
+    serviceTypes?: Array<{ serviceTypeId: string; serviceTypeName?: string }>;
+    serviceMedicals?: Array<{ serviceMedicalId: string; serviceMedicalName?: string }>;
+    images?: Array<{ id: string; imageUrl: string }>;
     status?: Status;
     createdAt: string;
     updatedAt: string;
@@ -91,11 +93,12 @@ export interface UpdateHospitalRequest {
     email?: string;
     phone?: string;
     address?: string;
-    logoUrl?: string;
+    avatarUrl?: string;
+    backgroundUrl?: string;
     description?: string;
-    website?: string;
-    establishedYear?: number;
-    totalBeds?: number;
+    specialtyIds?: string[];
+    serviceTypeIds?: string[];
+    serviceMedicalIds?: string[];
 }
 
 // ========== USER STATE (Multi-role support) ==========

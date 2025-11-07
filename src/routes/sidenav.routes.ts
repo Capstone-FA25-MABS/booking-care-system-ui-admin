@@ -5,16 +5,40 @@ import {
     createAppointmentsMenuItem,
     createDashboardMenuItem,
     createDoctorsMenuItem,
+    createDoctorAccountSettingsMenuItem,
+    createHospitalAccountSettingsMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
+    createSubscriptionPlansMenuItem,
 } from './menu.items';
+import { Role } from '@/enums/common.enums';
 
 export const listGroupMenuItemHospital: MenuConfig = [
     {
         title: 'Hospital',
         items: [
             createDoctorsMenuItem(),
+            createSimpleMenuItem(
+                'Quản lý tài khoản',
+                'ti ti-users-group',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
+            ),
             createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem(
+                'Quản lí chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SPECIALTIES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Quản lý dịch vụ bác sĩ',
+                'ti ti-medical-cross',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_TYPES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Quản lý dịch vụ bệnh viện',
+                'ti ti-building-hospital',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
+            ),
             createSimpleMenuItem(
                 'Hoàn tiền',
                 'ti ti-receipt-refund',
@@ -43,7 +67,7 @@ export const listGroupMenuItemHospital: MenuConfig = [
     },
     {
         title: 'Settings',
-        items: [createAccountSettingsMenuItem()],
+        items: [createHospitalAccountSettingsMenuItem()],
     },
 ];
 
@@ -75,7 +99,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
     },
     {
         title: 'Settings',
-        items: [createAccountSettingsMenuItem()],
+        items: [createDoctorAccountSettingsMenuItem()],
     },
 ];
 
@@ -167,6 +191,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
+            createSubscriptionPlansMenuItem(),
         ],
     },
     {
@@ -174,3 +199,22 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         items: [createAccountSettingsMenuItem()],
     },
 ];
+
+/**
+ * Get menu items based on user role
+ * @param role - User's role (ADMIN, DOCTOR, or STAFF)
+ * @returns Menu configuration for the specified role
+ */
+export const getMenuItemsByRole = (role: Role | null): MenuConfig => {
+    switch (role) {
+        case Role.ADMIN:
+            return listGroupMenuItemAdmin;
+        case Role.DOCTOR:
+            return listGroupMenuItemDoctor;
+        case Role.STAFF:
+            return listGroupMenuItemHospital;
+        default:
+            // Fallback to admin menu if role is not determined
+            return listGroupMenuItemAdmin;
+    }
+};

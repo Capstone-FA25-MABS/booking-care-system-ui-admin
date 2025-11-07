@@ -48,7 +48,9 @@ const StatusSelect: React.FC<StatusSelectProps> = ({
                         onChange={handleSelectChange}
                         placeholder="Chọn trạng thái"
                         isSearchable={false}
+                        classNamePrefix="select2"
                         styles={selectCustomStyles}
+                        menuPortalTarget={document.body}
                     />
                     {validationError && (
                         <div className={styles?.invalidFeedback || 'invalid-feedback'}>

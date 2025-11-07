@@ -1,0 +1,219 @@
+// ListSubscriptionPlans.module.scss
+
+.modal {
+    .modal-dialog {
+        max-width: 600px;
+    }
+}
+
+.modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.invalidFeedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.reactSelectInvalid {
+    .react-select__control {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+}
+
+.appliedFiltersContainer {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.appliedFiltersLabel {
+    font-weight: 500;
+    color: #6c757d;
+    margin-right: 8px;
+}
+
+.filterBadgeClose {
+    margin-left: 4px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.clearAllButton {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+}
+
+// Table styling
+.table {
+    th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        padding: 12px 16px;
+    }
+
+    td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .action-item {
+        text-align: center;
+        width: 80px;
+    }
+}
+
+// Avatar styling
+.avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .avatar-title {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+}
+
+// Note: Badge and status badge styling removed - using global styles from style.css instead
+// These definitions were causing contrast ratio issues
+
+// Search input styling
+.search-input {
+    position: relative;
+
+    input {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+
+        &:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    }
+}
+
+// Button styling
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+
+    &.btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+
+        &:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+    }
+
+    &.btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+
+        &:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
+        }
+    }
+}
+
+// Pagination styling
+.pagination {
+    .page-link {
+        border-radius: 6px;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+        color: #0d6efd;
+
+        &:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+    }
+
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+}
+
+// Loading skeleton styling
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .table-responsive {
+        border: none;
+    }
+
+    .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .search-set {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .table-dropdown {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+// Empty state styling
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+
+    i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    p {
+        margin: 0;
+        font-size: 1rem;
+    }
+}

@@ -84,7 +84,7 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
     return (
         <BaseModal
             isOpen={isOpen}
-            title="Từ Chối Đơn Đăng Ký"
+            title="Từ chối đơn đăng ký"
             titleId="rejection-modal-title"
             onClose={handleClose}
         >
@@ -141,7 +141,7 @@ const RejectionModal: React.FC<RejectionModalProps> = ({
                             </>
                         ) : (
                             <>
-                                <i className="ti ti-x me-2"></i> Từ Chối
+                                <i className="ti ti-x me-2"></i> Từ chối
                             </>
                         )}
                     </button>

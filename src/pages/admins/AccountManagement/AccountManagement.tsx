@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
-import { AppFooter } from '@/components/AppFooter';
 import { Account } from '@/types/auth.types';
 import {
     getAccountsByRole,
@@ -12,6 +11,9 @@ import {
 import { Role } from '@/enums/common.enums';
 import Pagination from '@/components/Pagination';
 import ActionDropdown from '@/components/ActionDropdown';
+import { SkeletonTableRow } from '@/components/SkeletonLoading';
+import { EmptyTableState, AccountTableRow } from '@/components/AccountTable';
+import { sortOptions } from '@/utils/account-management.utils';
 
 // Map URL role param to Role enum
 const getRoleFromParam = (roleParam: string | null): Role => {
@@ -31,90 +33,14 @@ const getRoleFromParam = (roleParam: string | null): Role => {
 const getRoleLabel = (role: Role): string => {
     switch (role) {
         case Role.PATIENT:
-            return 'Bệnh Nhân';
+            return 'Bệnh nhân';
         case Role.DOCTOR:
-            return 'Bác Sĩ';
+            return 'Bác sĩ';
         case Role.STAFF:
-            return 'Bệnh Viện';
+            return 'Bệnh viện';
         default:
-            return 'Tài Khoản';
+            return 'Tài khoản';
     }
-};
-
-// Sort options for dropdown
-const sortOptions = [
-    { value: 'CreatedAt_desc', label: 'Mới nhất', direction: 'desc' as const },
-    { value: 'CreatedAt_asc', label: 'Cũ nhất', direction: 'asc' as const },
-    { value: 'FullName_asc', label: 'Tên A-Z', direction: 'asc' as const },
-    { value: 'FullName_desc', label: 'Tên Z-A', direction: 'desc' as const },
-    { value: 'Email_asc', label: 'Email A-Z', direction: 'asc' as const },
-    { value: 'Email_desc', label: 'Email Z-A', direction: 'desc' as const },
-];
-
-// Helper function to get toggle active title
-const getToggleActiveTitle = (isLocked: boolean, status: string): string => {
-    if (isLocked) {
-        return 'Không thể thay đổi trạng thái khi tài khoản đang bị khóa';
-    }
-    return status === 'ACTIVE'
-        ? 'Bật (Hoạt động) - Click để tắt'
-        : 'Tắt (Vô hiệu hóa) - Click để bật';
-};
-
-// Helper functions to get lock/unlock titles
-const getLockTitle = (): string => 'Đang mở - Click để khóa tài khoản';
-const getUnlockTitle = (): string => 'Đang khóa - Click để mở khóa';
-
-// Skeleton cell component for loading state
-interface SkeletonCellProps {
-    height: string;
-    width: string;
-}
-
-const SkeletonCell: React.FC<SkeletonCellProps> = ({ height, width }) => {
-    const skeletonClass = 'bg-light rounded placeholder-glow';
-    const skeletonStyle = {
-        animation: 'pulse 1.5s ease-in-out infinite',
-    };
-
-    return (
-        <td>
-            <div className={skeletonClass} style={{ height, width, ...skeletonStyle }} />
-        </td>
-    );
-};
-
-// Skeleton row component for loading state
-const SkeletonRow: React.FC = () => {
-    const skeletonStyle = {
-        animation: 'pulse 1.5s ease-in-out infinite',
-    };
-
-    return (
-        <tr>
-            {/* Column 1: Name with Avatar */}
-            <td>
-                <div className="d-flex align-items-center">
-                    <div
-                        className="avatar me-2 bg-light rounded-circle placeholder-glow"
-                        style={{ width: '40px', height: '40px', ...skeletonStyle }}
-                    />
-                    <div className="flex-grow-1">
-                        <div
-                            className="bg-light rounded placeholder-glow mb-2"
-                            style={{ height: '14px', width: '120px', ...skeletonStyle }}
-                        />
-                    </div>
-                </div>
-            </td>
-            <SkeletonCell height="14px" width="180px" />
-            <SkeletonCell height="14px" width="100px" />
-            <SkeletonCell height="14px" width="150px" />
-            <SkeletonCell height="24px" width="50px" />
-            <SkeletonCell height="24px" width="50px" />
-            <SkeletonCell height="24px" width="80px" />
-        </tr>
-    );
 };
 
 const AccountManagement: React.FC = () => {
@@ -238,30 +164,6 @@ const AccountManagement: React.FC = () => {
         }
     };
 
-    // Get status badge class
-    const getStatusBadgeClass = (status: string) => {
-        switch (status) {
-            case 'ACTIVE':
-                return 'badge badge-soft-success border border-success';
-            case 'INACTIVE':
-                return 'badge badge-soft-danger border border-danger';
-            default:
-                return 'badge badge-soft-secondary border border-secondary';
-        }
-    };
-
-    // Get status label
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'ACTIVE':
-                return 'Hoạt động';
-            case 'INACTIVE':
-                return 'Vô hiệu hóa';
-            default:
-                return 'Không xác định';
-        }
-    };
-
     // Helper function to render table body content
     const renderTableBody = () => {
         if (isLoading) {
@@ -271,92 +173,25 @@ const AccountManagement: React.FC = () => {
                         { length: 5 },
                         (_, index) => `skeleton-row-${Date.now()}-${index}`
                     ).map((skeletonId) => (
-                        <SkeletonRow key={skeletonId} />
+                        <SkeletonTableRow key={skeletonId} showPhoneColumn={true} />
                     ))}
                 </>
             );
         }
 
         if (accounts.length === 0) {
-            return (
-                <tr>
-                    <td colSpan={7} className="text-center py-5">
-                        <div className="text-muted">
-                            <i className="ti ti-database-off fs-48 mb-2 d-block" />
-                            <p className="mb-0">Không có dữ liệu</p>
-                        </div>
-                    </td>
-                </tr>
-            );
+            return <EmptyTableState colSpan={7} />;
         }
 
         return accounts.map((account) => (
-            <tr key={account.accountId}>
-                <td>
-                    <div className="d-flex align-items-center">
-                        <span className="avatar me-2">
-                            {account.avatarUrl ? (
-                                <img
-                                    src={account.avatarUrl}
-                                    alt={account.fullName}
-                                    className="rounded-circle"
-                                />
-                            ) : (
-                                <div className="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                                    {account.fullName.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                        </span>
-                        <div>
-                            <h6 className="mb-1 fs-14 fw-semibold">
-                                <span className="text-dark">{account.fullName}</span>
-                            </h6>
-                        </div>
-                    </div>
-                </td>
-                <td>{account.email}</td>
-                <td>{account.phone || '-'}</td>
-                <td>{account.address || '-'}</td>
-
-                {/* Toggle Active/Inactive */}
-                <td>
-                    <div className="form-check form-switch">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id={`switch-active-${account.accountId}`}
-                            checked={account.status === 'ACTIVE'}
-                            onChange={() => handleToggleBanUnban(account.accountId)}
-                            disabled={account.isLocked}
-                            title={getToggleActiveTitle(account.isLocked, account.status)}
-                        />
-                    </div>
-                </td>
-                {/* Toggle Lock/Unlock */}
-                <td>
-                    <div className="form-check form-switch">
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id={`switch-lock-${account.accountId}`}
-                            checked={account.isLocked}
-                            onChange={() =>
-                                account.isLocked
-                                    ? handleUnlockAccount(account.accountId)
-                                    : handleLockAccount(account.accountId)
-                            }
-                            title={account.isLocked ? getUnlockTitle() : getLockTitle()}
-                        />
-                    </div>
-                </td>
-                <td>
-                    <span className={getStatusBadgeClass(account.status)}>
-                        {getStatusLabel(account.status)}
-                    </span>
-                </td>
-            </tr>
+            <AccountTableRow
+                key={account.accountId}
+                account={account}
+                showPhoneColumn={true}
+                onToggleBanUnban={handleToggleBanUnban}
+                onLockAccount={handleLockAccount}
+                onUnlockAccount={handleUnlockAccount}
+            />
         ));
     };
 
@@ -389,7 +224,7 @@ const AccountManagement: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản Lý Tài Khoản - {getRoleLabel(currentRole)}
+                        Quản lý tài khoản - {getRoleLabel(currentRole)}
                         <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                             Tổng {getRoleLabel(currentRole)}: {totalCount}
                         </span>
@@ -439,11 +274,11 @@ const AccountManagement: React.FC = () => {
                         <tr>
                             <th>{getRoleLabel(currentRole)}</th>
                             <th>Email</th>
-                            <th>Số Điện Thoại</th>
-                            <th>Địa Chỉ</th>
-                            <th>Kích Hoạt</th>
-                            <th>Khóa Tài Khoản</th>
-                            <th>Trạng Thái</th>
+                            <th>Số điện thoại</th>
+                            <th>Địa chỉ</th>
+                            <th>Kích hoạt</th>
+                            <th>Khóa tài khoản</th>
+                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>{renderTableBody()}</tbody>
@@ -455,21 +290,6 @@ const AccountManagement: React.FC = () => {
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
             />
-            {/* Footer Start */}
-            <AppFooter />
-            {/* Footer End */}
-
-            {/* Skeleton Loading Animation */}
-            <style>{`
-                @keyframes pulse {
-                    0%, 100% {
-                        opacity: 1;
-                    }
-                    50% {
-                        opacity: 0.5;
-                    }
-                }
-            `}</style>
         </div>
     );
 };
