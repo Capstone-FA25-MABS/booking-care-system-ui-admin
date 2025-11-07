@@ -39,18 +39,14 @@ const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
     const { imagePreview, imageFile, handleImageFileChange, handleRemoveImage, resetImage } =
         useImageUpload({
             maxSize: 5 * 1024 * 1024, // 5MB
-            onValidationError: (field, error) => {
+            onValidationError: (field) => {
                 if (field === 'imageUrl') {
-                    if (error) {
-                        setErrors((prev) => ({ ...prev, imageUrl: error }));
-                    } else {
-                        // Clear error when error is undefined
-                        setErrors((prev) => {
-                            const newErrors = { ...prev };
-                            delete newErrors.imageUrl;
-                            return newErrors;
-                        });
-                    }
+                    // Clear error when validation passes
+                    setErrors((prev) => {
+                        const newErrors = { ...prev };
+                        delete newErrors.imageUrl;
+                        return newErrors;
+                    });
                 }
             },
         });

@@ -47,6 +47,7 @@ export const PATHS = {
         },
         SERVICES: {
             ROOT: 'services',
+        },
         SUBSCRIPTION_PLANS: {
             ROOT: 'subscription-plans',
             ADD: 'add',
@@ -79,6 +80,7 @@ export const PATHS = {
             ROOT: 'services',
             ADD: 'add',
             EDIT: 'edit/:id',
+        },
         SPECIALTIES: {
             ROOT: 'specialties',
         },

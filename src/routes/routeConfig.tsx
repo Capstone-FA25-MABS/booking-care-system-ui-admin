@@ -122,6 +122,8 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.SERVICES.ROOT,
                 children: [{ index: true, element: <ListServices /> }],
+            },
+            {
                 path: PATHS.ADMIN.SUBSCRIPTION_PLANS.ROOT,
                 children: [
                     { index: true, element: <ListSubscriptionPlans /> },
@@ -208,6 +210,7 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.HOSPITAL.SERVICES.ROOT,
                 children: [{ index: true, element: <ListServicesStaff /> }],
+            },
             { path: PATHS.HOSPITAL.SPECIALTIES.ROOT, element: <HospitalSpecialtiesManagement /> },
             {
                 path: PATHS.HOSPITAL.SERVICE_TYPES.ROOT,
