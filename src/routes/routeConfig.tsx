@@ -32,10 +32,13 @@ import ListPositions from '@/pages/admins/Positions/ListPositions';
 import ListLanguages from '@/pages/admins/Languages/ListLanguages';
 import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
 import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
+import ListServiceCategories from '@/pages/admins/ServiceCategories/ListServiceCategories';
+import ListServices from '@/pages/admins/Services/ListServices';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
+import ListServicesStaff from '@/pages/hospitals/Services/ListServices';
 
 const routes: RouteObject[] = [
     {
@@ -89,6 +92,14 @@ const routes: RouteObject[] = [
                 children: [{ index: true, element: <ListServiceTypes /> }],
             },
             {
+                path: PATHS.ADMIN.SERVICE_CATEGORIES.ROOT,
+                children: [{ index: true, element: <ListServiceCategories /> }],
+            },
+            {
+                path: PATHS.ADMIN.SERVICES.ROOT,
+                children: [{ index: true, element: <ListServices /> }],
+            },
+            {
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
                 children: [{ index: true, element: <ListHospitalRegistrations /> }],
             },
@@ -118,9 +129,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.HOSPITAL.ROOT,
         element: (
-            <ProtectedRoute allowedRoles={[Role.STAFF]}>
-                <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={[Role.STAFF]}>
+            <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
+            // </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.HOSPITAL.DASHBOARD} replace /> },
@@ -139,6 +150,10 @@ const routes: RouteObject[] = [
                     { index: true, element: <ListAppointments /> },
                     { path: PATHS.HOSPITAL.APPOINTMENTS.NEW, element: <NewAppointment /> },
                 ],
+            },
+            {
+                path: PATHS.HOSPITAL.SERVICES.ROOT,
+                children: [{ index: true, element: <ListServicesStaff /> }],
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
