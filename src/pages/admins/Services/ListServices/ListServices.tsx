@@ -6,7 +6,6 @@ const ListServices: React.FC = () => {
         <ServiceListView
             showHospitalColumn={true}
             showHospitalFilter={true}
-            addServicePath="/admin/services/add"
             editServicePathTemplate="/admin/services/edit/:id"
             pageTitle="Danh Sách Dịch Vụ"
         />

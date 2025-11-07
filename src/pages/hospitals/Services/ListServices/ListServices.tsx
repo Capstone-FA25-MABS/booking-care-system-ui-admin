@@ -21,7 +21,6 @@ const ListServicesStaff: React.FC = () => {
             hospitalId={hospitalId}
             showHospitalColumn={false} // Staff doesn't need to see hospital column
             showHospitalFilter={false} // Staff doesn't need hospital filter
-            addServicePath="/hospital/services/add"
             editServicePathTemplate="/hospital/services/edit/:id"
             pageTitle="Dịch Vụ Của Bệnh Viện"
             useEditModal={true} // Use modal for editing instead of navigation
