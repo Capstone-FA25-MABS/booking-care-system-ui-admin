@@ -115,9 +115,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                     id: userProfile?.accountId,
                     accountId: userProfile?.accountId,
                     email: userProfile?.email || '',
-                    fullName: userProfile?.fullName || 'You',
+                    fullName:
+                        (adminProfile && `${adminProfile.firstName} ${adminProfile.lastName}`) ||
+                        (doctorProfile && `${doctorProfile.firstName} ${doctorProfile.lastName}`) ||
+                        (hospitalProfile && hospitalProfile.name) ||
+                        'You',
                     avatarUrl: userProfile?.avatarUrl || '/default-avatar.png',
-                    phoneNumber: userProfile?.phoneNumber,
+                    phoneNumber: userProfile?.phone,
                 };
             }
 
@@ -375,7 +379,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 // Load messages with cursor pagination
                 const messagesResponse = await ChatService.getMessages(conversationId, {
                     limit: 50,
-                    messagesOnly: true,
+                    messagesOnly: false,
                     includeSenderInfo: true,
                     includeReceiverInfo: true,
                 });
@@ -383,11 +387,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 // Extract messages and pagination metadata
                 const paginationData = messagesResponse.data;
                 const timelineItems = paginationData.items || [];
+                // Keep all timeline items (both messages and call logs)
                 const extractedMessages = Array.isArray(timelineItems)
-                    ? timelineItems
-                          .filter((item: any) => !item.itemType || item.itemType === 'Message')
-                          .map((item: any) => item.message || item)
-                          .reverse() // Reverse to show oldest first, newest last
+                    ? timelineItems.reverse() // Reverse to show oldest first, newest last
                     : [];
 
                 // Update messages and pagination state
@@ -461,7 +463,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             const response = await ChatService.getMessages(conversationId, {
                 limit: 50,
                 before,
-                messagesOnly: true,
+                messagesOnly: false,
                 includeSenderInfo: true,
                 includeReceiverInfo: true,
             });
@@ -472,11 +474,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
             // Extract messages from timeline items
             // Backend sorts by descending (newest first), but UI needs ascending (oldest first)
+            // Keep all timeline items (both messages and call logs)
             const extractedMessages = Array.isArray(timelineItems)
-                ? timelineItems
-                      .filter((item: any) => !item.itemType || item.itemType === 'Message')
-                      .map((item: any) => item.message || item)
-                      .reverse() // Reverse to show oldest first, newest last
+                ? timelineItems.reverse() // Reverse to show oldest first, newest last
                 : [];
 
             // Update pagination state
@@ -543,19 +543,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             const response = await ChatService.getMessages(activeConversation.id, {
                 limit: 50,
                 after: previousCursor, // Use 'after' to load newer messages
-                messagesOnly: true,
+                messagesOnly: false,
                 includeSenderInfo: true,
                 includeReceiverInfo: true,
             });
 
             const paginationData = response.data;
             const timelineItems = paginationData.items || [];
-            const extractedMessages = Array.isArray(timelineItems)
-                ? timelineItems
-                      .filter((item: any) => !item.itemType || item.itemType === 'Message')
-                      .map((item: any) => item.message || item)
-                      .reverse()
-                : [];
+            // Keep all timeline items (both messages and call logs)
+            const extractedMessages = Array.isArray(timelineItems) ? timelineItems.reverse() : [];
 
             // Update pagination state
             setPreviousCursor(paginationData.previousCursor);

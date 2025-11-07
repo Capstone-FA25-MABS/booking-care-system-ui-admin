@@ -66,11 +66,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
         remoteStream,
         isMuted,
         isVideoOff,
+        isScreenSharing,
         startCall,
         acceptCall,
         endCall,
         toggleMute,
         toggleVideo,
+        toggleScreenShare,
         cleanup,
     } = useWebRTC(
         userId,
@@ -745,12 +747,28 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                         ></i>
                                     </button>
 
-                                    {/* Screen Share (for future implementation) */}
+                                    {/* Screen Share */}
                                     <button
-                                        className="bg-light text-dark btn-icon btn-sm d-flex align-items-center justify-content-center rounded"
+                                        onClick={toggleScreenShare}
+                                        className={clsx(
+                                            'btn-icon btn-sm d-flex align-items-center justify-content-center rounded',
+                                            isScreenSharing
+                                                ? 'bg-primary text-white'
+                                                : 'bg-light text-dark'
+                                        )}
                                         type="button"
+                                        title={
+                                            isScreenSharing
+                                                ? 'Dừng chia sẻ màn hình'
+                                                : 'Chia sẻ màn hình'
+                                        }
+                                        aria-label={
+                                            isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình'
+                                        }
                                     >
-                                        <i className="ti ti-screen-share"></i>
+                                        <i
+                                            className={`ti ${isScreenSharing ? 'ti-screen-share-off' : 'ti-screen-share'}`}
+                                        ></i>
                                     </button>
                                 </div>
                             </div>

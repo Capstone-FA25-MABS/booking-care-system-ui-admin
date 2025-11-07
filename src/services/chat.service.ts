@@ -28,11 +28,15 @@ import {
 // ==================================================================================
 
 /**
- * Check if a string is a valid GUID/UUID format
+ * Check if a string is a valid GUID/UUID or MongoDB ObjectId format
  */
 const isGuid = (value: string): boolean => {
+    // GUID format: 8-4-4-4-12 (with dashes)
     const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return guidRegex.test(value);
+    // MongoDB ObjectId format: 24 hex characters (no dashes)
+    const objectIdRegex = /^[0-9a-f]{24}$/i;
+
+    return guidRegex.test(value) || objectIdRegex.test(value);
 };
 
 /**
@@ -634,9 +638,12 @@ export class ChatService {
         request: CreateCallLogRequest
     ): Promise<ApiResponse<CallLogResponse>> {
         try {
+            const transformedRequest = transformToPascalCase(request);
+            console.log('[ChatService] 📤 Sending createCallLog request:', transformedRequest);
+
             const response: any = await axiosInstance.post(
                 COMMUNICATION_ENDPOINTS.CREATE_CALL_LOG,
-                transformToPascalCase(request)
+                transformedRequest
             );
             return {
                 success: response.success ?? true,
@@ -644,6 +651,7 @@ export class ChatService {
                 message: response.message || 'Call log created successfully',
             };
         } catch (error: any) {
+            console.error('[ChatService] ❌ createCallLog error:', error);
             throw new Error(error.message || 'Failed to create call log');
         }
     }
@@ -655,9 +663,15 @@ export class ChatService {
         request: UpdateCallLogRequest
     ): Promise<ApiResponse<CallLogResponse>> {
         try {
+            const transformedRequest = transformToPascalCase(request);
+            console.log('[ChatService] 📤 Sending updateCallLog request:', {
+                url: COMMUNICATION_ENDPOINTS.UPDATE_CALL_LOG(request.id),
+                body: transformedRequest,
+            });
+
             const response: any = await axiosInstance.put(
                 COMMUNICATION_ENDPOINTS.UPDATE_CALL_LOG(request.id),
-                transformToPascalCase(request)
+                transformedRequest
             );
             return {
                 success: response.success ?? true,
@@ -665,6 +679,7 @@ export class ChatService {
                 message: response.message || 'Call log updated successfully',
             };
         } catch (error: any) {
+            console.error('[ChatService] ❌ updateCallLog error:', error);
             throw new Error(error.message || 'Failed to update call log');
         }
     }

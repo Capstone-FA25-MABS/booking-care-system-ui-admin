@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useSharedChatHub } from './useSharedChatHub';
+import { ChatService } from '@/services/chat.service';
+import { CallStatus, CallType } from '@/types/communication.types';
 import type {
     WebRTCOfferData,
     WebRTCAnswerData,
@@ -46,6 +48,7 @@ export interface UseWebRTCReturn {
     remoteStream: MediaStream | null;
     isMuted: boolean;
     isVideoOff: boolean;
+    isScreenSharing: boolean;
 
     // Actions
     startCall: (receiverId: string, conversationId: string) => Promise<void>;
@@ -54,6 +57,7 @@ export interface UseWebRTCReturn {
     endCall: (otherUserId: string, reason?: string) => Promise<void>;
     toggleMute: () => void;
     toggleVideo: () => void;
+    toggleScreenShare: () => Promise<void>;
 
     // Cleanup
     cleanup: () => void;
@@ -73,6 +77,7 @@ export const useWebRTC = (
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
 
     // Refs
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -82,6 +87,12 @@ export const useWebRTC = (
     const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
     const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null); // ✅ Store offer to send after accept
     const isInitializingCallRef = useRef<boolean>(false); // ✅ Track if call initialization is in progress
+    const originalVideoTrackRef = useRef<MediaStreamTrack | null>(null); // ✅ Store original camera track for screen share toggle
+
+    // Call logging refs
+    const callLogIdRef = useRef<string | null>(null); // ✅ Track call log ID for update
+    const callStartTimeRef = useRef<Date | null>(null); // ✅ Track call start time for duration calculation
+    const isCallerRef = useRef<boolean>(false); // ✅ Track if current user is caller (to avoid duplicate logs)
 
     // ✅ Refs for handlers to stabilize callbacks
     const handlersRef = useRef<any>({});
@@ -190,6 +201,115 @@ export const useWebRTC = (
     }, [callbacks]);
 
     /**
+     * Create call log when call connects
+     */
+    const createCallLog = useCallback(async () => {
+        try {
+            console.log('[WebRTC] 🎬 createCallLog called');
+            console.log('[WebRTC] 📊 Call log refs:', {
+                isCaller: isCallerRef.current,
+                userId,
+                remoteUserId: remoteUserIdRef.current,
+                conversationId: conversationIdRef.current,
+                existingCallLogId: callLogIdRef.current,
+            });
+
+            // Skip if already created
+            if (callLogIdRef.current) {
+                console.log('[WebRTC] ⚠️ Call log already exists, skipping:', callLogIdRef.current);
+                return;
+            }
+
+            const callerId = isCallerRef.current ? userId : remoteUserIdRef.current;
+            const receiverId = isCallerRef.current ? remoteUserIdRef.current : userId;
+            const conversationId = conversationIdRef.current;
+
+            if (!callerId || !receiverId || !conversationId) {
+                console.warn('[WebRTC] ❌ Missing info for call log:', {
+                    callerId,
+                    receiverId,
+                    conversationId,
+                });
+                return;
+            }
+
+            console.log('[WebRTC] 📝 Creating call log:', { callerId, receiverId, conversationId });
+
+            const requestBody = {
+                conversationId,
+                callerId,
+                receiverId,
+                type: CallType.Video, // Backend expects "type", not "callType"
+            };
+
+            console.log('[WebRTC] 📤 Request body:', requestBody);
+
+            const response = await ChatService.createCallLog(requestBody);
+
+            console.log('[WebRTC] 📦 API Response:', response);
+
+            if (response.success && response.data) {
+                callLogIdRef.current = response.data.id;
+                callStartTimeRef.current = new Date();
+                console.log('[WebRTC] ✅ Call log created:', response.data.id);
+            } else {
+                console.warn('[WebRTC] ⚠️ API response not successful:', response);
+            }
+        } catch (error) {
+            console.error('[WebRTC] ❌ Error creating call log:', error);
+            // Don't throw - call logging shouldn't break the call
+        }
+    }, [userId]);
+
+    /**
+     * Update call log when call ends
+     */
+    const updateCallLog = useCallback(async (status: CallStatus) => {
+        try {
+            console.log('[WebRTC] 🎬 updateCallLog called with status:', status);
+            const callLogId = callLogIdRef.current;
+            const startTime = callStartTimeRef.current;
+
+            console.log('[WebRTC] 📊 Update refs:', {
+                callLogId,
+                startTime,
+                status,
+            });
+
+            if (!callLogId) {
+                console.warn('[WebRTC] ❌ No call log ID to update (was not created)');
+                return;
+            }
+
+            const endTime = new Date();
+            const duration = startTime
+                ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+                : 0;
+
+            const updateRequest = {
+                id: callLogId,
+                status: status, // Backend expects "status", not "callStatus"
+                endedAt: endTime.toISOString(), // Backend expects "endedAt", not "endTime"
+                duration,
+            };
+
+            console.log('[WebRTC] 📝 Updating call log:', updateRequest);
+
+            const response = await ChatService.updateCallLog(updateRequest);
+
+            console.log('[WebRTC] 📦 Update API Response:', response);
+            console.log('[WebRTC] ✅ Call log updated successfully');
+
+            // Reset after update
+            callLogIdRef.current = null;
+            callStartTimeRef.current = null;
+        } catch (error) {
+            console.error('[WebRTC] ❌ Error updating call log:', error);
+            // Don't throw - call logging shouldn't break the call
+        }
+    }, []);
+
+    /**
      * Create RTCPeerConnection
      * @param remoteUserId - The remote user ID to send ICE candidates to (captured in closure)
      */
@@ -258,7 +378,17 @@ export const useWebRTC = (
                 console.log('[WebRTC] Connection state:', pc.connectionState);
                 switch (pc.connectionState) {
                     case 'connected':
+                        console.log('[WebRTC] 🎯 Connection established, will create call log');
                         updateCallState('connected');
+                        // ✅ Create call log when connection established
+                        // Only create if this is the active peer connection (not a stale one from remount)
+                        if (peerConnectionRef.current === pc) {
+                            createCallLog().catch((err) => {
+                                console.error('[WebRTC] 💥 Failed to create call log:', err);
+                            });
+                        } else {
+                            console.warn('[WebRTC] ⚠️ Ignoring stale peer connection state change');
+                        }
                         break;
                     case 'disconnected':
                     case 'failed':
@@ -283,7 +413,7 @@ export const useWebRTC = (
             peerConnectionRef.current = pc;
             return pc;
         },
-        [callbacks, updateCallState]
+        [callbacks, updateCallState, createCallLog]
     ); // Removed chatHub.connection from dependencies
 
     /**
@@ -374,8 +504,12 @@ export const useWebRTC = (
         // Reset state
         setRemoteStream(null);
         setCallState('idle');
-        remoteUserIdRef.current = '';
-        conversationIdRef.current = '';
+
+        // ✅ DON'T clear these refs during cleanup - they're needed for call logging
+        // They will be reset when starting a new call
+        // remoteUserIdRef.current = '';
+        // conversationIdRef.current = '';
+
         iceCandidateQueueRef.current = [];
         pendingOfferRef.current = null; // ✅ Clear pending offer
         // ✅ DON'T clear isInitializingCallRef here - async operations may still be running!
@@ -421,6 +555,9 @@ export const useWebRTC = (
                 isInitializingCallRef.current = true;
                 console.log('[WebRTC] Setting call state to calling');
                 updateCallState('calling');
+
+                // ✅ Mark as caller for call logging
+                isCallerRef.current = true;
 
                 remoteUserIdRef.current = receiverId;
                 conversationIdRef.current = conversationId;
@@ -515,6 +652,9 @@ export const useWebRTC = (
                 console.log('[WebRTC] Setting call state to connecting');
                 updateCallState('connecting');
 
+                // ✅ Mark as callee (not caller) for call logging
+                isCallerRef.current = false;
+
                 remoteUserIdRef.current = callerId;
                 conversationIdRef.current = conversationId;
 
@@ -571,6 +711,9 @@ export const useWebRTC = (
             try {
                 console.log('[WebRTC] Declining call from:', callerId);
 
+                // ✅ Update call log if exists (user declined after answering)
+                await updateCallLog(CallStatus.Rejected);
+
                 // ✅ Clear initializing flag when declining call
                 isInitializingCallRef.current = false;
 
@@ -588,7 +731,7 @@ export const useWebRTC = (
                 callbacks?.onError?.(error as Error);
             }
         },
-        [updateCallState, cleanup, chatHub, callbacks]
+        [updateCallState, cleanup, chatHub, callbacks, updateCallLog]
     );
 
     /**
@@ -598,6 +741,9 @@ export const useWebRTC = (
         async (otherUserId: string, reason?: string) => {
             try {
                 console.log('[WebRTC] Ending call with:', otherUserId);
+
+                // ✅ Update call log before ending
+                await updateCallLog(CallStatus.Accepted);
 
                 // ✅ Clear initializing flag when ending call
                 isInitializingCallRef.current = false;
@@ -617,7 +763,7 @@ export const useWebRTC = (
                 cleanup();
             }
         },
-        [updateCallState, cleanup, chatHub]
+        [updateCallState, cleanup, chatHub, updateCallLog]
     );
 
     /**
@@ -647,6 +793,105 @@ export const useWebRTC = (
             }
         }
     }, [localStream]);
+
+    /**
+     * Toggle screen sharing
+     */
+    const toggleScreenShare = useCallback(async () => {
+        try {
+            const pc = peerConnectionRef.current;
+            if (!pc || !localStream) {
+                console.warn('[WebRTC] No peer connection or local stream for screen share');
+                return;
+            }
+
+            if (isScreenSharing) {
+                // ✅ Stop screen sharing, return to camera
+                console.log('[WebRTC] Stopping screen share, returning to camera');
+
+                // Get the original camera track
+                const originalTrack = originalVideoTrackRef.current;
+                if (originalTrack) {
+                    // Replace screen track with camera track
+                    const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+                    if (sender) {
+                        await sender.replaceTrack(originalTrack);
+                        console.log('[WebRTC] ✅ Replaced screen track with camera track');
+                    }
+
+                    // Update local stream
+                    const currentScreenTrack = localStream.getVideoTracks()[0];
+                    if (currentScreenTrack) {
+                        localStream.removeTrack(currentScreenTrack);
+                        currentScreenTrack.stop();
+                    }
+                    localStream.addTrack(originalTrack);
+
+                    // Update callback
+                    callbacks?.onLocalStream?.(localStream);
+                }
+
+                setIsScreenSharing(false);
+                originalVideoTrackRef.current = null;
+            } else {
+                // ✅ Start screen sharing
+                console.log('[WebRTC] Starting screen share');
+
+                // Get screen share stream
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        cursor: 'always',
+                        displaySurface: 'monitor',
+                    } as MediaTrackConstraints,
+                    audio: false,
+                });
+
+                const screenTrack = screenStream.getVideoTracks()[0];
+                if (!screenTrack) {
+                    console.error('[WebRTC] No screen track available');
+                    return;
+                }
+
+                // Save original camera track
+                const currentVideoTrack = localStream.getVideoTracks()[0];
+                if (currentVideoTrack) {
+                    originalVideoTrackRef.current = currentVideoTrack;
+                }
+
+                // Replace camera track with screen track
+                const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+                if (sender) {
+                    await sender.replaceTrack(screenTrack);
+                    console.log('[WebRTC] ✅ Replaced camera track with screen track');
+                }
+
+                // Update local stream
+                if (currentVideoTrack) {
+                    localStream.removeTrack(currentVideoTrack);
+                }
+                localStream.addTrack(screenTrack);
+
+                // Update callback
+                callbacks?.onLocalStream?.(localStream);
+
+                // Handle screen share stopped (user clicks "Stop sharing" in browser)
+                screenTrack.onended = () => {
+                    console.log('[WebRTC] Screen share ended by user');
+                    toggleScreenShare(); // Stop screen sharing
+                };
+
+                setIsScreenSharing(true);
+                console.log('[WebRTC] ✅ Screen sharing started');
+            }
+        } catch (error) {
+            console.error('[WebRTC] Error toggling screen share:', error);
+            callbacks?.onError?.(error as Error);
+            // If user cancels screen share, just return without error
+            if ((error as Error).name === 'NotAllowedError') {
+                console.log('[WebRTC] Screen share cancelled by user');
+            }
+        }
+    }, [localStream, isScreenSharing, callbacks]);
 
     // ============================================================================
     // SIGNALR EVENT HANDLERS
@@ -808,42 +1053,54 @@ export const useWebRTC = (
      * Handle call declined
      */
     const handleCallDeclined = useCallback(
-        (data: CallDeclinedData) => {
+        async (data: CallDeclinedData) => {
             console.log('[WebRTC] Call declined by:', data.calleeId, 'reason:', data.reason);
+
+            // ✅ Update call log
+            await updateCallLog(CallStatus.Rejected);
+
             // ✅ Clear initializing flag
             isInitializingCallRef.current = false;
             updateCallState('declined');
             cleanup();
         },
-        [updateCallState, cleanup]
+        [updateCallState, cleanup, updateCallLog]
     );
 
     /**
      * Handle call ended
      */
     const handleCallEnded = useCallback(
-        (data: CallEndedData) => {
+        async (data: CallEndedData) => {
             console.log('[WebRTC] Call ended by:', data.userId, 'reason:', data.reason);
+
+            // ✅ Update call log
+            await updateCallLog(CallStatus.Accepted);
+
             // ✅ Clear initializing flag
             isInitializingCallRef.current = false;
             updateCallState('ended');
             cleanup();
         },
-        [updateCallState, cleanup]
+        [updateCallState, cleanup, updateCallLog]
     );
 
     /**
      * Handle user busy
      */
     const handleUserBusy = useCallback(
-        (data: UserBusyData) => {
+        async (data: UserBusyData) => {
             console.log('[WebRTC] User is busy:', data.userId);
+
+            // ✅ Update call log
+            await updateCallLog(CallStatus.Rejected);
+
             // ✅ Clear initializing flag
             isInitializingCallRef.current = false;
             updateCallState('busy');
             cleanup();
         },
-        [updateCallState, cleanup]
+        [updateCallState, cleanup, updateCallLog]
     );
 
     // ✅ Update handlers ref when handlers change
@@ -881,6 +1138,7 @@ export const useWebRTC = (
         remoteStream,
         isMuted,
         isVideoOff,
+        isScreenSharing,
 
         // Actions
         startCall,
@@ -889,6 +1147,7 @@ export const useWebRTC = (
         endCall,
         toggleMute,
         toggleVideo,
+        toggleScreenShare,
 
         // Cleanup
         cleanup,

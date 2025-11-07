@@ -180,13 +180,22 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
     const leaveConversation = useCallback(
         async (conversationId: string) => {
             if (!connection || !isConnected) {
-                throw new Error('ChatHub is not connected');
+                console.warn('[useSharedChatHub] ⚠️ Cannot leave conversation - not connected');
+                return; // ✅ Don't throw error, just return silently during cleanup
             }
             try {
                 await connection.invoke('LeaveConversation', conversationId);
-            } catch (error) {
+                console.log('[useSharedChatHub] ✅ Left conversation:', conversationId);
+            } catch (error: any) {
+                // ✅ Don't throw if connection was closed (common during cleanup)
+                if (error?.message?.includes('connection being closed')) {
+                    console.warn(
+                        '[useSharedChatHub] ⚠️ Connection closed while leaving conversation'
+                    );
+                    return;
+                }
                 console.error('[useSharedChatHub] ❌ Error leaving conversation:', error);
-                throw error;
+                // Don't throw - leaving conversation shouldn't break the app
             }
         },
         [connection, isConnected]

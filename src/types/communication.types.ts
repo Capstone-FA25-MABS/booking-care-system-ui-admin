@@ -18,16 +18,14 @@ export enum MessageStatus {
 }
 
 export enum CallType {
-    VOICE = 'Voice',
-    VIDEO = 'Video',
+    Audio = 'Audio',
+    Video = 'Video',
 }
 
 export enum CallStatus {
-    MISSED = 'Missed',
-    COMPLETED = 'Completed',
-    DECLINED = 'Declined',
-    BUSY = 'Busy',
-    FAILED = 'Failed',
+    Accepted = 'Accepted',
+    Missed = 'Missed',
+    Rejected = 'Rejected',
 }
 
 // Message Attachment
@@ -109,12 +107,11 @@ export interface CallLogResponse {
     conversationId: string;
     callerId: string;
     receiverId: string;
-    callType: CallType;
-    callStatus: CallStatus;
+    type: CallType; // API returns "type"
+    status: CallStatus; // API returns "status"
     duration?: number;
-    startTime: string;
-    endTime?: string;
-    createdAt: string;
+    startedAt: string; // API returns "startedAt"
+    endedAt?: string; // API returns "endedAt"
 }
 
 // Request DTOs
@@ -145,16 +142,14 @@ export interface CreateCallLogRequest {
     conversationId: string;
     callerId: string;
     receiverId: string;
-    callType: CallType;
-    callStatus?: CallStatus;
-    startTime: string;
+    type: CallType; // Backend expects "type", not "callType"
 }
 
 export interface UpdateCallLogRequest {
     id: string;
-    callStatus: CallStatus;
-    endTime: string;
-    duration?: number;
+    status: CallStatus; // Backend expects "status", not "callStatus"
+    endedAt?: string; // Backend expects "endedAt", not "endTime"
+    duration: number;
 }
 
 export interface GetConversationsQueryParameters {

@@ -2,9 +2,10 @@ import { useEffect, useRef, Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
-import { MessageResponse, MessageType } from '@/types/communication.types';
+import { MessageType, MessageAttachment } from '@/types/communication.types';
 import clsx from 'clsx';
 import styles from '../../Messages.module.scss';
+import CallLogItem from './CallLogItem';
 
 const MessageList = () => {
     const {
@@ -218,14 +219,11 @@ const MessageList = () => {
     };
 
     // Helper: Check if we need date separator
-    const needsDateSeparator = (
-        currentMsg: MessageResponse,
-        previousMsg: MessageResponse | null
-    ): boolean => {
-        if (!previousMsg) return true;
+    const needsDateSeparator = (currentItem: any, previousItem: any | null): boolean => {
+        if (!previousItem) return true;
 
-        const currentDate = new Date(currentMsg.createdAt).toDateString();
-        const previousDate = new Date(previousMsg.createdAt).toDateString();
+        const currentDate = new Date(currentItem.createdAt).toDateString();
+        const previousDate = new Date(previousItem.createdAt).toDateString();
 
         return currentDate !== previousDate;
     };
@@ -260,262 +258,293 @@ const MessageList = () => {
                 </div>
             )}
 
-            {messages.map((message: MessageResponse, index) => {
-                const previousMsg = index > 0 ? messages[index - 1] : null;
-                const showDateSeparator = needsDateSeparator(message, previousMsg);
-                const isOwn = message.senderId?.toUpperCase() === currentUserId;
+            {messages.map((item: any, index) => {
+                const previousItem = index > 0 ? messages[index - 1] : null;
+
+                // Check if it's a call log or message
+                const isCallLog = item.itemType === 'CallLog';
+                const message = isCallLog ? null : item.message || item;
+                const callLog = isCallLog ? item.callLog : null;
+
+                const showDateSeparator = needsDateSeparator(item, previousItem);
+                const isOwn = isCallLog
+                    ? (callLog?.callerId || '').toUpperCase() === currentUserId
+                    : (message?.senderId || '').toUpperCase() === currentUserId;
 
                 return (
-                    <Fragment key={message.id}>
+                    <Fragment key={item.id}>
                         {/* Date Separator */}
                         {showDateSeparator && (
                             <div className="text-center my-3">
                                 <span className="badge bg-light text-dark px-3 py-2 rounded-pill shadow-sm">
-                                    {getDateLabel(message.createdAt)}
+                                    {getDateLabel(item.createdAt)}
                                 </span>
                             </div>
                         )}
 
-                        {/* Message */}
-                        <div
-                            className="mb-3"
-                            style={{
-                                display: 'flex',
-                                gap: '0.75rem',
-                                alignItems: 'flex-end',
-                                justifyContent: isOwn ? 'flex-end' : 'flex-start',
-                            }}
-                        >
-                            {!isOwn && (
-                                <span
-                                    className="avatar flex-shrink-0"
-                                    style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <img
-                                        src={message.senderInfo?.avatarUrl || '/default-avatar.png'}
-                                        alt="avatar"
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover',
-                                        }}
-                                    />
-                                </span>
-                            )}
-                            <div style={{ maxWidth: '70%' }}>
-                                <div
-                                    style={{
-                                        padding: '0.625rem 0.875rem',
-                                        borderRadius: '0.5rem',
-                                        backgroundColor: isOwn ? '#007bff' : '#f8f9fa',
-                                        color: isOwn ? 'white' : '#212529',
-                                        wordBreak: 'break-word',
-                                        whiteSpace: 'normal',
-                                        display: 'inline-block',
-                                        minWidth: 'fit-content',
-                                        ...(isOwn
-                                            ? { borderBottomRightRadius: '0.25rem' }
-                                            : { borderBottomLeftRadius: '0.25rem' }),
-                                    }}
-                                >
-                                    {/* Text Content */}
-                                    {message.content && message.content.trim() && (
-                                        <p
-                                            style={{
-                                                margin: '0 0 0.25rem 0',
-                                                lineHeight: 1.5,
-                                                whiteSpace: 'normal',
-                                            }}
-                                        >
-                                            {message.content}
-                                        </p>
-                                    )}
-
-                                    {/* Attachments */}
-                                    {message.attachments && message.attachments.length > 0 && (
-                                        <div
-                                            style={{ marginTop: message.content ? '0.5rem' : '0' }}
-                                        >
-                                            {message.attachments.map((att, idx) => {
-                                                const fileUrl = att.url || att.fileUrl;
-                                                const fileName = att.name || att.fileName || 'File';
-                                                const mimeType = att.mimeType;
-
-                                                // Image attachments
-                                                if (
-                                                    message.type === MessageType.IMAGE ||
-                                                    mimeType?.startsWith('image/')
-                                                ) {
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            style={{
-                                                                marginTop: idx > 0 ? '0.5rem' : '0',
-                                                            }}
-                                                        >
-                                                            <img
-                                                                src={fileUrl}
-                                                                alt={fileName}
-                                                                onClick={() =>
-                                                                    setSelectedImage(
-                                                                        fileUrl || null
-                                                                    )
-                                                                }
-                                                                style={{
-                                                                    maxWidth: '250px',
-                                                                    maxHeight: '250px',
-                                                                    borderRadius: '0.5rem',
-                                                                    display: 'block',
-                                                                    objectFit: 'cover',
-                                                                    cursor: 'pointer',
-                                                                    transition: 'opacity 0.2s',
-                                                                }}
-                                                                onMouseOver={(e) =>
-                                                                    (e.currentTarget.style.opacity =
-                                                                        '0.8')
-                                                                }
-                                                                onMouseOut={(e) =>
-                                                                    (e.currentTarget.style.opacity =
-                                                                        '1')
-                                                                }
-                                                            />
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // Video attachments
-                                                if (
-                                                    message.type === MessageType.VIDEO ||
-                                                    mimeType?.startsWith('video/')
-                                                ) {
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            style={{
-                                                                marginTop: idx > 0 ? '0.5rem' : '0',
-                                                            }}
-                                                        >
-                                                            <video
-                                                                controls
-                                                                style={{
-                                                                    maxWidth: '250px',
-                                                                    maxHeight: '250px',
-                                                                    borderRadius: '0.5rem',
-                                                                    display: 'block',
-                                                                }}
-                                                            >
-                                                                <source
-                                                                    src={fileUrl}
-                                                                    type={mimeType}
-                                                                />
-                                                                Your browser does not support the
-                                                                video tag.
-                                                            </video>
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // Audio attachments
-                                                if (
-                                                    message.type === MessageType.AUDIO ||
-                                                    mimeType?.startsWith('audio/')
-                                                ) {
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            style={{
-                                                                marginTop: idx > 0 ? '0.5rem' : '0',
-                                                            }}
-                                                        >
-                                                            <audio
-                                                                controls
-                                                                style={{ maxWidth: '100%' }}
-                                                            >
-                                                                <source
-                                                                    src={fileUrl}
-                                                                    type={mimeType}
-                                                                />
-                                                                Your browser does not support the
-                                                                audio tag.
-                                                            </audio>
-                                                        </div>
-                                                    );
-                                                }
-
-                                                // Other file attachments
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        style={{
-                                                            marginTop: idx > 0 ? '0.25rem' : '0',
-                                                        }}
-                                                    >
-                                                        <a
-                                                            href={fileUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            style={{
-                                                                color: 'inherit',
-                                                                textDecoration: 'none',
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.25rem',
-                                                                fontSize: '0.875rem',
-                                                            }}
-                                                        >
-                                                            📎 {fileName}
-                                                        </a>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-
+                        {/* Render Call Log or Message */}
+                        {isCallLog && callLog ? (
+                            <CallLogItem callLog={callLog} isOwn={isOwn} />
+                        ) : message ? (
+                            <div
+                                className="mb-3"
+                                style={{
+                                    display: 'flex',
+                                    gap: '0.75rem',
+                                    alignItems: 'flex-end',
+                                    justifyContent: isOwn ? 'flex-end' : 'flex-start',
+                                }}
+                            >
+                                {!isOwn && (
                                     <span
+                                        className="avatar flex-shrink-0"
                                         style={{
-                                            display: 'block',
-                                            fontSize: '0.75rem',
-                                            marginTop: '0.25rem',
-                                            opacity: 0.7,
-                                            whiteSpace: 'nowrap',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
                                         }}
                                     >
-                                        {formatMessageTimestamp(message.createdAt)}
+                                        <img
+                                            src={
+                                                message.senderInfo?.avatarUrl ||
+                                                '/default-avatar.png'
+                                            }
+                                            alt="avatar"
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                            }}
+                                        />
                                     </span>
-                                </div>
-                            </div>
-                            {isOwn && (
-                                <span
-                                    className="avatar flex-shrink-0"
-                                    style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    <img
-                                        src={
-                                            adminProfile?.avatarUrl ||
-                                            doctorProfile?.avatarUrl ||
-                                            hospitalProfile?.avatarUrl ||
-                                            '/default-avatar.png'
-                                        }
-                                        alt="avatar"
+                                )}
+                                <div style={{ maxWidth: '70%' }}>
+                                    <div
                                         style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover',
+                                            padding: '0.625rem 0.875rem',
+                                            borderRadius: '0.5rem',
+                                            backgroundColor: isOwn ? '#007bff' : '#f8f9fa',
+                                            color: isOwn ? 'white' : '#212529',
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'normal',
+                                            display: 'inline-block',
+                                            minWidth: 'fit-content',
+                                            ...(isOwn
+                                                ? { borderBottomRightRadius: '0.25rem' }
+                                                : { borderBottomLeftRadius: '0.25rem' }),
                                         }}
-                                    />
-                                </span>
-                            )}
-                        </div>
+                                    >
+                                        {/* Text Content */}
+                                        {message.content && message.content.trim() && (
+                                            <p
+                                                style={{
+                                                    margin: '0 0 0.25rem 0',
+                                                    lineHeight: 1.5,
+                                                    whiteSpace: 'normal',
+                                                }}
+                                            >
+                                                {message.content}
+                                            </p>
+                                        )}
+
+                                        {/* Attachments */}
+                                        {message.attachments && message.attachments.length > 0 && (
+                                            <div
+                                                style={{
+                                                    marginTop: message.content ? '0.5rem' : '0',
+                                                }}
+                                            >
+                                                {message.attachments.map(
+                                                    (att: MessageAttachment, idx: number) => {
+                                                        const fileUrl = att.url || att.fileUrl;
+                                                        const fileName =
+                                                            att.name || att.fileName || 'File';
+                                                        const mimeType = att.mimeType;
+
+                                                        // Image attachments
+                                                        if (
+                                                            message.type === MessageType.IMAGE ||
+                                                            mimeType?.startsWith('image/')
+                                                        ) {
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    style={{
+                                                                        marginTop:
+                                                                            idx > 0
+                                                                                ? '0.5rem'
+                                                                                : '0',
+                                                                    }}
+                                                                >
+                                                                    <img
+                                                                        src={fileUrl}
+                                                                        alt={fileName}
+                                                                        onClick={() =>
+                                                                            setSelectedImage(
+                                                                                fileUrl || null
+                                                                            )
+                                                                        }
+                                                                        style={{
+                                                                            maxWidth: '250px',
+                                                                            maxHeight: '250px',
+                                                                            borderRadius: '0.5rem',
+                                                                            display: 'block',
+                                                                            objectFit: 'cover',
+                                                                            cursor: 'pointer',
+                                                                            transition:
+                                                                                'opacity 0.2s',
+                                                                        }}
+                                                                        onMouseOver={(e) =>
+                                                                            (e.currentTarget.style.opacity =
+                                                                                '0.8')
+                                                                        }
+                                                                        onMouseOut={(e) =>
+                                                                            (e.currentTarget.style.opacity =
+                                                                                '1')
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        // Video attachments
+                                                        if (
+                                                            message.type === MessageType.VIDEO ||
+                                                            mimeType?.startsWith('video/')
+                                                        ) {
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    style={{
+                                                                        marginTop:
+                                                                            idx > 0
+                                                                                ? '0.5rem'
+                                                                                : '0',
+                                                                    }}
+                                                                >
+                                                                    <video
+                                                                        controls
+                                                                        style={{
+                                                                            maxWidth: '250px',
+                                                                            maxHeight: '250px',
+                                                                            borderRadius: '0.5rem',
+                                                                            display: 'block',
+                                                                        }}
+                                                                    >
+                                                                        <source
+                                                                            src={fileUrl}
+                                                                            type={mimeType}
+                                                                        />
+                                                                        Your browser does not
+                                                                        support the video tag.
+                                                                    </video>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        // Audio attachments
+                                                        if (
+                                                            message.type === MessageType.AUDIO ||
+                                                            mimeType?.startsWith('audio/')
+                                                        ) {
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    style={{
+                                                                        marginTop:
+                                                                            idx > 0
+                                                                                ? '0.5rem'
+                                                                                : '0',
+                                                                    }}
+                                                                >
+                                                                    <audio
+                                                                        controls
+                                                                        style={{ maxWidth: '100%' }}
+                                                                    >
+                                                                        <source
+                                                                            src={fileUrl}
+                                                                            type={mimeType}
+                                                                        />
+                                                                        Your browser does not
+                                                                        support the audio tag.
+                                                                    </audio>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        // Other file attachments
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                style={{
+                                                                    marginTop:
+                                                                        idx > 0 ? '0.25rem' : '0',
+                                                                }}
+                                                            >
+                                                                <a
+                                                                    href={fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    style={{
+                                                                        color: 'inherit',
+                                                                        textDecoration: 'none',
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '0.25rem',
+                                                                        fontSize: '0.875rem',
+                                                                    }}
+                                                                >
+                                                                    📎 {fileName}
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    }
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <span
+                                            style={{
+                                                display: 'block',
+                                                fontSize: '0.75rem',
+                                                marginTop: '0.25rem',
+                                                opacity: 0.7,
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {formatMessageTimestamp(message.createdAt)}
+                                        </span>
+                                    </div>
+                                </div>
+                                {isOwn && (
+                                    <span
+                                        className="avatar flex-shrink-0"
+                                        style={{
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                        }}
+                                    >
+                                        <img
+                                            src={
+                                                adminProfile?.avatarUrl ||
+                                                doctorProfile?.avatarUrl ||
+                                                hospitalProfile?.avatarUrl ||
+                                                '/default-avatar.png'
+                                            }
+                                            alt="avatar"
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                            }}
+                                        />
+                                    </span>
+                                )}
+                            </div>
+                        ) : null}
                     </Fragment>
                 );
             })}
