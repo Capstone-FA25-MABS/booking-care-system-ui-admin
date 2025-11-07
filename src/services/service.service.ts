@@ -1,5 +1,6 @@
 import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import { Service, ServiceFormData, ServiceSearchParams } from '@/types/service.types';
+import { BaseService } from './baseService';
 
 export interface ServiceListResponse {
     items: Service[];
@@ -28,43 +29,9 @@ const SERVICE_ENDPOINTS = {
     FILTER_ENTITIES: '/services',
 } as const;
 
-export class ServiceService {
+export class ServiceService extends BaseService {
     protected entityName = 'Dịch Vụ';
     protected entityNamePlural = 'Dịch Vụ';
-
-    protected formatResponse(response: any, defaultMessage: string): ApiResponse {
-        return {
-            success: response.success ?? true,
-            data: response.data?.data || response.data || response,
-            message: response.message || defaultMessage,
-        };
-    }
-
-    protected handleError(
-        error: any,
-        defaultMessage: string = 'Không thể kết nối đến máy chủ!'
-    ): never {
-        console.error(`${this.entityName}Service Error:`, error);
-
-        if (error.response?.status === 400) {
-            const errorData = error.response.data;
-            if (
-                errorData?.errors &&
-                Array.isArray(errorData.errors) &&
-                errorData.errors.length > 0
-            ) {
-                throw new Error(errorData.errors[0]);
-            }
-            throw new Error(errorData?.message || 'Dữ liệu không hợp lệ');
-        } else if (error.response?.status === 404) {
-            throw new Error(`Không tìm thấy ${this.entityName.toLowerCase()}`);
-        } else if (error.response?.status === 409) {
-            throw new Error(`Tên ${this.entityName.toLowerCase()} đã tồn tại`);
-        } else if (error.response?.status === 500) {
-            throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
-        }
-        throw new Error(error.message || defaultMessage);
-    }
 
     protected validateEntityData(serviceData: ServiceFormData): void {
         if (!serviceData.name || serviceData.name.trim().length === 0) {
@@ -143,9 +110,7 @@ export class ServiceService {
 
     async getServiceById(id: string): Promise<ApiResponse<Service>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
             const response: any = await axiosInstance.get(SERVICE_ENDPOINTS.GET_ENTITY(id));
             return this.formatResponse(
                 response,
@@ -184,9 +149,7 @@ export class ServiceService {
 
     async updateService(id: string, serviceData: ServiceFormData): Promise<ApiResponse<Service>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
             this.validateEntityData(serviceData);
 
             const payload = {
@@ -217,9 +180,7 @@ export class ServiceService {
 
     async deleteService(id: string): Promise<ApiResponse<void>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
 
             // Backend uses DELETE method: [HttpDelete("{id}")]
             const response: any = await axiosInstance.delete(SERVICE_ENDPOINTS.DELETE_ENTITY(id));
@@ -276,9 +237,7 @@ export class ServiceService {
         serviceData: ServiceFormData & { imageFile: File }
     ): Promise<ApiResponse<Service>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
             this.validateEntityData(serviceData);
 
             const formData = new FormData();

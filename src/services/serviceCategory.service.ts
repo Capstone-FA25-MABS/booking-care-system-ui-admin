@@ -1,5 +1,6 @@
 import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import { ServiceCategory, ServiceCategoryFormData } from '@/types/serviceCategory.types';
+import { BaseService } from './baseService';
 
 const SERVICE_CATEGORY_ENDPOINTS = {
     GET_ALL_DETAILS: '/medical-services/servicecategories/all-details',
@@ -9,47 +10,9 @@ const SERVICE_CATEGORY_ENDPOINTS = {
     DELETE_ENTITY: (id: string) => `/medical-services/servicecategories/${id}`,
 } as const;
 
-export class ServiceCategoryService {
+export class ServiceCategoryService extends BaseService {
     protected entityName = 'Danh Mục Dịch Vụ';
     protected entityNamePlural = 'Danh Mục Dịch Vụ';
-
-    protected formatResponse(response: any, defaultMessage: string): ApiResponse {
-        return {
-            success: response.success ?? true,
-            data: response.data?.data || response.data || response,
-            message: response.message || defaultMessage,
-        };
-    }
-
-    protected handleError(
-        error: any,
-        defaultMessage: string = 'Không thể kết nối đến máy chủ!'
-    ): never {
-        console.error(`${this.entityName}Service Error:`, error);
-
-        if (error.response?.status === 400) {
-            const errorData = error.response.data;
-            // Check for error message (from InvalidOperationException)
-            if (errorData?.error) {
-                throw new Error(errorData.error);
-            }
-            if (
-                errorData?.errors &&
-                Array.isArray(errorData.errors) &&
-                errorData.errors.length > 0
-            ) {
-                throw new Error(errorData.errors[0]);
-            }
-            throw new Error(errorData?.message || 'Dữ liệu không hợp lệ');
-        } else if (error.response?.status === 404) {
-            throw new Error(`Không tìm thấy ${this.entityName.toLowerCase()}`);
-        } else if (error.response?.status === 409) {
-            throw new Error(`Tên ${this.entityName.toLowerCase()} đã tồn tại`);
-        } else if (error.response?.status === 500) {
-            throw new Error('Lỗi máy chủ. Vui lòng thử lại sau');
-        }
-        throw new Error(error.message || defaultMessage);
-    }
 
     /**
      * Get all service categories with details and sorting
@@ -92,9 +55,7 @@ export class ServiceCategoryService {
 
     async getServiceCategoryById(id: string): Promise<ApiResponse<ServiceCategory>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
             const response: any = await axiosInstance.get(
                 SERVICE_CATEGORY_ENDPOINTS.GET_ENTITY(id)
             );
@@ -139,9 +100,7 @@ export class ServiceCategoryService {
         data: ServiceCategoryFormData
     ): Promise<ApiResponse<ServiceCategory>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
 
             if (!data.name || data.name.trim().length === 0) {
                 throw new Error(`Tên ${this.entityName.toLowerCase()} không được để trống`);
@@ -171,9 +130,7 @@ export class ServiceCategoryService {
 
     async deleteServiceCategory(id: string): Promise<ApiResponse<void>> {
         try {
-            if (!id || id.trim().length === 0) {
-                throw new Error(`ID ${this.entityName.toLowerCase()} không hợp lệ`);
-            }
+            this.validateEntityId(id);
 
             const response: any = await axiosInstance.delete(
                 SERVICE_CATEGORY_ENDPOINTS.DELETE_ENTITY(id)

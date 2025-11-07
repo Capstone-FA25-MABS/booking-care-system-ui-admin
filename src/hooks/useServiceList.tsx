@@ -105,8 +105,7 @@ export const useServiceList = (config: UseServiceListConfig = {}) => {
         const activeHospitals = overrideFilters?.hospitals ?? appliedSelectedHospitals;
         const activeStatuses = overrideFilters?.statuses ?? appliedSelectedStatuses;
         const activePrices = overrideFilters?.prices ?? appliedSelectedPrices;
-        const activeSearchTerm =
-            overrideFilters?.search === undefined ? searchTerm : overrideFilters.search;
+        const activeSearchTerm = overrideFilters?.search ?? searchTerm;
 
         if (activeSearchTerm.trim()) {
             filterParams.searchTerm = activeSearchTerm.trim();

@@ -7,7 +7,6 @@ const ListServicesStaff: React.FC = () => {
     // Get hospital ID from the logged-in staff user's hospital profile
     const hospitalProfile = useSelector((state: RootState) => state.user.hospitalProfile);
 
-    // TODO: Remove this hardcoded ID when testing is complete
     // Hardcoded hospital ID for testing (remove after login is implemented)
     const TEST_HOSPITAL_ID = '3A3502FD-2B92-4370-9BA7-0B309A2B02A7';
 

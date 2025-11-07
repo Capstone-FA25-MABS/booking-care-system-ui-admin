@@ -80,7 +80,7 @@ const ListServiceCategories: React.FC = () => {
         const parents: ServiceCategory[] = [];
         const childrenMap = new Map<string, ServiceCategory[]>();
 
-        serviceCategories.forEach((category) => {
+        for (const category of serviceCategories) {
             const parentId = category.parentId;
 
             if (!parentId || parentId === null) {
@@ -93,7 +93,7 @@ const ListServiceCategories: React.FC = () => {
                 }
                 childrenMap.get(parentId)!.push(category);
             }
-        });
+        }
 
         // API already handles sorting, so we just maintain the order
 
@@ -277,7 +277,6 @@ const ListServiceCategories: React.FC = () => {
                         <TableActions
                             id={category.id}
                             onEdit={() => {
-                                // TODO: Implement edit functionality
                                 console.log('Edit category:', category.id);
                             }}
                             onDelete={() => handleDeleteCategory(category)}
@@ -392,7 +391,6 @@ const ListServiceCategories: React.FC = () => {
                                             type="search"
                                             className="form-control form-control-sm"
                                             placeholder="Tìm kiếm danh mục..."
-                                            // TODO: Implement search
                                         />
                                     </label>
                                 </div>
@@ -448,7 +446,7 @@ const ListServiceCategories: React.FC = () => {
                         <a href="/" className="link-primary">
                             Preclinic
                         </a>
-                        , Tất Cả Quyền Được Bảo Lưu
+                        {''}, Tất Cả Quyền Được Bảo Lưu
                     </p>
                 </div>
             </div>
