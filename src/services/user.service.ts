@@ -2,10 +2,8 @@ import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import {
     AdminProfile,
     DoctorProfile,
-    HospitalProfile,
     UpdateAdminRequest,
     UpdateDoctorRequest,
-    UpdateHospitalRequest,
 } from '@/types/user.types';
 
 // Base API endpoints
@@ -17,10 +15,6 @@ const USER_ENDPOINTS = {
     // Doctor endpoints (Doctor Service)
     DOCTOR_BY_ACCOUNT: `/doctors/by-account`,
     DOCTOR_HEALTH: '/doctors/health',
-
-    // Hospital endpoints (Hospital Service)
-    HOSPITAL_BY_ACCOUNT: `/hospitals/account`,
-    HOSPITAL_HEALTH: '/hospitals/health',
 } as const;
 
 /**
@@ -103,44 +97,6 @@ export class UserService {
         }
     }
 
-    // ========== HOSPITAL PROFILE (Hospital Service) ==========
-
-    /**
-     * Get hospital profiles by account ID from Hospital Service
-     * Note: A hospital account can have multiple hospital entities
-     */
-    static async getHospitalProfilesByAccountId(): Promise<ApiResponse<HospitalProfile[]>> {
-        try {
-            const response: any = await axiosInstance.get(USER_ENDPOINTS.HOSPITAL_BY_ACCOUNT);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Hospital profiles retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get hospital profiles');
-        }
-    }
-
-    /**
-     * Update hospital profile
-     */
-    static async updateHospitalProfile(
-        hospitalId: string,
-        updateData: UpdateHospitalRequest
-    ): Promise<ApiResponse<HospitalProfile>> {
-        try {
-            const response: any = await axiosInstance.put(`/hospitals/${hospitalId}`, updateData);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Hospital profile updated successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to update hospital profile');
-        }
-    }
-
     // ========== HEALTH CHECKS ==========
 
     static async healthCheckAdmin(): Promise<ApiResponse> {
@@ -168,29 +124,14 @@ export class UserService {
             throw new Error(error.message || 'Doctor service health check failed');
         }
     }
-
-    static async healthCheckHospital(): Promise<ApiResponse> {
-        try {
-            const response: any = await axiosInstance.get(USER_ENDPOINTS.HOSPITAL_HEALTH);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message,
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Hospital service health check failed');
-        }
-    }
 }
 
 // Export for convenience
 export const {
     getAdminProfile,
     getDoctorProfileByAccountId,
-    getHospitalProfilesByAccountId,
     updateAdminProfile,
     updateDoctorProfile,
-    updateHospitalProfile,
 } = UserService;
 
 export default UserService;
