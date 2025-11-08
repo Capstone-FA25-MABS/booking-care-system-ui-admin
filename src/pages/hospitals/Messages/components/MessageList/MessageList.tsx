@@ -271,16 +271,6 @@ const MessageList = () => {
                     ? (callLog?.callerId || '').toUpperCase() === currentUserId
                     : (message?.senderId || '').toUpperCase() === currentUserId;
 
-                // 🔍 Debug: Log call log ownership
-                if (isCallLog) {
-                    console.log('[MessageList Admin] 🔍 Call log ownership check:', {
-                        callerId: (callLog?.callerId || '').toUpperCase(),
-                        currentUserId: currentUserId,
-                        isOwn: isOwn,
-                        callLogId: item.id,
-                    });
-                }
-
                 return (
                     <Fragment key={item.id}>
                         {/* Date Separator */}

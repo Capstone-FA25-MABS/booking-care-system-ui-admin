@@ -52,7 +52,8 @@
         "react-toastify": "^11.0.5",
         "redux-persist": "^6.0.0",
         "simplebar-react": "^3.3.2",
-        "swiper": "^11.2.10"
+        "swiper": "^11.2.10",
+        "use-sound": "^5.0.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.22.0",
