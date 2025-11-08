@@ -5,7 +5,7 @@ import { RootState } from '@/store';
 import { MessageType, MessageAttachment } from '@/types/communication.types';
 import clsx from 'clsx';
 import styles from '../../Messages.module.scss';
-import CallLogItem from './CallLogItem';
+import CallLogItem from './CallLogItem/CallLogItem';
 
 const MessageList = () => {
     const {
@@ -270,6 +270,16 @@ const MessageList = () => {
                 const isOwn = isCallLog
                     ? (callLog?.callerId || '').toUpperCase() === currentUserId
                     : (message?.senderId || '').toUpperCase() === currentUserId;
+
+                // 🔍 Debug: Log call log ownership
+                if (isCallLog) {
+                    console.log('[MessageList Admin] 🔍 Call log ownership check:', {
+                        callerId: (callLog?.callerId || '').toUpperCase(),
+                        currentUserId: currentUserId,
+                        isOwn: isOwn,
+                        callLogId: item.id,
+                    });
+                }
 
                 return (
                     <Fragment key={item.id}>

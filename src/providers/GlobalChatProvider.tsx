@@ -49,7 +49,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
     // ✅ Track processed calls to prevent spam/duplicates
     const processedCallsRef = React.useRef<Set<string>>(new Set());
-    const callTimeoutRef = React.useRef<NodeJS.Timeout>();
+    const callTimeoutRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
 
     // Global notification callbacks
     const hubCallbacks: ChatHubCallbacks = {
@@ -143,6 +143,74 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
                     return prev;
                 });
             }, 60000);
+        }, []),
+
+        onCallEnded: useCallback((data: any) => {
+            console.log('[GlobalChat] 📵 Call ended:', data);
+
+            // ✅ Clear timeout
+            if (callTimeoutRef.current) {
+                clearTimeout(callTimeoutRef.current);
+            }
+
+            // ✅ If there's an incoming call, check if it's from the user who ended the call
+            setIncomingCall((prev) => {
+                if (!prev) return prev;
+
+                // data.userId is the one who ended the call
+                // data.otherUserId is the other participant
+                // If the caller (data.userId) ended the call, clear the notification
+                const isCallerWhoEnded = prev.callerId.toUpperCase() === data.userId?.toUpperCase();
+
+                if (isCallerWhoEnded) {
+                    console.log(
+                        '[GlobalChat] Clearing incoming call notification (caller ended call)'
+                    );
+                    // ✅ Clear from processed set to allow same user to call again
+                    const callId = `${prev.callerId}-${prev.conversationId}`;
+                    processedCallsRef.current.delete(callId);
+                    return null;
+                }
+                return prev;
+            });
+        }, []),
+
+        onCallLogUpdated: useCallback((data: any) => {
+            console.log('[GlobalChat] 📝 Call log updated:', data);
+            // ℹ️ The backend has already updated the conversation's LastMessage
+            // Components that display conversation lists can listen to this event
+            // and refetch/invalidate their queries to show the updated LastMessage
+            // No action needed here - this is for page-level handlers
+        }, []),
+
+        onCallDeclined: useCallback((data: any) => {
+            console.log('[GlobalChat] ❌ Call declined:', data);
+
+            // ✅ Clear timeout
+            if (callTimeoutRef.current) {
+                clearTimeout(callTimeoutRef.current);
+            }
+
+            // ✅ If there's an incoming call, check if caller declined
+            setIncomingCall((prev) => {
+                if (!prev) return prev;
+
+                // data.callerId is the one who initiated the call and declined it
+                // If the caller declined their own call, clear the notification
+                const isCallerWhoDeclined =
+                    prev.callerId.toUpperCase() === data.callerId?.toUpperCase();
+
+                if (isCallerWhoDeclined) {
+                    console.log(
+                        '[GlobalChat] Clearing incoming call notification (caller declined their own call)'
+                    );
+                    // ✅ Clear from processed set to allow same user to call again
+                    const callId = `${prev.callerId}-${prev.conversationId}`;
+                    processedCallsRef.current.delete(callId);
+                    return null;
+                }
+                return prev;
+            });
         }, []),
     };
 

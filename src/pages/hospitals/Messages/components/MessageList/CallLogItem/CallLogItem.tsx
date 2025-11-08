@@ -1,5 +1,7 @@
 import { CallLogResponse, CallType, CallStatus } from '@/types/communication.types';
+import clsx from 'clsx';
 
+import styles from './CallLogItem.module.scss';
 interface CallLogItemProps {
     callLog: CallLogResponse;
     isOwn: boolean;
@@ -66,12 +68,7 @@ const CallLogItem = ({ callLog, isOwn }: CallLogItemProps) => {
     };
 
     return (
-        <div className={`chats ${isOwn ? 'chats-right' : ''}`}>
-            {!isOwn && (
-                <div className="chat-avatar">
-                    <i className={`${icon} fs-5 text-primary`}></i>
-                </div>
-            )}
+        <div className={clsx('chats', { [styles.chats]: isOwn })}>
             <div className="chat-content">
                 <div
                     className="message-content"
@@ -96,11 +93,6 @@ const CallLogItem = ({ callLog, isOwn }: CallLogItemProps) => {
                     </div>
                 </div>
             </div>
-            {isOwn && (
-                <div className="chat-avatar">
-                    <i className={`${icon} fs-5 text-primary`}></i>
-                </div>
-            )}
         </div>
     );
 };

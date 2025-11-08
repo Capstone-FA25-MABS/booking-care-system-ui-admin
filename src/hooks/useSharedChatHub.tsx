@@ -109,6 +109,11 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
             callbacksRef.current?.onReceiveIceCandidate?.(data);
         };
 
+        const callLogUpdatedHandler = (data: any) => {
+            console.log('[useSharedChatHub] 📝 CallLogUpdated event:', data);
+            callbacksRef.current?.onCallLogUpdated?.(data);
+        };
+
         // Register all handlers
         connection.on('ReceiveMessage', receiveMessageHandler);
         connection.on('MessageRead', messageReadHandler);
@@ -132,6 +137,7 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
         connection.on('ReceiveOffer', receiveOfferHandler);
         connection.on('ReceiveAnswer', receiveAnswerHandler);
         connection.on('ReceiveIceCandidate', receiveIceCandidateHandler);
+        connection.on('CallLogUpdated', callLogUpdatedHandler);
 
         // Cleanup - remove handlers on unmount
         return () => {
@@ -158,6 +164,7 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
             connection.off('ReceiveOffer', receiveOfferHandler);
             connection.off('ReceiveAnswer', receiveAnswerHandler);
             connection.off('ReceiveIceCandidate', receiveIceCandidateHandler);
+            connection.off('CallLogUpdated', callLogUpdatedHandler);
         };
     }, [connection]);
 

@@ -96,6 +96,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     // ✅ Ref to track processing messages (prevent duplicates from multiple SignalR events)
     const processingMessagesRef = useRef<Set<string>>(new Set());
 
+    // ✅ Ref for loadConversations function to avoid circular dependency
+    const loadConversationsRef = useRef<(() => Promise<void>) | null>(null);
+
+    // ✅ Ref for reloadMessages function to refetch messages for active conversation
+    const reloadMessagesRef = useRef<(() => Promise<void>) | null>(null);
+
     // Pagination state
     const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
     const [previousCursor, setPreviousCursor] = useState<string | undefined>(undefined);
@@ -293,6 +299,31 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             console.error('[ChatProvider] SignalR error:', error);
             toast.error(`Lỗi kết nối: ${error}`);
         }, []),
+
+        onCallLogUpdated: useCallback(
+            (data: any) => {
+                console.log('[ChatProvider] 📝 Call log updated:', data);
+
+                // Refetch conversations to show updated LastMessage
+                if (loadConversationsRef.current) {
+                    loadConversationsRef.current();
+                }
+
+                // ✅ If call log belongs to active conversation, reload messages
+                if (
+                    activeConversation &&
+                    data.conversationId === activeConversation.id &&
+                    reloadMessagesRef.current
+                ) {
+                    console.log(
+                        '[ChatProvider] 📝 Reloading messages for active conversation:',
+                        activeConversation.id
+                    );
+                    reloadMessagesRef.current();
+                }
+            },
+            [activeConversation]
+        ),
     };
 
     // Use shared SignalR hub connection (from ChatHubContext)
@@ -348,6 +379,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             setIsLoading(false);
         }
     }, [userId]);
+
+    // ✅ Update ref when function changes
+    useEffect(() => {
+        loadConversationsRef.current = loadConversations;
+    }, [loadConversations]);
 
     // Load conversations when userId changes
     useEffect(() => {
@@ -439,6 +475,48 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         },
         [userId, chatHub, conversations]
     );
+
+    // ✅ Reload messages for active conversation (used when call log updated)
+    const reloadMessages = useCallback(async () => {
+        if (!activeConversation) {
+            console.log('[ChatProvider] No active conversation to reload');
+            return;
+        }
+
+        console.log(
+            '[ChatProvider] 🔄 Reloading messages for conversation:',
+            activeConversation.id
+        );
+
+        try {
+            // Reload messages without changing active conversation
+            const messagesResponse = await ChatService.getMessages(activeConversation.id, {
+                limit: 50,
+                messagesOnly: false,
+                includeSenderInfo: true,
+                includeReceiverInfo: true,
+            });
+
+            const paginationData = messagesResponse.data;
+            const timelineItems = paginationData.items || [];
+            const extractedMessages = Array.isArray(timelineItems) ? timelineItems.reverse() : [];
+
+            setMessages(extractedMessages);
+            setNextCursor(paginationData.nextCursor);
+            setPreviousCursor(paginationData.previousCursor);
+            setHasMoreOldMessages(paginationData.hasNext);
+            setHasMoreNewMessages(paginationData.hasPrevious);
+
+            console.log('[ChatProvider] ✅ Messages reloaded, count:', extractedMessages.length);
+        } catch (error) {
+            console.error('[ChatProvider] ❌ Error reloading messages:', error);
+        }
+    }, [activeConversation]);
+
+    // ✅ Update ref when function changes
+    useEffect(() => {
+        reloadMessagesRef.current = reloadMessages;
+    }, [reloadMessages]);
 
     const createOrGetConversation = useCallback(
         async (otherUserId: string): Promise<ConversationResponse> => {

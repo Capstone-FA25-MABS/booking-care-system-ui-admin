@@ -93,6 +93,7 @@ export const useWebRTC = (
     const callLogIdRef = useRef<string | null>(null); // ✅ Track call log ID for update
     const callStartTimeRef = useRef<Date | null>(null); // ✅ Track call start time for duration calculation
     const isCallerRef = useRef<boolean>(false); // ✅ Track if current user is caller (to avoid duplicate logs)
+    const isCreatingCallLogRef = useRef<boolean>(false); // ✅ Track if currently creating call log (prevent race condition)
 
     // ✅ Refs for handlers to stabilize callbacks
     const handlersRef = useRef<any>({});
@@ -212,13 +213,29 @@ export const useWebRTC = (
                 remoteUserId: remoteUserIdRef.current,
                 conversationId: conversationIdRef.current,
                 existingCallLogId: callLogIdRef.current,
+                isCreating: isCreatingCallLogRef.current,
             });
 
-            // Skip if already created
+            // ✅ ONLY CALLER creates call log (prevent duplicate from both sides)
+            if (!isCallerRef.current) {
+                console.log('[WebRTC] ⏭️ Not the caller, skipping call log creation');
+                return;
+            }
+
+            // ✅ Skip if already created
             if (callLogIdRef.current) {
                 console.log('[WebRTC] ⚠️ Call log already exists, skipping:', callLogIdRef.current);
                 return;
             }
+
+            // ✅ Skip if currently creating (race condition prevention)
+            if (isCreatingCallLogRef.current) {
+                console.log('[WebRTC] ⚠️ Already creating call log, skipping duplicate request');
+                return;
+            }
+
+            // ✅ Mark as creating
+            isCreatingCallLogRef.current = true;
 
             const callerId = isCallerRef.current ? userId : remoteUserIdRef.current;
             const receiverId = isCallerRef.current ? remoteUserIdRef.current : userId;
@@ -230,6 +247,7 @@ export const useWebRTC = (
                     receiverId,
                     conversationId,
                 });
+                isCreatingCallLogRef.current = false; // ✅ Reset flag
                 return;
             }
 
@@ -258,6 +276,9 @@ export const useWebRTC = (
         } catch (error) {
             console.error('[WebRTC] ❌ Error creating call log:', error);
             // Don't throw - call logging shouldn't break the call
+        } finally {
+            // ✅ Always reset flag
+            isCreatingCallLogRef.current = false;
         }
     }, [userId]);
 

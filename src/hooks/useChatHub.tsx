@@ -33,6 +33,7 @@ export interface ChatHubCallbacks {
     onReceiveOffer?: (data: WebRTCOfferData) => void;
     onReceiveAnswer?: (data: WebRTCAnswerData) => void;
     onReceiveIceCandidate?: (data: ICECandidateData) => void;
+    onCallLogUpdated?: (data: any) => void; // ✅ New: Call log updated event
 }
 
 // WebRTC Data Types
