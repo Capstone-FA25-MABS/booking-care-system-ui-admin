@@ -15,6 +15,7 @@ export interface ChatHubCallbacks {
     onMessageReceived?: (message: SignalRMessageReceived) => void;
     onMessageRead?: (data: SignalRMessageRead) => void;
     onAllMessagesRead?: (data: SignalRAllMessagesRead) => void;
+    onMessageRecalled?: (data: any) => void; // Message recalled event
     onUserStartedTyping?: (data: SignalRTypingEvent) => void;
     onUserStoppedTyping?: (data: SignalRTypingEvent) => void;
     onUserOnline?: (userId: string) => void;

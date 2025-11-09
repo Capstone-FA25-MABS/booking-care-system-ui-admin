@@ -20,6 +20,7 @@ import {
     SignalRMessageRead,
     SignalRTypingEvent,
     MessageType,
+    MessageStatus,
 } from '@/types/communication.types';
 
 interface ChatContextValue {
@@ -247,6 +248,85 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 prev.map((conv) =>
                     conv.id === data.conversationId ? { ...conv, unreadCount: 0 } : conv
                 )
+            );
+        }, []),
+
+        onMessageRecalled: useCallback((data: any) => {
+            console.log('[ChatProvider] 🔄 Message recalled - Raw data:', data);
+
+            // Handle both PascalCase (C# backend) and camelCase
+            const messageId = data.messageId || data.MessageId;
+            const content = data.content || data.Content;
+            const rawStatus = data.status || data.Status;
+            const updatedAt = data.updatedAt || data.UpdatedAt;
+
+            // ✅ Convert numeric status (from backend) to string
+            // Backend enum: SENT=0, DELIVERED=1, READ=2, UNREAD=3, RECALLED=4
+            let status: MessageStatus;
+            if (typeof rawStatus === 'number') {
+                const statusMap: { [key: number]: MessageStatus } = {
+                    0: MessageStatus.SENT,
+                    1: MessageStatus.DELIVERED,
+                    2: MessageStatus.READ,
+                    3: MessageStatus.READ, // Backend UNREAD → Frontend READ
+                    4: MessageStatus.RECALLED,
+                };
+                status = statusMap[rawStatus] || MessageStatus.SENT;
+                console.log('[ChatProvider] 🔄 Converted numeric status:', rawStatus, '→', status);
+            } else {
+                status = rawStatus as MessageStatus;
+            }
+
+            if (!messageId) {
+                console.error('[ChatProvider] ❌ No messageId in recalled data:', data);
+                return;
+            }
+
+            console.log(
+                '[ChatProvider] 📝 Processing recall for messageId:',
+                messageId,
+                'Status:',
+                status
+            );
+
+            // Update message in messages list
+            setMessages((prev) => {
+                const updated = prev.map((item) => {
+                    if (item.id === messageId) {
+                        console.log('[ChatProvider] ✅ Found and updating message:', item.id);
+                        return {
+                            ...item,
+                            content: content,
+                            status: status,
+                            updatedAt: updatedAt,
+                        };
+                    }
+                    return item;
+                });
+
+                const wasUpdated = updated.some((m) => m.id === messageId && m.status === status);
+                console.log(
+                    '[ChatProvider] 🎯 Update result - Message found and updated:',
+                    wasUpdated
+                );
+
+                return updated;
+            });
+
+            // Update conversation's last message if needed
+            setConversations((prev) =>
+                prev.map((conv) => {
+                    if (conv.lastMessage && conv.lastMessage.messageId === messageId) {
+                        return {
+                            ...conv,
+                            lastMessage: {
+                                ...conv.lastMessage,
+                                content: content,
+                            },
+                        };
+                    }
+                    return conv;
+                })
             );
         }, []),
 

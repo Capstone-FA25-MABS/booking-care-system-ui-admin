@@ -35,6 +35,10 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
             callbacksRef.current?.onAllMessagesRead?.(data);
         };
 
+        const messageRecalledHandler = (data: any) => {
+            callbacksRef.current?.onMessageRecalled?.(data);
+        };
+
         const userStartedTypingHandler = (data: any) => {
             callbacksRef.current?.onUserStartedTyping?.(data);
         };
@@ -118,6 +122,7 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
         connection.on('ReceiveMessage', receiveMessageHandler);
         connection.on('MessageRead', messageReadHandler);
         connection.on('AllMessagesRead', allMessagesReadHandler);
+        connection.on('MessageRecalled', messageRecalledHandler);
         connection.on('UserStartedTyping', userStartedTypingHandler);
         connection.on('UserStoppedTyping', userStoppedTypingHandler);
         connection.on('UserOnline', userOnlineHandler);
@@ -145,6 +150,7 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
             connection.off('ReceiveMessage', receiveMessageHandler);
             connection.off('MessageRead', messageReadHandler);
             connection.off('AllMessagesRead', allMessagesReadHandler);
+            connection.off('MessageRecalled', messageRecalledHandler);
             connection.off('UserStartedTyping', userStartedTypingHandler);
             connection.off('UserStoppedTyping', userStoppedTypingHandler);
             connection.off('UserOnline', userOnlineHandler);

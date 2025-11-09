@@ -2,10 +2,41 @@ import React from 'react';
 
 interface MessageDropdownProps {
     onAction?: (action: string) => void;
+    canRecall?: boolean;
+    isRecalling?: boolean;
 }
 
-const MessageDropdown: React.FC<MessageDropdownProps> = ({ onAction }) => (
+const MessageDropdown: React.FC<MessageDropdownProps> = ({
+    onAction,
+    canRecall = false,
+    isRecalling = false,
+}) => (
     <ul className="dropdown-menu p-2">
+        {canRecall && (
+            <li>
+                <button
+                    className="dropdown-item"
+                    onClick={() => onAction?.('recall')}
+                    type="button"
+                    disabled={isRecalling}
+                    style={{
+                        opacity: isRecalling ? 0.5 : 1,
+                        cursor: isRecalling ? 'not-allowed' : 'pointer',
+                    }}
+                >
+                    {isRecalling ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Đang thu hồi...
+                        </>
+                    ) : (
+                        <>
+                            <i className="ti ti-rotate-clockwise me-1"></i> Thu hồi tin nhắn
+                        </>
+                    )}
+                </button>
+            </li>
+        )}
         <li>
             <button className="dropdown-item" onClick={() => onAction?.('reply')} type="button">
                 <i className="ti ti-heart me-1"></i> Reply

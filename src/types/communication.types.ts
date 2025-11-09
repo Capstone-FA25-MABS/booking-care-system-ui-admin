@@ -15,6 +15,7 @@ export enum MessageStatus {
     DELIVERED = 'DELIVERED',
     READ = 'READ',
     FAILED = 'FAILED',
+    RECALLED = 'RECALLED',
 }
 
 export enum CallType {

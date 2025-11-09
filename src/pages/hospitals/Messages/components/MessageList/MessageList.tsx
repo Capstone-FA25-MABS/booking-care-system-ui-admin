@@ -1,11 +1,14 @@
 import { useEffect, useRef, Fragment, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
 import { MessageType, MessageAttachment } from '@/types/communication.types';
+import { ChatService } from '@/services/chat.service';
 import clsx from 'clsx';
 import styles from '../../Messages.module.scss';
 import CallLogItem from './CallLogItem/CallLogItem';
+import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
 
 const MessageList = () => {
     const {
@@ -27,6 +30,10 @@ const MessageList = () => {
 
     // State for image preview modal
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    // State for recall message
+    const [recallingMessageId, setRecallingMessageId] = useState<string | null>(null);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [messageToRecall, setMessageToRecall] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -156,6 +163,49 @@ const MessageList = () => {
                   (p) => (p.id || p.accountId || '').toUpperCase() === typingUserId.toUpperCase()
               )
             : null;
+
+    // Check if message can be recalled
+    const canRecall = (message: any): boolean => {
+        // Only sender can recall
+        if ((message.senderId || '').toUpperCase() !== currentUserId) return false;
+
+        // Can't recall already recalled message
+        if (message.status === 'RECALLED') return false;
+
+        // Check if createdAt exists
+        if (!message.createdAt) return false;
+
+        // Check 1-hour time limit
+        const messageTime = new Date(message.createdAt).getTime();
+        const now = Date.now();
+        const hoursSinceSent = (now - messageTime) / (1000 * 60 * 60);
+
+        return hoursSinceSent < 1;
+    };
+
+    // Handle recall message
+    const handleRecallMessage = async (messageId: string) => {
+        setMessageToRecall(messageId);
+        setShowConfirmDialog(true);
+    };
+
+    const confirmRecall = async () => {
+        if (!messageToRecall) return;
+
+        try {
+            setRecallingMessageId(messageToRecall);
+            await ChatService.recallMessage(messageToRecall, currentUserId);
+
+            toast.success('Đã thu hồi tin nhắn');
+            // Message will be updated via SignalR real-time notification
+        } catch (error: any) {
+            console.error('[MessageList] ❌ Recall message error:', error);
+            toast.error(error.message || 'Không thể thu hồi tin nhắn');
+        } finally {
+            setRecallingMessageId(null);
+            setMessageToRecall(null);
+        }
+    };
 
     // Helper: Format timestamp smartly (like WhatsApp)
     const formatMessageTimestamp = (createdAt: string): string => {
@@ -319,203 +369,342 @@ const MessageList = () => {
                                         />
                                     </span>
                                 )}
-                                <div style={{ maxWidth: '70%' }}>
-                                    <div
-                                        style={{
-                                            padding: '0.625rem 0.875rem',
-                                            borderRadius: '0.5rem',
-                                            backgroundColor: isOwn ? '#007bff' : '#f8f9fa',
-                                            color: isOwn ? 'white' : '#212529',
-                                            wordBreak: 'break-word',
-                                            whiteSpace: 'normal',
-                                            display: 'inline-block',
-                                            minWidth: 'fit-content',
-                                            ...(isOwn
-                                                ? { borderBottomRightRadius: '0.25rem' }
-                                                : { borderBottomLeftRadius: '0.25rem' }),
-                                        }}
-                                    >
-                                        {/* Text Content */}
-                                        {message.content && message.content.trim() && (
-                                            <p
-                                                style={{
-                                                    margin: '0 0 0.25rem 0',
-                                                    lineHeight: 1.5,
-                                                    whiteSpace: 'normal',
-                                                }}
-                                            >
-                                                {message.content}
-                                            </p>
-                                        )}
-
-                                        {/* Attachments */}
-                                        {message.attachments && message.attachments.length > 0 && (
+                                <div
+                                    style={{ maxWidth: '70%', position: 'relative' }}
+                                    onMouseEnter={(e) => {
+                                        const recallBtn = e.currentTarget.querySelector(
+                                            '.message-recall-btn'
+                                        ) as HTMLElement;
+                                        if (recallBtn) recallBtn.style.opacity = '1';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        const recallBtn = e.currentTarget.querySelector(
+                                            '.message-recall-btn'
+                                        ) as HTMLElement;
+                                        if (recallBtn) recallBtn.style.opacity = '0';
+                                    }}
+                                >
+                                    {/* Check if message is recalled */}
+                                    {message.status === 'RECALLED' ? (
+                                        <div>
                                             <div
                                                 style={{
-                                                    marginTop: message.content ? '0.5rem' : '0',
+                                                    padding: '0.625rem 0.875rem',
+                                                    borderRadius: '0.5rem',
+                                                    backgroundColor: '#f0f0f0',
+                                                    color: '#6c757d',
+                                                    fontStyle: 'italic',
+                                                    opacity: 0.7,
+                                                    wordBreak: 'break-word',
+                                                    whiteSpace: 'normal',
+                                                    display: 'inline-block',
+                                                    minWidth: 'fit-content',
+                                                    ...(isOwn
+                                                        ? { borderBottomRightRadius: '0.25rem' }
+                                                        : { borderBottomLeftRadius: '0.25rem' }),
                                                 }}
                                             >
-                                                {message.attachments.map(
-                                                    (att: MessageAttachment, idx: number) => {
-                                                        const fileUrl = att.url || att.fileUrl;
-                                                        const fileName =
-                                                            att.name || att.fileName || 'File';
-                                                        const mimeType = att.mimeType;
-
-                                                        // Image attachments
-                                                        if (
-                                                            message.type === MessageType.IMAGE ||
-                                                            mimeType?.startsWith('image/')
-                                                        ) {
-                                                            return (
-                                                                <div
-                                                                    key={idx}
-                                                                    style={{
-                                                                        marginTop:
-                                                                            idx > 0
-                                                                                ? '0.5rem'
-                                                                                : '0',
-                                                                    }}
-                                                                >
-                                                                    <img
-                                                                        src={fileUrl}
-                                                                        alt={fileName}
-                                                                        onClick={() =>
-                                                                            setSelectedImage(
-                                                                                fileUrl || null
-                                                                            )
-                                                                        }
-                                                                        style={{
-                                                                            maxWidth: '250px',
-                                                                            maxHeight: '250px',
-                                                                            borderRadius: '0.5rem',
-                                                                            display: 'block',
-                                                                            objectFit: 'cover',
-                                                                            cursor: 'pointer',
-                                                                            transition:
-                                                                                'opacity 0.2s',
-                                                                        }}
-                                                                        onMouseOver={(e) =>
-                                                                            (e.currentTarget.style.opacity =
-                                                                                '0.8')
-                                                                        }
-                                                                        onMouseOut={(e) =>
-                                                                            (e.currentTarget.style.opacity =
-                                                                                '1')
-                                                                        }
-                                                                    />
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        // Video attachments
-                                                        if (
-                                                            message.type === MessageType.VIDEO ||
-                                                            mimeType?.startsWith('video/')
-                                                        ) {
-                                                            return (
-                                                                <div
-                                                                    key={idx}
-                                                                    style={{
-                                                                        marginTop:
-                                                                            idx > 0
-                                                                                ? '0.5rem'
-                                                                                : '0',
-                                                                    }}
-                                                                >
-                                                                    <video
-                                                                        controls
-                                                                        style={{
-                                                                            maxWidth: '250px',
-                                                                            maxHeight: '250px',
-                                                                            borderRadius: '0.5rem',
-                                                                            display: 'block',
-                                                                        }}
-                                                                    >
-                                                                        <source
-                                                                            src={fileUrl}
-                                                                            type={mimeType}
-                                                                        />
-                                                                        Your browser does not
-                                                                        support the video tag.
-                                                                    </video>
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        // Audio attachments
-                                                        if (
-                                                            message.type === MessageType.AUDIO ||
-                                                            mimeType?.startsWith('audio/')
-                                                        ) {
-                                                            return (
-                                                                <div
-                                                                    key={idx}
-                                                                    style={{
-                                                                        marginTop:
-                                                                            idx > 0
-                                                                                ? '0.5rem'
-                                                                                : '0',
-                                                                    }}
-                                                                >
-                                                                    <audio
-                                                                        controls
-                                                                        style={{ maxWidth: '100%' }}
-                                                                    >
-                                                                        <source
-                                                                            src={fileUrl}
-                                                                            type={mimeType}
-                                                                        />
-                                                                        Your browser does not
-                                                                        support the audio tag.
-                                                                    </audio>
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        // Other file attachments
-                                                        return (
-                                                            <div
-                                                                key={idx}
-                                                                style={{
-                                                                    marginTop:
-                                                                        idx > 0 ? '0.25rem' : '0',
-                                                                }}
-                                                            >
-                                                                <a
-                                                                    href={fileUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    style={{
-                                                                        color: 'inherit',
-                                                                        textDecoration: 'none',
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '0.25rem',
-                                                                        fontSize: '0.875rem',
-                                                                    }}
-                                                                >
-                                                                    📎 {fileName}
-                                                                </a>
-                                                            </div>
-                                                        );
-                                                    }
-                                                )}
+                                                <i className="fa-solid fa-rotate-left me-1"></i>
+                                                {message.content}
                                             </div>
-                                        )}
-
-                                        <span
+                                            {/* Timestamp for recalled message */}
+                                            <span
+                                                style={{
+                                                    display: 'block',
+                                                    fontSize: '0.75rem',
+                                                    marginTop: '0.25rem',
+                                                    opacity: 0.7,
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {formatMessageTimestamp(message.createdAt)}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div
                                             style={{
-                                                display: 'block',
-                                                fontSize: '0.75rem',
-                                                marginTop: '0.25rem',
-                                                opacity: 0.7,
-                                                whiteSpace: 'nowrap',
+                                                padding: '0.625rem 0.875rem',
+                                                borderRadius: '0.5rem',
+                                                backgroundColor: isOwn ? '#007bff' : '#f8f9fa',
+                                                color: isOwn ? 'white' : '#212529',
+                                                wordBreak: 'break-word',
+                                                whiteSpace: 'normal',
+                                                display: 'inline-block',
+                                                minWidth: 'fit-content',
+                                                ...(isOwn
+                                                    ? { borderBottomRightRadius: '0.25rem' }
+                                                    : { borderBottomLeftRadius: '0.25rem' }),
                                             }}
                                         >
-                                            {formatMessageTimestamp(message.createdAt)}
-                                        </span>
-                                    </div>
+                                            {/* Text Content */}
+                                            {message.content && message.content.trim() && (
+                                                <p
+                                                    style={{
+                                                        margin: '0 0 0.25rem 0',
+                                                        lineHeight: 1.5,
+                                                        whiteSpace: 'normal',
+                                                    }}
+                                                >
+                                                    {message.content}
+                                                </p>
+                                            )}
+
+                                            {/* Attachments */}
+                                            {message.attachments &&
+                                                message.attachments.length > 0 && (
+                                                    <div
+                                                        style={{
+                                                            marginTop: message.content
+                                                                ? '0.5rem'
+                                                                : '0',
+                                                        }}
+                                                    >
+                                                        {message.attachments.map(
+                                                            (
+                                                                att: MessageAttachment,
+                                                                idx: number
+                                                            ) => {
+                                                                const fileUrl =
+                                                                    att.url || att.fileUrl;
+                                                                const fileName =
+                                                                    att.name ||
+                                                                    att.fileName ||
+                                                                    'File';
+                                                                const mimeType = att.mimeType;
+
+                                                                // Image attachments
+                                                                if (
+                                                                    message.type ===
+                                                                        MessageType.IMAGE ||
+                                                                    mimeType?.startsWith('image/')
+                                                                ) {
+                                                                    return (
+                                                                        <div
+                                                                            key={idx}
+                                                                            style={{
+                                                                                marginTop:
+                                                                                    idx > 0
+                                                                                        ? '0.5rem'
+                                                                                        : '0',
+                                                                            }}
+                                                                        >
+                                                                            <img
+                                                                                src={fileUrl}
+                                                                                alt={fileName}
+                                                                                onClick={() =>
+                                                                                    setSelectedImage(
+                                                                                        fileUrl ||
+                                                                                            null
+                                                                                    )
+                                                                                }
+                                                                                style={{
+                                                                                    maxWidth:
+                                                                                        '250px',
+                                                                                    maxHeight:
+                                                                                        '250px',
+                                                                                    borderRadius:
+                                                                                        '0.5rem',
+                                                                                    display:
+                                                                                        'block',
+                                                                                    objectFit:
+                                                                                        'cover',
+                                                                                    cursor: 'pointer',
+                                                                                    transition:
+                                                                                        'opacity 0.2s',
+                                                                                }}
+                                                                                onMouseOver={(e) =>
+                                                                                    (e.currentTarget.style.opacity =
+                                                                                        '0.8')
+                                                                                }
+                                                                                onMouseOut={(e) =>
+                                                                                    (e.currentTarget.style.opacity =
+                                                                                        '1')
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Video attachments
+                                                                if (
+                                                                    message.type ===
+                                                                        MessageType.VIDEO ||
+                                                                    mimeType?.startsWith('video/')
+                                                                ) {
+                                                                    return (
+                                                                        <div
+                                                                            key={idx}
+                                                                            style={{
+                                                                                marginTop:
+                                                                                    idx > 0
+                                                                                        ? '0.5rem'
+                                                                                        : '0',
+                                                                            }}
+                                                                        >
+                                                                            <video
+                                                                                controls
+                                                                                style={{
+                                                                                    maxWidth:
+                                                                                        '250px',
+                                                                                    maxHeight:
+                                                                                        '250px',
+                                                                                    borderRadius:
+                                                                                        '0.5rem',
+                                                                                    display:
+                                                                                        'block',
+                                                                                }}
+                                                                            >
+                                                                                <source
+                                                                                    src={fileUrl}
+                                                                                    type={mimeType}
+                                                                                />
+                                                                                Your browser does
+                                                                                not support the
+                                                                                video tag.
+                                                                            </video>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Audio attachments
+                                                                if (
+                                                                    message.type ===
+                                                                        MessageType.AUDIO ||
+                                                                    mimeType?.startsWith('audio/')
+                                                                ) {
+                                                                    return (
+                                                                        <div
+                                                                            key={idx}
+                                                                            style={{
+                                                                                marginTop:
+                                                                                    idx > 0
+                                                                                        ? '0.5rem'
+                                                                                        : '0',
+                                                                            }}
+                                                                        >
+                                                                            <audio
+                                                                                controls
+                                                                                style={{
+                                                                                    maxWidth:
+                                                                                        '100%',
+                                                                                }}
+                                                                            >
+                                                                                <source
+                                                                                    src={fileUrl}
+                                                                                    type={mimeType}
+                                                                                />
+                                                                                Your browser does
+                                                                                not support the
+                                                                                audio tag.
+                                                                            </audio>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Other file attachments
+                                                                return (
+                                                                    <div
+                                                                        key={idx}
+                                                                        style={{
+                                                                            marginTop:
+                                                                                idx > 0
+                                                                                    ? '0.25rem'
+                                                                                    : '0',
+                                                                        }}
+                                                                    >
+                                                                        <a
+                                                                            href={fileUrl}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            style={{
+                                                                                color: 'inherit',
+                                                                                textDecoration:
+                                                                                    'none',
+                                                                                display:
+                                                                                    'inline-flex',
+                                                                                alignItems:
+                                                                                    'center',
+                                                                                gap: '0.25rem',
+                                                                                fontSize:
+                                                                                    '0.875rem',
+                                                                            }}
+                                                                        >
+                                                                            📎 {fileName}
+                                                                        </a>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                            <span
+                                                style={{
+                                                    display: 'block',
+                                                    fontSize: '0.75rem',
+                                                    marginTop: '0.25rem',
+                                                    opacity: 0.7,
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {formatMessageTimestamp(message.createdAt)}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Recall button (hover to show) - positioned in top-right corner */}
+                                    {canRecall(message) && (
+                                        <button
+                                            onClick={() => handleRecallMessage(message.id)}
+                                            disabled={recallingMessageId === message.id}
+                                            title="Thu hồi tin nhắn"
+                                            className="message-recall-btn"
+                                            style={{
+                                                position: 'absolute',
+                                                top: '-8px',
+                                                right: '-8px',
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '50%',
+                                                border: 'none',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                                color: '#dc3545',
+                                                fontSize: '0.75rem',
+                                                cursor:
+                                                    recallingMessageId === message.id
+                                                        ? 'not-allowed'
+                                                        : 'pointer',
+                                                opacity: 0,
+                                                transition: 'all 0.2s ease',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                                                zIndex: 10,
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (recallingMessageId !== message.id) {
+                                                    e.currentTarget.style.transform = 'scale(1.15)';
+                                                    e.currentTarget.style.boxShadow =
+                                                        '0 3px 8px rgba(0,0,0,0.25)';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'scale(1)';
+                                                e.currentTarget.style.boxShadow =
+                                                    '0 2px 6px rgba(0,0,0,0.15)';
+                                            }}
+                                        >
+                                            {recallingMessageId === message.id ? (
+                                                <span
+                                                    className="spinner-border spinner-border-sm"
+                                                    style={{ width: '12px', height: '12px' }}
+                                                ></span>
+                                            ) : (
+                                                <i className="fa-solid fa-rotate-left"></i>
+                                            )}
+                                        </button>
+                                    )}
                                 </div>
                                 {isOwn && (
                                     <span
@@ -661,6 +850,19 @@ const MessageList = () => {
                     />
                 </div>
             )}
+
+            {/* Confirm Dialog for message recall */}
+            <ConfirmDialog
+                isOpen={showConfirmDialog}
+                onClose={() => setShowConfirmDialog(false)}
+                onConfirm={confirmRecall}
+                title="Thu hồi tin nhắn"
+                message="Bạn có chắc chắn muốn thu hồi tin nhắn này? Hành động này không thể hoàn tác."
+                confirmText="Thu hồi"
+                cancelText="Hủy"
+                type="warning"
+                icon="fa-solid fa-rotate-left"
+            />
         </div>
     );
 };

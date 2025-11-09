@@ -1,0 +1,190 @@
+// Backdrop
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 10001; // Higher than Modal z-index
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Dialog container
+.dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) !important;
+    background: white;
+    border-radius: 16px;
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 450px;
+    width: 90vw;
+    z-index: 10002; // Higher than backdrop
+    overflow: hidden;
+}
+
+// Header section
+.header {
+    padding: 24px 24px 16px;
+    text-align: center;
+}
+
+.iconContainer {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+        font-size: 24px;
+        color: white;
+    }
+
+    &.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    &.warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    &.info {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+// Content section
+.content {
+    padding: 0 24px 24px;
+    text-align: center;
+}
+
+.message {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+}
+
+// Actions section
+.actions {
+    padding: 16px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.cancelBtn {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+        background: #e5e7eb !important;
+        border-color: #9ca3af !important;
+    }
+}
+
+.confirmBtn {
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.2s ease !important;
+
+    &.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+
+        &:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+    }
+
+    &.warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+
+        &:hover {
+            background: linear-gradient(135deg, #d97706, #b45309) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+    }
+
+    &.info {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+
+        &:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+    }
+}
+
+// Responsive design
+@media (max-width: 480px) {
+    .dialog {
+        margin: 16px;
+        width: calc(100vw - 32px);
+    }
+
+    .header {
+        padding: 20px 20px 12px;
+    }
+
+    .iconContainer {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 12px;
+
+        i {
+            font-size: 20px;
+        }
+    }
+
+    .title {
+        font-size: 18px;
+    }
+
+    .content {
+        padding: 0 20px 20px;
+    }
+
+    .message {
+        font-size: 15px;
+    }
+
+    .actions {
+        padding: 12px 20px 20px;
+        flex-direction: column;
+
+        .cancelBtn,
+        .confirmBtn {
+            width: 100%;
+        }
+    }
+}

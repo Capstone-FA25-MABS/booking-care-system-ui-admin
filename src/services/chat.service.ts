@@ -131,6 +131,7 @@ const COMMUNICATION_ENDPOINTS = {
     CREATE_MESSAGE_WITH_ATTACHMENTS: `/communications/messages/with-attachments`,
     MARK_AS_READ: `/communications/messages/mark-as-read`,
     MARK_ALL_AS_READ: `/communications/messages/mark-all-as-read`,
+    RECALL_MESSAGE: `/communications/messages/recall`,
     UNREAD_COUNT: (conversationId: string) =>
         `/communications/conversations/${conversationId.toUpperCase()}/unread-count`,
     UPLOAD_FILE: `/fileupload/upload`,
@@ -464,6 +465,29 @@ export class ChatService {
     }
 
     /**
+     * Thu hồi tin nhắn (chỉ trong vòng 1 giờ)
+     */
+    static async recallMessage(
+        messageId: string,
+        userId: string
+    ): Promise<ApiResponse<MessageResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                COMMUNICATION_ENDPOINTS.RECALL_MESSAGE,
+                transformToPascalCase({ messageId, userId })
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Tin nhắn đã được thu hồi',
+            };
+        } catch (error: any) {
+            console.error('[ChatService] ❌ recallMessage error:', error);
+            throw new Error(error.message || 'Không thể thu hồi tin nhắn');
+        }
+    }
+
+    /**
      * Get unread message count for a conversation
      */
     static async getUnreadCount(
@@ -698,6 +722,7 @@ export const {
     createMessageWithAttachments,
     markMessageAsRead,
     markAllMessagesAsRead,
+    recallMessage,
     getUnreadCount,
     uploadFile,
     uploadMultipleFiles,
