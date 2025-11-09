@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { RootState } from '@/store';
 import { useSharedChatHub } from '@/hooks/useSharedChatHub';
 import { useNotificationSounds } from '@/hooks/useNotificationSounds';
 import { ChatHubCallbacks, IncomingCallData } from '@/hooks/useChatHub';
 import { SignalRMessageReceived } from '@/types/communication.types';
 import IncomingCallNotification from '@/components/IncomingCallNotification';
+import MessageNotificationCard from '@/components/MessageNotificationCard';
 
 interface GlobalChatContextValue {
     isConnected: boolean;
@@ -49,6 +49,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
     const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
+    const [messageNotificationOpen, setMessageNotificationOpen] = useState(false);
 
     // ✅ Track processed calls to prevent spam/duplicates
     const processedCallsRef = React.useRef<Set<string>>(new Set());
@@ -73,12 +74,8 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
                     // ✅ Play message notification sound
                     playMessageNotification();
 
-                    toast.info('💬 Bạn có tin nhắn mới!', {
-                        onClick: () => {
-                            // Navigate to messages page
-                            window.location.href = '/hospitals/messages';
-                        },
-                    });
+                    // ✅ Show message notification card
+                    setMessageNotificationOpen(true);
                 }
             },
             [userId, location.pathname, playMessageNotification]
@@ -375,6 +372,13 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     return (
         <GlobalChatContext.Provider value={value}>
             {children}
+            {/* Global Message Notification */}
+            <MessageNotificationCard
+                isOpen={messageNotificationOpen}
+                onClose={() => setMessageNotificationOpen(false)}
+                onNavigate={() => navigate('/hospitals/messages')}
+                duration={6000}
+            />
             {/* Global Incoming Call Notification */}
             {incomingCall && (
                 <IncomingCallNotification
