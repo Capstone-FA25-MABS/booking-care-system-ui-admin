@@ -382,19 +382,8 @@ const MessageList = () => {
                                     </span>
                                 )}
                                 <div
+                                    className="message-content-wrapper"
                                     style={{ maxWidth: '70%', position: 'relative' }}
-                                    onMouseEnter={(e) => {
-                                        const recallBtn = e.currentTarget.querySelector(
-                                            '.message-recall-btn'
-                                        ) as HTMLElement;
-                                        if (recallBtn) recallBtn.style.opacity = '1';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        const recallBtn = e.currentTarget.querySelector(
-                                            '.message-recall-btn'
-                                        ) as HTMLElement;
-                                        if (recallBtn) recallBtn.style.opacity = '0';
-                                    }}
                                 >
                                     {/* Check if message is recalled */}
                                     {message.status === 'RECALLED' ? (

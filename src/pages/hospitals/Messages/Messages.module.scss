@@ -385,5 +385,16 @@
     padding: 2rem;
 }
 
+// Message recall button hover effect (accessibility-friendly CSS-only approach)
+// Use :global to target the class added in MessageList component
+:global(.message-content-wrapper) {
+    &:hover,
+    &:focus-within {
+        :global(.message-recall-btn) {
+            opacity: 1 !important;
+        }
+    }
+}
+
 // Note: Emoji Picker Overlay styles moved to MessageInput.module.scss
 // to avoid conflicts and ensure proper positioning relative to input
