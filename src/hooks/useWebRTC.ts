@@ -474,48 +474,60 @@ export const useWebRTC = (
     // CLEANUP
     // ============================================================================
 
-    const cleanup = useCallback(() => {
-        console.log('[WebRTC] Cleanup called');
-
-        // ✅ Stop ALL tracks from peer connection senders FIRST
-        if (peerConnectionRef.current) {
-            const senders = peerConnectionRef.current.getSenders();
-            console.log('[WebRTC] Stopping tracks from', senders.length, 'senders');
-            for (const sender of senders) {
-                if (sender.track) {
-                    console.log(
-                        '[WebRTC] Stopping track from sender:',
-                        sender.track.kind,
-                        'state:',
-                        sender.track.readyState
-                    );
-                    if (sender.track.readyState === 'live') {
-                        sender.track.stop();
-                    }
-                }
+    /**
+     * Stop all tracks from peer connection senders
+     */
+    const stopPeerConnectionTracks = useCallback((pc: RTCPeerConnection) => {
+        const senders = pc.getSenders();
+        console.log('[WebRTC] Stopping tracks from', senders.length, 'senders');
+        for (const sender of senders) {
+            if (sender.track?.readyState === 'live') {
+                console.log(
+                    '[WebRTC] Stopping track from sender:',
+                    sender.track.kind,
+                    'state:',
+                    sender.track.readyState
+                );
+                sender.track.stop();
             }
         }
+    }, []);
 
-        // ✅ Stop local stream tracks from ref (backup, in case missed above)
-        const currentLocalStream = localStreamRef.current;
-        if (currentLocalStream) {
-            console.log('[WebRTC] Stopping local stream tracks');
-            for (const track of currentLocalStream.getTracks()) {
+    /**
+     * Stop all tracks from local stream
+     */
+    const stopLocalStreamTracks = useCallback((stream: MediaStream) => {
+        console.log('[WebRTC] Stopping local stream tracks');
+        for (const track of stream.getTracks()) {
+            if (track.readyState === 'live') {
                 console.log(
                     '[WebRTC] Stopping local track:',
                     track.kind,
                     'state:',
                     track.readyState
                 );
-                if (track.readyState === 'live') {
-                    track.stop();
-                }
+                track.stop();
             }
+        }
+    }, []);
+
+    const cleanup = useCallback(() => {
+        console.log('[WebRTC] Cleanup called');
+
+        // Stop ALL tracks from peer connection senders FIRST
+        if (peerConnectionRef.current) {
+            stopPeerConnectionTracks(peerConnectionRef.current);
+        }
+
+        // Stop local stream tracks from ref (backup, in case missed above)
+        const currentLocalStream = localStreamRef.current;
+        if (currentLocalStream) {
+            stopLocalStreamTracks(currentLocalStream);
             localStreamRef.current = null;
             setLocalStream(null);
         }
 
-        // ✅ Close peer connection
+        // Close peer connection
         if (peerConnectionRef.current) {
             console.log('[WebRTC] Closing peer connection');
             peerConnectionRef.current.close();
