@@ -19,6 +19,20 @@ const ChatUserNav: React.FC = () => {
     const userProfile = adminProfile || doctorProfile || hospitalProfile;
     const currentUserId = (userProfile?.accountId || '').toUpperCase();
 
+    // Helper to get user display name
+    const getUserDisplayName = () => {
+        if (adminProfile) return `${adminProfile.firstName} ${adminProfile.lastName}`;
+        if (doctorProfile) return `${doctorProfile.firstName} ${doctorProfile.lastName}`;
+        return hospitalProfile?.name || 'User';
+    };
+
+    // Helper to get user role
+    const getUserRole = () => {
+        if (adminProfile) return 'Quản trị viên';
+        if (doctorProfile) return 'Bác sĩ';
+        return 'Nhân viên';
+    };
+
     // Filter and sort conversations based on search
     const filteredConversations = useMemo(() => {
         // Ensure conversations is always an array
@@ -58,7 +72,7 @@ const ChatUserNav: React.FC = () => {
         const { content, type, attachments } = conv.lastMessage;
 
         // If has content, show it
-        if (content && content.trim()) {
+        if (content?.trim()) {
             return content;
         }
 
@@ -124,20 +138,8 @@ const ChatUserNav: React.FC = () => {
                         />
                     </span>
                     <div>
-                        <h6 className="fs-14 mb-1">
-                            {adminProfile
-                                ? `${adminProfile.firstName} ${adminProfile.lastName}`
-                                : doctorProfile
-                                  ? `${doctorProfile.firstName} ${doctorProfile.lastName}`
-                                  : hospitalProfile?.name || 'User'}
-                        </h6>
-                        <p className="mb-0">
-                            {adminProfile
-                                ? 'Quản trị viên'
-                                : doctorProfile
-                                  ? 'Bác sĩ'
-                                  : 'Nhân viên'}
-                        </p>
+                        <h6 className="fs-14 mb-1">{getUserDisplayName()}</h6>
+                        <p className="mb-0">{getUserRole()}</p>
                     </div>
                 </div>
                 <button
@@ -174,8 +176,8 @@ const ChatUserNav: React.FC = () => {
 
                     {isLoading ? (
                         <div className="text-center py-4">
-                            <div className="spinner-border spinner-border-sm" role="status">
-                                <span className="visually-hidden">Đang tải...</span>
+                            <div className="spinner-border spinner-border-sm" aria-label="Đang tải">
+                                <output className="visually-hidden">Đang tải...</output>
                             </div>
                         </div>
                     ) : filteredConversations.length === 0 ? (

@@ -239,8 +239,8 @@ const Messages: React.FC = () => {
                         style={{ minHeight: '400px' }}
                     >
                         <div className="text-center">
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="visually-hidden">Đang tải...</span>
+                            <div className="spinner-border text-primary" aria-label="Đang tải">
+                                <output className="visually-hidden">Đang tải...</output>
                             </div>
                             <p className="mt-3 text-muted">Đang tải thông tin người dùng...</p>
                         </div>

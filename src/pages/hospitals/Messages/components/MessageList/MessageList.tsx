@@ -289,8 +289,8 @@ const MessageList = () => {
     if (isLoadingMessages) {
         return (
             <div className={clsx(styles.messageListEmpty, 'text-center p-4')}>
-                <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Đang tải tin nhắn...</span>
+                <div className="spinner-border" aria-label="Đang tải tin nhắn">
+                    <output className="visually-hidden">Đang tải tin nhắn...</output>
                 </div>
             </div>
         );
@@ -301,8 +301,11 @@ const MessageList = () => {
             {/* Loading indicator for old messages */}
             {isLoadingMoreMessages && (
                 <div className="text-center py-2">
-                    <div className="spinner-border spinner-border-sm" role="status">
-                        <span className="visually-hidden">Đang tải tin nhắn cũ...</span>
+                    <div
+                        className="spinner-border spinner-border-sm"
+                        aria-label="Đang tải tin nhắn cũ"
+                    >
+                        <output className="visually-hidden">Đang tải tin nhắn cũ...</output>
                     </div>
                     <p className="text-muted small mt-1">Đang tải tin nhắn cũ...</p>
                 </div>
@@ -333,9 +336,8 @@ const MessageList = () => {
                         )}
 
                         {/* Render Call Log or Message */}
-                        {isCallLog && callLog ? (
-                            <CallLogItem callLog={callLog} isOwn={isOwn} />
-                        ) : message ? (
+                        {isCallLog && callLog && <CallLogItem callLog={callLog} isOwn={isOwn} />}
+                        {!isCallLog && message && (
                             <div
                                 className="mb-3"
                                 style={{
@@ -480,7 +482,10 @@ const MessageList = () => {
                                                                 ) {
                                                                     return (
                                                                         <div
-                                                                            key={idx}
+                                                                            key={
+                                                                                fileUrl ||
+                                                                                `img-${idx}`
+                                                                            }
                                                                             style={{
                                                                                 marginTop:
                                                                                     idx > 0
@@ -533,7 +538,10 @@ const MessageList = () => {
                                                                 ) {
                                                                     return (
                                                                         <div
-                                                                            key={idx}
+                                                                            key={
+                                                                                fileUrl ||
+                                                                                `video-${idx}`
+                                                                            }
                                                                             style={{
                                                                                 marginTop:
                                                                                     idx > 0
@@ -574,7 +582,10 @@ const MessageList = () => {
                                                                 ) {
                                                                     return (
                                                                         <div
-                                                                            key={idx}
+                                                                            key={
+                                                                                fileUrl ||
+                                                                                `audio-${idx}`
+                                                                            }
                                                                             style={{
                                                                                 marginTop:
                                                                                     idx > 0
@@ -604,7 +615,9 @@ const MessageList = () => {
                                                                 // Other file attachments
                                                                 return (
                                                                     <div
-                                                                        key={idx}
+                                                                        key={
+                                                                            fileUrl || `file-${idx}`
+                                                                        }
                                                                         style={{
                                                                             marginTop:
                                                                                 idx > 0
@@ -733,7 +746,7 @@ const MessageList = () => {
                                     </span>
                                 )}
                             </div>
-                        ) : null}
+                        )}
                     </Fragment>
                 );
             })}

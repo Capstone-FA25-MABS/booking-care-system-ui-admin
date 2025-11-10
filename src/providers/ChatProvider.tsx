@@ -126,7 +126,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                     fullName:
                         (adminProfile && `${adminProfile.firstName} ${adminProfile.lastName}`) ||
                         (doctorProfile && `${doctorProfile.firstName} ${doctorProfile.lastName}`) ||
-                        (hospitalProfile && hospitalProfile.name) ||
+                        hospitalProfile?.name ||
                         'You',
                     avatarUrl: userProfile?.avatarUrl || '/default-avatar.png',
                     phoneNumber: userProfile?.phone,

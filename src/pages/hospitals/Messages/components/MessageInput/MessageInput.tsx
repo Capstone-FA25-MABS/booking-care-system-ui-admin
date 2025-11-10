@@ -203,7 +203,10 @@ const MessageInput: React.FC = () => {
             {selectedFiles.length > 0 && (
                 <div className={clsx(styles.selectedFiles, 'p-2 bg-light border-top')}>
                     {selectedFiles.map((file, idx) => (
-                        <div key={idx} className="d-inline-block me-2">
+                        <div
+                            key={`${file.name}-${file.size}-${idx}`}
+                            className="d-inline-block me-2"
+                        >
                             <span className="badge bg-primary">
                                 {file.name}
                                 <button
