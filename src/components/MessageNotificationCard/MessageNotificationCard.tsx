@@ -48,17 +48,7 @@ const MessageNotificationCard: React.FC<MessageNotificationCardProps> = ({
                         damping: 30,
                     }}
                 >
-                    <div
-                        className={styles.card}
-                        onClick={handleClick}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                handleClick();
-                            }
-                        }}
-                    >
+                    <button className={styles.card} onClick={handleClick} type="button">
                         {/* Icon Badge */}
                         <div className={styles.iconBadge}>
                             <i className="fa-solid fa-envelope"></i>
@@ -82,7 +72,7 @@ const MessageNotificationCard: React.FC<MessageNotificationCardProps> = ({
                         >
                             <i className="fa-solid fa-times"></i>
                         </button>
-                    </div>
+                    </button>
 
                     {/* Progress bar */}
                     {duration > 0 && (

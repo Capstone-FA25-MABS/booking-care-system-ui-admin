@@ -816,6 +816,96 @@ export const useWebRTC = (
     }, [localStream]);
 
     /**
+     * Helper: Stop screen sharing and return to camera
+     */
+    const stopScreenShare = useCallback(
+        async (pc: RTCPeerConnection, stream: MediaStream) => {
+            console.log('[WebRTC] Stopping screen share, returning to camera');
+
+            const originalTrack = originalVideoTrackRef.current;
+            if (!originalTrack) return;
+
+            // Replace screen track with camera track
+            const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+            if (sender) {
+                await sender.replaceTrack(originalTrack);
+                console.log('[WebRTC] ✅ Replaced screen track with camera track');
+            }
+
+            // Update local stream
+            const currentScreenTrack = stream.getVideoTracks()[0];
+            if (currentScreenTrack) {
+                stream.removeTrack(currentScreenTrack);
+                currentScreenTrack.stop();
+            }
+            stream.addTrack(originalTrack);
+
+            // Update callback
+            callbacks?.onLocalStream?.(stream);
+
+            setIsScreenSharing(false);
+            originalVideoTrackRef.current = null;
+        },
+        [callbacks]
+    );
+
+    /**
+     * Helper: Start screen sharing
+     */
+    const startScreenShare = useCallback(
+        async (pc: RTCPeerConnection, stream: MediaStream, onScreenShareEnd: () => void) => {
+            console.log('[WebRTC] Starting screen share');
+
+            // Get screen share stream
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    cursor: 'always',
+                    displaySurface: 'monitor',
+                } as MediaTrackConstraints,
+                audio: false,
+            });
+
+            const screenTrack = screenStream.getVideoTracks()[0];
+            if (!screenTrack) {
+                console.error('[WebRTC] No screen track available');
+                return;
+            }
+
+            // Save original camera track
+            const currentVideoTrack = stream.getVideoTracks()[0];
+            if (currentVideoTrack) {
+                originalVideoTrackRef.current = currentVideoTrack;
+            }
+
+            // Replace camera track with screen track
+            const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+            if (sender) {
+                await sender.replaceTrack(screenTrack);
+                console.log('[WebRTC] ✅ Replaced camera track with screen track');
+            }
+
+            // Update local stream
+            if (currentVideoTrack) {
+                stream.removeTrack(currentVideoTrack);
+            }
+            stream.addTrack(screenTrack);
+
+            // Update callback
+            callbacks?.onLocalStream?.(stream);
+
+            // Handle screen share stopped (user clicks "Stop sharing" in browser)
+            screenTrack.onended = () => {
+                console.log('[WebRTC] Screen share ended by user');
+                onScreenShareEnd();
+            };
+
+            setIsScreenSharing(true);
+            console.log('[WebRTC] ✅ Screen sharing started');
+        },
+        [callbacks]
+    );
+
+    /**
      * Toggle screen sharing
      */
     const toggleScreenShare = useCallback(async () => {
@@ -827,82 +917,9 @@ export const useWebRTC = (
             }
 
             if (isScreenSharing) {
-                // ✅ Stop screen sharing, return to camera
-                console.log('[WebRTC] Stopping screen share, returning to camera');
-
-                // Get the original camera track
-                const originalTrack = originalVideoTrackRef.current;
-                if (originalTrack) {
-                    // Replace screen track with camera track
-                    const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-                    if (sender) {
-                        await sender.replaceTrack(originalTrack);
-                        console.log('[WebRTC] ✅ Replaced screen track with camera track');
-                    }
-
-                    // Update local stream
-                    const currentScreenTrack = localStream.getVideoTracks()[0];
-                    if (currentScreenTrack) {
-                        localStream.removeTrack(currentScreenTrack);
-                        currentScreenTrack.stop();
-                    }
-                    localStream.addTrack(originalTrack);
-
-                    // Update callback
-                    callbacks?.onLocalStream?.(localStream);
-                }
-
-                setIsScreenSharing(false);
-                originalVideoTrackRef.current = null;
+                await stopScreenShare(pc, localStream);
             } else {
-                // ✅ Start screen sharing
-                console.log('[WebRTC] Starting screen share');
-
-                // Get screen share stream
-                const screenStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: {
-                        cursor: 'always',
-                        displaySurface: 'monitor',
-                    } as MediaTrackConstraints,
-                    audio: false,
-                });
-
-                const screenTrack = screenStream.getVideoTracks()[0];
-                if (!screenTrack) {
-                    console.error('[WebRTC] No screen track available');
-                    return;
-                }
-
-                // Save original camera track
-                const currentVideoTrack = localStream.getVideoTracks()[0];
-                if (currentVideoTrack) {
-                    originalVideoTrackRef.current = currentVideoTrack;
-                }
-
-                // Replace camera track with screen track
-                const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-                if (sender) {
-                    await sender.replaceTrack(screenTrack);
-                    console.log('[WebRTC] ✅ Replaced camera track with screen track');
-                }
-
-                // Update local stream
-                if (currentVideoTrack) {
-                    localStream.removeTrack(currentVideoTrack);
-                }
-                localStream.addTrack(screenTrack);
-
-                // Update callback
-                callbacks?.onLocalStream?.(localStream);
-
-                // Handle screen share stopped (user clicks "Stop sharing" in browser)
-                screenTrack.onended = () => {
-                    console.log('[WebRTC] Screen share ended by user');
-                    toggleScreenShare(); // Stop screen sharing
-                };
-
-                setIsScreenSharing(true);
-                console.log('[WebRTC] ✅ Screen sharing started');
+                await startScreenShare(pc, localStream, toggleScreenShare);
             }
         } catch (error) {
             console.error('[WebRTC] Error toggling screen share:', error);
@@ -912,7 +929,7 @@ export const useWebRTC = (
                 console.log('[WebRTC] Screen share cancelled by user');
             }
         }
-    }, [localStream, isScreenSharing, callbacks]);
+    }, [localStream, isScreenSharing, callbacks, stopScreenShare, startScreenShare]);
 
     // ============================================================================
     // SIGNALR EVENT HANDLERS

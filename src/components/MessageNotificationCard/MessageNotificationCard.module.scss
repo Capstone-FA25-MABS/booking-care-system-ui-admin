@@ -15,6 +15,15 @@
 }
 
 .card {
+    // Reset button styles
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+
+    // Card styles
     position: relative;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: 16px;
@@ -50,7 +59,7 @@
 .iconBadge {
     width: 52px;
     height: 52px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -58,7 +67,7 @@
     color: white;
     font-size: 24px;
     flex-shrink: 0;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
     i {
