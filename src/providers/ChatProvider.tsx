@@ -506,7 +506,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 const timelineItems = paginationData.items || [];
                 // Keep all timeline items (both messages and call logs)
                 const extractedMessages = Array.isArray(timelineItems)
-                    ? timelineItems.toReversed() // Reverse to show oldest first, newest last
+                    ? [...timelineItems].reverse() // Reverse to show oldest first, newest last
                     : [];
 
                 // Update messages and pagination state
@@ -580,7 +580,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             const paginationData = messagesResponse.data;
             const timelineItems = paginationData.items || [];
             const extractedMessages = Array.isArray(timelineItems)
-                ? timelineItems.toReversed()
+                ? [...timelineItems].reverse()
                 : [];
 
             setMessages(extractedMessages);
@@ -636,7 +636,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             // Backend sorts by descending (newest first), but UI needs ascending (oldest first)
             // Keep all timeline items (both messages and call logs)
             const extractedMessages = Array.isArray(timelineItems)
-                ? timelineItems.toReversed() // Reverse to show oldest first, newest last
+                ? [...timelineItems].reverse() // Reverse to show oldest first, newest last
                 : [];
 
             // Update pagination state
@@ -712,7 +712,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             const timelineItems = paginationData.items || [];
             // Keep all timeline items (both messages and call logs)
             const extractedMessages = Array.isArray(timelineItems)
-                ? timelineItems.toReversed()
+                ? [...timelineItems].reverse()
                 : [];
 
             // Update pagination state
