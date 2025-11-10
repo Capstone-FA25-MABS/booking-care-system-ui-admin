@@ -85,6 +85,59 @@ const VideoCall: React.FC<VideoCallProps> = ({
         return undefined;
     }, [userProfile]);
 
+    // Helper: Attempt to play remote video
+    const attemptRemoteVideoPlay = useCallback(() => {
+        console.log(
+            '[VideoCall] Attempting play (readyState:',
+            remoteVideoRef.current?.readyState,
+            ')'
+        );
+
+        if (!remoteVideoRef.current) {
+            remoteVideoPlayingRef.current = false;
+            return;
+        }
+
+        remoteVideoRef.current
+            .play()
+            .then(() => {
+                console.log('[VideoCall] ✅ Remote video playing successfully');
+            })
+            .catch((error) => {
+                console.error('[VideoCall] ❌ Error playing:', error);
+                remoteVideoPlayingRef.current = false;
+            });
+    }, []);
+
+    // Helper: Handle remote video ready state and play
+    const handleRemoteVideoReady = useCallback(() => {
+        if (!remoteVideoRef.current) return;
+
+        remoteVideoPlayingRef.current = true;
+
+        if (remoteVideoRef.current.readyState >= 2) {
+            console.log('[VideoCall] Video ready, playing immediately');
+            attemptRemoteVideoPlay();
+            return;
+        }
+
+        console.log('[VideoCall] Waiting for loadeddata event...');
+        const onLoadedData = () => {
+            console.log('[VideoCall] loadeddata fired, playing now');
+            attemptRemoteVideoPlay();
+            remoteVideoRef.current?.removeEventListener('loadeddata', onLoadedData);
+        };
+        remoteVideoRef.current.addEventListener('loadeddata', onLoadedData);
+
+        setTimeout(() => {
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.removeEventListener('loadeddata', onLoadedData);
+                console.log('[VideoCall] Timeout, force trying play');
+                attemptRemoteVideoPlay();
+            }
+        }, 2000);
+    }, [attemptRemoteVideoPlay]);
+
     // WebRTC Hook Integration
     const {
         callState,
@@ -128,7 +181,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 console.log('[VideoCall] Audio tracks:', audioTracks.length);
 
                 if (remoteVideoRef.current) {
-                    // ✅ Only set srcObject if different (prevent "new load request")
                     const currentSrcObject = remoteVideoRef.current.srcObject as MediaStream | null;
                     if (currentSrcObject === stream) {
                         console.log('[VideoCall] srcObject already set, skipping');
@@ -137,73 +189,16 @@ const VideoCall: React.FC<VideoCallProps> = ({
                         remoteVideoRef.current.srcObject = stream;
                     }
 
-                    // ✅ Only play when we have BOTH tracks AND haven't played yet
-                    if (
-                        videoTracks.length > 0 &&
-                        audioTracks.length > 0 &&
-                        !remoteVideoPlayingRef.current
-                    ) {
+                    const hasBothTracks = videoTracks.length > 0 && audioTracks.length > 0;
+                    const shouldPlay = hasBothTracks && !remoteVideoPlayingRef.current;
+
+                    if (shouldPlay) {
                         console.log('[VideoCall] Both tracks ready, preparing to play...');
                         console.log(
                             '[VideoCall] Video element readyState:',
                             remoteVideoRef.current.readyState
                         );
-
-                        remoteVideoPlayingRef.current = true; // ✅ Mark as playing immediately
-
-                        // ✅ Function to attempt playing
-                        const tryPlay = () => {
-                            console.log(
-                                '[VideoCall] Attempting play (readyState:',
-                                remoteVideoRef.current?.readyState,
-                                ')'
-                            );
-
-                            if (!remoteVideoRef.current) {
-                                remoteVideoPlayingRef.current = false;
-                                return;
-                            }
-
-                            remoteVideoRef.current
-                                .play()
-                                .then(() => {
-                                    console.log('[VideoCall] ✅ Remote video playing successfully');
-                                })
-                                .catch((error) => {
-                                    console.error('[VideoCall] ❌ Error playing:', error);
-                                    remoteVideoPlayingRef.current = false;
-                                });
-                        };
-
-                        // ✅ If video has enough data, play immediately
-                        if (remoteVideoRef.current.readyState >= 2) {
-                            console.log('[VideoCall] Video ready, playing immediately');
-                            tryPlay();
-                        } else {
-                            // ✅ Wait for video data to load
-                            console.log('[VideoCall] Waiting for loadeddata event...');
-                            const onLoadedData = () => {
-                                console.log('[VideoCall] loadeddata fired, playing now');
-                                tryPlay();
-                                remoteVideoRef.current?.removeEventListener(
-                                    'loadeddata',
-                                    onLoadedData
-                                );
-                            };
-                            remoteVideoRef.current.addEventListener('loadeddata', onLoadedData);
-
-                            // ✅ Timeout fallback
-                            setTimeout(() => {
-                                if (remoteVideoRef.current) {
-                                    remoteVideoRef.current.removeEventListener(
-                                        'loadeddata',
-                                        onLoadedData
-                                    );
-                                    console.log('[VideoCall] Timeout, force trying play');
-                                    tryPlay();
-                                }
-                            }, 2000);
-                        }
+                        handleRemoteVideoReady();
                     } else if (remoteVideoPlayingRef.current) {
                         console.log('[VideoCall] ⏭️ Already playing, skipping duplicate play()');
                     } else {
@@ -231,6 +226,31 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
     // Ref to track current callState for cleanup
     const callStateRef = useRef(callState);
+
+    // Helper: Calculate target corner position
+    const calculateTargetCorner = useCallback(
+        (centerX: number, centerY: number, containerWidth: number, containerHeight: number) => {
+            const localVideoWidth = 200;
+            const localVideoHeight = 150;
+            const midX = containerWidth / 2;
+            const midY = containerHeight / 2;
+
+            if (centerX < midX && centerY < midY) {
+                return { x: 16, y: 16 };
+            }
+            if (centerX >= midX && centerY < midY) {
+                return { x: containerWidth - localVideoWidth - 16, y: 16 };
+            }
+            if (centerX < midX && centerY >= midY) {
+                return { x: 16, y: containerHeight - localVideoHeight - 16 };
+            }
+            return {
+                x: containerWidth - localVideoWidth - 16,
+                y: containerHeight - localVideoHeight - 16,
+            };
+        },
+        []
+    );
 
     // Keep callStateRef in sync
     useEffect(() => {
@@ -486,41 +506,18 @@ const VideoCall: React.FC<VideoCallProps> = ({
         const localVideoWidth = 200;
         const localVideoHeight = 150;
 
-        // Current position (transform offset from initial top-right position)
-        const initialX = containerWidth - 216; // 200px + 16px padding
+        const initialX = containerWidth - 216;
         const initialY = 16;
         const currentX = initialX + x;
         const currentY = initialY + y;
 
         const centerX = currentX + localVideoWidth / 2;
         const centerY = currentY + localVideoHeight / 2;
-        const midX = containerWidth / 2;
-        const midY = containerHeight / 2;
 
-        let targetX, targetY;
+        const target = calculateTargetCorner(centerX, centerY, containerWidth, containerHeight);
 
-        // Determine which corner to snap to
-        if (centerX < midX && centerY < midY) {
-            // Top-left
-            targetX = 16;
-            targetY = 16;
-        } else if (centerX >= midX && centerY < midY) {
-            // Top-right
-            targetX = containerWidth - localVideoWidth - 16;
-            targetY = 16;
-        } else if (centerX < midX && centerY >= midY) {
-            // Bottom-left
-            targetX = 16;
-            targetY = containerHeight - localVideoHeight - 16;
-        } else {
-            // Bottom-right
-            targetX = containerWidth - localVideoWidth - 16;
-            targetY = containerHeight - localVideoHeight - 16;
-        }
-
-        // Convert to transform offset
-        const transformX = targetX - initialX;
-        const transformY = targetY - initialY;
+        const transformX = target.x - initialX;
+        const transformY = target.y - initialY;
 
         setLocalVideoPosition({ x: transformX, y: transformY });
     };
@@ -597,6 +594,60 @@ const VideoCall: React.FC<VideoCallProps> = ({
     const localVideoCursor = isDragging ? 'grabbing' : 'grab';
     const localVideoZIndex = isDragging ? 1001 : 1000;
     const localVideoDisplay = isVideoOff ? 'none' : 'block';
+    const videoAvatarHidden = !isVideoOff;
+    const placeholderHidden = isRemoteVideoVisible;
+
+    // Helper render functions to reduce JSX complexity
+    const renderLocalVideoContent = () => (
+        <>
+            <video
+                ref={localVideoRef}
+                className={clsx(styles.localVideo, 'img-fluid rounded border border-primary')}
+                autoPlay
+                playsInline
+                muted
+                style={{ display: localVideoDisplay }}
+            />
+            <img
+                src={userAvatarUrl}
+                className={clsx('img-fluid rounded border border-primary', {
+                    'd-none': videoAvatarHidden,
+                })}
+                alt="My avatar"
+            />
+            <div className={clsx(styles.dragIndicator)}>
+                <i className="ti ti-grip-horizontal"></i>
+            </div>
+        </>
+    );
+
+    const renderCallDurationBadge = () => (
+        <span className="bg-light-subtle rounded badge text-dark p-2 d-inline-flex align-items-center">
+            <i className="ti ti-circle-filled me-1 text-success"></i>
+            {formatDuration(callDuration)}
+        </span>
+    );
+
+    const renderControlButton = (
+        onClick: () => void,
+        iconClass: string,
+        buttonClass: string,
+        ariaLabel?: string,
+        title?: string
+    ) => (
+        <button
+            onClick={onClick}
+            className={clsx(
+                'btn-icon btn-sm d-flex justify-content-center align-items-center rounded',
+                buttonClass
+            )}
+            type="button"
+            aria-label={ariaLabel}
+            title={title}
+        >
+            <i className={`ti ${iconClass}`}></i>
+        </button>
+    );
 
     if (!isVisible) return null;
 
@@ -622,7 +673,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                             {/* Fallback image when no remote video */}
                             <div
                                 className={clsx(styles.videoPlaceholder, {
-                                    [styles.hidden]: isRemoteVideoVisible,
+                                    [styles.hidden]: placeholderHidden,
                                 })}
                             >
                                 <img
@@ -661,40 +712,12 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                 aria-label="Local video - kéo để di chuyển, click để snap về góc"
                                 title="Kéo để di chuyển, click để snap về góc"
                             >
-                                <video
-                                    ref={localVideoRef}
-                                    className={clsx(
-                                        styles.localVideo,
-                                        'img-fluid rounded border border-primary'
-                                    )}
-                                    autoPlay
-                                    playsInline
-                                    muted
-                                    style={{ display: localVideoDisplay }}
-                                />
-                                {/* Avatar fallback when video is off - Show current user's avatar */}
-                                <img
-                                    src={userAvatarUrl}
-                                    className={clsx('img-fluid rounded border border-primary', {
-                                        'd-none': !isVideoOff,
-                                    })}
-                                    alt="My avatar"
-                                />
-
-                                {/* Drag indicator */}
-                                <div className={clsx(styles.dragIndicator)}>
-                                    <i className="ti ti-grip-horizontal"></i>
-                                </div>
+                                {renderLocalVideoContent()}
                             </button>
 
                             {/* Call Duration and Fullscreen Button */}
                             <div className="position-absolute start-0 top-0 p-2 z-1 d-flex align-items-center">
-                                <div className="me-2">
-                                    <span className="bg-light-subtle rounded badge text-dark p-2 d-inline-flex align-items-center">
-                                        <i className="ti ti-circle-filled me-1 text-success"></i>
-                                        {formatDuration(callDuration)}
-                                    </span>
-                                </div>
+                                <div className="me-2">{renderCallDurationBadge()}</div>
                                 <button
                                     onClick={toggleFullscreen}
                                     className="btn p-0 avatar-sm btn-light"
@@ -713,29 +736,23 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     )}
                                 >
                                     {/* Microphone Toggle */}
-                                    <button
-                                        onClick={toggleMute}
-                                        className={clsx(
-                                            'btn-icon btn-sm d-flex justify-content-center align-items-center rounded me-2',
-                                            micButtonClass
+                                    <div className="me-2">
+                                        {renderControlButton(
+                                            toggleMute,
+                                            micIconClass,
+                                            micButtonClass,
+                                            micAriaLabel
                                         )}
-                                        type="button"
-                                        aria-label={micAriaLabel}
-                                    >
-                                        <i className={`ti ${micIconClass}`}></i>
-                                    </button>
+                                    </div>
 
                                     {/* Video Toggle */}
-                                    <button
-                                        onClick={toggleVideo}
-                                        className={clsx(
-                                            'btn-icon btn-sm d-flex justify-content-center align-items-center rounded me-2',
+                                    <div className="me-2">
+                                        {renderControlButton(
+                                            toggleVideo,
+                                            videoIconClass,
                                             videoButtonClass
                                         )}
-                                        type="button"
-                                    >
-                                        <i className={`ti ${videoIconClass}`}></i>
-                                    </button>
+                                    </div>
 
                                     {/* End Call */}
                                     <button
@@ -747,30 +764,22 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     </button>
 
                                     {/* Speaker Toggle */}
-                                    <button
-                                        onClick={toggleSpeaker}
-                                        className={clsx(
-                                            'btn-icon btn-sm d-flex justify-content-center align-items-center rounded mx-2',
+                                    <div className="mx-2">
+                                        {renderControlButton(
+                                            toggleSpeaker,
+                                            speakerIconClass,
                                             speakerButtonClass
                                         )}
-                                        type="button"
-                                    >
-                                        <i className={`ti ${speakerIconClass}`}></i>
-                                    </button>
+                                    </div>
 
                                     {/* Screen Share */}
-                                    <button
-                                        onClick={toggleScreenShare}
-                                        className={clsx(
-                                            'btn-icon btn-sm d-flex align-items-center justify-content-center rounded',
-                                            screenShareButtonClass
-                                        )}
-                                        type="button"
-                                        title={screenShareTitle}
-                                        aria-label={screenShareAriaLabel}
-                                    >
-                                        <i className={`ti ${screenShareIconClass}`}></i>
-                                    </button>
+                                    {renderControlButton(
+                                        toggleScreenShare,
+                                        screenShareIconClass,
+                                        screenShareButtonClass,
+                                        screenShareAriaLabel,
+                                        screenShareTitle
+                                    )}
                                 </div>
                             </div>
                         </div>
