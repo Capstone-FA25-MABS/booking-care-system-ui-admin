@@ -927,12 +927,7 @@ const MessageList = () => {
                             maxHeight: '90vh',
                             objectFit: 'contain',
                             borderRadius: '0.5rem',
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.stopPropagation();
-                            }
+                            pointerEvents: 'none',
                         }}
                     />
                 </button>

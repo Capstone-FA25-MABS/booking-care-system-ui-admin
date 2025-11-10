@@ -576,26 +576,45 @@ const VideoCall: React.FC<VideoCallProps> = ({
         };
     }, [isDragging, dragOffset]);
 
-    // Computed values to reduce complexity in JSX
-    const isRemoteVideoVisible = callState === 'connected' || remoteStream !== null;
-    const micIconClass = isMuted ? 'ti-microphone-off' : 'ti-microphone';
-    const videoIconClass = isVideoOff ? 'ti-video-off' : 'ti-video';
-    const speakerIconClass = isSpeakerMuted ? 'ti-volume-off' : 'ti-volume';
-    const screenShareIconClass = isScreenSharing ? 'ti-screen-share-off' : 'ti-screen-share';
-    const fullscreenIconClass = isFullscreen ? 'ti-minimize' : 'ti-maximize';
-    const micButtonClass = isMuted ? 'bg-danger text-white' : 'bg-light';
-    const videoButtonClass = isVideoOff ? 'bg-danger text-white' : 'bg-light';
-    const speakerButtonClass = isSpeakerMuted ? 'bg-danger text-white' : 'bg-light';
-    const screenShareButtonClass = isScreenSharing ? 'bg-primary text-white' : 'bg-light text-dark';
-    const screenShareTitle = isScreenSharing ? 'Dừng chia sẻ màn hình' : 'Chia sẻ màn hình';
-    const screenShareAriaLabel = isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình';
-    const micAriaLabel = isMuted ? 'Bật mic' : 'Tắt mic';
-    const userAvatarUrl = userProfile?.avatarUrl || '/src/assets/img/users/user-01.jpg';
-    const localVideoCursor = isDragging ? 'grabbing' : 'grab';
-    const localVideoZIndex = isDragging ? 1001 : 1000;
-    const localVideoDisplay = isVideoOff ? 'none' : 'block';
-    const videoAvatarHidden = !isVideoOff;
-    const placeholderHidden = isRemoteVideoVisible;
+    // Helper: Get UI state values
+    const getUIState = useCallback(() => {
+        const isRemoteVideoVisible = callState === 'connected' || remoteStream !== null;
+        return {
+            isRemoteVideoVisible,
+            micIconClass: isMuted ? 'ti-microphone-off' : 'ti-microphone',
+            videoIconClass: isVideoOff ? 'ti-video-off' : 'ti-video',
+            speakerIconClass: isSpeakerMuted ? 'ti-volume-off' : 'ti-volume',
+            screenShareIconClass: isScreenSharing ? 'ti-screen-share-off' : 'ti-screen-share',
+            fullscreenIconClass: isFullscreen ? 'ti-minimize' : 'ti-maximize',
+            micButtonClass: isMuted ? 'bg-danger text-white' : 'bg-light',
+            videoButtonClass: isVideoOff ? 'bg-danger text-white' : 'bg-light',
+            speakerButtonClass: isSpeakerMuted ? 'bg-danger text-white' : 'bg-light',
+            screenShareButtonClass: isScreenSharing
+                ? 'bg-primary text-white'
+                : 'bg-light text-dark',
+            screenShareTitle: isScreenSharing ? 'Dừng chia sẻ màn hình' : 'Chia sẻ màn hình',
+            screenShareAriaLabel: isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình',
+            micAriaLabel: isMuted ? 'Bật mic' : 'Tắt mic',
+            userAvatarUrl: userProfile?.avatarUrl || '/src/assets/img/users/user-01.jpg',
+            localVideoCursor: isDragging ? 'grabbing' : 'grab',
+            localVideoZIndex: isDragging ? 1001 : 1000,
+            localVideoDisplay: isVideoOff ? 'none' : 'block',
+            videoAvatarHidden: !isVideoOff,
+            placeholderHidden: isRemoteVideoVisible,
+        };
+    }, [
+        callState,
+        remoteStream,
+        isMuted,
+        isVideoOff,
+        isSpeakerMuted,
+        isScreenSharing,
+        isFullscreen,
+        userProfile?.avatarUrl,
+        isDragging,
+    ]);
+
+    const uiState = getUIState();
 
     // Helper render functions to reduce JSX complexity
     const renderLocalVideoContent = () => (
@@ -606,12 +625,12 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 autoPlay
                 playsInline
                 muted
-                style={{ display: localVideoDisplay }}
+                style={{ display: uiState.localVideoDisplay }}
             />
             <img
-                src={userAvatarUrl}
+                src={uiState.userAvatarUrl}
                 className={clsx('img-fluid rounded border border-primary', {
-                    'd-none': videoAvatarHidden,
+                    'd-none': uiState.videoAvatarHidden,
                 })}
                 alt="My avatar"
             />
@@ -673,7 +692,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                             {/* Fallback image when no remote video */}
                             <div
                                 className={clsx(styles.videoPlaceholder, {
-                                    [styles.hidden]: placeholderHidden,
+                                    [styles.hidden]: uiState.placeholderHidden,
                                 })}
                             >
                                 <img
@@ -697,8 +716,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     right: '16px',
                                     top: '16px',
                                     padding: '8px',
-                                    cursor: localVideoCursor,
-                                    zIndex: localVideoZIndex,
+                                    cursor: uiState.localVideoCursor,
+                                    zIndex: uiState.localVideoZIndex,
                                     transform: `translate(${localVideoPosition.x}px, ${localVideoPosition.y}px)`,
                                     border: 'none',
                                     background: 'transparent',
@@ -723,7 +742,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     className="btn p-0 avatar-sm btn-light"
                                     type="button"
                                 >
-                                    <i className={`ti ${fullscreenIconClass}`}></i>
+                                    <i className={`ti ${uiState.fullscreenIconClass}`}></i>
                                 </button>
                             </div>
 
@@ -739,9 +758,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     <div className="me-2">
                                         {renderControlButton(
                                             toggleMute,
-                                            micIconClass,
-                                            micButtonClass,
-                                            micAriaLabel
+                                            uiState.micIconClass,
+                                            uiState.micButtonClass,
+                                            uiState.micAriaLabel
                                         )}
                                     </div>
 
@@ -749,8 +768,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     <div className="me-2">
                                         {renderControlButton(
                                             toggleVideo,
-                                            videoIconClass,
-                                            videoButtonClass
+                                            uiState.videoIconClass,
+                                            uiState.videoButtonClass
                                         )}
                                     </div>
 
@@ -767,18 +786,18 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     <div className="mx-2">
                                         {renderControlButton(
                                             toggleSpeaker,
-                                            speakerIconClass,
-                                            speakerButtonClass
+                                            uiState.speakerIconClass,
+                                            uiState.speakerButtonClass
                                         )}
                                     </div>
 
                                     {/* Screen Share */}
                                     {renderControlButton(
                                         toggleScreenShare,
-                                        screenShareIconClass,
-                                        screenShareButtonClass,
-                                        screenShareAriaLabel,
-                                        screenShareTitle
+                                        uiState.screenShareIconClass,
+                                        uiState.screenShareButtonClass,
+                                        uiState.screenShareAriaLabel,
+                                        uiState.screenShareTitle
                                     )}
                                 </div>
                             </div>
