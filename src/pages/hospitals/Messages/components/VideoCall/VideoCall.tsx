@@ -77,6 +77,14 @@ const VideoCall: React.FC<VideoCallProps> = ({
         onClose();
     }, [participantId, conversationId, clearProcessedCall, onClose]);
 
+    // Helper: Get user display name
+    const getUserDisplayName = useCallback(() => {
+        if (!userProfile) return undefined;
+        if ('fullName' in userProfile) return userProfile.fullName as string | undefined;
+        if ('name' in userProfile) return userProfile.name as string | undefined;
+        return undefined;
+    }, [userProfile]);
+
     // WebRTC Hook Integration
     const {
         callState,
@@ -216,15 +224,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
             },
         },
         {
-            name: (() => {
-                if (userProfile && 'fullName' in userProfile) {
-                    return userProfile.fullName as string | undefined;
-                }
-                if (userProfile && 'name' in userProfile) {
-                    return userProfile.name as string | undefined;
-                }
-                return undefined;
-            })(),
+            name: getUserDisplayName(),
             avatar: userProfile?.avatarUrl,
         }
     );
@@ -579,6 +579,25 @@ const VideoCall: React.FC<VideoCallProps> = ({
         };
     }, [isDragging, dragOffset]);
 
+    // Computed values to reduce complexity in JSX
+    const isRemoteVideoVisible = callState === 'connected' || remoteStream !== null;
+    const micIconClass = isMuted ? 'ti-microphone-off' : 'ti-microphone';
+    const videoIconClass = isVideoOff ? 'ti-video-off' : 'ti-video';
+    const speakerIconClass = isSpeakerMuted ? 'ti-volume-off' : 'ti-volume';
+    const screenShareIconClass = isScreenSharing ? 'ti-screen-share-off' : 'ti-screen-share';
+    const fullscreenIconClass = isFullscreen ? 'ti-minimize' : 'ti-maximize';
+    const micButtonClass = isMuted ? 'bg-danger text-white' : 'bg-light';
+    const videoButtonClass = isVideoOff ? 'bg-danger text-white' : 'bg-light';
+    const speakerButtonClass = isSpeakerMuted ? 'bg-danger text-white' : 'bg-light';
+    const screenShareButtonClass = isScreenSharing ? 'bg-primary text-white' : 'bg-light text-dark';
+    const screenShareTitle = isScreenSharing ? 'Dừng chia sẻ màn hình' : 'Chia sẻ màn hình';
+    const screenShareAriaLabel = isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình';
+    const micAriaLabel = isMuted ? 'Bật mic' : 'Tắt mic';
+    const userAvatarUrl = userProfile?.avatarUrl || '/src/assets/img/users/user-01.jpg';
+    const localVideoCursor = isDragging ? 'grabbing' : 'grab';
+    const localVideoZIndex = isDragging ? 1001 : 1000;
+    const localVideoDisplay = isVideoOff ? 'none' : 'block';
+
     if (!isVisible) return null;
 
     return (
@@ -603,8 +622,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                             {/* Fallback image when no remote video */}
                             <div
                                 className={clsx(styles.videoPlaceholder, {
-                                    [styles.hidden]:
-                                        callState === 'connected' || remoteStream !== null,
+                                    [styles.hidden]: isRemoteVideoVisible,
                                 })}
                             >
                                 <img
@@ -628,8 +646,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     right: '16px',
                                     top: '16px',
                                     padding: '8px',
-                                    cursor: isDragging ? 'grabbing' : 'grab',
-                                    zIndex: isDragging ? 1001 : 1000,
+                                    cursor: localVideoCursor,
+                                    zIndex: localVideoZIndex,
                                     transform: `translate(${localVideoPosition.x}px, ${localVideoPosition.y}px)`,
                                     border: 'none',
                                     background: 'transparent',
@@ -652,14 +670,11 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     autoPlay
                                     playsInline
                                     muted
-                                    style={{ display: isVideoOff ? 'none' : 'block' }}
+                                    style={{ display: localVideoDisplay }}
                                 />
                                 {/* Avatar fallback when video is off - Show current user's avatar */}
                                 <img
-                                    src={
-                                        userProfile?.avatarUrl ||
-                                        '/src/assets/img/users/user-01.jpg'
-                                    }
+                                    src={userAvatarUrl}
                                     className={clsx('img-fluid rounded border border-primary', {
                                         'd-none': !isVideoOff,
                                     })}
@@ -685,9 +700,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     className="btn p-0 avatar-sm btn-light"
                                     type="button"
                                 >
-                                    <i
-                                        className={`ti ${isFullscreen ? 'ti-minimize' : 'ti-maximize'}`}
-                                    ></i>
+                                    <i className={`ti ${fullscreenIconClass}`}></i>
                                 </button>
                             </div>
 
@@ -704,14 +717,12 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                         onClick={toggleMute}
                                         className={clsx(
                                             'btn-icon btn-sm d-flex justify-content-center align-items-center rounded me-2',
-                                            isMuted ? 'bg-danger text-white' : 'bg-light'
+                                            micButtonClass
                                         )}
                                         type="button"
-                                        aria-label={isMuted ? 'Bật mic' : 'Tắt mic'}
+                                        aria-label={micAriaLabel}
                                     >
-                                        <i
-                                            className={`ti ${isMuted ? 'ti-microphone-off' : 'ti-microphone'}`}
-                                        ></i>
+                                        <i className={`ti ${micIconClass}`}></i>
                                     </button>
 
                                     {/* Video Toggle */}
@@ -719,13 +730,11 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                         onClick={toggleVideo}
                                         className={clsx(
                                             'btn-icon btn-sm d-flex justify-content-center align-items-center rounded me-2',
-                                            isVideoOff ? 'bg-danger text-white' : 'bg-light'
+                                            videoButtonClass
                                         )}
                                         type="button"
                                     >
-                                        <i
-                                            className={`ti ${isVideoOff ? 'ti-video-off' : 'ti-video'}`}
-                                        ></i>
+                                        <i className={`ti ${videoIconClass}`}></i>
                                     </button>
 
                                     {/* End Call */}
@@ -742,13 +751,11 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                         onClick={toggleSpeaker}
                                         className={clsx(
                                             'btn-icon btn-sm d-flex justify-content-center align-items-center rounded mx-2',
-                                            isSpeakerMuted ? 'bg-danger text-white' : 'bg-light'
+                                            speakerButtonClass
                                         )}
                                         type="button"
                                     >
-                                        <i
-                                            className={`ti ${isSpeakerMuted ? 'ti-volume-off' : 'ti-volume'}`}
-                                        ></i>
+                                        <i className={`ti ${speakerIconClass}`}></i>
                                     </button>
 
                                     {/* Screen Share */}
@@ -756,23 +763,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                         onClick={toggleScreenShare}
                                         className={clsx(
                                             'btn-icon btn-sm d-flex align-items-center justify-content-center rounded',
-                                            isScreenSharing
-                                                ? 'bg-primary text-white'
-                                                : 'bg-light text-dark'
+                                            screenShareButtonClass
                                         )}
                                         type="button"
-                                        title={
-                                            isScreenSharing
-                                                ? 'Dừng chia sẻ màn hình'
-                                                : 'Chia sẻ màn hình'
-                                        }
-                                        aria-label={
-                                            isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình'
-                                        }
+                                        title={screenShareTitle}
+                                        aria-label={screenShareAriaLabel}
                                     >
-                                        <i
-                                            className={`ti ${isScreenSharing ? 'ti-screen-share-off' : 'ti-screen-share'}`}
-                                        ></i>
+                                        <i className={`ti ${screenShareIconClass}`}></i>
                                     </button>
                                 </div>
                             </div>
