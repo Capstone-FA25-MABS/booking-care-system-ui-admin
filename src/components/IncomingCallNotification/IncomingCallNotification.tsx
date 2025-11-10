@@ -41,11 +41,11 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
                         type="button"
                     >
                         <i className="ti ti-phone-off me-2"></i>
-                        Từ chối
+                        <span>Từ chối</span>
                     </button>
                     <button className="btn btn-success btn-lg" onClick={onAccept} type="button">
                         <i className="ti ti-phone-check me-2"></i>
-                        Chấp nhận
+                        <span>Chấp nhận</span>
                     </button>
                 </div>
             </div>

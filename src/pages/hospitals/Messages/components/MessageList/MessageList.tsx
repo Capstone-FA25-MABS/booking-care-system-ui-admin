@@ -269,7 +269,10 @@ const MessageList = () => {
     };
 
     // Helper: Check if we need date separator
-    const needsDateSeparator = (currentItem: any, previousItem: any | null): boolean => {
+    const needsDateSeparator = (
+        currentItem: { createdAt: string },
+        previousItem: { createdAt: string } | null
+    ): boolean => {
         if (!previousItem) return true;
 
         const currentDate = new Date(currentItem.createdAt).toDateString();
@@ -379,8 +382,6 @@ const MessageList = () => {
                                     </span>
                                 )}
                                 <div
-                                    role="group"
-                                    tabIndex={0}
                                     style={{ maxWidth: '70%', position: 'relative' }}
                                     onMouseEnter={(e) => {
                                         const recallBtn = e.currentTarget.querySelector(
@@ -389,18 +390,6 @@ const MessageList = () => {
                                         if (recallBtn) recallBtn.style.opacity = '1';
                                     }}
                                     onMouseLeave={(e) => {
-                                        const recallBtn = e.currentTarget.querySelector(
-                                            '.message-recall-btn'
-                                        ) as HTMLElement;
-                                        if (recallBtn) recallBtn.style.opacity = '0';
-                                    }}
-                                    onFocus={(e) => {
-                                        const recallBtn = e.currentTarget.querySelector(
-                                            '.message-recall-btn'
-                                        ) as HTMLElement;
-                                        if (recallBtn) recallBtn.style.opacity = '1';
-                                    }}
-                                    onBlur={(e) => {
                                         const recallBtn = e.currentTarget.querySelector(
                                             '.message-recall-btn'
                                         ) as HTMLElement;
@@ -514,63 +503,81 @@ const MessageList = () => {
                                                                                         : '0',
                                                                             }}
                                                                         >
-                                                                            <img
-                                                                                src={fileUrl}
-                                                                                alt={fileName}
-                                                                                role="button"
-                                                                                tabIndex={0}
+                                                                            <button
+                                                                                type="button"
                                                                                 onClick={() =>
                                                                                     setSelectedImage(
                                                                                         fileUrl ||
                                                                                             null
                                                                                     )
                                                                                 }
-                                                                                onKeyDown={(e) => {
-                                                                                    if (
-                                                                                        e.key ===
-                                                                                            'Enter' ||
-                                                                                        e.key ===
-                                                                                            ' '
-                                                                                    ) {
-                                                                                        e.preventDefault();
-                                                                                        setSelectedImage(
-                                                                                            fileUrl ||
-                                                                                                null
-                                                                                        );
-                                                                                    }
-                                                                                }}
                                                                                 style={{
-                                                                                    maxWidth:
-                                                                                        '250px',
-                                                                                    maxHeight:
-                                                                                        '250px',
-                                                                                    borderRadius:
-                                                                                        '0.5rem',
+                                                                                    border: 'none',
+                                                                                    background:
+                                                                                        'none',
+                                                                                    padding: 0,
+                                                                                    cursor: 'pointer',
                                                                                     display:
                                                                                         'block',
-                                                                                    objectFit:
-                                                                                        'cover',
-                                                                                    cursor: 'pointer',
-                                                                                    transition:
-                                                                                        'opacity 0.2s',
                                                                                 }}
-                                                                                onMouseOver={(e) =>
-                                                                                    (e.currentTarget.style.opacity =
-                                                                                        '0.8')
-                                                                                }
-                                                                                onMouseOut={(e) =>
-                                                                                    (e.currentTarget.style.opacity =
-                                                                                        '1')
-                                                                                }
-                                                                                onFocus={(e) =>
-                                                                                    (e.currentTarget.style.opacity =
-                                                                                        '0.8')
-                                                                                }
-                                                                                onBlur={(e) =>
-                                                                                    (e.currentTarget.style.opacity =
-                                                                                        '1')
-                                                                                }
-                                                                            />
+                                                                                onMouseOver={(
+                                                                                    e
+                                                                                ) => {
+                                                                                    const img =
+                                                                                        e.currentTarget.querySelector(
+                                                                                            'img'
+                                                                                        ) as HTMLImageElement;
+                                                                                    if (img)
+                                                                                        img.style.opacity =
+                                                                                            '0.8';
+                                                                                }}
+                                                                                onMouseOut={(e) => {
+                                                                                    const img =
+                                                                                        e.currentTarget.querySelector(
+                                                                                            'img'
+                                                                                        ) as HTMLImageElement;
+                                                                                    if (img)
+                                                                                        img.style.opacity =
+                                                                                            '1';
+                                                                                }}
+                                                                                onFocus={(e) => {
+                                                                                    const img =
+                                                                                        e.currentTarget.querySelector(
+                                                                                            'img'
+                                                                                        ) as HTMLImageElement;
+                                                                                    if (img)
+                                                                                        img.style.opacity =
+                                                                                            '0.8';
+                                                                                }}
+                                                                                onBlur={(e) => {
+                                                                                    const img =
+                                                                                        e.currentTarget.querySelector(
+                                                                                            'img'
+                                                                                        ) as HTMLImageElement;
+                                                                                    if (img)
+                                                                                        img.style.opacity =
+                                                                                            '1';
+                                                                                }}
+                                                                            >
+                                                                                <img
+                                                                                    src={fileUrl}
+                                                                                    alt={fileName}
+                                                                                    style={{
+                                                                                        maxWidth:
+                                                                                            '250px',
+                                                                                        maxHeight:
+                                                                                            '250px',
+                                                                                        borderRadius:
+                                                                                            '0.5rem',
+                                                                                        display:
+                                                                                            'block',
+                                                                                        objectFit:
+                                                                                            'cover',
+                                                                                        transition:
+                                                                                            'opacity 0.2s',
+                                                                                    }}
+                                                                                />
+                                                                            </button>
                                                                         </div>
                                                                     );
                                                                 }
@@ -611,6 +618,7 @@ const MessageList = () => {
                                                                                     src={fileUrl}
                                                                                     type={mimeType}
                                                                                 />
+                                                                                <track kind="captions" />
                                                                                 Your browser does
                                                                                 not support the
                                                                                 video tag.
@@ -649,6 +657,7 @@ const MessageList = () => {
                                                                                     src={fileUrl}
                                                                                     type={mimeType}
                                                                                 />
+                                                                                <track kind="captions" />
                                                                                 Your browser does
                                                                                 not support the
                                                                                 audio tag.
@@ -847,9 +856,8 @@ const MessageList = () => {
 
             {/* Image Preview Modal */}
             {selectedImage && (
-                <div
-                    role="button"
-                    tabIndex={0}
+                <button
+                    type="button"
                     style={{
                         position: 'fixed',
                         top: 0,
@@ -862,10 +870,12 @@ const MessageList = () => {
                         justifyContent: 'center',
                         zIndex: 9999,
                         cursor: 'pointer',
+                        border: 'none',
+                        padding: 0,
                     }}
                     onClick={() => setSelectedImage(null)}
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                        if (e.key === 'Escape') {
                             e.preventDefault();
                             setSelectedImage(null);
                         }
@@ -919,8 +929,13 @@ const MessageList = () => {
                             borderRadius: '0.5rem',
                         }}
                         onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.stopPropagation();
+                            }
+                        }}
                     />
-                </div>
+                </button>
             )}
 
             {/* Confirm Dialog for message recall */}

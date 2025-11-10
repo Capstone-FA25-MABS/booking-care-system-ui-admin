@@ -225,21 +225,21 @@ const ChatUserNav: React.FC = () => {
                                 };
 
                                 return (
-                                    <div
+                                    <button
                                         key={conv.id}
-                                        role="button"
-                                        tabIndex={0}
+                                        type="button"
                                         onClick={() => selectConversation(conv.id)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                selectConversation(conv.id);
-                                            }
+                                        style={{
+                                            cursor: 'pointer',
+                                            border: 'none',
+                                            background: 'none',
+                                            padding: 0,
+                                            width: '100%',
+                                            textAlign: 'left',
                                         }}
-                                        style={{ cursor: 'pointer' }}
                                     >
                                         <UserListItem user={user} />
-                                    </div>
+                                    </button>
                                 );
                             })}
                         </>

@@ -27,11 +27,12 @@ const MessageDropdown: React.FC<MessageDropdownProps> = ({
                     {isRecalling ? (
                         <>
                             <span className="spinner-border spinner-border-sm me-2"></span>
-                            Đang thu hồi...
+                            <span>Đang thu hồi...</span>
                         </>
                     ) : (
                         <>
-                            <i className="ti ti-rotate-clockwise me-1"></i> Thu hồi tin nhắn
+                            <i className="ti ti-rotate-clockwise me-1"></i>
+                            <span>Thu hồi tin nhắn</span>
                         </>
                     )}
                 </button>
