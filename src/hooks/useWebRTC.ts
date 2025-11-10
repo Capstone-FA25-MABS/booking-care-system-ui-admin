@@ -387,7 +387,7 @@ export const useWebRTC = (
             // Handle remote stream
             pc.ontrack = (event) => {
                 console.log('[WebRTC] Received remote track:', event.track.kind);
-                if (event.streams && event.streams[0]) {
+                if (event.streams?.[0]) {
                     console.log('[WebRTC] Setting remote stream');
                     setRemoteStream(event.streams[0]);
                     callbacks?.onRemoteStream?.(event.streams[0]);
@@ -444,10 +444,10 @@ export const useWebRTC = (
         console.log('[WebRTC] Adding local stream to peer connection');
         console.log('[WebRTC] Stream tracks:', stream.getTracks());
         console.log('[WebRTC] Peer connection senders before:', pc.getSenders().length);
-        stream.getTracks().forEach((track) => {
+        for (const track of stream.getTracks()) {
             pc.addTrack(track, stream);
             console.log('[WebRTC] ✅ Added track:', track.kind, 'enabled:', track.enabled);
-        });
+        }
         console.log('[WebRTC] Peer connection senders after:', pc.getSenders().length);
     }, []);
 
@@ -481,7 +481,7 @@ export const useWebRTC = (
         if (peerConnectionRef.current) {
             const senders = peerConnectionRef.current.getSenders();
             console.log('[WebRTC] Stopping tracks from', senders.length, 'senders');
-            senders.forEach((sender) => {
+            for (const sender of senders) {
                 if (sender.track) {
                     console.log(
                         '[WebRTC] Stopping track from sender:',
@@ -493,14 +493,14 @@ export const useWebRTC = (
                         sender.track.stop();
                     }
                 }
-            });
+            }
         }
 
         // ✅ Stop local stream tracks from ref (backup, in case missed above)
         const currentLocalStream = localStreamRef.current;
         if (currentLocalStream) {
             console.log('[WebRTC] Stopping local stream tracks');
-            currentLocalStream.getTracks().forEach((track) => {
+            for (const track of currentLocalStream.getTracks()) {
                 console.log(
                     '[WebRTC] Stopping local track:',
                     track.kind,
@@ -510,7 +510,7 @@ export const useWebRTC = (
                 if (track.readyState === 'live') {
                     track.stop();
                 }
-            });
+            }
             localStreamRef.current = null;
             setLocalStream(null);
         }

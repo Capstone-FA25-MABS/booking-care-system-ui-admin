@@ -437,7 +437,7 @@ const MessageList = () => {
                                             }}
                                         >
                                             {/* Text Content */}
-                                            {message.content && message.content.trim() && (
+                                            {message.content?.trim() && (
                                                 <p
                                                     style={{
                                                         margin: '0 0 0.25rem 0',

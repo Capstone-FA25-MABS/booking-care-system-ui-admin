@@ -31,7 +31,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     useEffect(() => {
         if (isOpen) {
             // Save current overflow style
-            const originalStyle = window.getComputedStyle(document.body).overflow;
+            const originalStyle = globalThis.getComputedStyle(document.body).overflow;
             // Prevent scrolling
             document.body.style.overflow = 'hidden';
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { RootState } from '@/store';
@@ -357,17 +357,30 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         [onlineUsers]
     );
 
-    const value: GlobalChatContextValue = {
-        isConnected: chatHub.isConnected,
-        connection: chatHub.connection,
-        onlineUsers,
-        isUserOnline,
-        incomingCall,
-        acceptIncomingCall,
-        declineIncomingCall,
-        clearIncomingCall,
-        clearProcessedCall, // ✅ Add new function
-    };
+    const value: GlobalChatContextValue = useMemo(
+        () => ({
+            isConnected: chatHub.isConnected,
+            connection: chatHub.connection,
+            onlineUsers,
+            isUserOnline,
+            incomingCall,
+            acceptIncomingCall,
+            declineIncomingCall,
+            clearIncomingCall,
+            clearProcessedCall, // ✅ Add new function
+        }),
+        [
+            chatHub.isConnected,
+            chatHub.connection,
+            onlineUsers,
+            isUserOnline,
+            incomingCall,
+            acceptIncomingCall,
+            declineIncomingCall,
+            clearIncomingCall,
+            clearProcessedCall,
+        ]
+    );
 
     return (
         <GlobalChatContext.Provider value={value}>

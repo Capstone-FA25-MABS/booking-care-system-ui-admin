@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useEffect, useState } from 'react';
+import React, { createContext, useContext, useRef, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import * as signalR from '@microsoft/signalr';
 import { RootState } from '@/store';
@@ -115,10 +115,13 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
         };
     }, [userId, accessToken, chatHubUrl]);
 
-    const value: ChatHubContextValue = {
-        connection: connectionRef.current,
-        isConnected,
-    };
+    const value: ChatHubContextValue = useMemo(
+        () => ({
+            connection: connectionRef.current,
+            isConnected,
+        }),
+        [isConnected]
+    );
 
     return <ChatHubContext.Provider value={value}>{children}</ChatHubContext.Provider>;
 };

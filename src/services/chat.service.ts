@@ -355,9 +355,9 @@ export class ChatService {
             formData.append('Content', request.content);
             formData.append('Type', request.type);
 
-            request.files.forEach((file) => {
+            for (const file of request.files) {
                 formData.append('Files', file);
-            });
+            }
 
             const response: any = await axiosInstance.post(
                 COMMUNICATION_ENDPOINTS.CREATE_MESSAGE_WITH_FILES,
@@ -566,9 +566,9 @@ export class ChatService {
     > {
         try {
             const formData = new FormData();
-            files.forEach((file) => {
+            for (const file of files) {
                 formData.append('files', file);
-            });
+            }
             formData.append('userId', userId);
             formData.append('messageType', messageType);
 

@@ -1,4 +1,1 @@
-import MessageNotificationCard from './MessageNotificationCard';
-
-export default MessageNotificationCard;
-export { MessageNotificationCard };
+export { default, default as MessageNotificationCard } from './MessageNotificationCard';

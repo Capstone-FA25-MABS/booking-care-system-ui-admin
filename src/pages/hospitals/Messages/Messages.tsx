@@ -67,7 +67,7 @@ const MessagesContent: React.FC = () => {
             // Clear global incoming call to prevent duplicate
             clearIncomingCall();
             // Clear navigation state
-            window.history.replaceState({}, document.title);
+            globalThis.history.replaceState({}, document.title);
         }
     }, [location, clearIncomingCall]);
 

@@ -63,7 +63,7 @@ const ChatUserNav: React.FC = () => {
         }
 
         // If no content but has attachments, show appropriate message
-        if (attachments && attachments.length > 0) {
+        if (attachments?.length > 0) {
             const attachment = attachments[0];
             const fileName = attachment.fileName || attachment.name;
 
