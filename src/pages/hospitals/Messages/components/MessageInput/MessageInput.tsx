@@ -17,6 +17,11 @@ const MessageInput: React.FC = () => {
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const recognitionRef = useRef<any>(null);
 
+    // Handler: Remove file from selected files
+    const handleRemoveFile = (indexToRemove: number) => {
+        setSelectedFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
+    };
+
     const handleSendMessage = async () => {
         if (!messageInput.trim() && selectedFiles.length === 0) return;
         if (!activeConversation) return;
@@ -211,9 +216,7 @@ const MessageInput: React.FC = () => {
                                 {file.name}
                                 <button
                                     className="btn-close btn-close-white ms-2"
-                                    onClick={() =>
-                                        setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))
-                                    }
+                                    onClick={() => handleRemoveFile(idx)}
                                 ></button>
                             </span>
                         </div>

@@ -278,6 +278,20 @@ const MessageList = () => {
         return currentDate !== previousDate;
     };
 
+    // Helper: Get item metadata
+    const getItemMetadata = (item: any, index: number) => {
+        const previousItem = index > 0 ? messages[index - 1] : null;
+        const isCallLog = item.itemType === 'CallLog';
+        const message = isCallLog ? null : item.message || item;
+        const callLog = isCallLog ? item.callLog : null;
+        const showDateSeparator = needsDateSeparator(item, previousItem);
+        const isOwn = isCallLog
+            ? (callLog?.callerId || '').toUpperCase() === currentUserId
+            : (message?.senderId || '').toUpperCase() === currentUserId;
+
+        return { isCallLog, message, callLog, showDateSeparator, isOwn };
+    };
+
     if (!activeConversation) {
         return (
             <div className={clsx(styles.messageListEmpty, 'text-center p-4')}>
@@ -312,17 +326,10 @@ const MessageList = () => {
             )}
 
             {messages.map((item: any, index) => {
-                const previousItem = index > 0 ? messages[index - 1] : null;
-
-                // Check if it's a call log or message
-                const isCallLog = item.itemType === 'CallLog';
-                const message = isCallLog ? null : item.message || item;
-                const callLog = isCallLog ? item.callLog : null;
-
-                const showDateSeparator = needsDateSeparator(item, previousItem);
-                const isOwn = isCallLog
-                    ? (callLog?.callerId || '').toUpperCase() === currentUserId
-                    : (message?.senderId || '').toUpperCase() === currentUserId;
+                const { isCallLog, message, callLog, showDateSeparator, isOwn } = getItemMetadata(
+                    item,
+                    index
+                );
 
                 return (
                     <Fragment key={item.id}>
@@ -372,6 +379,8 @@ const MessageList = () => {
                                     </span>
                                 )}
                                 <div
+                                    role="group"
+                                    tabIndex={0}
                                     style={{ maxWidth: '70%', position: 'relative' }}
                                     onMouseEnter={(e) => {
                                         const recallBtn = e.currentTarget.querySelector(
@@ -380,6 +389,18 @@ const MessageList = () => {
                                         if (recallBtn) recallBtn.style.opacity = '1';
                                     }}
                                     onMouseLeave={(e) => {
+                                        const recallBtn = e.currentTarget.querySelector(
+                                            '.message-recall-btn'
+                                        ) as HTMLElement;
+                                        if (recallBtn) recallBtn.style.opacity = '0';
+                                    }}
+                                    onFocus={(e) => {
+                                        const recallBtn = e.currentTarget.querySelector(
+                                            '.message-recall-btn'
+                                        ) as HTMLElement;
+                                        if (recallBtn) recallBtn.style.opacity = '1';
+                                    }}
+                                    onBlur={(e) => {
                                         const recallBtn = e.currentTarget.querySelector(
                                             '.message-recall-btn'
                                         ) as HTMLElement;
@@ -496,12 +517,28 @@ const MessageList = () => {
                                                                             <img
                                                                                 src={fileUrl}
                                                                                 alt={fileName}
+                                                                                role="button"
+                                                                                tabIndex={0}
                                                                                 onClick={() =>
                                                                                     setSelectedImage(
                                                                                         fileUrl ||
                                                                                             null
                                                                                     )
                                                                                 }
+                                                                                onKeyDown={(e) => {
+                                                                                    if (
+                                                                                        e.key ===
+                                                                                            'Enter' ||
+                                                                                        e.key ===
+                                                                                            ' '
+                                                                                    ) {
+                                                                                        e.preventDefault();
+                                                                                        setSelectedImage(
+                                                                                            fileUrl ||
+                                                                                                null
+                                                                                        );
+                                                                                    }
+                                                                                }}
                                                                                 style={{
                                                                                     maxWidth:
                                                                                         '250px',
@@ -522,6 +559,14 @@ const MessageList = () => {
                                                                                         '0.8')
                                                                                 }
                                                                                 onMouseOut={(e) =>
+                                                                                    (e.currentTarget.style.opacity =
+                                                                                        '1')
+                                                                                }
+                                                                                onFocus={(e) =>
+                                                                                    (e.currentTarget.style.opacity =
+                                                                                        '0.8')
+                                                                                }
+                                                                                onBlur={(e) =>
                                                                                     (e.currentTarget.style.opacity =
                                                                                         '1')
                                                                                 }
@@ -803,6 +848,8 @@ const MessageList = () => {
             {/* Image Preview Modal */}
             {selectedImage && (
                 <div
+                    role="button"
+                    tabIndex={0}
                     style={{
                         position: 'fixed',
                         top: 0,
@@ -817,6 +864,12 @@ const MessageList = () => {
                         cursor: 'pointer',
                     }}
                     onClick={() => setSelectedImage(null)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                            e.preventDefault();
+                            setSelectedImage(null);
+                        }
+                    }}
                 >
                     <button
                         style={{
@@ -845,6 +898,12 @@ const MessageList = () => {
                             (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')
                         }
                         onMouseOut={(e) =>
+                            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')
+                        }
+                        onFocus={(e) =>
+                            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')
+                        }
+                        onBlur={(e) =>
                             (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')
                         }
                     >

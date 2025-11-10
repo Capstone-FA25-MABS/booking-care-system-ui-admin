@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useSelector } from 'react-redux';
 
@@ -60,6 +60,23 @@ const VideoCall: React.FC<VideoCallProps> = ({
     // Track if remote video is playing (to prevent duplicate play() calls)
     const remoteVideoPlayingRef = useRef(false);
 
+    // Helper: Handle call end cleanup
+    const handleCallEndCleanup = useCallback(() => {
+        console.log('[VideoCall] Clearing processed call for:', participantId);
+        clearProcessedCall(participantId, conversationId);
+        remoteVideoPlayingRef.current = false;
+
+        if (localVideoRef.current) {
+            console.log('[VideoCall] Clearing local video srcObject (call ended)');
+            localVideoRef.current.srcObject = null;
+        }
+        if (remoteVideoRef.current) {
+            console.log('[VideoCall] Clearing remote video srcObject (call ended)');
+            remoteVideoRef.current.srcObject = null;
+        }
+        onClose();
+    }, [participantId, conversationId, clearProcessedCall, onClose]);
+
     // WebRTC Hook Integration
     const {
         callState,
@@ -89,23 +106,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                     state === 'failed' ||
                     state === 'busy'
                 ) {
-                    // ✅ Clear processed call to allow same user to call again
-                    console.log('[VideoCall] Clearing processed call for:', participantId);
-                    clearProcessedCall(participantId, conversationId);
-
-                    // ✅ Reset remote video playing flag for next call
-                    remoteVideoPlayingRef.current = false;
-
-                    // ✅ Clear video srcObject when call ends to release camera/mic
-                    if (localVideoRef.current) {
-                        console.log('[VideoCall] Clearing local video srcObject (call ended)');
-                        localVideoRef.current.srcObject = null;
-                    }
-                    if (remoteVideoRef.current) {
-                        console.log('[VideoCall] Clearing remote video srcObject (call ended)');
-                        remoteVideoRef.current.srcObject = null;
-                    }
-                    onClose();
+                    handleCallEndCleanup();
                 }
             },
             onRemoteStream: (stream) => {
@@ -121,11 +122,11 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 if (remoteVideoRef.current) {
                     // ✅ Only set srcObject if different (prevent "new load request")
                     const currentSrcObject = remoteVideoRef.current.srcObject as MediaStream | null;
-                    if (currentSrcObject !== stream) {
+                    if (currentSrcObject === stream) {
+                        console.log('[VideoCall] srcObject already set, skipping');
+                    } else {
                         console.log('[VideoCall] Setting remote video srcObject');
                         remoteVideoRef.current.srcObject = stream;
-                    } else {
-                        console.log('[VideoCall] srcObject already set, skipping');
                     }
 
                     // ✅ Only play when we have BOTH tracks AND haven't played yet
@@ -215,12 +216,15 @@ const VideoCall: React.FC<VideoCallProps> = ({
             },
         },
         {
-            name:
-                userProfile && 'fullName' in userProfile
-                    ? (userProfile.fullName as string | undefined)
-                    : userProfile && 'name' in userProfile
-                      ? (userProfile.name as string | undefined)
-                      : undefined,
+            name: (() => {
+                if (userProfile && 'fullName' in userProfile) {
+                    return userProfile.fullName as string | undefined;
+                }
+                if (userProfile && 'name' in userProfile) {
+                    return userProfile.name as string | undefined;
+                }
+                return undefined;
+            })(),
             avatar: userProfile?.avatarUrl,
         }
     );

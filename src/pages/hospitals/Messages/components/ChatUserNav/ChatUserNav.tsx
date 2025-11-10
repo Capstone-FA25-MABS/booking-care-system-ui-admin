@@ -39,9 +39,9 @@ const ChatUserNav: React.FC = () => {
         const convs = conversations || [];
 
         // Filter by search keyword
-        const filtered = !searchKeyword
-            ? convs
-            : convs.filter((conv) => {
+        const filtered = searchKeyword
+            ? convs.filter((conv) => {
+                  // Search in participant names or last message
                   // Search in participant names or last message
                   const participantName = conv.participantDetails
                       ?.filter((p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId)
@@ -53,7 +53,8 @@ const ChatUserNav: React.FC = () => {
                       participantName?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
                       lastMessageContent.toLowerCase().includes(searchKeyword.toLowerCase())
                   );
-              });
+              })
+            : convs;
 
         // Sort by most recent message (newest first)
         // Use updatedAt or lastMessage.createdAt as fallback
@@ -64,6 +65,20 @@ const ChatUserNav: React.FC = () => {
             return new Date(timeB).getTime() - new Date(timeA).getTime();
         });
     }, [conversations, searchKeyword, currentUserId]);
+
+    // Helper to get attachment preview text
+    const getAttachmentPreview = (type: string, fileName?: string) => {
+        const typeMap: Record<string, { icon: string; text: string }> = {
+            [MessageType.IMAGE]: { icon: '📷', text: 'Đã gửi ảnh' },
+            [MessageType.VIDEO]: { icon: '🎥', text: 'Đã gửi video' },
+            [MessageType.AUDIO]: { icon: '🎵', text: 'Đã gửi audio' },
+            [MessageType.FILE]: { icon: '📎', text: 'Đã gửi file' },
+            [MessageType.VOICE_NOTE]: { icon: '🎤', text: 'Tin nhắn thoại' },
+        };
+
+        const preview = typeMap[type] || { icon: '📎', text: 'Đã gửi file' };
+        return fileName ? `${preview.icon} ${fileName}` : `${preview.icon} ${preview.text}`;
+    };
 
     // Helper to format last message preview
     const formatLastMessagePreview = (conv: any) => {
@@ -80,21 +95,7 @@ const ChatUserNav: React.FC = () => {
         if (attachments?.length > 0) {
             const attachment = attachments[0];
             const fileName = attachment.fileName || attachment.name;
-
-            switch (type) {
-                case MessageType.IMAGE:
-                    return fileName ? `📷 ${fileName}` : '📷 Đã gửi ảnh';
-                case MessageType.VIDEO:
-                    return fileName ? `🎥 ${fileName}` : '🎥 Đã gửi video';
-                case MessageType.AUDIO:
-                    return fileName ? `🎵 ${fileName}` : '🎵 Đã gửi audio';
-                case MessageType.FILE:
-                    return fileName ? `📎 ${fileName}` : '📎 Đã gửi file';
-                case MessageType.VOICE_NOTE:
-                    return '🎤 Tin nhắn thoại';
-                default:
-                    return fileName ? `📎 ${fileName}` : '📎 Đã gửi file';
-            }
+            return getAttachmentPreview(type, fileName);
         }
 
         return 'Không có tin nhắn';
@@ -174,61 +175,74 @@ const ChatUserNav: React.FC = () => {
                 <div className={clsx(styles.chatUsers, 'p-3')}>
                     <h6>Tất cả tin nhắn</h6>
 
-                    {isLoading ? (
+                    {isLoading && (
                         <div className="text-center py-4">
                             <div className="spinner-border spinner-border-sm" aria-label="Đang tải">
                                 <output className="visually-hidden">Đang tải...</output>
                             </div>
                         </div>
-                    ) : filteredConversations.length === 0 ? (
+                    )}
+                    {!isLoading && filteredConversations.length === 0 && (
                         <div className="text-center py-4 text-muted">
                             <p>Chưa có cuộc hội thoại nào</p>
                         </div>
-                    ) : (
-                        filteredConversations.map((conv) => {
-                            // Get other participant info
-                            const otherParticipant = conv.participantDetails?.find(
-                                (p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId
-                            );
+                    )}
+                    {!isLoading && filteredConversations.length > 0 && (
+                        <>
+                            {filteredConversations.map((conv) => {
+                                // Get other participant info
+                                const otherParticipant = conv.participantDetails?.find(
+                                    (p) =>
+                                        (p.id || p.accountId || '').toUpperCase() !== currentUserId
+                                );
 
-                            // Check online status - normalize to UPPERCASE
-                            const isOnline = otherParticipant
-                                ? onlineUsers.has(
-                                      (
-                                          otherParticipant.id ||
-                                          otherParticipant.accountId ||
-                                          ''
-                                      ).toUpperCase()
-                                  )
-                                : false;
+                                // Check online status - normalize to UPPERCASE
+                                const isOnline = otherParticipant
+                                    ? onlineUsers.has(
+                                          (
+                                              otherParticipant.id ||
+                                              otherParticipant.accountId ||
+                                              ''
+                                          ).toUpperCase()
+                                      )
+                                    : false;
 
-                            const isActive = activeConversation?.id === conv.id;
+                                const isActive = activeConversation?.id === conv.id;
 
-                            // Transform to User type for UserListItem
-                            const user = {
-                                id: conv.id,
-                                name: otherParticipant?.fullName || 'Unknown User',
-                                avatar: otherParticipant?.avatarUrl || '/default-avatar.png',
-                                lastMessage: formatLastMessagePreview(conv),
-                                time: conv.lastMessage
-                                    ? formatTime(conv.lastMessage.createdAt)
-                                    : '',
-                                unreadCount: conv.unreadCount || 0,
-                                status: isOnline ? 'online' : 'offline',
-                                isActive,
-                                isRead: (conv.unreadCount || 0) === 0,
-                            };
+                                // Transform to User type for UserListItem
+                                const user = {
+                                    id: conv.id,
+                                    name: otherParticipant?.fullName || 'Unknown User',
+                                    avatar: otherParticipant?.avatarUrl || '/default-avatar.png',
+                                    lastMessage: formatLastMessagePreview(conv),
+                                    time: conv.lastMessage
+                                        ? formatTime(conv.lastMessage.createdAt)
+                                        : '',
+                                    unreadCount: conv.unreadCount || 0,
+                                    status: isOnline ? 'online' : 'offline',
+                                    isActive,
+                                    isRead: (conv.unreadCount || 0) === 0,
+                                };
 
-                            return (
-                                <div
-                                    key={conv.id}
-                                    onClick={() => selectConversation(conv.id)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <UserListItem user={user} />
-                                </div>
-                            );
-                        })
+                                return (
+                                    <div
+                                        key={conv.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => selectConversation(conv.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                selectConversation(conv.id);
+                                            }
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <UserListItem user={user} />
+                                    </div>
+                                );
+                            })}
+                        </>
                     )}
                 </div>
             </div>

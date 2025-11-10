@@ -214,9 +214,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                                       attachments: message.attachments,
                                   },
                                   unreadCount:
-                                      message.senderId.toUpperCase() !== userId.toUpperCase()
-                                          ? (conv.unreadCount || 0) + 1
-                                          : conv.unreadCount,
+                                      message.senderId.toUpperCase() === userId.toUpperCase()
+                                          ? conv.unreadCount
+                                          : (conv.unreadCount || 0) + 1,
                               }
                             : conv
                     )
