@@ -1,0 +1,335 @@
+.modalContent {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    .headerContent {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        flex: 1;
+
+        .headerIcon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+    }
+
+    .modalTitle {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .modalSubtitle {
+        font-size: 14px;
+        margin: 6px 0 0 0;
+        opacity: 0.95;
+        font-weight: 400;
+
+        strong {
+            font-weight: 600;
+        }
+    }
+
+    .closeButton {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        flex-shrink: 0;
+
+        &:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.modalBody {
+    padding: 28px;
+    max-height: 60vh;
+    overflow-y: auto;
+
+    /* Custom scrollbar */
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+
+        &:hover {
+            background: #a0aec0;
+        }
+    }
+}
+
+.planSummary {
+    background: linear-gradient(135deg, #f6f8fb 0%, #e9f0f7 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 28px;
+    border: 1px solid #e2e8f0;
+
+    .summaryRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        &:not(:last-child) {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summaryLabel {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .summaryValue {
+            font-size: 15px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .summaryPrice {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 700;
+        }
+    }
+}
+
+.paymentMethodsSection {
+    .sectionTitle {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0 0 16px 0;
+    }
+}
+
+.loadingContainer,
+.emptyContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    color: #64748b;
+
+    p {
+        margin: 12px 0 0 0;
+        font-size: 14px;
+    }
+
+    .spinner {
+        animation: spin 1s linear infinite;
+        color: #667eea;
+    }
+
+    .emptyIcon {
+        color: #cbd5e0;
+        margin-bottom: 8px;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.paymentMethodsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.paymentMethodCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+
+    &:hover:not(:disabled) {
+        border-color: #667eea;
+        background: #f8f9ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    &.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .methodContent {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+
+        .methodImage {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: white;
+            padding: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .methodIconPlaceholder {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .methodInfo {
+            flex: 1;
+
+            .methodName {
+                font-size: 15px;
+                font-weight: 600;
+                color: #1e293b;
+                margin: 0 0 4px 0;
+            }
+
+            .methodDescription {
+                font-size: 13px;
+                color: #64748b;
+                margin: 0;
+                line-height: 1.4;
+            }
+        }
+    }
+
+    .checkIcon {
+        color: #667eea;
+        flex-shrink: 0;
+        animation: scaleIn 0.2s ease;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 28px;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+
+    button {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+
+    .cancelButton {
+        background: white;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+
+        &:hover:not(:disabled) {
+            background: #f8f9fa;
+            border-color: #cbd5e0;
+        }
+    }
+
+    .confirmButton {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .buttonSpinner {
+            animation: spin 1s linear infinite;
+        }
+    }
+}
