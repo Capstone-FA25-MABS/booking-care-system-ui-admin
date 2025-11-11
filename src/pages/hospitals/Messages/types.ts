@@ -1,5 +1,5 @@
 export interface User {
-    id: number;
+    id: string | number;
     name: string;
     avatar: string;
     lastMessage: string;
@@ -7,6 +7,7 @@ export interface User {
     unreadCount: number;
     isActive: boolean;
     isRead: boolean;
+    status?: string; // 'online' | 'offline'
 }
 
 export interface Message {
