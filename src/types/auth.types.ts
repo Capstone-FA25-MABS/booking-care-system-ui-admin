@@ -33,6 +33,8 @@ export interface ResetPasswordRequest {
 export interface AuthResponse {
     message: string;
     token?: string;
+    requires2FA?: boolean;
+    accountId?: string;
 }
 
 // Form validation types
@@ -107,4 +109,53 @@ export interface AccountManagementResponse {
     pageNumber: number;
     pageSize: number;
     totalPages: number;
+}
+
+// Two-Factor Authentication Request DTOs
+export interface Enable2FARequest {
+    verificationCode: string;
+}
+
+export interface Disable2FARequest {
+    password: string;
+}
+
+export interface Verify2FARequest {
+    accountId: string;
+    verificationCode: string;
+    rememberDevice?: boolean;
+}
+
+export interface RegenerateBackupCodesRequest {
+    password: string;
+}
+
+// Two-Factor Authentication Response DTOs
+export interface TwoFactorSetupData {
+    secretKey: string;
+    qrCodeUrl: string;
+    manualEntryKey: string;
+}
+
+export interface Enable2FAResponse {
+    success: boolean;
+    message: string;
+    backupCodes?: string[];
+}
+
+export interface Disable2FAResponse {
+    success: boolean;
+    message: string;
+}
+
+export interface RegenerateBackupCodesResponse {
+    success: boolean;
+    message: string;
+    backupCodes?: string[];
+}
+
+export interface TwoFactorStatus {
+    isEnabled: boolean;
+    enabledAt?: string;
+    remainingBackupCodes: number;
 }
