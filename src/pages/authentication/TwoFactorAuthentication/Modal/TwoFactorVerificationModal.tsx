@@ -2,6 +2,22 @@ import React, { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Nav, Tab } from 'react-bootstrap';
 import { Shield, Key, FileKey } from 'lucide-react';
 
+// Helper function to remove non-digit characters
+const removeNonDigits = (str: string): string => {
+    return str
+        .split('')
+        .filter((char) => char >= '0' && char <= '9')
+        .join('');
+};
+
+// Helper function to remove non-alphanumeric characters (uppercase letters and digits only)
+const removeNonAlphanumeric = (str: string): string => {
+    return str
+        .split('')
+        .filter((char) => (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9'))
+        .join('');
+};
+
 interface TwoFactorVerificationModalProps {
     show: boolean;
     onHide: () => void;
@@ -107,9 +123,10 @@ const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProps> = ({
                                         placeholder="000000"
                                         value={verificationCode}
                                         onChange={(e) => {
-                                            const value = e.target.value
-                                                .replace(/\D/g, '')
-                                                .slice(0, 6);
+                                            const value = removeNonDigits(e.target.value).slice(
+                                                0,
+                                                6
+                                            );
                                             setVerificationCode(value);
                                             setLocalError(null);
                                         }}
@@ -176,10 +193,9 @@ const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProps> = ({
                                         placeholder="ABCD1234"
                                         value={verificationCode}
                                         onChange={(e) => {
-                                            const value = e.target.value
-                                                .toUpperCase()
-                                                .replace(/[^A-Z0-9]/g, '')
-                                                .slice(0, 8);
+                                            const value = removeNonAlphanumeric(
+                                                e.target.value.toUpperCase()
+                                            ).slice(0, 8);
                                             setVerificationCode(value);
                                             setLocalError(null);
                                         }}

@@ -7,6 +7,14 @@ import { TwoFactorStatus, TwoFactorSetupData } from '@/types/auth.types';
 import './TwoFactorAuthentication.scss';
 import SpinnerComponent from '@/components/Spinner';
 
+// Helper function to remove non-digit characters
+const removeNonDigits = (str: string): string => {
+    return str
+        .split('')
+        .filter((char) => char >= '0' && char <= '9')
+        .join('');
+};
+
 const TwoFactorAuthentication = () => {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<TwoFactorStatus | null>(null);
@@ -397,7 +405,7 @@ const TwoFactorAuthentication = () => {
                                         maxLength={6}
                                         value={verificationCode}
                                         onChange={(e) =>
-                                            setVerificationCode(e.target.value.replace(/\D/g, ''))
+                                            setVerificationCode(removeNonDigits(e.target.value))
                                         }
                                         placeholder="000000"
                                         style={{
