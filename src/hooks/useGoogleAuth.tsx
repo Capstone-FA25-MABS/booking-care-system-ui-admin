@@ -10,7 +10,8 @@ interface UseGoogleAuthReturn {
 
 export const useGoogleAuth = (
     onSuccess?: (roles: string[]) => void,
-    onError?: (error: any) => void
+    onError?: (error: any) => void,
+    on2FARequired?: (accountId: string) => void
 ): UseGoogleAuthReturn => {
     const [isLoading, setIsLoading] = useState(false);
     const { googleLogin } = useAuth();
@@ -23,8 +24,14 @@ export const useGoogleAuth = (
 
                 // Use auth hook's googleLogin method and get roles from response
                 const result = await googleLogin({ accessToken: tokenResponse.access_token });
-                const roles = result?.roles || [];
 
+                // Check if 2FA is required
+                if (result?.requires2FA && result?.accountId) {
+                    on2FARequired?.(result.accountId);
+                    return;
+                }
+
+                const roles = result?.roles || [];
                 toast.success('Đăng nhập thành công');
                 onSuccess?.(roles);
             } catch (error) {

@@ -36,7 +36,8 @@ interface FacebookUser {
  */
 export const useFacebookAuth = (
     onSuccess?: (roles: string[]) => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    on2FARequired?: (accountId: string) => void
 ) => {
     const [isLoading, setIsLoading] = useState(false);
     const { facebookLogin } = useAuth();
@@ -108,8 +109,15 @@ export const useFacebookAuth = (
                             const result = await facebookLogin({
                                 accessToken: response.authResponse!.accessToken,
                             });
-                            const roles = result?.roles || [];
 
+                            // Check if 2FA is required
+                            if (result?.requires2FA && result?.accountId) {
+                                setIsLoading(false);
+                                on2FARequired?.(result.accountId);
+                                return;
+                            }
+
+                            const roles = result?.roles || [];
                             setIsLoading(false);
                             toast.success('Đăng nhập Facebook thành công!');
                             onSuccess?.(roles);
@@ -128,7 +136,7 @@ export const useFacebookAuth = (
                 onError?.('Facebook login processing failed');
             }
         },
-        [facebookLogin, onError, onSuccess]
+        [facebookLogin, onError, onSuccess, on2FARequired]
     );
 
     const login = useCallback(async () => {
