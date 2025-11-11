@@ -22,14 +22,17 @@ const ProfileSettings = () => {
     if (isLoading) {
         return (
             <div className="content" id="profilePage">
-                <div className="mb-3 border-bottom pb-3">
-                    <h4 className="fw-bold mb-0">Settings</h4>
-                </div>
                 <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ minHeight: '400px' }}
+                    style={{
+                        minHeight: 'calc(100vh - 300px)',
+                        width: '100%',
+                    }}
                 >
-                    <Spinner size="large" variant="primary" />
+                    <div className="text-center">
+                        <Spinner size="medium" variant="primary" />
+                        <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+                    </div>
                 </div>
             </div>
         );

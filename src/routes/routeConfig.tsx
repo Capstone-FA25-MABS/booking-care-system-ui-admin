@@ -26,6 +26,7 @@ import ProfileSettings from '@/pages/settings/ProfileSettings';
 import SecuritySettings from '@/pages/settings/SecuritySettings';
 import NotificationsSettings from '@/pages/settings/NotificationsSettings';
 import IntegrationsSettings from '@/pages/settings/IntegrationsSettings';
+import TwoFactorAuthentication from '@/pages/authentication/TwoFactorAuthentication';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Role } from '@/enums/common.enums';
 import ListPositions from '@/pages/admins/Positions/ListPositions';
@@ -84,6 +85,7 @@ const routes: RouteObject[] = [
                     },
                     { path: PATHS.ADMIN.SETTINGS.PROFILE, element: <ProfileSettings /> },
                     { path: PATHS.ADMIN.SETTINGS.SECURITY, element: <SecuritySettings /> },
+                    { path: PATHS.ADMIN.SETTINGS.TWO_FACTOR, element: <TwoFactorAuthentication /> },
                     {
                         path: PATHS.ADMIN.SETTINGS.NOTIFICATIONS,
                         element: <NotificationsSettings />,
@@ -173,6 +175,10 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.DOCTOR.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.DOCTOR.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    {
+                        path: PATHS.DOCTOR.SETTINGS.TWO_FACTOR,
+                        element: <TwoFactorAuthentication />,
+                    },
                 ],
             },
         ],
@@ -231,6 +237,10 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.HOSPITAL.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.HOSPITAL.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    {
+                        path: PATHS.HOSPITAL.SETTINGS.TWO_FACTOR,
+                        element: <TwoFactorAuthentication />,
+                    },
                 ],
             },
         ],
