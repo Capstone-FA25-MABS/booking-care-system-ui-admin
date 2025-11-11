@@ -162,6 +162,14 @@ export const createAccountSettingsMenuItem = (): MenuItem => ({
             ),
         },
         {
+            label: 'Xác thực 2 yếu tố',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.TWO_FACTOR
+            ),
+        },
+        {
             label: 'Thông báo',
             link: buildPath(
                 PATHS.ADMIN.ROOT,
@@ -195,6 +203,14 @@ export const createDoctorAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.DOCTOR.SETTINGS.PROFILE
             ),
         },
+        {
+            label: 'Xác thực 2 yếu tố',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SETTINGS.ROOT,
+                PATHS.DOCTOR.SETTINGS.TWO_FACTOR
+            ),
+        },
     ],
 });
 
@@ -211,6 +227,14 @@ export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.HOSPITAL.ROOT,
                 PATHS.HOSPITAL.SETTINGS.ROOT,
                 PATHS.HOSPITAL.SETTINGS.PROFILE
+            ),
+        },
+        {
+            label: 'Xác thực 2 yếu tố',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SETTINGS.ROOT,
+                PATHS.HOSPITAL.SETTINGS.TWO_FACTOR
             ),
         },
     ],

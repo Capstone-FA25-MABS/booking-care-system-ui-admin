@@ -21,6 +21,7 @@ export const PATHS = {
             SECURITY: 'security',
             NOTIFICATIONS: 'notifications',
             INTEGRATIONS: 'integrations',
+            TWO_FACTOR: 'two-factor-authentication',
         },
         POSITIONS: {
             ROOT: 'positions',
@@ -86,6 +87,7 @@ export const PATHS = {
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            TWO_FACTOR: 'two-factor-authentication',
         },
     },
 
@@ -103,6 +105,7 @@ export const PATHS = {
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            TWO_FACTOR: 'two-factor-authentication',
         },
     },
 
