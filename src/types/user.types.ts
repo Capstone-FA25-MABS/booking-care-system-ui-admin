@@ -48,7 +48,8 @@ export interface HospitalProfile {
     email: string;
     phone?: string;
     address?: string;
-    avatarUrl?: string;
+    logoUrl?: string; // Legacy field name
+    avatarUrl?: string; // Actual field from backend
     backgroundUrl?: string;
     description?: string;
     specialties?: Array<{ specialtyId: string; specialtyName?: string }>;
