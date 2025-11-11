@@ -6,13 +6,17 @@ import { useFacebookAuth } from '@/hooks/useFacebookAuth';
 import { LoginFormData } from '@/types/auth.types';
 import { AuthService } from '@/services/auth.service';
 import ExternalAuthButtons from '@/components/ExternalAuthButtons';
+import TwoFactorVerificationModal from '@/pages/authentication/TwoFactorAuthentication/Modal/TwoFactorVerificationModal';
 import Input from '@/components/Input';
 import { toast } from 'react-toastify';
 import { getRedirectPathByRole } from '@/utils/navigation';
+import { useAppDispatch } from '@/store/hooks';
+import { complete2FALoginAsync } from '@/store/slices/authSlice';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login, isLoading, error, isAuthenticated, clearError, roles } = useAuth();
+    const dispatch = useAppDispatch();
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -26,6 +30,10 @@ const Login: React.FC = () => {
         password?: string;
     }>({});
     const [externalAuthError, setExternalAuthError] = useState<string | null>(null);
+    const [show2FAModal, setShow2FAModal] = useState(false);
+    const [pending2FAAccountId, setPending2FAAccountId] = useState<string | null>(null);
+    const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
+    const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
     // Get redirect path based on user roles
     const handleSuccessRedirect = (rolesFromAuth: string[]) => {
@@ -33,16 +41,24 @@ const Login: React.FC = () => {
         navigate(redirectPath);
     };
 
+    // Handle 2FA required from external auth
+    const handle2FARequiredFromExternal = (accountId: string) => {
+        setPending2FAAccountId(accountId);
+        setShow2FAModal(true);
+    };
+
     // Google Auth Hook
     const { isLoading: googleLoading, login: triggerGoogleLogin } = useGoogleAuth(
         handleSuccessRedirect, // onSuccess - receives roles from Google login
-        () => setExternalAuthError('Đăng nhập Google thất bại. Vui lòng thử lại.') // onError
+        () => setExternalAuthError('Đăng nhập Google thất bại. Vui lòng thử lại.'), // onError
+        handle2FARequiredFromExternal // on2FARequired
     );
 
     // Facebook Auth Hook
     const { isLoading: facebookLoading, login: triggerFacebookLogin } = useFacebookAuth(
         handleSuccessRedirect, // onSuccess - receives roles from Facebook login
-        () => setExternalAuthError('Đăng nhập Facebook thất bại. Vui lòng thử lại.') // onError
+        () => setExternalAuthError('Đăng nhập Facebook thất bại. Vui lòng thử lại.'), // onError
+        handle2FARequiredFromExternal // on2FARequired
     );
 
     // Redirect if already authenticated
@@ -57,6 +73,16 @@ const Login: React.FC = () => {
     useEffect(() => {
         clearError();
     }, [clearError]);
+
+    // Clear form data when component mounts to prevent auto-submit
+    useEffect(() => {
+        // Clear form data to prevent browser auto-fill and auto-submit
+        setFormData({
+            email: '',
+            password: '',
+            rememberMe: false,
+        });
+    }, []); // Only run once on mount
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -94,6 +120,18 @@ const Login: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Prevent submission if already authenticated (from useAuth hook)
+        if (isAuthenticated && roles.length > 0) {
+            const redirectPath = getRedirectPathByRole(roles);
+            navigate(redirectPath);
+            return;
+        }
+
+        // Prevent submission if 2FA modal is open or verifying
+        if (show2FAModal || isVerifying2FA) {
+            return;
+        }
+
         if (!validateForm()) {
             return;
         }
@@ -106,8 +144,15 @@ const Login: React.FC = () => {
 
             // Get roles from login result
             const result = await login(loginRequest);
-            const rolesFromAuth = result?.roles || [];
 
+            // Check if 2FA is required
+            if (result?.requires2FA && result?.accountId) {
+                setPending2FAAccountId(result.accountId);
+                setShow2FAModal(true);
+                return;
+            }
+
+            const rolesFromAuth = result?.roles || [];
             toast.success('Đăng nhập thành công');
             handleSuccessRedirect(rolesFromAuth);
         } catch (err) {
@@ -129,6 +174,48 @@ const Login: React.FC = () => {
         setExternalAuthError(null);
         setValidationErrors({});
         triggerFacebookLogin();
+    };
+
+    const handle2FAVerification = async (code: string) => {
+        if (!pending2FAAccountId) {
+            setTwoFactorError('Không tìm thấy thông tin tài khoản');
+            return;
+        }
+
+        setIsVerifying2FA(true);
+        setTwoFactorError(null);
+
+        try {
+            // Dispatch complete2FALoginAsync thunk để xử lý verify và cập nhật auth state đầy đủ
+            const result = await dispatch(
+                complete2FALoginAsync({ accountId: pending2FAAccountId, code })
+            ).unwrap();
+
+            // Nếu thành công, result sẽ chứa roles, accessToken, emailConfirmed, etc.
+            if (result.roles.length > 0) {
+                setShow2FAModal(false);
+                setPending2FAAccountId(null);
+
+                // Đợi một chút để đảm bảo Redux state được cập nhật trước khi navigate
+                // Điều này giúp ProtectedRoute có thể đọc được state đúng
+                await new Promise((resolve) => setTimeout(resolve, 200));
+
+                handleSuccessRedirect(result.roles);
+            } else {
+                setTwoFactorError('Xác thực thất bại. Vui lòng thử lại.');
+            }
+        } catch (err: any) {
+            console.error('2FA verification failed:', err);
+            setTwoFactorError(err || 'Mã xác thực không hợp lệ');
+        } finally {
+            setIsVerifying2FA(false);
+        }
+    };
+
+    const handle2FAModalClose = () => {
+        setShow2FAModal(false);
+        setPending2FAAccountId(null);
+        setTwoFactorError(null);
     };
 
     return (
@@ -223,6 +310,14 @@ const Login: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <TwoFactorVerificationModal
+                show={show2FAModal}
+                onHide={handle2FAModalClose}
+                onVerify={handle2FAVerification}
+                isLoading={isVerifying2FA}
+                error={twoFactorError}
+            />
         </form>
     );
 };
