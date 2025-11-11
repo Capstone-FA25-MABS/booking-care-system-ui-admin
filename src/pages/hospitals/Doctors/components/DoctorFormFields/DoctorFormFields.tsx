@@ -213,7 +213,7 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                 }}
             >
                 <div className="text-center">
-                    <Spinner size="large" variant="primary" />
+                    <Spinner size="medium" variant="primary" />
                     <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
                 </div>
             </div>

@@ -12,6 +12,19 @@ import { getAllJwtInfo } from '@/utils/jwt';
 
 // Helper function to validate roles for admin front-end
 const validateRoles = (response: any, rejectWithValue: any) => {
+    // Check if 2FA is required
+    if (response.data?.requires2FA) {
+        return {
+            requires2FA: true,
+            accountId: response.data.accountId,
+            roles: [],
+            emailConfirmed: false,
+            phoneConfirmed: false,
+            hasExternalProvider: false,
+            accessToken: null,
+        };
+    }
+
     const token = response.data?.token;
     if (token) {
         // Get all JWT information
@@ -40,6 +53,19 @@ const validateRoles = (response: any, rejectWithValue: any) => {
 
 // Helper function to handle validation result (DRY principle)
 const handleValidationResult = (validationResult: any) => {
+    // Check if 2FA is required
+    if (validationResult?.requires2FA) {
+        return {
+            requires2FA: true,
+            accountId: validationResult.accountId,
+            roles: [],
+            emailConfirmed: false,
+            phoneConfirmed: false,
+            hasExternalProvider: false,
+            accessToken: null,
+        };
+    }
+
     if (validationResult?.roles) {
         return {
             roles: validationResult.roles,
@@ -155,6 +181,21 @@ export const facebookLoginAsync = createAsyncThunk(
     }
 );
 
+export const complete2FALoginAsync = createAsyncThunk(
+    'auth/complete2FALogin',
+    async ({ accountId, code }: { accountId: string; code: string }, { rejectWithValue }) => {
+        try {
+            const response = await AuthService.verify2FA(accountId, code);
+
+            // Validate roles using helper function (same as regular login)
+            const validationResult = validateRoles(response, rejectWithValue);
+            return handleValidationResult(validationResult);
+        } catch (error: any) {
+            return rejectWithValue(error.message || '2FA verification failed');
+        }
+    }
+);
+
 // Auth slice
 const authSlice = createSlice({
     name: 'auth',
@@ -173,6 +214,10 @@ const authSlice = createSlice({
             state.phoneConfirmed = false;
             state.hasExternalProvider = false;
             state.accessToken = null;
+        },
+        updateAccessToken: (state, action) => {
+            // Update access token after refresh (used by axios interceptor)
+            state.accessToken = action.payload;
         },
     },
     extraReducers: (builder) => {
@@ -261,10 +306,29 @@ const authSlice = createSlice({
             })
             .addCase(facebookLoginAsync.rejected, (state, action) => {
                 state.error = action.payload as string;
+            })
+            // 2FA verification cases
+            .addCase(complete2FALoginAsync.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(complete2FALoginAsync.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.roles = action.payload?.roles || [];
+                state.emailConfirmed = action.payload?.emailConfirmed || false;
+                state.phoneConfirmed = action.payload?.phoneConfirmed || false;
+                state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.accessToken = action.payload?.accessToken || null;
+                state.isAuthenticated = state.roles.length > 0;
+                state.error = null;
+            })
+            .addCase(complete2FALoginAsync.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
             });
     },
 });
 
-export const { clearError, resetAuthState } = authSlice.actions;
+export const { clearError, resetAuthState, updateAccessToken } = authSlice.actions;
 
 export default authSlice.reducer;

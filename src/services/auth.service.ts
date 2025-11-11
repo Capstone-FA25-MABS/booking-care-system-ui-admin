@@ -8,6 +8,14 @@ import {
     AuthResponse,
     AccountManagementResponse,
     RegisterDoctorRequest,
+    Enable2FARequest,
+    Disable2FARequest,
+    RegenerateBackupCodesRequest,
+    TwoFactorSetupData,
+    Enable2FAResponse,
+    Disable2FAResponse,
+    RegenerateBackupCodesResponse,
+    TwoFactorStatus,
 } from '@/types/auth.types';
 import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
 import { Role } from '@/enums/common.enums';
@@ -27,6 +35,12 @@ const AUTH_ENDPOINTS = {
     BAN_UNBAN_ACCOUNT: (id: string) => `/auth/accounts/${id}/ban-unban`,
     LOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/lock`,
     UNLOCK_ACCOUNT: (id: string) => `/auth/accounts/${id}/unlock`,
+    TWO_FACTOR_SETUP: '/auth/2fa/setup',
+    TWO_FACTOR_ENABLE: '/auth/2fa/enable',
+    TWO_FACTOR_DISABLE: '/auth/2fa/disable',
+    TWO_FACTOR_VERIFY: '/auth/2fa/verify',
+    TWO_FACTOR_STATUS: '/auth/2fa/status',
+    TWO_FACTOR_REGENERATE_BACKUP_CODES: '/auth/2fa/regenerate-backup-codes',
 } as const;
 
 /**
@@ -352,6 +366,122 @@ export class AuthService {
     }
 
     /**
+     * Generate 2FA setup (QR code and secret key)
+     */
+    static async generate2FASetup(): Promise<ApiResponse<TwoFactorSetupData>> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.TWO_FACTOR_SETUP);
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || '2FA setup generated successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to generate 2FA setup');
+        }
+    }
+
+    /**
+     * Enable 2FA for the authenticated account
+     */
+    static async enable2FA(request: Enable2FARequest): Promise<ApiResponse<Enable2FAResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.TWO_FACTOR_ENABLE,
+                request
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || '2FA enabled successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to enable 2FA');
+        }
+    }
+
+    /**
+     * Disable 2FA for the authenticated account
+     */
+    static async disable2FA(request: Disable2FARequest): Promise<ApiResponse<Disable2FAResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.TWO_FACTOR_DISABLE,
+                request
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || '2FA disabled successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to disable 2FA');
+        }
+    }
+
+    /**
+     * Get 2FA status for the authenticated account
+     */
+    static async get2FAStatus(): Promise<ApiResponse<TwoFactorStatus>> {
+        try {
+            const response: any = await axiosInstance.get(AUTH_ENDPOINTS.TWO_FACTOR_STATUS);
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || '2FA status retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get 2FA status');
+        }
+    }
+
+    /**
+     * Regenerate backup codes
+     */
+    static async regenerateBackupCodes(
+        request: RegenerateBackupCodesRequest
+    ): Promise<ApiResponse<RegenerateBackupCodesResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                AUTH_ENDPOINTS.TWO_FACTOR_REGENERATE_BACKUP_CODES,
+                request
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Backup codes regenerated successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to regenerate backup codes');
+        }
+    }
+
+    /**
+     * Verify 2FA code during login
+     */
+    static async verify2FA(accountId: string, verificationCode: string): Promise<ApiResponse> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.TWO_FACTOR_VERIFY, {
+                accountId,
+                verificationCode,
+            });
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || '2FA verification successful',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to verify 2FA code');
+        }
+    }
+
+    /**
      * Register new doctor account using Saga pattern
      */
     static async registerDoctor(request: RegisterDoctorRequest): Promise<ApiResponse> {
@@ -431,6 +561,12 @@ export const {
     toggleBanUnbanAccount,
     lockAccount,
     unlockAccount,
+    generate2FASetup,
+    enable2FA,
+    disable2FA,
+    verify2FA,
+    get2FAStatus,
+    regenerateBackupCodes,
 } = AuthService;
 
 // Default export
