@@ -2,7 +2,7 @@ import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'ax
 import { toast } from 'react-toastify';
 import { API_CONFIG } from './api.config';
 import AuthService from '@/services/auth.service';
-import { resetAuthState } from '@/store/slices/authSlice';
+import { resetAuthState, updateAccessToken } from '@/store/slices/authSlice';
 import { clearAllUserProfiles } from '@/store/slices/userSlice';
 
 // Extend Axios config to include metadata
@@ -141,6 +141,11 @@ const handleTokenRefresh = async (originalRequest: ExtendedAxiosRequestConfig) =
         const refreshResponse: any = await instance.post('/auth/refresh-token');
         const newToken = refreshResponse?.data?.token || refreshResponse?.token;
 
+        // ✅ Update Redux state with new access token
+        if (newToken && reduxStore) {
+            reduxStore.dispatch(updateAccessToken(newToken));
+        }
+
         processQueue(null, newToken || '1');
         isRefreshing = false;
         return instance(originalRequest);
@@ -167,6 +172,7 @@ const handleResponseError = async (error: AxiosError) => {
     const url = (originalRequest.url || '').toString();
     const isLogin = url.includes('/auth/login');
     const isRefresh = url.includes('/auth/refresh-token');
+    const is2FAVerify = url.includes('/auth/2fa/verify');
 
     // Handle 403 errors
     if (error.response?.status === 403) {
@@ -174,7 +180,7 @@ const handleResponseError = async (error: AxiosError) => {
     }
 
     // Handle 401 errors with token refresh
-    if (error.response?.status === 401 && !isLogin && !isRefresh) {
+    if (error.response?.status === 401 && !isLogin && !isRefresh && !is2FAVerify) {
         if (isRefreshing) {
             return queueFailedRequest(originalRequest);
         }

@@ -62,7 +62,7 @@ export function getAllJwtInfo(token: string | null): {
     // Extract confirmation statuses
     const emailConfirmed = payload.confirmEmail?.toLowerCase() === 'true';
     const phoneConfirmed = payload.confirmPhone?.toLowerCase() === 'true';
-    const mustChangePassword = payload.mus?.toLowerCase() === 'true';
+    const mustChangePassword = payload.mustChangePassword?.toLowerCase() === 'true';
     const hasExternalProvider = payload.hasExternalProvider?.toLowerCase() === 'true';
 
     return {
