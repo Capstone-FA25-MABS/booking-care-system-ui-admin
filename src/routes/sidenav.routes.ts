@@ -45,7 +45,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
             ),
             createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
-            createSimpleMenuItem('Services', 'ti ti-user-cog', '/hospital/services'),
+            createSimpleMenuItem(
+                'Dịch vụ',
+                'ti ti-briefcase',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
+            ),
             createSimpleMenuItem(
                 'Specializations',
                 'ti ti-user-shield',
@@ -171,6 +175,16 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'Loại dịch vụ cho bác sĩ',
                 'ti ti-medical-cross',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_TYPES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Danh mục dịch vụ',
+                'ti ti-folder',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_CATEGORIES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Dịch vụ',
+                'ti ti-briefcase',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICES.ROOT)
             ),
             createSimpleMenuItem(
                 'Phương thức thanh toán',
