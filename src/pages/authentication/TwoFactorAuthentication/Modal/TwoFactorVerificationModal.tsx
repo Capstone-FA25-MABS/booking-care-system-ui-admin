@@ -29,15 +29,13 @@ const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProps> = ({
 
         // Validate based on method
         if (activeMethod === 'totp') {
-            if (!verificationCode || verificationCode.length !== 6) {
+            if (!verificationCode || verificationCode?.length !== 6) {
                 setLocalError('Vui lòng nhập mã xác thực 6 chữ số');
                 return;
             }
-        } else {
-            if (!verificationCode || verificationCode.length !== 8) {
-                setLocalError('Vui lòng nhập mã dự phòng 8 ký tự');
-                return;
-            }
+        } else if (!verificationCode || verificationCode?.length !== 8) {
+            setLocalError('Vui lòng nhập mã dự phòng 8 ký tự');
+            return;
         }
 
         try {
@@ -146,7 +144,6 @@ const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProps> = ({
                                                     as="span"
                                                     animation="border"
                                                     size="sm"
-                                                    role="status"
                                                     aria-hidden="true"
                                                     className="me-2"
                                                 />
@@ -217,7 +214,6 @@ const TwoFactorVerificationModal: React.FC<TwoFactorVerificationModalProps> = ({
                                                     as="span"
                                                     animation="border"
                                                     size="sm"
-                                                    role="status"
                                                     aria-hidden="true"
                                                     className="me-2"
                                                 />

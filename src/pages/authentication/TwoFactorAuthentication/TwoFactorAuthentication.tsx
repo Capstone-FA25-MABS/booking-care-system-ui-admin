@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import AuthService from '@/services/auth.service';
 import { TwoFactorStatus, TwoFactorSetupData } from '@/types/auth.types';
 import './TwoFactorAuthentication.scss';
+import SpinnerComponent from '@/components/Spinner';
 
 const TwoFactorAuthentication = () => {
     const [loading, setLoading] = useState(false);
@@ -50,7 +51,7 @@ const TwoFactorAuthentication = () => {
     };
 
     const handleEnable2FA = async () => {
-        if (!verificationCode || verificationCode.length !== 6) {
+        if (!verificationCode || verificationCode?.length !== 6) {
             toast.error('Vui lòng nhập mã xác thực 6 chữ số');
             return;
         }
@@ -146,7 +147,7 @@ const TwoFactorAuthentication = () => {
         a.download = 'backup-codes.txt';
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(url);
         toast.success('Đã tải xuống mã dự phòng');
     };
@@ -156,11 +157,15 @@ const TwoFactorAuthentication = () => {
             <div className="content">
                 <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ minHeight: '400px' }}
+                    style={{
+                        minHeight: 'calc(100vh - 300px)',
+                        width: '100%',
+                    }}
                 >
-                    <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </Spinner>
+                    <div className="text-center">
+                        <SpinnerComponent size="medium" variant="primary" />
+                        <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -314,7 +319,6 @@ const TwoFactorAuthentication = () => {
                                                                 as="span"
                                                                 animation="border"
                                                                 size="sm"
-                                                                role="status"
                                                                 aria-hidden="true"
                                                                 className="me-2"
                                                             />
@@ -480,17 +484,17 @@ const TwoFactorAuthentication = () => {
                     </Alert>
 
                     <Row className="backup-codes-grid g-3">
-                        {backupCodes.map((code, index) => (
-                            <Col key={index} xs={12} md={6}>
+                        {backupCodes.map((code) => (
+                            <Col key={code} xs={12} md={6}>
                                 <div className="backup-code-item d-flex align-items-center justify-content-between p-2 bg-light border rounded">
                                     <code className="fw-bold">{code}</code>
                                     <Button
                                         variant="link"
                                         size="sm"
-                                        onClick={() => copyToClipboard(code, `mã ${index + 1}`)}
+                                        onClick={() => copyToClipboard(code, code)}
                                         className="p-0"
                                     >
-                                        {copiedCode === `mã ${index + 1}` ? (
+                                        {copiedCode === code ? (
                                             <Check size={16} className="text-success" />
                                         ) : (
                                             <Copy size={16} />
