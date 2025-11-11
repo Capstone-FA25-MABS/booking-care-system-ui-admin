@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import SubscriptionPlanCard from './components/SubscriptionPlanCard';
 import SubscriptionPlanSkeletonCard from './components/SubscriptionPlanSkeletonCard/SubscriptionPlanSkeletonCard';
 import PaymentMethodSelectionModal from './components/PaymentMethodSelectionModal';
-import { Check, X, Info, Plus } from 'lucide-react';
+import { Check, Info, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './SubscriptionPlan.module.scss';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -78,14 +78,15 @@ const SubscriptionPlan: React.FC = () => {
         }
     }, [hospitalId, loadActiveHospitalSubscription]);
 
-    // Check for payment success redirect and show success message
+    // Check for payment redirect and show appropriate message
     useEffect(() => {
-        const checkPaymentSuccess = () => {
+        const checkPaymentResult = () => {
             const params = new URLSearchParams(globalThis.location.search);
             const planType = params.get('plan-type');
+            const isCancelled = params.get('is_cancelled') === 'true';
 
-            // Check if this is a redirect from payment (has plan-type and we haven't shown success yet)
-            if (planType && !hasShownPaymentSuccess && !loading && hospitalId) {
+            // Check if this is a redirect from payment (has plan-type and we haven't shown message yet)
+            if (planType && !hasShownPaymentSuccess && hospitalId) {
                 // Check if we have a recent URL change that indicates payment redirect
                 const isFromPayment =
                     globalThis.document.referrer.includes('vnpay') ||
@@ -96,26 +97,33 @@ const SubscriptionPlan: React.FC = () => {
                     isFromPayment ||
                     globalThis.sessionStorage.getItem('payment-redirect') === 'true'
                 ) {
-                    // Show success message
-                    toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
+                    // Mark as shown immediately to prevent duplicate toasts
                     setHasShownPaymentSuccess(true);
 
-                    // Clear payment redirect flag
+                    // Clear payment redirect flag immediately
                     globalThis.sessionStorage.removeItem('payment-redirect');
 
-                    // Reload subscription data to get the latest status
-                    loadActiveHospitalSubscription(hospitalId);
-
-                    // Clean up URL by removing any payment-related parameters but keep plan-type
-                    const cleanUrl = `${globalThis.location.pathname}?plan-type=${planType}`;
-                    globalThis.history.replaceState({}, '', cleanUrl);
+                    // Show toast immediately based on payment result
+                    if (isCancelled) {
+                        toast.error('Thanh toán đã bị hủy hoặc thất bại. Vui lòng thử lại.');
+                    } else {
+                        toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
+                        // Reload subscription data after showing toast (non-blocking)
+                        setTimeout(() => {
+                            loadActiveHospitalSubscription(hospitalId);
+                        }, 100);
+                    }
                 }
             }
         };
 
-        // Run check after a small delay to ensure data is loaded
-        const timeoutId = setTimeout(checkPaymentSuccess, 1000);
-        return () => clearTimeout(timeoutId);
+        // Check immediately if not loading, otherwise wait a bit
+        if (!loading) {
+            checkPaymentResult();
+        } else {
+            const timeoutId = setTimeout(checkPaymentResult, 300);
+            return () => clearTimeout(timeoutId);
+        }
     }, [loading, hospitalId, hasShownPaymentSuccess, loadActiveHospitalSubscription]);
 
     // Handle errors - bỏ qua error nếu là "No active subscription found" (đây là trạng thái bình thường)
@@ -765,14 +773,6 @@ const SubscriptionPlan: React.FC = () => {
 
     return (
         <div className={styles.subscriptionPlan}>
-            <button
-                className={styles.closeButton}
-                onClick={() => globalThis.history.back()}
-                aria-label="Quay lại"
-            >
-                <X size={24} color="#6c757d" />
-            </button>
-
             <div className={styles.container}>
                 <div className={styles.header}>
                     <h1 className={styles.title}>Gói dịch vụ</h1>
