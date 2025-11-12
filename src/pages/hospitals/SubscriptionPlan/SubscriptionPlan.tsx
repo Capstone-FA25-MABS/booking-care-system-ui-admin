@@ -12,6 +12,7 @@ import PaymentMethodService from '@/services/paymentMethod.service';
 import type { CreateSubscriptionPaymentRequest } from '@/types/paymentMethod.types';
 
 type BillingPeriod = 'yearly' | 'quarterly' | 'monthly';
+type BillingCycle = 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
 interface Feature {
     icon: React.ReactNode;
@@ -28,7 +29,7 @@ const SubscriptionPlan: React.FC = () => {
         planId: string;
         planName: string;
         planPrice: string;
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+        planBillingCycle: BillingCycle;
     } | null>(null);
     const [hasShownPaymentSuccess, setHasShownPaymentSuccess] = useState(false);
 
@@ -56,7 +57,7 @@ const SubscriptionPlan: React.FC = () => {
     }, [hospitalId, hospitalProfile, profile]);
 
     // Map billing period to API billing cycle
-    const getBillingCycle = (period: BillingPeriod): 'MONTHLY' | 'QUARTERLY' | 'YEARLY' => {
+    const getBillingCycle = (period: BillingPeriod): BillingCycle => {
         switch (period) {
             case 'monthly':
                 return 'MONTHLY';
@@ -117,12 +118,12 @@ const SubscriptionPlan: React.FC = () => {
             }
         };
 
-        // Check immediately if not loading, otherwise wait a bit
-        if (!loading) {
-            checkPaymentResult();
-        } else {
+        // Check immediately if loading is complete, otherwise wait a bit
+        if (loading) {
             const timeoutId = setTimeout(checkPaymentResult, 300);
             return () => clearTimeout(timeoutId);
+        } else {
+            checkPaymentResult();
         }
     }, [loading, hospitalId, hasShownPaymentSuccess, loadActiveHospitalSubscription]);
 
@@ -547,7 +548,7 @@ const SubscriptionPlan: React.FC = () => {
     };
 
     // Helper function to get billing cycle label for error messages
-    const getBillingCycleLabel = (billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'): string => {
+    const getBillingCycleLabel = (billingCycle: BillingCycle): string => {
         if (billingCycle === 'QUARTERLY') return 'quý';
         if (billingCycle === 'YEARLY') return 'năm';
         return 'tháng';
@@ -556,7 +557,7 @@ const SubscriptionPlan: React.FC = () => {
     // Helper function to check and handle downgrade attempt
     const checkDowngradeAndHandle = (
         targetPlan: SubscriptionPlanType | undefined,
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY',
+        planBillingCycle: BillingCycle,
         currentPlan: SubscriptionPlanType | undefined
     ): boolean => {
         if (!targetPlan || !isDowngrade(planBillingCycle, targetPlan.price)) {
@@ -603,10 +604,7 @@ const SubscriptionPlan: React.FC = () => {
     };
 
     // Xử lý nâng cấp gói dịch vụ
-    const handleUpgradePlan = async (
-        planId: string,
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-    ) => {
+    const handleUpgradePlan = async (planId: string, planBillingCycle: BillingCycle) => {
         if (!validateHospitalId(hospitalId)) {
             return;
         }
@@ -681,7 +679,7 @@ const SubscriptionPlan: React.FC = () => {
                 toast.success('Đang chuyển hướng đến trang thanh toán...');
 
                 // Redirect to payment URL
-                window.location.href = response.data.paymentUrl;
+                globalThis.location.href = response.data.paymentUrl;
             } else {
                 throw new Error(response.message || 'Không thể tạo URL thanh toán');
             }
@@ -899,11 +897,10 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
     }, [onClose]);
 
     return (
-        <div
+        <dialog
+            open
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            role="dialog"
-            aria-modal="true"
             aria-labelledby="terms-modal-title"
         >
             {/* Hidden button overlay for backdrop click - accessible and SonarQube compliant */}
@@ -1133,8 +1130,8 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
                     </div>
                 </div>
             </div>
-        </div>
+        </dialog>
     );
 };
 
-export default SubscriptionPlan as React.FC;
+export default SubscriptionPlan;

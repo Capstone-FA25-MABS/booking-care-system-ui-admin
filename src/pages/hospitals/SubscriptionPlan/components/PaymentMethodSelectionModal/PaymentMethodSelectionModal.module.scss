@@ -11,7 +11,7 @@
     justify-content: space-between;
     padding: 24px 28px;
     border-bottom: 1px solid #e9ecef;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5568d3 0%, #6941a0 100%);
     color: white;
 
     .headerContent {
@@ -55,7 +55,6 @@
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s ease;
-        color: white;
         flex-shrink: 0;
 
         &:hover:not(:disabled) {
@@ -115,7 +114,7 @@
 
         .summaryLabel {
             font-size: 14px;
-            color: #64748b;
+            color: #475569;
             font-weight: 500;
         }
 
@@ -236,7 +235,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5568d3 0%, #6941a0 100%);
             border-radius: 8px;
             color: white;
         }
@@ -253,7 +252,7 @@
 
             .methodDescription {
                 font-size: 13px;
-                color: #64748b;
+                color: #475569;
                 margin: 0;
                 line-height: 1.4;
             }
@@ -305,7 +304,7 @@
 
     .cancelButton {
         background: white;
-        color: #64748b;
+        color: #475569;
         border: 1px solid #e2e8f0;
 
         &:hover:not(:disabled) {
@@ -315,13 +314,13 @@
     }
 
     .confirmButton {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #5568d3 0%, #6941a0 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 4px 12px rgba(85, 104, 211, 0.3);
 
         &:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 16px rgba(85, 104, 211, 0.4);
         }
 
         &:active:not(:disabled) {

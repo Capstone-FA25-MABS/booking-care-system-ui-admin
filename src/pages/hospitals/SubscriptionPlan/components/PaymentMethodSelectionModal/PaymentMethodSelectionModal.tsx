@@ -82,7 +82,7 @@ const PaymentMethodSelectionModal: React.FC<PaymentMethodSelectionModalProps> = 
 
         setSubmitting(true);
         try {
-            await onConfirm(selectedPaymentMethodId);
+            onConfirm(selectedPaymentMethodId);
         } catch {
             // Error handling is done in parent component
             setSubmitting(false);
@@ -96,11 +96,10 @@ const PaymentMethodSelectionModal: React.FC<PaymentMethodSelectionModalProps> = 
     };
 
     return (
-        <div
+        <dialog
+            open
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            role="dialog"
-            aria-modal="true"
             aria-labelledby="payment-method-modal-title"
         >
             {/* Backdrop overlay */}
@@ -169,63 +168,77 @@ const PaymentMethodSelectionModal: React.FC<PaymentMethodSelectionModalProps> = 
                         <div className={styles.paymentMethodsSection}>
                             <h6 className={styles.sectionTitle}>Phương thức thanh toán</h6>
 
-                            {loading ? (
-                                <div className={styles.loadingContainer}>
-                                    <Loader2 size={32} className={styles.spinner} />
-                                    <p>Đang tải phương thức thanh toán...</p>
-                                </div>
-                            ) : paymentMethods.length === 0 ? (
-                                <div className={styles.emptyContainer}>
-                                    <CreditCard size={48} className={styles.emptyIcon} />
-                                    <p>Không có phương thức thanh toán nào khả dụng</p>
-                                </div>
-                            ) : (
-                                <div className={styles.paymentMethodsList}>
-                                    {paymentMethods.map((method) => (
-                                        <button
-                                            key={method.id}
-                                            type="button"
-                                            className={`${styles.paymentMethodCard} ${
-                                                selectedPaymentMethodId === method.id
-                                                    ? styles.selected
-                                                    : ''
-                                            }`}
-                                            onClick={() => setSelectedPaymentMethodId(method.id)}
-                                            disabled={submitting}
-                                        >
-                                            <div className={styles.methodContent}>
-                                                {method.imageUrl ? (
-                                                    <img
-                                                        src={method.imageUrl}
-                                                        alt={method.name}
-                                                        className={styles.methodImage}
-                                                    />
-                                                ) : (
-                                                    <div className={styles.methodIconPlaceholder}>
-                                                        <CreditCard size={24} />
-                                                    </div>
-                                                )}
-                                                <div className={styles.methodInfo}>
-                                                    <h6 className={styles.methodName}>
-                                                        {method.name}
-                                                    </h6>
-                                                    {method.description && (
-                                                        <p className={styles.methodDescription}>
-                                                            {method.description}
-                                                        </p>
+                            {(() => {
+                                if (loading) {
+                                    return (
+                                        <div className={styles.loadingContainer}>
+                                            <Loader2 size={32} className={styles.spinner} />
+                                            <p>Đang tải phương thức thanh toán...</p>
+                                        </div>
+                                    );
+                                }
+
+                                if (paymentMethods.length === 0) {
+                                    return (
+                                        <div className={styles.emptyContainer}>
+                                            <CreditCard size={48} className={styles.emptyIcon} />
+                                            <p>Không có phương thức thanh toán nào khả dụng</p>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className={styles.paymentMethodsList}>
+                                        {paymentMethods.map((method) => (
+                                            <button
+                                                key={method.id}
+                                                type="button"
+                                                className={`${styles.paymentMethodCard} ${
+                                                    selectedPaymentMethodId === method.id
+                                                        ? styles.selected
+                                                        : ''
+                                                }`}
+                                                onClick={() =>
+                                                    setSelectedPaymentMethodId(method.id)
+                                                }
+                                                disabled={submitting}
+                                            >
+                                                <div className={styles.methodContent}>
+                                                    {method.imageUrl ? (
+                                                        <img
+                                                            src={method.imageUrl}
+                                                            alt={method.name}
+                                                            className={styles.methodImage}
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className={styles.methodIconPlaceholder}
+                                                        >
+                                                            <CreditCard size={24} />
+                                                        </div>
                                                     )}
+                                                    <div className={styles.methodInfo}>
+                                                        <h6 className={styles.methodName}>
+                                                            {method.name}
+                                                        </h6>
+                                                        {method.description && (
+                                                            <p className={styles.methodDescription}>
+                                                                {method.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {selectedPaymentMethodId === method.id && (
-                                                <CheckCircle2
-                                                    size={24}
-                                                    className={styles.checkIcon}
-                                                />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                                                {selectedPaymentMethodId === method.id && (
+                                                    <CheckCircle2
+                                                        size={24}
+                                                        className={styles.checkIcon}
+                                                    />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
 
@@ -257,7 +270,7 @@ const PaymentMethodSelectionModal: React.FC<PaymentMethodSelectionModalProps> = 
                     </div>
                 </div>
             </div>
-        </div>
+        </dialog>
     );
 };
 
