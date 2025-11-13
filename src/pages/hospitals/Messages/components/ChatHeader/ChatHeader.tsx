@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
+import TagManager from '../TagManager';
 import trustcare from '@/assets/img/icons/trustcare.svg';
+
 interface ChatHeaderProps {
     onVideoCallStart?: () => void;
     onVoiceCallStart?: () => void;
@@ -10,6 +12,8 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallStart }) => {
     const { activeConversation, onlineUsers } = useChat();
+    const [showTagManager, setShowTagManager] = useState(false);
+    const tagManagerRef = React.useRef<HTMLDivElement>(null);
 
     // Get current user profile
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -17,6 +21,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
     );
     const userProfile = adminProfile || doctorProfile || hospitalProfile;
     const currentUserId = (userProfile?.accountId || '').toUpperCase();
+
+    // Function to reload conversation tags (can be called from TagManager)
+    const loadConversationTags = async () => {
+        // Dispatch custom event to notify ChatUserNav to reload tags
+        window.dispatchEvent(new CustomEvent('conversationTagsUpdated'));
+    };
+
+    // Close tag manager when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (tagManagerRef.current && !tagManagerRef.current.contains(event.target as Node)) {
+                setShowTagManager(false);
+            }
+        };
+
+        if (showTagManager) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showTagManager]);
 
     // Get other participant info
     const otherParticipant = activeConversation?.participantDetails?.find(
@@ -77,6 +104,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
+                    data-bs-original-title="Quản lý nhãn"
+                    type="button"
+                    onClick={() => setShowTagManager(!showTagManager)}
+                    disabled={!activeConversation}
+                >
+                    <i className="ti ti-tag"></i>
+                </button>
+                <button
+                    className="btn btn-icon btn-light"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
                     data-bs-original-title="Thông tin"
                     type="button"
                     disabled={!activeConversation}
@@ -87,6 +125,32 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
                     <i className="ti ti-x"></i>
                 </button>
             </div>
+
+            {/* Tag Manager Dropdown */}
+            {showTagManager && activeConversation && (
+                <div
+                    ref={tagManagerRef}
+                    style={{
+                        position: 'absolute',
+                        top: '3.5rem',
+                        right: '1rem',
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        borderRadius: '0.375rem',
+                        boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)',
+                        width: '300px',
+                        maxHeight: '400px',
+                        overflow: 'auto',
+                    }}
+                >
+                    <TagManager
+                        userId={currentUserId}
+                        conversationId={activeConversation.id}
+                        showConversationTags={true}
+                        onTagsUpdated={loadConversationTags}
+                    />
+                </div>
+            )}
         </div>
     );
 };
