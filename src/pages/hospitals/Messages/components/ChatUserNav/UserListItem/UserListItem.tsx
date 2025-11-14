@@ -53,21 +53,15 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, conversationTags = []
             )}
         >
             <div className="d-flex align-items-center flex-grow-1 min-w-0">
-                <button
-                    className="avatar me-2 flex-shrink-0 border-0 bg-transparent p-0"
-                    type="button"
-                >
+                <div className="avatar me-2 flex-shrink-0">
                     <img src={user.avatar} alt="user" />
-                </button>
+                </div>
                 <div className="min-w-0 flex-grow-1">
                     <div className="d-flex align-items-center mb-1">
                         <h6 className="fs-14 mb-0 text-truncate me-2">
-                            <button
-                                className="text-decoration-none border-0 bg-transparent p-0 text-start text-truncate"
-                                type="button"
-                            >
+                            <span className="text-decoration-none text-start text-truncate">
                                 {user.name}
-                            </button>
+                            </span>
                         </h6>
                         {/* Zalo-style Tag Dots */}
                         {prioritizedTags.length > 0 && (

@@ -36,17 +36,17 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
     const connectionRef = useRef<signalR.HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
-    const chatHubUrl = 'http://localhost:6005/chatHub';
+    const chatHubUrl = 'http://localhost:5000/api/chatHub';
 
     // Create and manage SignalR connection
     useEffect(() => {
         // Only connect if we have a userId
-        if (!userId) {
+        if (!userId || !accessToken) {
             console.log('[ChatHubContext] ⏳ Waiting for user authentication...');
             return;
         }
 
-        // Build URL with userId query string (fallback if JWT claims don't work)
+        // Build URL with userId query param (same pattern as Patient app)
         const hubUrlWithUserId = `${chatHubUrl}?userId=${encodeURIComponent(userId)}`;
 
         // Create SignalR connection
