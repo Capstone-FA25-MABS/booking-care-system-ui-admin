@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import SubscriptionPlanCard from './components/SubscriptionPlanCard';
 import SubscriptionPlanSkeletonCard from './components/SubscriptionPlanSkeletonCard/SubscriptionPlanSkeletonCard';
 import PaymentMethodSelectionModal from './components/PaymentMethodSelectionModal';
-import { Check, Info, Plus } from 'lucide-react';
+import { Check, Info, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './SubscriptionPlan.module.scss';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -32,6 +32,8 @@ const SubscriptionPlan: React.FC = () => {
         planBillingCycle: BillingCycle;
     } | null>(null);
     const [hasShownPaymentSuccess, setHasShownPaymentSuccess] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [cardsVisible, setCardsVisible] = useState(3); // Track number of visible cards
 
     // Get subscription data and current hospital profile
     const {
@@ -415,9 +417,42 @@ const SubscriptionPlan: React.FC = () => {
         const billingCycle = getBillingCycle(billingPeriod);
         return subscriptionPlans
             .filter((plan) => plan.billingCycle === billingCycle && plan.status === 'ACTIVE')
-            .sort((a, b) => a.price - b.price)
-            .slice(0, 3); // Limit to 3 plans
+            .sort((a, b) => a.price - b.price);
     }, [subscriptionPlans, billingPeriod]);
+
+    // Reset slide when billing period changes
+    useEffect(() => {
+        setCurrentSlide(0);
+    }, [billingPeriod]);
+
+    // Track screen size and adjust visible cards count
+    useEffect(() => {
+        const updateCardsVisible = () => {
+            const width = window.innerWidth;
+            if (width <= 768) {
+                setCardsVisible(1); // Show 1 card for mobile screens <= 768px
+            } else if (width <= 1200) {
+                setCardsVisible(2); // Show 2 cards for medium screens <= 1200px
+            } else {
+                setCardsVisible(3); // Show 3 cards for larger screens
+            }
+        };
+
+        // Set initial value
+        updateCardsVisible();
+
+        // Listen for resize events
+        window.addEventListener('resize', updateCardsVisible);
+
+        return () => {
+            window.removeEventListener('resize', updateCardsVisible);
+        };
+    }, []);
+
+    // Reset slide when cards visible changes
+    useEffect(() => {
+        setCurrentSlide(0);
+    }, [cardsVisible]);
 
     // Parse features from JSON string and map iconType to icon
     const parseFeatures = (featuresJson?: string): Feature[] => {
@@ -836,7 +871,45 @@ const SubscriptionPlan: React.FC = () => {
                     </div>
                 </div>
 
-                <div className={styles.plansContainer}>{renderPlansContent()}</div>
+                <div className={styles.plansContainerWrapper}>
+                    {filteredPlans.length > cardsVisible && (
+                        <button
+                            className={`${styles.carouselButton} ${styles.carouselButtonPrev}`}
+                            onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                            disabled={currentSlide === 0}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    )}
+                    <div className={styles.plansContainer}>
+                        <div
+                            className={styles.plansSlider}
+                            style={{
+                                transform:
+                                    cardsVisible === 1
+                                        ? `translateX(-${currentSlide * 100}%)`
+                                        : cardsVisible === 2
+                                          ? `translateX(calc(-${currentSlide} * ((100% - 0.75rem) / 2 + 0.75rem)))`
+                                          : `translateX(calc(-${currentSlide} * ((100% - 2rem) / 3 + 1rem)))`,
+                            }}
+                        >
+                            {renderPlansContent()}
+                        </div>
+                    </div>
+                    {filteredPlans.length > cardsVisible && (
+                        <button
+                            className={`${styles.carouselButton} ${styles.carouselButtonNext}`}
+                            onClick={() =>
+                                setCurrentSlide(
+                                    Math.min(filteredPlans.length - cardsVisible, currentSlide + 1)
+                                )
+                            }
+                            disabled={currentSlide >= filteredPlans.length - cardsVisible}
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    )}
+                </div>
 
                 {/* Terms and Conditions Button */}
                 <div className="text-center" style={{ marginTop: '2rem' }}>

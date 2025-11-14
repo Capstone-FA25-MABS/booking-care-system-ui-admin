@@ -472,8 +472,8 @@ export const validateSubscriptionPlanForm = (
     }
 
     const price = Number.parseFloat(formData.price);
-    if (Number.isNaN(price) || price <= 0) {
-        return 'Giá gói phải là số dương';
+    if (Number.isNaN(price) || price < 0) {
+        return 'Giá gói phải là số không âm (có thể là 0 cho gói miễn phí)';
     }
 
     if (requiresBillingCycle && !formData.billingCycle) {

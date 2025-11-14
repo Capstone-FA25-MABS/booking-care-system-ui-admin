@@ -108,11 +108,6 @@ export const useDoctorFormOptions = (): DoctorFormOptions => {
                         hospitalServiceTypeIds.has(serviceType.id)
                     );
 
-                    console.log('✅ Filtered Results:', {
-                        specialties: filteredSpecialties.length,
-                        serviceTypes: filteredServiceTypes.length,
-                    });
-
                     // No fallback - if hospital hasn't configured, dropdown will be empty
                     // This forces hospital to configure specialties/service types first
                     setSpecialties(filteredSpecialties);
