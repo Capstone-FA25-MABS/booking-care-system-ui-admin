@@ -171,6 +171,7 @@ interface DoctorFormFieldsProps {
     specialties: Array<{ id: string; name: string }>;
     languages: Array<{ id: string; name: string }>;
     serviceTypes: Array<{ id: string; name: string }>;
+    hasChanges?: boolean;
 }
 
 const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
@@ -190,6 +191,7 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
     specialties,
     languages,
     serviceTypes,
+    hasChanges = true,
 }) => {
     const renderSubmitButtonText = (): React.ReactNode => {
         if (isLoading) {
@@ -290,25 +292,27 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
                 errors={errors as Record<string, string>}
             />
 
-            <div className="card mb-4">
-                <div className={`card-body ${styles.sectionBorder}`}>
-                    <div className="text-end">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="md"
-                            className="btn btn-light btn-md me-2"
-                            onClick={onCancel}
-                            disabled={isLoading}
-                        >
-                            Hủy
-                        </Button>
-                        <Button type="submit" variant="primary" disabled={isLoading}>
-                            {renderSubmitButtonText()}
-                        </Button>
+            {hasChanges && (
+                <div className="card mb-4">
+                    <div className={`card-body ${styles.sectionBorder}`}>
+                        <div className="text-end">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="md"
+                                className="btn btn-light btn-md me-2"
+                                onClick={onCancel}
+                                disabled={isLoading}
+                            >
+                                Hủy
+                            </Button>
+                            <Button type="submit" variant="primary" disabled={isLoading}>
+                                {renderSubmitButtonText()}
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </form>
     );
 };
