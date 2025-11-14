@@ -16,6 +16,7 @@ export const useDoctorFormLogic = ({
     doctorId,
 }: UseDoctorFormLogicProps) => {
     const [formData, setFormData] = useState<DoctorFormData>(initialData);
+    const [initialFormData, setInitialFormData] = useState<DoctorFormData>(initialData);
     const [errors, setErrors] = useState<
         Partial<
             Record<keyof DoctorFormData | `servicePrices_${number}_${keyof DoctorPrice}`, string>
@@ -165,6 +166,51 @@ export const useDoctorFormLogic = ({
         return { doctorData, doctorLanguages, doctorPrices };
     }, [formData, isEdit, doctorId]);
 
+    // Check if form has changes
+    const hasChanges = useCallback((): boolean => {
+        // Check basic fields
+        const fieldsToCompare: (keyof DoctorFormData)[] = [
+            'firstName',
+            'lastName',
+            'email',
+            'phone',
+            'dateOfBirth',
+            'address',
+            'gender',
+            'bio',
+            'yearsOfExperience',
+            'positionId',
+            'specialtyId',
+            'hospitalId',
+        ];
+
+        const basicFieldsChanged = fieldsToCompare.some(
+            (field) => formData[field] !== initialFormData[field]
+        );
+
+        // Check avatar file
+        const avatarChanged = formData.avatar instanceof File;
+
+        // Check languages
+        const languagesChanged =
+            formData.languageIds.length !== initialFormData.languageIds.length ||
+            formData.languageIds.some((id, index) => id !== initialFormData.languageIds[index]);
+
+        // Check service prices
+        const pricesChanged =
+            formData.servicePrices.length !== initialFormData.servicePrices.length ||
+            formData.servicePrices.some((price, index) => {
+                const initialPrice = initialFormData.servicePrices[index];
+                return (
+                    !initialPrice ||
+                    price.serviceTypeId !== initialPrice.serviceTypeId ||
+                    price.amount !== initialPrice.amount
+                );
+            });
+
+        return basicFieldsChanged || avatarChanged || languagesChanged || pricesChanged;
+    }, [formData, initialFormData]);
+
     return {
         formData,
         errors,
@@ -179,5 +225,8 @@ export const useDoctorFormLogic = ({
         validateForm,
         resetForm,
         prepareSubmitData,
+        hasChanges,
+        initialFormData,
+        setInitialFormData,
     };
 };

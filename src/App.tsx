@@ -4,8 +4,8 @@ import AppRoutes from './routes/AppRoutes';
 import ReduxProvider from './store/ReduxProvider';
 import GoogleOAuthWrapper from './providers/GoogleOAuthProvider';
 import AccountNotificationProvider from './providers/AccountNotificationProvider';
-import { ChatHubProvider } from './contexts/ChatHubContext';
-import { GlobalChatProvider } from './providers/GlobalChatProvider';
+// import { ChatHubProvider } from './contexts/ChatHubContext';
+// import { GlobalChatProvider } from './providers/GlobalChatProvider';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -26,11 +26,11 @@ const App: React.FC = () => {
                         theme="colored"
                     />
                     <BrowserRouter>
-                        <ChatHubProvider>
-                            <GlobalChatProvider>
-                                <AppRoutes />
-                            </GlobalChatProvider>
-                        </ChatHubProvider>
+                        {/* <ChatHubProvider>
+                            <GlobalChatProvider> */}
+                        <AppRoutes />
+                        {/* </GlobalChatProvider>
+                        </ChatHubProvider> */}
                     </BrowserRouter>
                 </AccountNotificationProvider>
             </GoogleOAuthWrapper>

@@ -282,9 +282,22 @@ const HospitalProfileSettings: React.FC = () => {
         backgroundUrl: '',
     });
 
+    const [initialFormData, setInitialFormData] = useState<UpdateHospitalRequest>({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        description: '',
+        avatarUrl: '',
+        backgroundUrl: '',
+    });
+
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
     const [hospitalImages, setHospitalImages] = useState<
+        Array<{ id: string; imageUrl: string; description?: string }>
+    >([]);
+    const [initialHospitalImages, setInitialHospitalImages] = useState<
         Array<{ id: string; imageUrl: string; description?: string }>
     >([]);
     const [newHospitalImages, setNewHospitalImages] = useState<File[]>([]);
@@ -292,15 +305,10 @@ const HospitalProfileSettings: React.FC = () => {
     const [errors, setErrors] = useState<Partial<Record<keyof UpdateHospitalRequest, string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Load hospital profile
-    useEffect(() => {
-        loadHospitalProfile();
-    }, []);
-
-    // Update form when profile loaded
+    // Update form when profile loaded from Redux
     useEffect(() => {
         if (hospitalProfile) {
-            setFormData({
+            const profileData = {
                 name: hospitalProfile.name || '',
                 email: hospitalProfile.email || '',
                 phone: hospitalProfile.phone || '',
@@ -308,20 +316,33 @@ const HospitalProfileSettings: React.FC = () => {
                 description: hospitalProfile.description || '',
                 avatarUrl: hospitalProfile.avatarUrl || '',
                 backgroundUrl: hospitalProfile.backgroundUrl || '',
-            });
+            };
+            setFormData(profileData);
+            setInitialFormData(profileData);
             setHospitalImages(hospitalProfile.images || []);
+            setInitialHospitalImages(hospitalProfile.images || []);
         }
     }, [hospitalProfile]);
 
-    const loadHospitalProfile = async () => {
-        try {
-            const response = await HospitalService.getHospitalProfilesByAccountId();
-            if (response.data?.length > 0) {
-                dispatch({ type: 'user/setHospitalProfile', payload: response.data[0] });
-            }
-        } catch (error: any) {
-            toast.error(error.message || 'Không thể tải thông tin bệnh viện');
-        }
+    // Check if form has changes
+    const hasChanges = (): boolean => {
+        // Check basic form fields
+        const formChanged = Object.keys(formData).some(
+            (key) =>
+                formData[key as keyof UpdateHospitalRequest] !==
+                initialFormData[key as keyof UpdateHospitalRequest]
+        );
+
+        // Check files
+        const filesChanged = avatarFile !== null || backgroundFile !== null;
+
+        // Check images
+        const imagesChanged =
+            newHospitalImages.length > 0 ||
+            imagesToDelete.length > 0 ||
+            hospitalImages.length !== initialHospitalImages.length;
+
+        return formChanged || filesChanged || imagesChanged;
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -381,17 +402,18 @@ const HospitalProfileSettings: React.FC = () => {
         return Object.keys(newErrors).length > 0 ? newErrors : null;
     };
 
-    // Delete hospital images
+    // Delete hospital images (optimized with Promise.all for parallel deletion)
     const deleteHospitalImages = async (hospitalId: string): Promise<void> => {
         if (imagesToDelete.length === 0) return;
 
-        for (const imageId of imagesToDelete) {
-            try {
-                await HospitalService.deleteHospitalImage(hospitalId, imageId);
-            } catch (error: any) {
-                console.error(`Failed to delete image ${imageId}:`, error);
-            }
-        }
+        // Delete all images in parallel for better performance
+        await Promise.allSettled(
+            imagesToDelete.map((imageId) =>
+                HospitalService.deleteHospitalImage(hospitalId, imageId).catch((error) => {
+                    console.error(`Failed to delete image ${imageId}:`, error);
+                })
+            )
+        );
     };
 
     // Upload new hospital images
@@ -460,13 +482,13 @@ const HospitalProfileSettings: React.FC = () => {
         ).unwrap();
     };
 
-    // Update Redux store with final profile data
+    // Update Redux store with final profile data (optimized)
     const updateReduxProfile = (
         updatedProfile: HospitalProfile | null,
         uploadedImages: Array<{ id: string; imageUrl: string }>
     ): void => {
         if (!updatedProfile) {
-            loadHospitalProfile();
+            // Only reload if update failed - avoid unnecessary API call
             return;
         }
 
@@ -497,18 +519,57 @@ const HospitalProfileSettings: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            await deleteHospitalImages(hospitalProfile.id);
+            // Optimize: Run delete and profile update in parallel
+            // Upload images can only happen after delete completes
+            const [, updatedProfile] = await Promise.all([
+                deleteHospitalImages(hospitalProfile.id),
+                updateProfileWithFiles(hospitalProfile.id),
+            ]);
+
+            // Upload new images after delete to ensure clean state
             const uploadedImages = await uploadNewHospitalImages(hospitalProfile.id);
-            const updatedProfile = await updateProfileWithFiles(hospitalProfile.id);
+
             updateReduxProfile(updatedProfile, uploadedImages);
 
             toast.success('Cập nhật thông tin bệnh viện thành công!');
+
+            // Reset change tracking
             setImagesToDelete([]);
             setNewHospitalImages([]);
+            setAvatarFile(null);
+            setBackgroundFile(null);
+
+            // Update initial data to match current data
+            if (updatedProfile) {
+                const newInitialData = {
+                    name: updatedProfile.name || '',
+                    email: updatedProfile.email || '',
+                    phone: updatedProfile.phone || '',
+                    address: updatedProfile.address || '',
+                    description: updatedProfile.description || '',
+                    avatarUrl: updatedProfile.avatarUrl || '',
+                    backgroundUrl: updatedProfile.backgroundUrl || '',
+                };
+                setInitialFormData(newInitialData);
+                setInitialHospitalImages(hospitalImages);
+            }
         } catch (error: any) {
             toast.error(error.message || 'Không thể cập nhật thông tin bệnh viện');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleCancel = () => {
+        // Reset form to initial state
+        if (hospitalProfile) {
+            setFormData(initialFormData);
+            setHospitalImages(initialHospitalImages);
+            setAvatarFile(null);
+            setBackgroundFile(null);
+            setNewHospitalImages([]);
+            setImagesToDelete([]);
+            setErrors({});
         }
     };
 
@@ -603,41 +664,27 @@ const HospitalProfileSettings: React.FC = () => {
                         onRemoveImage={handleRemoveHospitalImage}
                     />
 
-                    <div className="card mb-4">
-                        <div className={`card-body ${styles.sectionBorder}`}>
-                            <div className="text-end">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="md"
-                                    className="btn btn-light btn-md me-2"
-                                    onClick={() => {
-                                        // Navigate back or reset form
-                                        if (hospitalProfile) {
-                                            setFormData({
-                                                name: hospitalProfile.name || '',
-                                                email: hospitalProfile.email || '',
-                                                phone: hospitalProfile.phone || '',
-                                                address: hospitalProfile.address || '',
-                                                description: hospitalProfile.description || '',
-                                                avatarUrl: hospitalProfile.avatarUrl || '',
-                                                backgroundUrl: hospitalProfile.backgroundUrl || '',
-                                            });
-                                            setAvatarFile(null);
-                                            setBackgroundFile(null);
-                                            setErrors({});
-                                        }
-                                    }}
-                                    disabled={isSubmitting}
-                                >
-                                    Hủy
-                                </Button>
-                                <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                    {renderSubmitButtonText()}
-                                </Button>
+                    {hasChanges() && (
+                        <div className="card mb-4">
+                            <div className={`card-body ${styles.sectionBorder}`}>
+                                <div className="text-end">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="md"
+                                        className="btn btn-light btn-md me-2"
+                                        onClick={handleCancel}
+                                        disabled={isSubmitting}
+                                    >
+                                        Hủy
+                                    </Button>
+                                    <Button type="submit" variant="primary" disabled={isSubmitting}>
+                                        {renderSubmitButtonText()}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </form>
             </div>
         </>
