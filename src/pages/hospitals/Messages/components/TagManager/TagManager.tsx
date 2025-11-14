@@ -316,7 +316,6 @@ const TagManager: React.FC<TagManagerProps> = ({
                                     {tag.icon && <span className="me-1">{tag.icon}</span>}
                                     {tag.name}
                                 </span>
-                                <span className={styles.tagCount}>{tag.conversationCount}</span>
                                 {/* Action buttons for CUSTOM and SYSTEM tags (user-created) */}
                                 {(tag.type === ConversationTagType.CUSTOM ||
                                     tag.type === ConversationTagType.SYSTEM ||
@@ -404,20 +403,97 @@ const TagManager: React.FC<TagManagerProps> = ({
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Màu sắc</label>
-                                        <div className={styles.colorPicker}>
-                                            {TAG_COLORS.map((color) => (
-                                                <button
+                                        <div
+                                            style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                                gap: '16px',
+                                                marginTop: '16px',
+                                                padding: '8px',
+                                            }}
+                                        >
+                                            {TAG_COLORS.map((color, index) => (
+                                                <div
                                                     key={color}
-                                                    type="button"
-                                                    className={clsx(
-                                                        styles.colorOption,
-                                                        newTagColor === color && styles.selected
-                                                    )}
-                                                    style={{ backgroundColor: color }}
                                                     onClick={() => setNewTagColor(color)}
-                                                />
+                                                    style={{
+                                                        width: '48px',
+                                                        height: '48px',
+                                                        background: `linear-gradient(135deg, ${color}e6, ${color})`,
+                                                        borderRadius: '50%',
+                                                        cursor: 'pointer',
+                                                        position: 'relative',
+                                                        border: 'none',
+                                                        boxShadow:
+                                                            newTagColor === color
+                                                                ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
+                                                                : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                                        transition:
+                                                            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        transform:
+                                                            newTagColor === color
+                                                                ? 'scale(1.1)'
+                                                                : 'scale(1)',
+                                                        animationDelay: `${index * 50}ms`,
+                                                        backdropFilter: 'blur(8px)',
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (newTagColor !== color) {
+                                                            e.currentTarget.style.transform =
+                                                                'scale(1.15)';
+                                                            e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (newTagColor !== color) {
+                                                            e.currentTarget.style.transform =
+                                                                'scale(1)';
+                                                            e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
+                                                        }
+                                                    }}
+                                                >
+                                                    {newTagColor === color && (
+                                                        <div
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: '50%',
+                                                                left: '50%',
+                                                                transform: 'translate(-50%, -50%)',
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                backgroundColor:
+                                                                    'rgba(255,255,255,0.9)',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                animation: 'pulse 2s infinite',
+                                                            }}
+                                                        >
+                                                            <svg
+                                                                width="12"
+                                                                height="12"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="3"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                style={{ color: '#3b82f6' }}
+                                                            >
+                                                                <polyline points="20,6 9,17 4,12"></polyline>
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
+                                        <style>{`
+                                            @keyframes pulse {
+                                                0%, 100% { transform: translate(-50%, -50%) scale(1); }
+                                                50% { transform: translate(-50%, -50%) scale(1.1); }
+                                            }
+                                        `}</style>
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Loại nhãn</label>
@@ -496,18 +572,89 @@ const TagManager: React.FC<TagManagerProps> = ({
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Màu sắc</label>
-                                        <div className={styles.colorPicker}>
-                                            {TAG_COLORS.map((color) => (
-                                                <button
+                                        <div
+                                            style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                                gap: '16px',
+                                                marginTop: '16px',
+                                                padding: '8px',
+                                            }}
+                                        >
+                                            {TAG_COLORS.map((color, index) => (
+                                                <div
                                                     key={color}
-                                                    type="button"
-                                                    className={clsx(
-                                                        styles.colorOption,
-                                                        editTagColor === color && styles.selected
-                                                    )}
-                                                    style={{ backgroundColor: color }}
                                                     onClick={() => setEditTagColor(color)}
-                                                />
+                                                    style={{
+                                                        width: '48px',
+                                                        height: '48px',
+                                                        background: `linear-gradient(135deg, ${color}e6, ${color})`,
+                                                        borderRadius: '50%',
+                                                        cursor: 'pointer',
+                                                        position: 'relative',
+                                                        border: 'none',
+                                                        boxShadow:
+                                                            editTagColor === color
+                                                                ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
+                                                                : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                                        transition:
+                                                            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        transform:
+                                                            editTagColor === color
+                                                                ? 'scale(1.1)'
+                                                                : 'scale(1)',
+                                                        animationDelay: `${index * 50}ms`,
+                                                        backdropFilter: 'blur(8px)',
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (editTagColor !== color) {
+                                                            e.currentTarget.style.transform =
+                                                                'scale(1.15)';
+                                                            e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (editTagColor !== color) {
+                                                            e.currentTarget.style.transform =
+                                                                'scale(1)';
+                                                            e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
+                                                        }
+                                                    }}
+                                                >
+                                                    {editTagColor === color && (
+                                                        <div
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: '50%',
+                                                                left: '50%',
+                                                                transform: 'translate(-50%, -50%)',
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                backgroundColor:
+                                                                    'rgba(255,255,255,0.9)',
+                                                                borderRadius: '50%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                animation: 'pulse 2s infinite',
+                                                            }}
+                                                        >
+                                                            <svg
+                                                                width="12"
+                                                                height="12"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="3"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                style={{ color: '#3b82f6' }}
+                                                            >
+                                                                <polyline points="20,6 9,17 4,12"></polyline>
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
                                     </div>

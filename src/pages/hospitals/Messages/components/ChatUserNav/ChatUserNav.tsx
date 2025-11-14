@@ -5,7 +5,7 @@ import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
 import { MessageType } from '@/types/communication.types';
 import TagManager from '../TagManager';
-import ConversationTagBadge from '../ConversationTagBadge';
+
 import TagService from '@/services/tag.service';
 import { Tag } from '@/types/tag.types';
 import styles from '../../Messages.module.scss';
@@ -341,10 +341,11 @@ const ChatUserNav: React.FC = () => {
                                 const convTags = conversationTags.get(conv.id) || [];
 
                                 return (
-                                    <div key={conv.id}>
+                                    <div key={conv.id} className={clsx(styles.conversationItem)}>
                                         <button
                                             type="button"
                                             onClick={() => selectConversation(conv.id)}
+                                            className={clsx(styles.conversationButton)}
                                             style={{
                                                 cursor: 'pointer',
                                                 border: 'none',
@@ -354,21 +355,8 @@ const ChatUserNav: React.FC = () => {
                                                 textAlign: 'left',
                                             }}
                                         >
-                                            <UserListItem user={user} />
+                                            <UserListItem user={user} conversationTags={convTags} />
                                         </button>
-                                        {convTags.length > 0 && (
-                                            <div
-                                                style={{
-                                                    paddingLeft: '1rem',
-                                                    paddingTop: '0.25rem',
-                                                }}
-                                            >
-                                                <ConversationTagBadge
-                                                    tags={convTags}
-                                                    maxVisible={3}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}

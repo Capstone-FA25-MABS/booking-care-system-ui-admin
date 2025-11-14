@@ -31,13 +31,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
     // Close tag manager when clicking outside
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (tagManagerRef.current && !tagManagerRef.current.contains(event.target as Node)) {
-                setShowTagManager(false);
+            const target = event.target as Node;
+
+            // Check if TagManager ref exists and contains the clicked element
+            if (tagManagerRef.current && !tagManagerRef.current.contains(target)) {
+                // Additional check: don't close if clicking on modal backdrop or modal content
+                const isModalClick = (target as Element)?.closest('.modal');
+
+                if (!isModalClick) {
+                    setShowTagManager(false);
+                }
             }
         };
 
         if (showTagManager) {
-            document.addEventListener('mousedown', handleClickOutside);
+            // Use setTimeout to avoid immediate closing when button is clicked
+            const timeoutId = setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 100);
+
+            return () => {
+                clearTimeout(timeoutId);
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
         }
 
         return () => {
@@ -141,6 +157,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
                         width: '300px',
                         maxHeight: '400px',
                         overflow: 'auto',
+                    }}
+                    onMouseDown={(e) => {
+                        // Prevent event from bubbling up to handleClickOutside
+                        e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                        // Prevent event from bubbling up
+                        e.stopPropagation();
                     }}
                 >
                     <TagManager
