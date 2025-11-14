@@ -129,9 +129,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                         hospitalProfile?.name ||
                         'You',
                     avatarUrl: userProfile?.avatarUrl || '/default-avatar.png',
-                    phoneNumber:
-                        (userProfile && 'phone' in userProfile ? userProfile.phone : undefined) ||
-                        undefined,
+                    phoneNumber: userProfile?.phone,
                 };
             }
 

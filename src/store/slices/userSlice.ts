@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { UserService } from '@/services/user.service';
 import { HospitalService } from '@/services/hospital.service';
-import { DoctorService } from '@/services/doctor.service';
 import {
     AdminProfile,
     DoctorProfile,
@@ -127,11 +126,12 @@ export const fetchProfileByRole = createAsyncThunk<
             const response = await UserService.getAdminProfile();
             return { role, profile: response.data };
         } else if (role === Role.DOCTOR) {
-            const response = await DoctorService.getCurrentDoctorProfile();
+            const response = await UserService.getDoctorProfileByAccountId();
             return { role, profile: response.data };
         } else if (role === Role.STAFF) {
-            const response = await HospitalService.getCurrentHospitalProfile();
-            return { role, profile: response.data };
+            const response = await HospitalService.getHospitalProfilesByAccountId();
+            const profiles = response.data;
+            return { role, profile: profiles && profiles.length > 0 ? profiles[0] : null };
         }
         throw new Error('Invalid role');
     } catch (error: any) {

@@ -9,7 +9,6 @@ import {
 const DOCTOR_ENDPOINTS = {
     BASE: '/doctors',
     HEALTH: '/doctors/health',
-    PROFILE: '/doctors/profile',
     GET_DOCTOR: (id: string) => `/doctors/${id}`,
     GET_DOCTOR_PRICES: (id: string) => `/doctors/${id}/prices`,
     UPDATE_DOCTOR: (id: string) => `/doctors/${id}`,
@@ -36,22 +35,6 @@ export class DoctorService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Doctor service health check failed');
-        }
-    }
-
-    /**
-     * Get current doctor profile (authenticated account)
-     */
-    static async getCurrentDoctorProfile(): Promise<ApiResponse<DoctorByIdResponse>> {
-        try {
-            const response: any = await axiosInstance.get(DOCTOR_ENDPOINTS.PROFILE);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Doctor profile retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to retrieve doctor profile');
         }
     }
 

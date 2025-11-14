@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import { AppDispatch } from '@/store';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import { updateHospitalProfile, fetchProfileByRole } from '@/store/slices/userSlice';
 import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { Specialty } from '@/types/specialty.types';
+import { Role } from '@/enums/common.enums';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
-import HospitalService from '@/services/hospital.service';
 import styles from './HospitalSpecialtiesManagement.module.scss';
 
 const HospitalSpecialtiesManagement: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
     const { profile, hospitalProfile } = useCurrentUserProfile();
     const hospitalId = hospitalProfile?.id || (profile as any)?.id;
 
     // State
     const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([]);
     const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<string[]>([]);
-    const [initialSpecialtyIds, setInitialSpecialtyIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,19 +55,15 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                     setAllSpecialties(activeSpecialties);
                 }
 
-                // Load current hospital specialties via lightweight endpoint
-                if (hospitalId) {
-                    const idsResponse = await HospitalService.getHospitalSpecialtyIds(hospitalId);
-                    const idsData = idsResponse.data as any;
-                    const ids: string[] = Array.isArray(idsData)
-                        ? idsData
-                              .map((x: any) =>
-                                  typeof x === 'string' ? x : x?.specialtyId || x?.id
-                              )
-                              .filter(Boolean)
-                        : [];
-                    setSelectedSpecialtyIds(ids);
-                    setInitialSpecialtyIds(ids);
+                // Load current hospital specialties
+                if (hospitalProfile?.specialties && hospitalProfile.specialties.length > 0) {
+                    const currentSpecialtyIds = hospitalProfile.specialties
+                        .map((s: any) => {
+                            // Handle both structures: { specialtyId: string } or { id: string }
+                            return s.specialtyId || s.id;
+                        })
+                        .filter(Boolean); // Remove any undefined/null values
+                    setSelectedSpecialtyIds(currentSpecialtyIds);
                 }
             } catch (error: any) {
                 console.error('Error loading specialties:', error);
@@ -109,10 +108,21 @@ const HospitalSpecialtiesManagement: React.FC = () => {
 
         setIsSaving(true);
         try {
-            // Update only hospital specialties
-            await HospitalService.updateHospitalSpecialties(hospitalId, selectedSpecialtyIds);
-            // No need to refresh profile - update local state only for better performance
-            setInitialSpecialtyIds(selectedSpecialtyIds);
+            // Include required fields from current hospital profile
+            await dispatch(
+                updateHospitalProfile({
+                    hospitalId,
+                    updateData: {
+                        name: hospitalProfile.name,
+                        address: hospitalProfile.address || '',
+                        description: hospitalProfile.description || '',
+                        specialtyIds: selectedSpecialtyIds,
+                    },
+                })
+            ).unwrap();
+
+            // Reload hospital profile to get updated data
+            await dispatch(fetchProfileByRole({ role: Role.STAFF }));
 
             toast.success('Cập nhật chuyên khoa thành công!');
         } catch (error: any) {
@@ -126,10 +136,12 @@ const HospitalSpecialtiesManagement: React.FC = () => {
     };
 
     // Check if has changes
+    const currentSpecialtyIds =
+        hospitalProfile?.specialties?.map((s: any) => s.specialtyId || s.id).filter(Boolean) || [];
     const hasChanges =
-        selectedSpecialtyIds.length !== initialSpecialtyIds.length ||
-        selectedSpecialtyIds.some((id) => !initialSpecialtyIds.includes(id)) ||
-        initialSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
+        selectedSpecialtyIds.length !== currentSpecialtyIds.length ||
+        selectedSpecialtyIds.some((id) => !currentSpecialtyIds.includes(id)) ||
+        currentSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
 
     if (isLoading) {
         return (

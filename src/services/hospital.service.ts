@@ -2,13 +2,8 @@ import axiosInstance, { ApiResponse } from '@/configs/axios.config';
 import type { HospitalProfile, UpdateHospitalRequest } from '@/types/user.types';
 
 const HOSPITAL_ENDPOINTS = {
-    PROFILE: '/hospitals/profile',
-    BY_ACCOUNT: `/hospitals/account`, // Legacy endpoint (returns array)
+    BY_ACCOUNT: `/hospitals/account`,
     HEALTH: '/hospitals/health',
-    GET_SPECIALTIES: (id: string) => `/hospitals/${id}/specialties`,
-    PUT_SPECIALTIES: (id: string) => `/hospitals/${id}/specialties`,
-    GET_SERVICE_TYPES: (id: string) => `/hospitals/${id}/service-types`,
-    PUT_SERVICE_TYPES: (id: string) => `/hospitals/${id}/service-types`,
 } as const;
 
 /**
@@ -17,23 +12,7 @@ const HOSPITAL_ENDPOINTS = {
  */
 export class HospitalService {
     /**
-     * Get current hospital profile (single hospital for authenticated account)
-     */
-    static async getCurrentHospitalProfile(): Promise<ApiResponse<HospitalProfile>> {
-        try {
-            const response: any = await axiosInstance.get(HOSPITAL_ENDPOINTS.PROFILE);
-            return {
-                success: response.success ?? true,
-                data: response.data || response,
-                message: response.message || 'Hospital profile retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get hospital profile');
-        }
-    }
-
-    /**
-     * Get hospital profiles by account ID from Hospital Service (legacy)
+     * Get hospital profiles by account ID from Hospital Service
      * Note: A hospital account can have multiple hospital entities
      */
     static async getHospitalProfilesByAccountId(): Promise<ApiResponse<HospitalProfile[]>> {
@@ -244,75 +223,6 @@ export class HospitalService {
             throw new Error(error.message || 'Hospital service health check failed');
         }
     }
-
-    // ===== Lightweight relations (specialties/service types) =====
-    static async getHospitalSpecialtyIds(hospitalId: string): Promise<ApiResponse<string[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_ENDPOINTS.GET_SPECIALTIES(hospitalId)
-            );
-            return {
-                success: true,
-                data: response.data || response,
-                message: 'Hospital specialties retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get hospital specialties');
-        }
-    }
-
-    static async updateHospitalSpecialties(
-        hospitalId: string,
-        specialtyIds: string[]
-    ): Promise<ApiResponse<void>> {
-        try {
-            const response: any = await axiosInstance.put(
-                HOSPITAL_ENDPOINTS.PUT_SPECIALTIES(hospitalId),
-                { ids: specialtyIds }
-            );
-            return {
-                success: true,
-                data: response.data,
-                message: 'Hospital specialties updated successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to update hospital specialties');
-        }
-    }
-
-    static async getHospitalServiceTypeIds(hospitalId: string): Promise<ApiResponse<string[]>> {
-        try {
-            const response: any = await axiosInstance.get(
-                HOSPITAL_ENDPOINTS.GET_SERVICE_TYPES(hospitalId)
-            );
-            return {
-                success: true,
-                data: response.data || response,
-                message: 'Hospital service types retrieved successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to get hospital service types');
-        }
-    }
-
-    static async updateHospitalServiceTypes(
-        hospitalId: string,
-        serviceTypeIds: string[]
-    ): Promise<ApiResponse<void>> {
-        try {
-            const response: any = await axiosInstance.put(
-                HOSPITAL_ENDPOINTS.PUT_SERVICE_TYPES(hospitalId),
-                { ids: serviceTypeIds }
-            );
-            return {
-                success: true,
-                data: response.data,
-                message: 'Hospital service types updated successfully',
-            };
-        } catch (error: any) {
-            throw new Error(error.message || 'Failed to update hospital service types');
-        }
-    }
 }
 
 export const {
@@ -324,10 +234,6 @@ export const {
     uploadHospitalImages,
     deleteHospitalImage,
     healthCheck,
-    getHospitalSpecialtyIds,
-    updateHospitalSpecialties,
-    getHospitalServiceTypeIds,
-    updateHospitalServiceTypes,
 } = HospitalService;
 
 export default HospitalService;

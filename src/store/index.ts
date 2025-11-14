@@ -22,7 +22,6 @@ import positionReducer from './slices/positionSlice';
 import languageReducer from './slices/languageSlice';
 import specialtyReducer from './slices/specialtySlice';
 import serviceTypeReducer from './slices/serviceTypeSlice';
-import hospitalReducer from './slices/hospitalSlice';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -35,7 +34,6 @@ const rootReducer = combineReducers({
     language: languageReducer,
     specialty: specialtyReducer,
     serviceType: serviceTypeReducer,
-    hospital: hospitalReducer,
 });
 
 // Redux persist configuration

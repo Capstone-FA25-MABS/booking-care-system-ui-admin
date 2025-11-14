@@ -55,8 +55,6 @@ const DoctorProfileSettings: React.FC = () => {
         handleFileChange,
         validateForm,
         prepareSubmitData,
-        hasChanges,
-        setInitialFormData,
     } = useDoctorFormLogic({ initialData, isEdit: true, doctorId: doctorProfile?.id });
 
     const {
@@ -81,7 +79,6 @@ const DoctorProfileSettings: React.FC = () => {
                     getDoctorPrices
                 );
                 setFormData(formMapped);
-                setInitialFormData(formMapped); // Track initial state
             } catch (error: any) {
                 toast.error(error.message || 'Không thể tải thông tin bác sĩ');
             } finally {
@@ -89,7 +86,7 @@ const DoctorProfileSettings: React.FC = () => {
             }
         };
         fetchDoctorData();
-    }, [doctorProfile?.id, setFormData, setInitialFormData]);
+    }, [doctorProfile?.id, setFormData]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -123,15 +120,6 @@ const DoctorProfileSettings: React.FC = () => {
             // Update Redux store
             if (updatedProfile) {
                 dispatch(setDoctorProfile(updatedProfile as DoctorProfile));
-
-                // Re-fetch to update initial form data
-                const refreshedFormData = await fetchDoctorDataForForm(
-                    doctorProfile.id,
-                    getDoctorById,
-                    getDoctorPrices
-                );
-                setFormData(refreshedFormData);
-                setInitialFormData(refreshedFormData);
             }
 
             toast.success('Cập nhật thông tin bác sĩ thành công!');
@@ -197,7 +185,6 @@ const DoctorProfileSettings: React.FC = () => {
                     specialties={specialties}
                     languages={languages}
                     serviceTypes={serviceTypes}
-                    hasChanges={hasChanges()}
                 />
             </div>
         </>
