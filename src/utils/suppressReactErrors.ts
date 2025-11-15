@@ -37,9 +37,10 @@ if (process.env.NODE_ENV === 'development') {
     };
 
     // Also suppress React's onUncaughtError for removeChild errors
-    const originalOnUncaughtError = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__?.onUncaughtError;
+    const originalOnUncaughtError = (globalThis as any).__REACT_DEVTOOLS_GLOBAL_HOOK__
+        ?.onUncaughtError;
     if (originalOnUncaughtError) {
-        (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.onUncaughtError = (
+        (globalThis as any).__REACT_DEVTOOLS_GLOBAL_HOOK__.onUncaughtError = (
             error: Error,
             errorInfo: any
         ) => {
@@ -52,8 +53,8 @@ if (process.env.NODE_ENV === 'development') {
     }
 
     // Override window.onerror to catch and suppress removeChild errors
-    const originalOnError = window.onerror;
-    window.onerror = (
+    const originalOnError = globalThis.onerror;
+    globalThis.onerror = (
         message: string | Event,
         source?: string,
         lineno?: number,
@@ -72,8 +73,8 @@ if (process.env.NODE_ENV === 'development') {
     };
 
     // Override window.onunhandledrejection for promise rejections
-    const originalOnUnhandledRejection = window.onunhandledrejection;
-    window.onunhandledrejection = function (event: PromiseRejectionEvent) {
+    const originalOnUnhandledRejection = globalThis.onunhandledrejection;
+    globalThis.onunhandledrejection = function (event: PromiseRejectionEvent) {
         if (
             event.reason?.name === 'NotFoundError' &&
             event.reason?.message?.includes('removeChild')
@@ -84,7 +85,7 @@ if (process.env.NODE_ENV === 'development') {
         }
 
         if (originalOnUnhandledRejection) {
-            originalOnUnhandledRejection.call(window, event);
+            originalOnUnhandledRejection.call(globalThis as any, event);
         }
     };
 }

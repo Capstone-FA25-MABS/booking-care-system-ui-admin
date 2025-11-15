@@ -333,12 +333,26 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                         key={notification.id}
                                                         className="dropdown-item notification-item py-3 text-wrap border-bottom"
                                                         style={{ cursor: 'pointer' }}
+                                                        role="button"
+                                                        tabIndex={0}
                                                         onClick={() =>
                                                             handleNotificationClick(
                                                                 notification.id,
                                                                 notification.actionUrl
                                                             )
                                                         }
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                e.key === 'Enter' ||
+                                                                e.key === ' '
+                                                            ) {
+                                                                e.preventDefault();
+                                                                handleNotificationClick(
+                                                                    notification.id,
+                                                                    notification.actionUrl
+                                                                );
+                                                            }
+                                                        }}
                                                     >
                                                         <div className="d-flex">
                                                             <div className="me-3 position-relative flex-shrink-0">

@@ -14,7 +14,7 @@ export const useTheme = () => {
             setTheme(savedTheme as Theme);
         } else {
             // Check system preference
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const prefersDark = globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
             setTheme(prefersDark ? 'dark' : 'light');
         }
     }, []);
@@ -22,12 +22,12 @@ export const useTheme = () => {
     // Apply theme to HTML element
     useEffect(() => {
         const htmlElement = document.documentElement;
-        htmlElement.setAttribute('data-bs-theme', theme);
+        htmlElement.dataset.bsTheme = theme;
 
         // Set default attributes for proper theme styling
-        htmlElement.setAttribute('data-topbar', 'white');
-        htmlElement.setAttribute('data-sidebar', 'light');
-        htmlElement.setAttribute('data-layout', 'fluid');
+        htmlElement.dataset.topbar = 'white';
+        htmlElement.dataset.sidebar = 'light';
+        htmlElement.dataset.layout = 'fluid';
 
         // Save to localStorage
         localStorage.setItem(THEME_STORAGE_KEY, theme);

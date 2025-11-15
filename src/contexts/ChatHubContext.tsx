@@ -171,7 +171,7 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
                 performCleanup();
             }
 
-            function performCleanup() {
+            async function performCleanup() {
                 // Check if component has remounted (connection might have been recreated)
                 if (
                     !connectionRef.current ||
@@ -185,49 +185,41 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
                 console.log('[ChatHubContext] 🔌 Disconnecting...');
 
                 const currentConnection = connectionRef.current;
-                if (currentConnection) {
-                    // Check connection state before stopping
-                    const state = currentConnection.state;
-                    if (
-                        state === signalR.HubConnectionState.Connected ||
-                        state === signalR.HubConnectionState.Connecting ||
-                        state === signalR.HubConnectionState.Reconnecting
-                    ) {
-                        currentConnection
-                            .stop()
-                            .then(() => {
-                                console.log('[ChatHubContext] ✅ Connection stopped successfully');
-                            })
-                            .catch((error) => {
-                                console.warn(
-                                    '[ChatHubContext] ⚠️ Error stopping connection:',
-                                    error
-                                );
-                            })
-                            .finally(() => {
-                                // Only clear if we're still cleaning up (component might have remounted)
-                                if (isCleaningUpRef.current) {
-                                    connectionRef.current = null;
-                                    setConnection(null);
-                                    setIsConnected(false);
-                                    connectionStartTimeRef.current = null;
-                                }
-                            });
-                    } else {
-                        if (isCleaningUpRef.current) {
-                            connectionRef.current = null;
-                            setConnection(null);
-                            setIsConnected(false);
-                            connectionStartTimeRef.current = null;
-                        }
-                    }
+                if (!currentConnection) {
+                    clearConnectionState();
+                    return;
+                }
+
+                const state = currentConnection.state;
+                const shouldStop =
+                    state === signalR.HubConnectionState.Connected ||
+                    state === signalR.HubConnectionState.Connecting ||
+                    state === signalR.HubConnectionState.Reconnecting;
+
+                if (shouldStop) {
+                    await stopConnection(currentConnection);
                 } else {
-                    if (isCleaningUpRef.current) {
-                        connectionRef.current = null;
-                        setConnection(null);
-                        setIsConnected(false);
-                        connectionStartTimeRef.current = null;
-                    }
+                    clearConnectionState();
+                }
+            }
+
+            async function stopConnection(connection: signalR.HubConnection) {
+                try {
+                    await connection.stop();
+                    console.log('[ChatHubContext] ✅ Connection stopped successfully');
+                } catch (error) {
+                    console.warn('[ChatHubContext] ⚠️ Error stopping connection:', error);
+                } finally {
+                    clearConnectionState();
+                }
+            }
+
+            function clearConnectionState() {
+                if (isCleaningUpRef.current) {
+                    connectionRef.current = null;
+                    setConnection(null);
+                    setIsConnected(false);
+                    connectionStartTimeRef.current = null;
                 }
             }
         };

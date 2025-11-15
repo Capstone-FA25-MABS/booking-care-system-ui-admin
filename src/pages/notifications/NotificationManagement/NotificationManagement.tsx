@@ -18,9 +18,9 @@ import {
     NotificationCategoryLabels,
     getTypesByCategory,
 } from '@/enums/notification.enums';
-import { getLocalizedNotification } from '@/types/notification.types';
-import { Notification } from '@/types/notification.types';
+import { getLocalizedNotification, Notification } from '@/types/notification.types';
 import TableSkeleton from '@/components/TableSkeleton/TableSkeleton';
+import ModalDelete from '@/components/ModalDelete/ModalDelete';
 
 const NotificationManagement: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -36,6 +36,11 @@ const NotificationManagement: React.FC = () => {
     const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 20;
+
+    // Modal states
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteModalType, setDeleteModalType] = useState<'selected' | 'all'>('selected');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Load total notifications count for user
     const loadTotalNotifications = useCallback(async () => {
@@ -137,7 +142,7 @@ const NotificationManagement: React.FC = () => {
 
         // Navigate to action URL if available
         if (notification.actionUrl) {
-            window.open(notification.actionUrl, '_blank');
+            globalThis.open(notification.actionUrl, '_blank');
         }
     };
 
@@ -174,24 +179,9 @@ const NotificationManagement: React.FC = () => {
         }
     };
 
-    const handleDeleteSelected = async () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa các thông báo đã chọn?')) {
-            try {
-                await Promise.all(
-                    selectedNotifications.map((id) => dispatch(deleteNotification(id)).unwrap())
-                );
-
-                // Update total count immediately
-                setTotalNotifications((prev) => prev - selectedNotifications.length);
-
-                setSelectedNotifications([]);
-                toast.success('Đã xóa các thông báo đã chọn');
-                // Refresh data after delete
-                loadNotifications();
-            } catch {
-                toast.error('Không thể xóa thông báo');
-            }
-        }
+    const handleDeleteSelected = () => {
+        setDeleteModalType('selected');
+        setShowDeleteModal(true);
     };
 
     const handleMarkAllAsRead = async () => {
@@ -208,20 +198,44 @@ const NotificationManagement: React.FC = () => {
         }
     };
 
-    const handleDeleteAll = async () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) {
-            try {
-                await dispatch(deleteAllNotifications()).unwrap();
+    const handleDeleteAll = () => {
+        setDeleteModalType('all');
+        setShowDeleteModal(true);
+    };
 
+    // Modal handlers
+    const handleCloseDeleteModal = () => {
+        setShowDeleteModal(false);
+        setIsDeleting(false);
+    };
+
+    const handleConfirmDelete = async () => {
+        setIsDeleting(true);
+        try {
+            if (deleteModalType === 'selected') {
+                await Promise.all(
+                    selectedNotifications.map((id) => dispatch(deleteNotification(id)).unwrap())
+                );
+                // Update total count immediately
+                setTotalNotifications((prev) => prev - selectedNotifications.length);
+                setSelectedNotifications([]);
+                toast.success('Đã xóa các thông báo đã chọn');
+            } else {
+                await dispatch(deleteAllNotifications()).unwrap();
                 // Reset total count to 0
                 setTotalNotifications(0);
-
                 toast.success('Đã xóa tất cả thông báo');
-                // Refresh data after delete all
-                loadNotifications();
-            } catch {
-                toast.error('Không thể xóa tất cả thông báo');
             }
+            // Refresh data after delete
+            loadNotifications();
+            handleCloseDeleteModal();
+        } catch {
+            toast.error(
+                deleteModalType === 'selected'
+                    ? 'Không thể xóa thông báo'
+                    : 'Không thể xóa tất cả thông báo'
+            );
+            setIsDeleting(false);
         }
     };
 
@@ -267,6 +281,151 @@ const NotificationManagement: React.FC = () => {
         return Object.entries(countsByType)
             .filter(([type]) => types.includes(type as any))
             .reduce((sum, [, count]) => sum + count, 0);
+    };
+
+    // Helper function to render table body content
+    const renderTableBody = () => {
+        if (isLoading) {
+            return (
+                <TableSkeleton
+                    rows={5}
+                    columns={[
+                        { type: 'text', width: 30 }, // Checkbox column
+                        { type: 'avatar', width: 300 }, // Notification content
+                        { type: 'badge', width: 80 }, // Status
+                        { type: 'text', width: 120 }, // Time
+                        { type: 'actions', items: 3 }, // Actions
+                    ]}
+                />
+            );
+        }
+
+        if (filteredNotifications.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={5} className="text-center py-4">
+                        <i className="ti ti-bell-off fs-48 text-muted mb-2 d-block"></i>
+                        <p className="text-muted mb-0">Không có thông báo nào trong danh mục này</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return filteredNotifications.map((notification) => {
+            const localizedNotification = getLocalizedNotification(notification, 'vi');
+            return (
+                <tr
+                    key={notification.id}
+                    className={notification.isRead ? '' : 'table-light'}
+                    style={{
+                        backgroundColor: notification.isRead ? 'transparent' : '#f8f9fa',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s ease',
+                        borderLeft: notification.isRead
+                            ? '3px solid transparent'
+                            : '3px solid #0d6efd',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#e9ecef';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = notification.isRead
+                            ? 'transparent'
+                            : '#f8f9fa';
+                    }}
+                    onClick={() => handleNotificationClick(notification)}
+                >
+                    <td onClick={(e) => e.stopPropagation()}>
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedNotifications.includes(notification.id)}
+                            onChange={() => handleSelectNotification(notification.id)}
+                        />
+                    </td>
+                    <td>
+                        <div className="d-flex align-items-start">
+                            <div className="me-3">
+                                <div
+                                    className="avatar-sm rounded-circle d-flex align-items-center justify-content-center"
+                                    style={{
+                                        backgroundColor: notification.isRead
+                                            ? '#f8f9fa'
+                                            : '#e3f2fd',
+                                        border: notification.isRead
+                                            ? '1px solid #e9ecef'
+                                            : '2px solid #0d6efd',
+                                    }}
+                                >
+                                    <i
+                                        className={`${getNotificationIcon(notification)} fs-18`}
+                                        style={{
+                                            color: notification.isRead ? '#6c757d' : '#0d6efd',
+                                        }}
+                                    ></i>
+                                </div>
+                            </div>
+                            <div className="flex-grow-1">
+                                <h6 className={`mb-1 ${notification.isRead ? '' : 'fw-bold'}`}>
+                                    {localizedNotification.title}
+                                </h6>
+                                <p className="text-muted mb-0 fs-13">
+                                    {localizedNotification.content}
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {notification.isRead ? (
+                            <span className="badge bg-success">Đã đọc</span>
+                        ) : (
+                            <span className="badge bg-warning">Chưa đọc</span>
+                        )}
+                    </td>
+                    <td>
+                        <span className="fs-13 text-muted">
+                            {formatNotificationTime(notification.createdAt)}
+                        </span>
+                    </td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                        <div className="btn-group btn-group-sm">
+                            <button
+                                className="btn btn-outline-primary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNotificationClick(notification);
+                                }}
+                                title="Xem chi tiết"
+                            >
+                                <i className="ti ti-eye"></i>
+                            </button>
+                            {!notification.isRead && (
+                                <button
+                                    className="btn btn-outline-success"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        dispatch(markNotificationAsRead(notification.id));
+                                    }}
+                                    title="Đánh dấu đã đọc"
+                                >
+                                    <i className="ti ti-check"></i>
+                                </button>
+                            )}
+                            <button
+                                className="btn btn-outline-danger"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    dispatch(deleteNotification(notification.id));
+                                }}
+                                title="Xóa thông báo"
+                            >
+                                <i className="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            );
+        });
     };
 
     return (
@@ -360,15 +519,14 @@ const NotificationManagement: React.FC = () => {
                                     <h4 className="card-title">Danh sách thông báo</h4>
                                 </div>
                                 <div className="col-auto">
-                                    <div className="btn-group" role="group">
+                                    <fieldset className="btn-group">
                                         <button
                                             type="button"
                                             className="btn btn-outline-primary btn-sm"
                                             onClick={handleMarkAllAsRead}
                                             disabled={unreadCount === 0}
                                         >
-                                            <i className="ti ti-check-all me-1"></i>
-                                            Đọc tất cả
+                                            <i className="ti ti-check-all me-1"></i> Đọc tất cả
                                         </button>
                                         <button
                                             type="button"
@@ -376,10 +534,9 @@ const NotificationManagement: React.FC = () => {
                                             onClick={handleDeleteAll}
                                             disabled={notifications.length === 0}
                                         >
-                                            <i className="ti ti-trash me-1"></i>
-                                            Xóa tất cả
+                                            <i className="ti ti-trash me-1"></i> Xóa tất cả
                                         </button>
-                                    </div>
+                                    </fieldset>
                                 </div>
                             </div>
                         </div>
@@ -418,15 +575,13 @@ const NotificationManagement: React.FC = () => {
                                                 className="btn btn-outline-primary"
                                                 onClick={handleMarkSelectedAsRead}
                                             >
-                                                <i className="ti ti-check me-1"></i>
-                                                Đánh dấu đã đọc
+                                                <i className="ti ti-check me-1"></i> Đánh dấu đã đọc
                                             </button>
                                             <button
                                                 className="btn btn-outline-danger"
                                                 onClick={handleDeleteSelected}
                                             >
-                                                <i className="ti ti-trash me-1"></i>
-                                                Xóa
+                                                <i className="ti ti-trash me-1"></i> Xóa
                                             </button>
                                         </div>
                                     </div>
@@ -456,196 +611,33 @@ const NotificationManagement: React.FC = () => {
                                             <th>Hành động</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {isLoading ? (
-                                            <TableSkeleton
-                                                rows={5}
-                                                columns={[
-                                                    { type: 'text', width: 30 }, // Checkbox column
-                                                    { type: 'avatar', width: 300 }, // Notification content
-                                                    { type: 'badge', width: 80 }, // Status
-                                                    { type: 'text', width: 120 }, // Time
-                                                    { type: 'actions', items: 3 }, // Actions
-                                                ]}
-                                            />
-                                        ) : filteredNotifications.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={5} className="text-center py-4">
-                                                    <i className="ti ti-bell-off fs-48 text-muted mb-2 d-block"></i>
-                                                    <p className="text-muted mb-0">
-                                                        Không có thông báo nào trong danh mục này
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            filteredNotifications.map((notification) => {
-                                                const localizedNotification =
-                                                    getLocalizedNotification(notification, 'vi');
-                                                return (
-                                                    <tr
-                                                        key={notification.id}
-                                                        className={
-                                                            !notification.isRead
-                                                                ? 'table-light'
-                                                                : ''
-                                                        }
-                                                        style={{
-                                                            backgroundColor: !notification.isRead
-                                                                ? '#f8f9fa'
-                                                                : 'transparent',
-                                                            cursor: 'pointer',
-                                                            transition:
-                                                                'background-color 0.2s ease',
-                                                            borderLeft: !notification.isRead
-                                                                ? '3px solid #0d6efd'
-                                                                : '3px solid transparent',
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor =
-                                                                '#e9ecef';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor =
-                                                                !notification.isRead
-                                                                    ? '#f8f9fa'
-                                                                    : 'transparent';
-                                                        }}
-                                                        onClick={() =>
-                                                            handleNotificationClick(notification)
-                                                        }
-                                                    >
-                                                        <td onClick={(e) => e.stopPropagation()}>
-                                                            <input
-                                                                type="checkbox"
-                                                                className="form-check-input"
-                                                                checked={selectedNotifications.includes(
-                                                                    notification.id
-                                                                )}
-                                                                onChange={() =>
-                                                                    handleSelectNotification(
-                                                                        notification.id
-                                                                    )
-                                                                }
-                                                            />
-                                                        </td>
-                                                        <td>
-                                                            <div className="d-flex align-items-start">
-                                                                <div className="me-3">
-                                                                    <div
-                                                                        className="avatar-sm rounded-circle d-flex align-items-center justify-content-center"
-                                                                        style={{
-                                                                            backgroundColor:
-                                                                                !notification.isRead
-                                                                                    ? '#e3f2fd'
-                                                                                    : '#f8f9fa',
-                                                                            border: !notification.isRead
-                                                                                ? '2px solid #0d6efd'
-                                                                                : '1px solid #e9ecef',
-                                                                        }}
-                                                                    >
-                                                                        <i
-                                                                            className={`${getNotificationIcon(
-                                                                                notification
-                                                                            )} fs-18`}
-                                                                            style={{
-                                                                                color: !notification.isRead
-                                                                                    ? '#0d6efd'
-                                                                                    : '#6c757d',
-                                                                            }}
-                                                                        ></i>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex-grow-1">
-                                                                    <h6
-                                                                        className={`mb-1 ${!notification.isRead ? 'fw-bold' : ''}`}
-                                                                    >
-                                                                        {
-                                                                            localizedNotification.title
-                                                                        }
-                                                                    </h6>
-                                                                    <p className="text-muted mb-0 fs-13">
-                                                                        {
-                                                                            localizedNotification.content
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            {notification.isRead ? (
-                                                                <span className="badge bg-success">
-                                                                    Đã đọc
-                                                                </span>
-                                                            ) : (
-                                                                <span className="badge bg-warning">
-                                                                    Chưa đọc
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            <span className="fs-13 text-muted">
-                                                                {formatNotificationTime(
-                                                                    notification.createdAt
-                                                                )}
-                                                            </span>
-                                                        </td>
-                                                        <td onClick={(e) => e.stopPropagation()}>
-                                                            <div className="btn-group btn-group-sm">
-                                                                <button
-                                                                    className="btn btn-outline-primary"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleNotificationClick(
-                                                                            notification
-                                                                        );
-                                                                    }}
-                                                                    title="Xem chi tiết"
-                                                                >
-                                                                    <i className="ti ti-eye"></i>
-                                                                </button>
-                                                                {!notification.isRead && (
-                                                                    <button
-                                                                        className="btn btn-outline-success"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            dispatch(
-                                                                                markNotificationAsRead(
-                                                                                    notification.id
-                                                                                )
-                                                                            );
-                                                                        }}
-                                                                        title="Đánh dấu đã đọc"
-                                                                    >
-                                                                        <i className="ti ti-check"></i>
-                                                                    </button>
-                                                                )}
-                                                                <button
-                                                                    className="btn btn-outline-danger"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        dispatch(
-                                                                            deleteNotification(
-                                                                                notification.id
-                                                                            )
-                                                                        );
-                                                                    }}
-                                                                    title="Xóa thông báo"
-                                                                >
-                                                                    <i className="ti ti-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })
-                                        )}
-                                    </tbody>
+                                    <tbody>{renderTableBody()}</tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ModalDelete
+                show={showDeleteModal}
+                onHide={handleCloseDeleteModal}
+                onConfirm={handleConfirmDelete}
+                title={
+                    deleteModalType === 'selected'
+                        ? 'Xác nhận xóa thông báo đã chọn'
+                        : 'Xác nhận xóa tất cả thông báo'
+                }
+                message={
+                    deleteModalType === 'selected'
+                        ? `Bạn có chắc chắn muốn xóa ${selectedNotifications.length} thông báo đã chọn không`
+                        : 'Bạn có chắc chắn muốn xóa tất cả thông báo không'
+                }
+                confirmText="Có, xóa"
+                cancelText="Hủy"
+                loading={isDeleting}
+            />
         </div>
     );
 };
