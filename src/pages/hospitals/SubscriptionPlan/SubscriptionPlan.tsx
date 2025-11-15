@@ -1,14 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import SubscriptionPlanCard from './components/SubscriptionPlanCard';
 import SubscriptionPlanSkeletonCard from './components/SubscriptionPlanSkeletonCard/SubscriptionPlanSkeletonCard';
-import { Check, X, Info, Plus } from 'lucide-react';
+import PaymentMethodSelectionModal from './components/PaymentMethodSelectionModal';
+import { Check, Info, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './SubscriptionPlan.module.scss';
 import { useSubscription } from '@/hooks/useSubscription';
 import type { SubscriptionPlan as SubscriptionPlanType } from '@/services/subscription.service';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import PaymentMethodService from '@/services/paymentMethod.service';
+import type { CreateSubscriptionPaymentRequest } from '@/types/paymentMethod.types';
 
 type BillingPeriod = 'yearly' | 'quarterly' | 'monthly';
+type BillingCycle = 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
 interface Feature {
     icon: React.ReactNode;
@@ -20,6 +24,14 @@ interface Feature {
 const SubscriptionPlan: React.FC = () => {
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [isPaymentMethodModalOpen, setIsPaymentMethodModalOpen] = useState(false);
+    const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<{
+        planId: string;
+        planName: string;
+        planPrice: string;
+        planBillingCycle: BillingCycle;
+    } | null>(null);
+    const [hasShownPaymentSuccess, setHasShownPaymentSuccess] = useState(false);
 
     // Get subscription data and current hospital profile
     const {
@@ -30,8 +42,6 @@ const SubscriptionPlan: React.FC = () => {
         loadActiveHospitalSubscription,
         hospitalSubscriptions,
         clearError,
-        createHospitalSubscription,
-        upgradeHospitalSubscription,
     } = useSubscription();
     const { profile, hospitalProfile } = useCurrentUserProfile();
     // Lấy hospital ID từ hospitalProfile (cho STAFF role) hoặc profile
@@ -47,7 +57,7 @@ const SubscriptionPlan: React.FC = () => {
     }, [hospitalId, hospitalProfile, profile]);
 
     // Map billing period to API billing cycle
-    const getBillingCycle = (period: BillingPeriod): 'MONTHLY' | 'QUARTERLY' | 'YEARLY' => {
+    const getBillingCycle = (period: BillingPeriod): BillingCycle => {
         switch (period) {
             case 'monthly':
                 return 'MONTHLY';
@@ -68,6 +78,54 @@ const SubscriptionPlan: React.FC = () => {
             loadActiveHospitalSubscription(hospitalId);
         }
     }, [hospitalId, loadActiveHospitalSubscription]);
+
+    // Check for payment redirect and show appropriate message
+    useEffect(() => {
+        const checkPaymentResult = () => {
+            const params = new URLSearchParams(globalThis.location.search);
+            const planType = params.get('plan-type');
+            const isCancelled = params.get('is_cancelled') === 'true';
+
+            // Check if this is a redirect from payment (has plan-type and we haven't shown message yet)
+            if (planType && !hasShownPaymentSuccess && hospitalId) {
+                // Check if we have a recent URL change that indicates payment redirect
+                const isFromPayment =
+                    globalThis.document.referrer.includes('vnpay') ||
+                    globalThis.document.referrer.includes('payos') ||
+                    globalThis.sessionStorage.getItem('payment-redirect') === 'true';
+
+                if (
+                    isFromPayment ||
+                    globalThis.sessionStorage.getItem('payment-redirect') === 'true'
+                ) {
+                    // Mark as shown immediately to prevent duplicate toasts
+                    setHasShownPaymentSuccess(true);
+
+                    // Clear payment redirect flag immediately
+                    globalThis.sessionStorage.removeItem('payment-redirect');
+
+                    // Show toast immediately based on payment result
+                    if (isCancelled) {
+                        toast.error('Thanh toán đã bị hủy hoặc thất bại. Vui lòng thử lại.');
+                    } else {
+                        toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
+                        // Reload subscription data after showing toast (non-blocking)
+                        setTimeout(() => {
+                            loadActiveHospitalSubscription(hospitalId);
+                        }, 100);
+                    }
+                }
+            }
+        };
+
+        // Check immediately if loading is complete, otherwise wait a bit
+        if (loading) {
+            const timeoutId = setTimeout(checkPaymentResult, 300);
+            return () => clearTimeout(timeoutId);
+        } else {
+            checkPaymentResult();
+        }
+    }, [loading, hospitalId, hasShownPaymentSuccess, loadActiveHospitalSubscription]);
 
     // Handle errors - bỏ qua error nếu là "No active subscription found" (đây là trạng thái bình thường)
     useEffect(() => {
@@ -472,47 +530,6 @@ const SubscriptionPlan: React.FC = () => {
         return null;
     }, [subscriptionPlans]);
 
-    // Tính toán startDate và endDate dựa trên billing cycle
-    const calculateSubscriptionDates = (
-        billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-    ): { startDate: string; endDate: string } => {
-        const now = new Date();
-        // Use local date to avoid timezone issues
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const day = now.getDate();
-
-        // Create startDate using local date (no timezone conversion)
-        const startDate = new Date(year, month, day);
-
-        const endDate = new Date(year, month, day);
-
-        switch (billingCycle) {
-            case 'MONTHLY':
-                endDate.setMonth(endDate.getMonth() + 1);
-                break;
-            case 'QUARTERLY':
-                endDate.setMonth(endDate.getMonth() + 3);
-                break;
-            case 'YEARLY':
-                endDate.setFullYear(endDate.getFullYear() + 1);
-                break;
-        }
-
-        // Format as YYYY-MM-DD using local timezone to avoid UTC conversion issues
-        const formatDate = (date: Date): string => {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        };
-
-        return {
-            startDate: formatDate(startDate),
-            endDate: formatDate(endDate),
-        };
-    };
-
     // Helper function to validate hospital ID
     const validateHospitalId = (id: string | undefined): boolean => {
         if (!id) {
@@ -531,7 +548,7 @@ const SubscriptionPlan: React.FC = () => {
     };
 
     // Helper function to get billing cycle label for error messages
-    const getBillingCycleLabel = (billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'): string => {
+    const getBillingCycleLabel = (billingCycle: BillingCycle): string => {
         if (billingCycle === 'QUARTERLY') return 'quý';
         if (billingCycle === 'YEARLY') return 'năm';
         return 'tháng';
@@ -540,7 +557,7 @@ const SubscriptionPlan: React.FC = () => {
     // Helper function to check and handle downgrade attempt
     const checkDowngradeAndHandle = (
         targetPlan: SubscriptionPlanType | undefined,
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY',
+        planBillingCycle: BillingCycle,
         currentPlan: SubscriptionPlanType | undefined
     ): boolean => {
         if (!targetPlan || !isDowngrade(planBillingCycle, targetPlan.price)) {
@@ -565,45 +582,6 @@ const SubscriptionPlan: React.FC = () => {
         return true;
     };
 
-    // Helper function to handle upgrade subscription
-    const handleUpgradeSubscription = async (
-        currentActiveSubscription: any,
-        planId: string
-    ): Promise<void> => {
-        const success = await upgradeHospitalSubscription(
-            currentActiveSubscription.hospitalSubscriptionId,
-            planId
-        );
-        if (success) {
-            toast.success('Nâng cấp gói dịch vụ thành công!');
-            await loadActiveHospitalSubscription(hospitalId!);
-        } else {
-            toast.error('Nâng cấp gói dịch vụ thất bại. Vui lòng thử lại.');
-        }
-    };
-
-    // Helper function to handle create subscription
-    const handleCreateSubscription = async (
-        planId: string,
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-    ): Promise<void> => {
-        const { startDate, endDate } = calculateSubscriptionDates(planBillingCycle);
-
-        const success = await createHospitalSubscription({
-            hospitalId: hospitalId!,
-            subscriptionId: planId,
-            startDate,
-            endDate,
-        });
-
-        if (success) {
-            toast.success('Đăng ký gói dịch vụ thành công!');
-            await loadActiveHospitalSubscription(hospitalId!);
-        } else {
-            toast.error('Đăng ký gói dịch vụ thất bại. Vui lòng thử lại.');
-        }
-    };
-
     // Helper function to handle errors
     const handleSubscriptionError = (err: any): void => {
         console.error('Error creating subscription:', err);
@@ -626,10 +604,7 @@ const SubscriptionPlan: React.FC = () => {
     };
 
     // Xử lý nâng cấp gói dịch vụ
-    const handleUpgradePlan = async (
-        planId: string,
-        planBillingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
-    ) => {
+    const handleUpgradePlan = async (planId: string, planBillingCycle: BillingCycle) => {
         if (!validateHospitalId(hospitalId)) {
             return;
         }
@@ -645,12 +620,74 @@ const SubscriptionPlan: React.FC = () => {
                 if (checkDowngradeAndHandle(targetPlan, planBillingCycle, currentPlan)) {
                     return;
                 }
-                await handleUpgradeSubscription(currentActiveSubscription, planId);
-            } else {
-                await handleCreateSubscription(planId, planBillingCycle);
+            }
+
+            // Show payment method selection modal
+            if (targetPlan) {
+                setSelectedPlanForPayment({
+                    planId,
+                    planName: targetPlan.name,
+                    planPrice: formatPrice(targetPlan.price),
+                    planBillingCycle,
+                });
+                setIsPaymentMethodModalOpen(true);
             }
         } catch (err: any) {
             handleSubscriptionError(err);
+        }
+    };
+
+    // Handle payment method confirmation
+    const handlePaymentMethodConfirm = async (paymentMethodId: string) => {
+        if (!selectedPlanForPayment) return;
+
+        try {
+            const currentActiveSubscription = hospitalSubscriptions.find(
+                (s) => s.status === 'ACTIVE'
+            );
+
+            const targetPlan = subscriptionPlans.find(
+                (p) => p.id === selectedPlanForPayment.planId
+            );
+            if (!targetPlan) {
+                throw new Error('Không tìm thấy thông tin gói dịch vụ');
+            }
+
+            // Prepare payment request
+            const paymentRequest: CreateSubscriptionPaymentRequest = {
+                subscriptionId: selectedPlanForPayment.planId,
+                hospitalId: hospitalId!,
+                amount: targetPlan.price,
+                paymentMethodId: paymentMethodId,
+                isUpgrade: !!currentActiveSubscription,
+                currentHospitalSubscriptionId: currentActiveSubscription?.hospitalSubscriptionId,
+                planType: billingPeriod, // Send current billing period for proper redirect
+            };
+
+            // Create payment URL
+            const response = await PaymentMethodService.createSubscriptionPayment(paymentRequest);
+
+            if (response.success && response.data?.paymentUrl) {
+                // Close modal first
+                setIsPaymentMethodModalOpen(false);
+                setSelectedPlanForPayment(null);
+
+                // Set flag to indicate we're going to payment
+                globalThis.sessionStorage.setItem('payment-redirect', 'true');
+
+                // Show success message and redirect to payment
+                toast.success('Đang chuyển hướng đến trang thanh toán...');
+
+                // Redirect to payment URL
+                globalThis.location.href = response.data.paymentUrl;
+            } else {
+                throw new Error(response.message || 'Không thể tạo URL thanh toán');
+            }
+        } catch (err: any) {
+            console.error('Error creating subscription payment:', err);
+            const errorMessage = err.message || 'Có lỗi xảy ra khi tạo thanh toán';
+            toast.error(errorMessage);
+            throw err; // Re-throw to let modal handle the error state
         }
     };
 
@@ -734,14 +771,6 @@ const SubscriptionPlan: React.FC = () => {
 
     return (
         <div className={styles.subscriptionPlan}>
-            <button
-                className={styles.closeButton}
-                onClick={() => globalThis.history.back()}
-                aria-label="Quay lại"
-            >
-                <X size={24} color="#6c757d" />
-            </button>
-
             <div className={styles.container}>
                 <div className={styles.header}>
                     <h1 className={styles.title}>Gói dịch vụ</h1>
@@ -825,6 +854,19 @@ const SubscriptionPlan: React.FC = () => {
             {isTermsModalOpen && (
                 <TermsAndConditionsModal onClose={() => setIsTermsModalOpen(false)} />
             )}
+
+            {/* Payment Method Selection Modal */}
+            {isPaymentMethodModalOpen && selectedPlanForPayment && (
+                <PaymentMethodSelectionModal
+                    planName={selectedPlanForPayment.planName}
+                    planPrice={selectedPlanForPayment.planPrice}
+                    onClose={() => {
+                        setIsPaymentMethodModalOpen(false);
+                        setSelectedPlanForPayment(null);
+                    }}
+                    onConfirm={handlePaymentMethodConfirm}
+                />
+            )}
         </div>
     );
 };
@@ -855,11 +897,10 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
     }, [onClose]);
 
     return (
-        <div
+        <dialog
+            open
             className="modal fade show d-block"
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            role="dialog"
-            aria-modal="true"
             aria-labelledby="terms-modal-title"
         >
             {/* Hidden button overlay for backdrop click - accessible and SonarQube compliant */}
@@ -1089,8 +1130,8 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
                     </div>
                 </div>
             </div>
-        </div>
+        </dialog>
     );
 };
 
-export default SubscriptionPlan as React.FC;
+export default SubscriptionPlan;
