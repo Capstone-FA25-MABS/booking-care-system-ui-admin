@@ -49,6 +49,7 @@ import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
 import HospitalSpecialtiesManagement from '@/pages/hospitals/Specialties';
 import HospitalServiceTypesManagement from '@/pages/hospitals/ServiceTypes';
 import HospitalServiceMedicalsManagement from '@/pages/hospitals/ServiceMedicals';
+import NotificationManagement from '@/pages/notifications/NotificationManagement/NotificationManagement';
 
 const routes: RouteObject[] = [
     {
@@ -144,6 +145,10 @@ const routes: RouteObject[] = [
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
                 children: [{ index: true, element: <ListHospitalRegistrations /> }],
             },
+            {
+                path: PATHS.ADMIN.NOTIFICATIONS.ROOT,
+                children: [{ index: true, element: <NotificationManagement /> }],
+            },
         ],
     },
     // Doctor routes - Only accessible by DOCTOR role
@@ -167,6 +172,10 @@ const routes: RouteObject[] = [
             { path: PATHS.DOCTOR.SCHEDULE, element: <h1>Doctor Schedule</h1> },
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
             { path: PATHS.DOCTOR.MESSAGES, element: <Messages /> },
+            {
+                path: PATHS.DOCTOR.NOTIFICATIONS.ROOT,
+                children: [{ index: true, element: <NotificationManagement /> }],
+            },
             {
                 path: PATHS.DOCTOR.SETTINGS.ROOT,
                 children: [
@@ -229,6 +238,10 @@ const routes: RouteObject[] = [
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlan /> },
+            {
+                path: PATHS.HOSPITAL.NOTIFICATIONS.ROOT,
+                children: [{ index: true, element: <NotificationManagement /> }],
+            },
             {
                 path: PATHS.HOSPITAL.SETTINGS.ROOT,
                 children: [
