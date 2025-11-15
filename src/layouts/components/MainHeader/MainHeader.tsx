@@ -329,30 +329,21 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                         currentLanguage as 'vi' | 'en'
                                                     );
                                                 return (
-                                                    <div
+                                                    <button
                                                         key={notification.id}
-                                                        className="dropdown-item notification-item py-3 text-wrap border-bottom"
-                                                        style={{ cursor: 'pointer' }}
-                                                        role="button"
-                                                        tabIndex={0}
+                                                        type="button"
+                                                        className="dropdown-item notification-item py-3 text-wrap border-bottom btn btn-link text-start p-3"
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            border: 'none',
+                                                            background: 'none',
+                                                        }}
                                                         onClick={() =>
                                                             handleNotificationClick(
                                                                 notification.id,
                                                                 notification.actionUrl
                                                             )
                                                         }
-                                                        onKeyDown={(e) => {
-                                                            if (
-                                                                e.key === 'Enter' ||
-                                                                e.key === ' '
-                                                            ) {
-                                                                e.preventDefault();
-                                                                handleNotificationClick(
-                                                                    notification.id,
-                                                                    notification.actionUrl
-                                                                );
-                                                            }
-                                                        }}
                                                     >
                                                         <div className="d-flex">
                                                             <div className="me-3 position-relative flex-shrink-0">
@@ -399,7 +390,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </button>
                                                 );
                                             })
                                         )}
@@ -413,14 +404,6 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                 setShowNotifications(false);
                                                 // Navigate based on current user role
                                                 switch (role) {
-                                                    case Role.ADMIN:
-                                                        navigate(
-                                                            buildPath(
-                                                                PATHS.ADMIN.ROOT,
-                                                                PATHS.ADMIN.NOTIFICATIONS.ROOT
-                                                            )
-                                                        );
-                                                        break;
                                                     case Role.STAFF:
                                                         navigate(
                                                             buildPath(
@@ -437,7 +420,9 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                             )
                                                         );
                                                         break;
+                                                    case Role.ADMIN:
                                                     default:
+                                                        // Default to admin notifications for ADMIN role and any other roles
                                                         navigate(
                                                             buildPath(
                                                                 PATHS.ADMIN.ROOT,
