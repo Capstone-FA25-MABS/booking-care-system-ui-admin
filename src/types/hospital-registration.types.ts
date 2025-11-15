@@ -10,14 +10,25 @@ export enum RegistrationStatus {
 
 export interface HospitalRegistrationResponse {
     id: string;
+
+    // Representative Information
+    representativeName: string;
+    representativeEmail: string;
+    representativePhone: string;
+
+    // Hospital Information
     hospitalName: string;
-    email: string;
-    phone: string;
+    hospitalEmail: string;
+    hospitalPhone: string;
     address: string;
+    taxCode: string;
+
+    // Files
     licenseFile: string;
     businessCertificateFile: string;
     identityCardFile: string;
-    taxCode: string;
+
+    // Status and metadata
     status: RegistrationStatus;
     statusText: string;
     contractFile?: string;
