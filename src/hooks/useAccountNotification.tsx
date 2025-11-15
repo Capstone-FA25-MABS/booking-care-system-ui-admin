@@ -84,8 +84,16 @@ export const useAccountNotification = (accessToken: string | null) => {
         // Start connection
         const startConnection = async () => {
             try {
+                // Check if connection still exists before starting
+                if (!connectionRef.current || connectionRef.current !== connection) {
+                    return;
+                }
                 await connection.start();
             } catch (error) {
+                // Check if connection still exists before retrying
+                if (!connectionRef.current || connectionRef.current !== connection) {
+                    return;
+                }
                 console.error('[SignalR] Connection failed:', error);
                 // Retry after 5 seconds
                 setTimeout(startConnection, 5000);
@@ -99,8 +107,34 @@ export const useAccountNotification = (accessToken: string | null) => {
 
         // Cleanup on unmount
         return () => {
-            if (connectionRef.current) {
-                connectionRef.current.stop();
+            const currentConnection = connectionRef.current;
+            if (currentConnection && currentConnection === connection) {
+                try {
+                    const state = currentConnection.state;
+                    // Only stop if connection is in a valid state
+                    if (
+                        state === signalR.HubConnectionState.Connected ||
+                        state === signalR.HubConnectionState.Connecting ||
+                        state === signalR.HubConnectionState.Reconnecting
+                    ) {
+                        currentConnection
+                            .stop()
+                            .catch((error) => {
+                                console.warn(
+                                    '[useAccountNotification] Error stopping connection:',
+                                    error
+                                );
+                            })
+                            .finally(() => {
+                                connectionRef.current = null;
+                            });
+                    } else {
+                        connectionRef.current = null;
+                    }
+                } catch (error) {
+                    console.warn('[useAccountNotification] Error during cleanup:', error);
+                    connectionRef.current = null;
+                }
             }
         };
     }, [accessToken, dispatch]);
