@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
-import TableSkeleton from '@/components/TableSkeleton';
-import { HospitalRegistrationService } from '@/services/hospital-registration.service';
+import TableSkeleton, { type SkeletonColumn } from '@/components/TableSkeleton';
+import ActionDropdown from '@/components/ActionDropdown';
+import {
+    HospitalRegistrationService,
+    deleteRegistration,
+} from '@/services/hospital-registration.service';
 import ApprovalModal from '@/pages/admins/HospitalRegistrations/Modals/ApprovalModal';
 import RejectionModal from '@/pages/admins/HospitalRegistrations/Modals/RejectionModal';
+import UpdateContractModal from '@/pages/admins/HospitalRegistrations/Modals/UpdateContractModal';
+import ModalDelete from '@/components/ModalDelete';
 import {
     HospitalRegistrationResponse,
     RegistrationStatus,
@@ -15,6 +21,7 @@ import {
     type RegistrationTabCounts,
 } from '@/types/hospital-registration.types';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import { hospitalRegistrationSortOptions } from '@/utils/hospital-registration.utils';
 
 const ListHospitalRegistrations: React.FC = () => {
     // States
@@ -29,6 +36,11 @@ const ListHospitalRegistrations: React.FC = () => {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Search and Sort
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const [selectedSort, setSelectedSort] = useState('CreatedAt_desc');
 
     // Tab counts
     const [tabCounts, setTabCounts] = useState<RegistrationTabCounts>({
@@ -69,6 +81,38 @@ const ListHospitalRegistrations: React.FC = () => {
         registrationId: '',
         hospitalName: '',
     });
+
+    // Update contract modal state
+    const [updateContractModal, setUpdateContractModal] = useState<{
+        isOpen: boolean;
+        registrationId: string;
+        hospitalName: string;
+    }>({
+        isOpen: false,
+        registrationId: '',
+        hospitalName: '',
+    });
+
+    // Delete modal state
+    const [deleteModal, setDeleteModal] = useState<{
+        isOpen: boolean;
+        registrationId: string;
+        hospitalName: string;
+    }>({
+        isOpen: false,
+        registrationId: '',
+        hospitalName: '',
+    });
+
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+            setCurrentPage(1); // Reset to first page when searching
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const handlePreviewFile = (fileUrl: string, fileName: string) => {
         setPreviewModal({
@@ -128,18 +172,76 @@ const ListHospitalRegistrations: React.FC = () => {
         fetchTabCounts(); // Re-count after rejection
     };
 
+    // Update contract modal handlers
+    const handleOpenUpdateContract = (registrationId: string, hospitalName: string) => {
+        setUpdateContractModal({
+            isOpen: true,
+            registrationId,
+            hospitalName,
+        });
+    };
+
+    const handleCloseUpdateContract = () => {
+        setUpdateContractModal({
+            isOpen: false,
+            registrationId: '',
+            hospitalName: '',
+        });
+    };
+
+    const handleUpdateContractSuccess = () => {
+        fetchRegistrations();
+    };
+
+    // Delete modal handlers
+    const handleOpenDelete = (registrationId: string, hospitalName: string) => {
+        setDeleteModal({
+            isOpen: true,
+            registrationId,
+            hospitalName,
+        });
+    };
+
+    const handleCloseDelete = () => {
+        setDeleteModal({
+            isOpen: false,
+            registrationId: '',
+            hospitalName: '',
+        });
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            const response = await deleteRegistration(deleteModal.registrationId);
+            if (response.success) {
+                toast.success(response.message || 'Xóa đơn đăng ký thành công');
+                fetchRegistrations();
+                fetchTabCounts();
+                handleCloseDelete();
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Có lỗi xảy ra khi xóa đơn đăng ký');
+        }
+    };
+
     // Fetch registrations
-    const fetchRegistrations = async () => {
+    const fetchRegistrations = useCallback(async () => {
         setIsLoading(true);
         setApiError(null);
 
         try {
+            // Parse sort value (format: "field_order")
+            const [sortBy, sortOrder] = selectedSort
+                ? selectedSort.split('_')
+                : ['CreatedAt', 'desc'];
+
             const response = await HospitalRegistrationService.getAllRegistrations({
                 status: mapUITabToStatus(activeStatusTab),
                 page: currentPage,
                 pageSize: itemsPerPage,
-                sortBy: 'CreatedAt',
-                sortOrder: 'DESC',
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy: sortBy,
+                sortOrder: sortOrder.toUpperCase(),
             });
 
             setRegistrations(response.registrations || []);
@@ -151,7 +253,7 @@ const ListHospitalRegistrations: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [activeStatusTab, currentPage, debouncedSearchTerm, selectedSort]);
 
     // Fetch tab counts
     const fetchTabCounts = async () => {
@@ -188,10 +290,19 @@ const ListHospitalRegistrations: React.FC = () => {
     useEffect(() => {
         fetchRegistrations();
         fetchTabCounts(); // Re-count when tab changes
-    }, [activeStatusTab, currentPage]);
+    }, [fetchRegistrations, activeStatusTab, currentPage]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleSortChange = (value: string) => {
+        setSelectedSort(value);
+        setCurrentPage(1); // Reset to first page when sorting
     };
 
     const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -208,27 +319,52 @@ const ListHospitalRegistrations: React.FC = () => {
 
     const renderTableBody = () => {
         if (isLoading) {
-            return (
-                <TableSkeleton
-                    rows={itemsPerPage}
-                    columns={[
-                        { type: 'text', width: 200, lines: 2 }, // Hospital Name + Address
-                        { type: 'text', width: 180, lines: 2 }, // Email + Phone
-                        { type: 'text', width: 120 }, // Tax Code
-                        { type: 'actions', width: 120, items: 3 }, // Files
-                        { type: 'actions', width: 100, items: 1 }, // Contract File
-                        { type: 'date', width: 140 }, // Submitted Date
-                        { type: 'badge', width: 100 }, // Status
-                        { type: 'actions', width: 200, items: 2 }, // Actions
-                    ]}
-                />
-            );
+            // Base columns that are always present
+            const baseColumns: SkeletonColumn[] = [
+                { type: 'text', width: 180, lines: 2 }, // Representative Info
+                { type: 'text', width: 200, lines: 2 }, // Hospital Name + Address
+                { type: 'text', width: 180, lines: 2 }, // Hospital Contact
+                { type: 'text', width: 120 }, // Tax Code
+                { type: 'actions', width: 120, items: 3 }, // Files
+                { type: 'actions', width: 100, items: 1 }, // Contract File
+                { type: 'date', width: 140 }, // Submitted Date
+            ];
+
+            // Add conditional columns based on status
+            const columns: SkeletonColumn[] = [...baseColumns];
+
+            // Add reason column for cancelled status
+            if (activeStatusTab === 'cancelled') {
+                columns.push({ type: 'text', width: 150, lines: 2 }); // Reason
+            }
+
+            // Add status column (always present)
+            columns.push({ type: 'badge', width: 100 }); // Status
+
+            // Add actions column for all status tabs (different actions per status)
+            if (activeStatusTab === 'pending') {
+                columns.push({ type: 'actions', width: 200, items: 2 }); // Approve/Reject
+            } else if (activeStatusTab === 'confirmed') {
+                columns.push({ type: 'actions', width: 200, items: 1 }); // Update Contract
+            } else if (activeStatusTab === 'cancelled') {
+                columns.push({ type: 'actions', width: 100, items: 1 }); // Delete
+            }
+
+            return <TableSkeleton rows={itemsPerPage} columns={columns} />;
         }
+
+        // Calculate colSpan based on status tab
+        // Base columns: 8 (Representative, Hospital Name, Hospital Contact, Tax Code, Files, Contract, Date, Status)
+        // + 1 for Reason (cancelled only)
+        // + 1 for Actions (all status tabs)
+        let colSpan = 8; // Base columns
+        if (activeStatusTab === 'cancelled') colSpan += 1; // Add reason column
+        colSpan += 1; // Add actions column (present in all status tabs)
 
         if (apiError) {
             return (
                 <tr>
-                    <td colSpan={8} className="text-center py-5">
+                    <td colSpan={colSpan} className="text-center py-5">
                         <div className="text-danger">
                             <i className="ti ti-alert-circle fs-1"></i>
                             <p className="mt-2">{apiError}</p>
@@ -248,7 +384,7 @@ const ListHospitalRegistrations: React.FC = () => {
         if (registrations.length === 0) {
             return (
                 <tr>
-                    <td colSpan={8} className="text-center py-5">
+                    <td colSpan={colSpan} className="text-center py-5">
                         <i className="ti ti-clipboard-off fs-1 text-muted"></i>
                         <p className="mt-2 text-muted">Không có đơn đăng ký nào</p>
                     </td>
@@ -259,12 +395,17 @@ const ListHospitalRegistrations: React.FC = () => {
         return registrations.map((registration) => (
             <tr key={registration.id}>
                 <td>
+                    <div className="fw-semibold">{registration.representativeName}</div>
+                    <div className="text-muted small">{registration.representativeEmail}</div>
+                    <div className="text-muted small">{registration.representativePhone}</div>
+                </td>
+                <td>
                     <div className="fw-semibold">{registration.hospitalName}</div>
                     <div className="text-muted small">{registration.address}</div>
                 </td>
                 <td>
-                    <div>{registration.email}</div>
-                    <div className="text-muted small">{registration.phone}</div>
+                    <div>{registration.hospitalEmail}</div>
+                    <div className="text-muted small">{registration.hospitalPhone}</div>
                 </td>
                 <td>{registration.taxCode}</td>
                 <td>
@@ -360,32 +501,69 @@ const ListHospitalRegistrations: React.FC = () => {
                         {getStatusText(registration.status)}
                     </span>
                 </td>
-                <td>
-                    {registration.status === 'PENDING' && (
-                        <div className="d-flex gap-2">
-                            <button
-                                type="button"
-                                className="btn btn-outline-success"
-                                onClick={() =>
-                                    handleOpenApproval(registration.id, registration.hospitalName)
-                                }
-                                title="Phê duyệt"
-                            >
-                                <i className="ti ti-check me-1"></i> Phê duyệt
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline-danger"
-                                onClick={() =>
-                                    handleOpenRejection(registration.id, registration.hospitalName)
-                                }
-                                title="Từ chối"
-                            >
-                                <i className="ti ti-x me-1"></i> Từ chối
-                            </button>
-                        </div>
-                    )}
-                </td>
+                {/* Actions column - conditional based on status */}
+                {activeStatusTab === 'pending' && (
+                    <td>
+                        {registration.status === 'PENDING' && (
+                            <div className="d-flex gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-success"
+                                    onClick={() =>
+                                        handleOpenApproval(
+                                            registration.id,
+                                            registration.hospitalName
+                                        )
+                                    }
+                                    title="Phê duyệt"
+                                >
+                                    <i className="ti ti-check me-1"></i> Phê duyệt
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-danger"
+                                    onClick={() =>
+                                        handleOpenRejection(
+                                            registration.id,
+                                            registration.hospitalName
+                                        )
+                                    }
+                                    title="Từ chối"
+                                >
+                                    <i className="ti ti-x me-1"></i> Từ chối
+                                </button>
+                            </div>
+                        )}
+                    </td>
+                )}
+                {activeStatusTab === 'confirmed' && (
+                    <td>
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary"
+                            onClick={() =>
+                                handleOpenUpdateContract(registration.id, registration.hospitalName)
+                            }
+                            title="Cập nhật file hợp đồng"
+                        >
+                            <i className="ti ti-edit me-1"></i> Cập nhật hợp đồng
+                        </button>
+                    </td>
+                )}
+                {activeStatusTab === 'cancelled' && (
+                    <td>
+                        <button
+                            type="button"
+                            className="btn btn-outline-danger"
+                            onClick={() =>
+                                handleOpenDelete(registration.id, registration.hospitalName)
+                            }
+                            title="Xóa đơn đăng ký"
+                        >
+                            <i className="ti ti-trash me-1"></i> Xóa
+                        </button>
+                    </td>
+                )}
             </tr>
         ));
     };
@@ -442,20 +620,61 @@ const ListHospitalRegistrations: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Search and Sort Controls */}
+                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+                    <div className="search-set">
+                        <div className="d-flex align-items-center flex-wrap gap-2">
+                            <div className="table-search d-flex align-items-center mb-0">
+                                <div className="search-input">
+                                    <label
+                                        htmlFor="registrationSearch"
+                                        aria-label="Search registrations"
+                                    >
+                                        <input
+                                            id="registrationSearch"
+                                            type="search"
+                                            className="form-control form-control-sm"
+                                            placeholder="Tìm kiếm đăng ký..."
+                                            value={searchTerm}
+                                            onChange={handleSearchChange}
+                                            aria-controls="DataTables_Table_0"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sort Dropdown */}
+                    <div className="d-flex align-items-center gap-2">
+                        <ActionDropdown
+                            type="sort"
+                            options={hospitalRegistrationSortOptions}
+                            selectedValue={selectedSort}
+                            onSelect={handleSortChange}
+                            placeholder="Sắp xếp:"
+                            size="sm"
+                        />
+                    </div>
+                </div>
+
                 {/* Table */}
                 <div className="table-responsive">
                     <table className="table datatable table-nowrap">
                         <thead>
                             <tr>
+                                <th>Người đại diện</th>
                                 <th>Tên bệnh viện</th>
-                                <th>Liên hệ</th>
+                                <th>Liên hệ bệnh viện</th>
                                 <th>Mã số thuế</th>
                                 <th>Hồ sơ đính kèm</th>
                                 <th>Hợp đồng</th>
                                 <th>Ngày gửi</th>
                                 {activeStatusTab === 'cancelled' && <th>Nguyên nhân</th>}
                                 <th>Trạng thái</th>
-                                {activeStatusTab === 'pending' && <th>Thao tác</th>}
+                                {(activeStatusTab === 'pending' ||
+                                    activeStatusTab === 'confirmed' ||
+                                    activeStatusTab === 'cancelled') && <th>Thao tác</th>}
                             </tr>
                         </thead>
                         <tbody>{renderTableBody()}</tbody>
@@ -494,6 +713,27 @@ const ListHospitalRegistrations: React.FC = () => {
                 registrationId={rejectionModal.registrationId}
                 onClose={handleCloseRejection}
                 onSuccess={handleRejectionSuccess}
+            />
+
+            {/* Update Contract Modal */}
+            <UpdateContractModal
+                isOpen={updateContractModal.isOpen}
+                hospitalName={updateContractModal.hospitalName}
+                registrationId={updateContractModal.registrationId}
+                onClose={handleCloseUpdateContract}
+                onSuccess={handleUpdateContractSuccess}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ModalDelete
+                show={deleteModal.isOpen}
+                onHide={handleCloseDelete}
+                onConfirm={handleDeleteConfirm}
+                title="Xóa đơn đăng ký"
+                message="Bạn có chắc chắn muốn xóa đơn đăng ký của bệnh viện"
+                itemName={deleteModal.hospitalName}
+                confirmText="Có, xóa"
+                cancelText="Hủy"
             />
         </>
     );
