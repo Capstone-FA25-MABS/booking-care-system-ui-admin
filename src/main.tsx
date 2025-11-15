@@ -7,6 +7,8 @@ import '@/assets/plugins/simplebar/simplebar.min.js';
 import 'simplebar-react/dist/simplebar.min.css';
 import './styles/index.scss';
 import '@/assets/css/style.css';
+// Suppress known React errors (removeChild conflicts with DOM libraries)
+import '@/utils/suppressReactErrors';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>

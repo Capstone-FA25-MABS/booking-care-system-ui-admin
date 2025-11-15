@@ -241,6 +241,31 @@ export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
 });
 
 /**
+ * Create Notifications menu item for different roles
+ */
+export const createNotificationsMenuItem = (role: 'admin' | 'staff' | 'doctor'): MenuItem => {
+    let basePath: string;
+
+    switch (role) {
+        case 'admin':
+            basePath = buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.NOTIFICATIONS.ROOT);
+            break;
+        case 'staff':
+            basePath = buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.NOTIFICATIONS.ROOT);
+            break;
+        case 'doctor':
+            basePath = buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.NOTIFICATIONS.ROOT);
+            break;
+    }
+
+    return {
+        label: 'Thông báo',
+        icon: 'ti ti-bell',
+        link: basePath,
+    };
+};
+
+/**
  * Create simple menu items
  */
 export const createSimpleMenuItem = (label: string, icon: string, link: string): MenuItem => ({

@@ -8,6 +8,7 @@ import {
     createDoctorAccountSettingsMenuItem,
     createHospitalAccountSettingsMenuItem,
     createMessagesMenuItem,
+    createNotificationsMenuItem,
     createSimpleMenuItem,
     createSubscriptionPlansMenuItem,
 } from './menu.items';
@@ -63,6 +64,7 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_PLAN)
             ),
             createMessagesMenuItem('staff'),
+            createNotificationsMenuItem('staff'),
         ],
     },
     {
@@ -95,6 +97,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
             ),
             createMessagesMenuItem('doctor'),
+            createNotificationsMenuItem('doctor'),
         ],
     },
     {
@@ -192,6 +195,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
             createSubscriptionPlansMenuItem(),
+            createNotificationsMenuItem('admin'),
         ],
     },
     {
