@@ -58,6 +58,9 @@ export const PATHS = {
         HOSPITAL_REGISTRATIONS: {
             ROOT: 'hospital-registrations',
         },
+        NOTIFICATIONS: {
+            ROOT: 'notifications',
+        },
     },
 
     // Hospital paths
@@ -97,6 +100,9 @@ export const PATHS = {
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
         PROFILE_SETTINGS: 'profile-settings',
+        NOTIFICATIONS: {
+            ROOT: 'notifications',
+        },
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
@@ -115,6 +121,9 @@ export const PATHS = {
         SCHEDULE: 'schedule',
         PATIENTS: 'patients',
         MESSAGES: 'messages',
+        NOTIFICATIONS: {
+            ROOT: 'notifications',
+        },
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
