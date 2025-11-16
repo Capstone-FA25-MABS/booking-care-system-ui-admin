@@ -4,7 +4,7 @@ import SubscriptionPlanSkeletonCard from './components/SubscriptionPlanSkeletonC
 import PaymentMethodSelectionModal from './components/PaymentMethodSelectionModal';
 import { Check, Info, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
-import styles from './SubscriptionPlan.module.scss';
+import styles from './SubscriptionPlanList.module.scss';
 import { useSubscription } from '@/hooks/useSubscription';
 import type { SubscriptionPlan as SubscriptionPlanType } from '@/services/subscription.service';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
@@ -21,7 +21,7 @@ interface Feature {
     iconType?: 'check' | 'plus';
 }
 
-const SubscriptionPlan: React.FC = () => {
+const SubscriptionPlanList: React.FC = () => {
     const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
     const [isPaymentMethodModalOpen, setIsPaymentMethodModalOpen] = useState(false);
@@ -1207,4 +1207,4 @@ const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = ({ onClo
     );
 };
 
-export default SubscriptionPlan;
+export default SubscriptionPlanList;

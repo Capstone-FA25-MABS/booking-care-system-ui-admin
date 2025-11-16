@@ -120,18 +120,22 @@ export interface SubscriptionUsageResponse {
     message?: string;
     subscriptionPlanId?: string;
     subscriptionPlanName?: string;
-    maxDoctors: number;
-    maxSpecialties: number;
-    maxAppointments: number;
+    maxDoctors: number | null; // null = unlimited
+    maxSpecialties: number | null; // null = unlimited
+    maxAppointments: number | null; // null = unlimited
+    maxServices: number | null; // null = unlimited
     currentDoctorCount: number;
     currentSpecialtyCount: number;
     currentAppointmentCount: number;
+    currentServiceCount: number;
     doctorUsagePercentage: number;
     specialtyUsagePercentage: number;
     appointmentUsagePercentage: number;
+    serviceUsagePercentage: number;
     isDoctorLimitExceeded: boolean;
     isSpecialtyLimitExceeded: boolean;
     isAppointmentLimitExceeded: boolean;
+    isServiceLimitExceeded: boolean;
     subscriptionEndDate?: string;
     daysUntilExpiry: number;
     generatedAt: string;

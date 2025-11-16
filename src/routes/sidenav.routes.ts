@@ -7,6 +7,7 @@ import {
     createDoctorsMenuItem,
     createDoctorAccountSettingsMenuItem,
     createHospitalAccountSettingsMenuItem,
+    createHospitalSubscriptionPlansMenuItem,
     createMessagesMenuItem,
     createSimpleMenuItem,
     createSubscriptionPlansMenuItem,
@@ -44,24 +45,12 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-receipt-refund',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
             ),
-            createSimpleMenuItem('Locations', 'ti ti-map-pin', '/hospital/locations'),
             createSimpleMenuItem(
                 'Dịch vụ',
                 'ti ti-briefcase',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
             ),
-            createSimpleMenuItem(
-                'Specializations',
-                'ti ti-user-shield',
-                '/hospital/specializations'
-            ),
-            createSimpleMenuItem('Assets', 'ti ti-asset', '/hospital/assets'),
-            createSimpleMenuItem('Activities', 'ti ti-activity', '/hospital/activities'),
-            createSimpleMenuItem(
-                'Gói dịch vụ',
-                'ti ti-package',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_PLAN)
-            ),
+            createHospitalSubscriptionPlansMenuItem(),
             createMessagesMenuItem('staff'),
         ],
     },

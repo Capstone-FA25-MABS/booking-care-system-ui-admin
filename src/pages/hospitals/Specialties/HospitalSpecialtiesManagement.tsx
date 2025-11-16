@@ -6,11 +6,13 @@ import { Specialty } from '@/types/specialty.types';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
 import HospitalService from '@/services/hospital.service';
+import { useSubscription } from '@/hooks/useSubscription';
 import styles from './HospitalSpecialtiesManagement.module.scss';
 
 const HospitalSpecialtiesManagement: React.FC = () => {
     const { profile, hospitalProfile } = useCurrentUserProfile();
     const hospitalId = hospitalProfile?.id || (profile as any)?.id;
+    const { checkSpecialtyLimit, usageData, loadUsageData } = useSubscription();
 
     // State
     const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([]);
@@ -19,6 +21,13 @@ const HospitalSpecialtiesManagement: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Load usage data on mount
+    useEffect(() => {
+        if (hospitalId) {
+            loadUsageData(hospitalId);
+        }
+    }, [hospitalId, loadUsageData]);
 
     // Load all specialties and current hospital specialties
     useEffect(() => {
@@ -107,12 +116,60 @@ const HospitalSpecialtiesManagement: React.FC = () => {
             return;
         }
 
+        // Calculate how many specialties are being added
+        const specialtiesToAdd = selectedSpecialtyIds.filter(
+            (id) => !initialSpecialtyIds.includes(id)
+        );
+
+        // Check limit before saving if adding specialties
+        if (specialtiesToAdd.length > 0) {
+            const currentCount = usageData?.currentSpecialtyCount || initialSpecialtyIds.length;
+
+            // Check if we can add all new specialties
+            const canAdd = await checkSpecialtyLimit(hospitalId);
+            if (!canAdd) {
+                const maxCount = usageData?.maxSpecialties ?? Number.MAX_SAFE_INTEGER;
+                const isUnlimited =
+                    maxCount === null ||
+                    maxCount === undefined ||
+                    maxCount === -1 ||
+                    maxCount === Number.MAX_SAFE_INTEGER;
+                const displayMax = isUnlimited ? '∞' : maxCount.toString();
+                toast.error(
+                    `Bạn đã đạt giới hạn số lượng chuyên khoa cho phép trong gói đăng ký. Hiện tại: ${currentCount}/${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+
+            // Check if adding these specialties would exceed the limit
+            const newCount = currentCount + specialtiesToAdd.length;
+            if (
+                usageData &&
+                usageData.maxSpecialties !== null &&
+                usageData.maxSpecialties !== undefined &&
+                usageData.maxSpecialties !== Number.MAX_SAFE_INTEGER &&
+                usageData.maxSpecialties !== -1 &&
+                newCount > usageData.maxSpecialties
+            ) {
+                const displayMax = usageData.maxSpecialties.toString();
+                toast.error(
+                    `Không thể thêm ${specialtiesToAdd.length} chuyên khoa. Giới hạn hiện tại: ${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             // Update only hospital specialties
             await HospitalService.updateHospitalSpecialties(hospitalId, selectedSpecialtyIds);
             // No need to refresh profile - update local state only for better performance
             setInitialSpecialtyIds(selectedSpecialtyIds);
+
+            // Reload usage data to reflect changes
+            if (hospitalId) {
+                await loadUsageData(hospitalId);
+            }
 
             toast.success('Cập nhật chuyên khoa thành công!');
         } catch (error: any) {
