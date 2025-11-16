@@ -35,6 +35,7 @@ const AddSubscriptionPlan: React.FC = () => {
     const [isUnlimitedDoctors, setIsUnlimitedDoctors] = useState(false);
     const [isUnlimitedSpecialties, setIsUnlimitedSpecialties] = useState(false);
     const [isUnlimitedAppointments, setIsUnlimitedAppointments] = useState(false);
+    const [isUnlimitedServices, setIsUnlimitedServices] = useState(false);
     const [autoCreateAllCycles, setAutoCreateAllCycles] = useState(true); // Mặc định tạo 3 gói
 
     const {
@@ -49,6 +50,7 @@ const AddSubscriptionPlan: React.FC = () => {
         handleMaxDoctorsChange,
         handleMaxSpecialtiesChange,
         handleMaxAppointmentsChange,
+        handleMaxServicesChange,
         handleFeaturesChange,
         handleStatusChange,
         resetForm,
@@ -78,9 +80,11 @@ const AddSubscriptionPlan: React.FC = () => {
                 maxDoctors: formData.maxDoctors,
                 maxSpecialties: formData.maxSpecialties,
                 maxAppointments: formData.maxAppointments,
+                maxServices: formData.maxServices,
                 unlimitedDoctors: isUnlimitedDoctors,
                 unlimitedSpecialties: isUnlimitedSpecialties,
                 unlimitedAppointments: isUnlimitedAppointments,
+                unlimitedServices: isUnlimitedServices,
                 features: formData.features,
                 status: formData.status,
             },
@@ -96,12 +100,15 @@ const AddSubscriptionPlan: React.FC = () => {
                     customPlansConfig.quarterly?.maxSpecialties || formData.maxSpecialties,
                 maxAppointments:
                     customPlansConfig.quarterly?.maxAppointments || formData.maxAppointments,
+                maxServices: customPlansConfig.quarterly?.maxServices || formData.maxServices,
                 unlimitedDoctors:
                     customPlansConfig.quarterly?.unlimitedDoctors ?? isUnlimitedDoctors,
                 unlimitedSpecialties:
                     customPlansConfig.quarterly?.unlimitedSpecialties ?? isUnlimitedSpecialties,
                 unlimitedAppointments:
                     customPlansConfig.quarterly?.unlimitedAppointments ?? isUnlimitedAppointments,
+                unlimitedServices:
+                    customPlansConfig.quarterly?.unlimitedServices ?? isUnlimitedServices,
                 features: customPlansConfig.quarterly?.features || formData.features,
                 status: customPlansConfig.quarterly?.status || formData.status,
             },
@@ -116,11 +123,14 @@ const AddSubscriptionPlan: React.FC = () => {
                 maxSpecialties: customPlansConfig.yearly?.maxSpecialties || formData.maxSpecialties,
                 maxAppointments:
                     customPlansConfig.yearly?.maxAppointments || formData.maxAppointments,
+                maxServices: customPlansConfig.yearly?.maxServices || formData.maxServices,
                 unlimitedDoctors: customPlansConfig.yearly?.unlimitedDoctors ?? isUnlimitedDoctors,
                 unlimitedSpecialties:
                     customPlansConfig.yearly?.unlimitedSpecialties ?? isUnlimitedSpecialties,
                 unlimitedAppointments:
                     customPlansConfig.yearly?.unlimitedAppointments ?? isUnlimitedAppointments,
+                unlimitedServices:
+                    customPlansConfig.yearly?.unlimitedServices ?? isUnlimitedServices,
                 features: customPlansConfig.yearly?.features || formData.features,
                 status: customPlansConfig.yearly?.status || formData.status,
             },
@@ -131,12 +141,14 @@ const AddSubscriptionPlan: React.FC = () => {
         formData.maxDoctors,
         formData.maxSpecialties,
         formData.maxAppointments,
+        formData.maxServices,
         formData.features,
         formData.status,
         autoCreateAllCycles,
         isUnlimitedDoctors,
         isUnlimitedSpecialties,
         isUnlimitedAppointments,
+        isUnlimitedServices,
         customPlansConfig,
     ]);
 
@@ -149,6 +161,7 @@ const AddSubscriptionPlan: React.FC = () => {
             isUnlimitedDoctors,
             isUnlimitedSpecialties,
             isUnlimitedAppointments,
+            isUnlimitedServices,
             !autoCreateAllCycles
         );
 
@@ -179,6 +192,7 @@ const AddSubscriptionPlan: React.FC = () => {
                             formData.maxAppointments,
                             isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(formData.maxServices, isUnlimitedServices),
                         features: formData.features || undefined,
                         status: formData.status,
                     },
@@ -202,6 +216,10 @@ const AddSubscriptionPlan: React.FC = () => {
                             customPlansConfig.quarterly?.unlimitedAppointments ??
                                 isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(
+                            customPlansConfig.quarterly?.maxServices || formData.maxServices,
+                            customPlansConfig.quarterly?.unlimitedServices ?? isUnlimitedServices
+                        ),
                         features:
                             customPlansConfig.quarterly?.features || formData.features || undefined,
                         status: customPlansConfig.quarterly?.status || formData.status,
@@ -224,6 +242,10 @@ const AddSubscriptionPlan: React.FC = () => {
                             customPlansConfig.yearly?.unlimitedAppointments ??
                                 isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(
+                            customPlansConfig.yearly?.maxServices || formData.maxServices,
+                            customPlansConfig.yearly?.unlimitedServices ?? isUnlimitedServices
+                        ),
                         features:
                             customPlansConfig.yearly?.features || formData.features || undefined,
                         status: customPlansConfig.yearly?.status || formData.status,
@@ -243,6 +265,7 @@ const AddSubscriptionPlan: React.FC = () => {
                             formData.maxAppointments,
                             isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(formData.maxServices, isUnlimitedServices),
                         features: formData.features || undefined,
                         status: formData.status,
                     },
@@ -307,6 +330,7 @@ const AddSubscriptionPlan: React.FC = () => {
                         onMaxDoctorsChange={handleMaxDoctorsChange}
                         onMaxSpecialtiesChange={handleMaxSpecialtiesChange}
                         onMaxAppointmentsChange={handleMaxAppointmentsChange}
+                        onMaxServicesChange={handleMaxServicesChange}
                         onFeaturesChange={handleFeaturesChange}
                         onStatusChange={handleStatusChange}
                         onSubmit={handleSubmit}
@@ -317,9 +341,11 @@ const AddSubscriptionPlan: React.FC = () => {
                         isUnlimitedDoctors={isUnlimitedDoctors}
                         isUnlimitedSpecialties={isUnlimitedSpecialties}
                         isUnlimitedAppointments={isUnlimitedAppointments}
+                        isUnlimitedServices={isUnlimitedServices}
                         onToggleUnlimitedDoctors={setIsUnlimitedDoctors}
                         onToggleUnlimitedSpecialties={setIsUnlimitedSpecialties}
                         onToggleUnlimitedAppointments={setIsUnlimitedAppointments}
+                        onToggleUnlimitedServices={setIsUnlimitedServices}
                         // Auto create all cycles option
                         autoCreateAllCycles={autoCreateAllCycles}
                         onToggleAutoCreateAllCycles={setAutoCreateAllCycles}
@@ -480,6 +506,27 @@ const AddSubscriptionPlan: React.FC = () => {
                                                                 placeholder={
                                                                     formData.maxAppointments ||
                                                                     '100'
+                                                                }
+                                                                setCustomPlansConfig={
+                                                                    setCustomPlansConfig
+                                                                }
+                                                            />
+
+                                                            {/* Dịch vụ */}
+                                                            <PreviewLimitInput
+                                                                label="Dịch vụ"
+                                                                type="services"
+                                                                billingCycle={
+                                                                    preview.billingCycle as
+                                                                        | 'QUARTERLY'
+                                                                        | 'YEARLY'
+                                                                }
+                                                                value={preview.maxServices}
+                                                                unlimited={
+                                                                    preview.unlimitedServices
+                                                                }
+                                                                placeholder={
+                                                                    formData.maxServices || '50'
                                                                 }
                                                                 setCustomPlansConfig={
                                                                     setCustomPlansConfig

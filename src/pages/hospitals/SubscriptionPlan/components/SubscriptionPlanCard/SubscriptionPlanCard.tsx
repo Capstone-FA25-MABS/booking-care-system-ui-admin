@@ -89,27 +89,24 @@ const SubscriptionPlanCard = ({
                         </div>
                         {(startDate || endDate) && (
                             <div className={styles.dateInfo}>
-                                <p className={styles.dateText}>
+                                <div className={styles.dateText}>
                                     {startDate && (
-                                        <>
-                                            <span className={styles.dateLabel}>Bắt đầu:</span>{' '}
+                                        <div>
+                                            <span className={styles.dateLabel}>Ngày bắt đầu:</span>{' '}
                                             <span className="fs-13 badge rounded fw-medium badge-soft-info text-info">
                                                 {formatDisplayDate(startDate)}
                                             </span>
-                                        </>
-                                    )}
-                                    {startDate && endDate && (
-                                        <span className={styles.dateSeparator}> • </span>
+                                        </div>
                                     )}
                                     {endDate && (
-                                        <>
-                                            <span className={styles.dateLabel}>Hết hạn:</span>{' '}
+                                        <div>
+                                            <span className={styles.dateLabel}>Ngày hết hạn:</span>{' '}
                                             <span className="fs-13 badge rounded fw-medium badge-soft-info text-info">
                                                 {formatDisplayDate(endDate)}
                                             </span>
-                                        </>
+                                        </div>
                                     )}
-                                </p>
+                                </div>
                             </div>
                         )}
                     </div>

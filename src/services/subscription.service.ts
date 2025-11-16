@@ -15,6 +15,7 @@ export interface SubscriptionPlan {
     maxDoctors: number | null; // null = unlimited
     maxSpecialties: number | null; // null = unlimited
     maxAppointments: number | null; // null = unlimited
+    maxServices: number | null; // null = unlimited
     features?: string;
     status: SubscriptionStatus;
     createdAt: string;
@@ -29,6 +30,7 @@ export interface CreateSubscriptionPlanRequest {
     maxDoctors: number | null; // null = unlimited
     maxSpecialties: number | null; // null = unlimited
     maxAppointments: number | null; // null = unlimited
+    maxServices: number | null; // null = unlimited
     features?: string;
     status?: SubscriptionStatus;
 }
@@ -41,6 +43,7 @@ export interface UpdateSubscriptionPlanRequest {
     maxDoctors?: number | null; // null = unlimited
     maxSpecialties?: number | null; // null = unlimited
     maxAppointments?: number | null; // null = unlimited
+    maxServices?: number | null; // null = unlimited
     features?: string;
     status?: SubscriptionStatus;
 }

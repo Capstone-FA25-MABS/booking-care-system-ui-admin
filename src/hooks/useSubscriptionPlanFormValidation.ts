@@ -8,6 +8,7 @@ export interface SubscriptionPlanFormData {
     maxDoctors: string;
     maxSpecialties: string;
     maxAppointments: string;
+    maxServices: string;
     features?: string;
     status: 'ACTIVE' | 'INACTIVE';
 }
@@ -20,6 +21,7 @@ export interface SubscriptionPlanValidationErrors {
     maxDoctors?: string;
     maxSpecialties?: string;
     maxAppointments?: string;
+    maxServices?: string;
     features?: string;
     status?: string;
 }
@@ -28,9 +30,11 @@ export interface CustomPlanConfig {
     maxDoctors: string;
     maxSpecialties: string;
     maxAppointments: string;
+    maxServices: string;
     unlimitedDoctors: boolean;
     unlimitedSpecialties: boolean;
     unlimitedAppointments: boolean;
+    unlimitedServices: boolean;
     features?: string;
     status?: 'ACTIVE' | 'INACTIVE';
 }
@@ -176,6 +180,28 @@ const validateMaxAppointments = (maxAppointments: string): string | undefined =>
     return undefined;
 };
 
+const validateMaxServices = (maxServices: string): string | undefined => {
+    if (!maxServices.trim()) {
+        return 'Số dịch vụ tối đa không được để trống';
+    }
+
+    const value = Number.parseInt(maxServices, 10);
+    if (Number.isNaN(value)) {
+        return 'Số dịch vụ tối đa phải là một số hợp lệ';
+    }
+
+    // -1 represents unlimited
+    if (value < -1) {
+        return 'Giá trị không hợp lệ (dùng -1 cho không giới hạn)';
+    }
+
+    if (value > 1000 && value !== -1) {
+        return 'Số dịch vụ tối đa không được vượt quá 1000';
+    }
+
+    return undefined;
+};
+
 const validateFeatureItem = (feature: unknown, index: number): string | undefined => {
     if (!feature || typeof feature !== 'object') {
         return `Tính năng thứ ${index + 1} không hợp lệ`;
@@ -277,6 +303,7 @@ export const useSubscriptionPlanFormValidation = () => {
         maxDoctors: '',
         maxSpecialties: '',
         maxAppointments: '',
+        maxServices: '',
         features: '',
         status: 'ACTIVE',
     });
@@ -356,6 +383,16 @@ export const useSubscriptionPlanFormValidation = () => {
         [validationErrors.maxAppointments]
     );
 
+    const handleMaxServicesChange = useCallback(
+        (value: string) => {
+            setFormData((prev) => ({ ...prev, maxServices: value }));
+            if (validationErrors.maxServices) {
+                setValidationErrors((prev) => ({ ...prev, maxServices: undefined }));
+            }
+        },
+        [validationErrors.maxServices]
+    );
+
     const handleFeaturesChange = useCallback(
         (value: string) => {
             setFormData((prev) => ({ ...prev, features: value }));
@@ -401,6 +438,9 @@ export const useSubscriptionPlanFormValidation = () => {
         const maxAppointmentsError = validateMaxAppointments(formData.maxAppointments);
         if (maxAppointmentsError) errors.maxAppointments = maxAppointmentsError;
 
+        const maxServicesError = validateMaxServices(formData.maxServices);
+        if (maxServicesError) errors.maxServices = maxServicesError;
+
         const featuresError = validateFeatures(formData.features);
         if (featuresError) errors.features = featuresError;
 
@@ -421,6 +461,7 @@ export const useSubscriptionPlanFormValidation = () => {
             maxDoctors: '',
             maxSpecialties: '',
             maxAppointments: '',
+            maxServices: '',
             features: '',
             status: 'ACTIVE',
         });
@@ -440,6 +481,7 @@ export const useSubscriptionPlanFormValidation = () => {
         handleMaxDoctorsChange,
         handleMaxSpecialtiesChange,
         handleMaxAppointmentsChange,
+        handleMaxServicesChange,
         handleFeaturesChange,
         handleStatusChange,
         validateForm,
@@ -457,10 +499,12 @@ export const validateSubscriptionPlanForm = (
         maxDoctors: string;
         maxSpecialties: string;
         maxAppointments: string;
+        maxServices: string;
     },
     isUnlimitedDoctors: boolean,
     isUnlimitedSpecialties: boolean,
     isUnlimitedAppointments: boolean,
+    isUnlimitedServices: boolean,
     requiresBillingCycle: boolean = true
 ): string | null => {
     if (!formData.name?.trim()) {
@@ -499,6 +543,13 @@ export const validateSubscriptionPlanForm = (
         (!formData.maxAppointments || Number.parseInt(formData.maxAppointments, 10) <= 0)
     ) {
         return 'Vui lòng nhập số lịch hẹn tối đa hoặc chọn không giới hạn';
+    }
+
+    if (
+        !isUnlimitedServices &&
+        (!formData.maxServices || Number.parseInt(formData.maxServices, 10) <= 0)
+    ) {
+        return 'Vui lòng nhập số dịch vụ tối đa hoặc chọn không giới hạn';
     }
 
     return null;

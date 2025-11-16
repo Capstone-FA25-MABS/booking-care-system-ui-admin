@@ -21,6 +21,7 @@ interface SubscriptionPlanFormFieldsProps {
     onMaxDoctorsChange: (value: string) => void;
     onMaxSpecialtiesChange: (value: string) => void;
     onMaxAppointmentsChange: (value: string) => void;
+    onMaxServicesChange: (value: string) => void;
     onFeaturesChange: (value: string) => void;
     onStatusChange?: (value: 'ACTIVE' | 'INACTIVE') => void;
     onSubmit: (e: React.FormEvent) => void;
@@ -31,9 +32,11 @@ interface SubscriptionPlanFormFieldsProps {
     isUnlimitedDoctors: boolean;
     isUnlimitedSpecialties: boolean;
     isUnlimitedAppointments: boolean;
+    isUnlimitedServices: boolean;
     onToggleUnlimitedDoctors: (checked: boolean) => void;
     onToggleUnlimitedSpecialties: (checked: boolean) => void;
     onToggleUnlimitedAppointments: (checked: boolean) => void;
+    onToggleUnlimitedServices: (checked: boolean) => void;
     // auto create all cycles option
     autoCreateAllCycles?: boolean;
     onToggleAutoCreateAllCycles?: (checked: boolean) => void;
@@ -49,6 +52,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
     onMaxDoctorsChange,
     onMaxSpecialtiesChange,
     onMaxAppointmentsChange,
+    onMaxServicesChange,
     onFeaturesChange,
     onStatusChange,
     onSubmit,
@@ -58,9 +62,11 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
     isUnlimitedDoctors,
     isUnlimitedSpecialties,
     isUnlimitedAppointments,
+    isUnlimitedServices,
     onToggleUnlimitedDoctors,
     onToggleUnlimitedSpecialties,
     onToggleUnlimitedAppointments,
+    onToggleUnlimitedServices,
     autoCreateAllCycles = true,
     onToggleAutoCreateAllCycles,
 }) => {
@@ -342,6 +348,46 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 <div className="form-text text-danger">
                                     {errors.maxAppointments}
                                 </div>
+                            )}
+                        </div>
+                        <div className="col-md-4">
+                            <label htmlFor="maxServices" className="form-label">
+                                Số dịch vụ tối đa
+                            </label>
+                            <div className="d-flex align-items-center">
+                                <Input
+                                    id="maxServices"
+                                    className="flex-grow-1"
+                                    type="number"
+                                    required
+                                    name="maxServices"
+                                    value={isUnlimitedServices ? '' : formData.maxServices}
+                                    onChange={(e) => onMaxServicesChange(e.target.value)}
+                                    placeholder="Nhập số lượng"
+                                    error={errors.maxServices}
+                                    min="1"
+                                    disabled={isUnlimitedServices}
+                                />
+                                <div className="form-check form-switch ms-3">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="unlimitedServices"
+                                        checked={isUnlimitedServices}
+                                        onChange={(e) =>
+                                            onToggleUnlimitedServices(e.target.checked)
+                                        }
+                                    />
+                                    <label
+                                        className="form-check-label ms-2"
+                                        htmlFor="unlimitedServices"
+                                    >
+                                        Không giới hạn
+                                    </label>
+                                </div>
+                            </div>
+                            {errors.maxServices && (
+                                <div className="form-text text-danger">{errors.maxServices}</div>
                             )}
                         </div>
                     </div>

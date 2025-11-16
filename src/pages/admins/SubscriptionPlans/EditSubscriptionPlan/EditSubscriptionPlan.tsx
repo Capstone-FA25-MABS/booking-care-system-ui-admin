@@ -52,7 +52,7 @@ const getConfigKey = (billingCycle: string): 'quarterly' | 'yearly' => {
 const getLimitValue = (
     config: CustomPlansConfig | undefined,
     key: 'quarterly' | 'yearly',
-    limitType: 'maxDoctors' | 'maxSpecialties' | 'maxAppointments',
+    limitType: 'maxDoctors' | 'maxSpecialties' | 'maxAppointments' | 'maxServices',
     syncSameLimits: boolean,
     formValue: string,
     planValue: number | null | undefined
@@ -67,7 +67,11 @@ const getLimitValue = (
 const getUnlimitedFlag = (
     config: CustomPlansConfig | undefined,
     key: 'quarterly' | 'yearly',
-    limitType: 'unlimitedDoctors' | 'unlimitedSpecialties' | 'unlimitedAppointments',
+    limitType:
+        | 'unlimitedDoctors'
+        | 'unlimitedSpecialties'
+        | 'unlimitedAppointments'
+        | 'unlimitedServices',
     syncSameLimits: boolean,
     formUnlimited: boolean,
     planValue: number | null | undefined
@@ -85,6 +89,7 @@ const EditSubscriptionPlan: React.FC = () => {
     const [isUnlimitedDoctors, setIsUnlimitedDoctors] = useState(false);
     const [isUnlimitedSpecialties, setIsUnlimitedSpecialties] = useState(false);
     const [isUnlimitedAppointments, setIsUnlimitedAppointments] = useState(false);
+    const [isUnlimitedServices, setIsUnlimitedServices] = useState(false);
 
     // State để track việc sync với các gói khác
     const [syncWithRelatedPlans, setSyncWithRelatedPlans] = useState(false);
@@ -109,6 +114,7 @@ const EditSubscriptionPlan: React.FC = () => {
         handleMaxDoctorsChange,
         handleMaxSpecialtiesChange,
         handleMaxAppointmentsChange,
+        handleMaxServicesChange,
         handleFeaturesChange,
         handleStatusChange,
         resetForm,
@@ -179,6 +185,7 @@ const EditSubscriptionPlan: React.FC = () => {
                     maxDoctors: displayLimit(plan.maxDoctors, setIsUnlimitedDoctors),
                     maxSpecialties: displayLimit(plan.maxSpecialties, setIsUnlimitedSpecialties),
                     maxAppointments: displayLimit(plan.maxAppointments, setIsUnlimitedAppointments),
+                    maxServices: displayLimit(plan.maxServices, setIsUnlimitedServices),
                     features: plan.features || '',
                     status: plan.status,
                 });
@@ -233,6 +240,14 @@ const EditSubscriptionPlan: React.FC = () => {
                 formData.maxAppointments,
                 plan.maxAppointments
             ),
+            maxServices: getLimitValue(
+                customPlansConfig,
+                configKey,
+                'maxServices',
+                syncSameLimits,
+                formData.maxServices,
+                plan.maxServices
+            ),
             unlimitedDoctors: getUnlimitedFlag(
                 customPlansConfig,
                 configKey,
@@ -256,6 +271,14 @@ const EditSubscriptionPlan: React.FC = () => {
                 syncSameLimits,
                 isUnlimitedAppointments,
                 plan.maxAppointments
+            ),
+            unlimitedServices: getUnlimitedFlag(
+                customPlansConfig,
+                configKey,
+                'unlimitedServices',
+                syncSameLimits,
+                isUnlimitedServices,
+                plan.maxServices
             ),
             features:
                 customPlansConfig[configKey]?.features ||
@@ -285,12 +308,14 @@ const EditSubscriptionPlan: React.FC = () => {
         formData.maxDoctors,
         formData.maxSpecialties,
         formData.maxAppointments,
+        formData.maxServices,
         formData.features,
         formData.status,
         syncSameLimits,
         isUnlimitedDoctors,
         isUnlimitedSpecialties,
         isUnlimitedAppointments,
+        isUnlimitedServices,
         customPlansConfig,
     ]);
 
@@ -361,6 +386,24 @@ const EditSubscriptionPlan: React.FC = () => {
                     relatedPlan.maxAppointments
                 )
             ),
+            maxServices: parseLimit(
+                getLimitValue(
+                    customPlansConfig,
+                    key,
+                    'maxServices',
+                    syncSameLimits,
+                    formData.maxServices,
+                    relatedPlan.maxServices
+                ),
+                getUnlimitedFlag(
+                    customPlansConfig,
+                    key,
+                    'unlimitedServices',
+                    syncSameLimits,
+                    isUnlimitedServices,
+                    relatedPlan.maxServices
+                )
+            ),
             features:
                 customPlansConfig[key]?.features ||
                 (syncSameLimits ? formData.features || undefined : relatedPlan.features),
@@ -410,6 +453,7 @@ const EditSubscriptionPlan: React.FC = () => {
             isUnlimitedDoctors,
             isUnlimitedSpecialties,
             isUnlimitedAppointments,
+            isUnlimitedServices,
             true
         );
 
@@ -429,6 +473,7 @@ const EditSubscriptionPlan: React.FC = () => {
                 maxDoctors: parseLimit(formData.maxDoctors, isUnlimitedDoctors),
                 maxSpecialties: parseLimit(formData.maxSpecialties, isUnlimitedSpecialties),
                 maxAppointments: parseLimit(formData.maxAppointments, isUnlimitedAppointments),
+                maxServices: parseLimit(formData.maxServices, isUnlimitedServices),
                 features: formData.features || undefined,
                 status: formData.status,
             };
@@ -482,6 +527,7 @@ const EditSubscriptionPlan: React.FC = () => {
                         onMaxDoctorsChange={handleMaxDoctorsChange}
                         onMaxSpecialtiesChange={handleMaxSpecialtiesChange}
                         onMaxAppointmentsChange={handleMaxAppointmentsChange}
+                        onMaxServicesChange={handleMaxServicesChange}
                         onFeaturesChange={handleFeaturesChange}
                         onStatusChange={handleStatusChange}
                         onSubmit={handleSubmit}
@@ -492,9 +538,11 @@ const EditSubscriptionPlan: React.FC = () => {
                         isUnlimitedDoctors={isUnlimitedDoctors}
                         isUnlimitedSpecialties={isUnlimitedSpecialties}
                         isUnlimitedAppointments={isUnlimitedAppointments}
+                        isUnlimitedServices={isUnlimitedServices}
                         onToggleUnlimitedDoctors={setIsUnlimitedDoctors}
                         onToggleUnlimitedSpecialties={setIsUnlimitedSpecialties}
                         onToggleUnlimitedAppointments={setIsUnlimitedAppointments}
+                        onToggleUnlimitedServices={setIsUnlimitedServices}
                     />
                 </div>
             </div>
@@ -755,6 +803,27 @@ const EditSubscriptionPlan: React.FC = () => {
                                                                     placeholder={
                                                                         formData.maxAppointments ||
                                                                         '100'
+                                                                    }
+                                                                    setCustomPlansConfig={
+                                                                        setCustomPlansConfig
+                                                                    }
+                                                                />
+
+                                                                {/* Dịch vụ */}
+                                                                <PreviewLimitInput
+                                                                    label="Dịch vụ"
+                                                                    type="services"
+                                                                    billingCycle={
+                                                                        preview.billingCycle as
+                                                                            | 'QUARTERLY'
+                                                                            | 'YEARLY'
+                                                                    }
+                                                                    value={preview.maxServices}
+                                                                    unlimited={
+                                                                        preview.unlimitedServices
+                                                                    }
+                                                                    placeholder={
+                                                                        formData.maxServices || '50'
                                                                     }
                                                                     setCustomPlansConfig={
                                                                         setCustomPlansConfig

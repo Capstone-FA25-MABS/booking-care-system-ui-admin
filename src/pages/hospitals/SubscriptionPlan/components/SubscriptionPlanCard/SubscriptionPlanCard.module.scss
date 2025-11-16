@@ -67,9 +67,9 @@
     margin-bottom: 0;
     font-weight: 500;
     font-size: 1.15rem;
-    color: #6b7280;
+    color: #dc2626;
     text-decoration: line-through;
-    text-decoration-color: #9ca3af;
+    text-decoration-color: #dc2626;
     text-decoration-thickness: 2px;
     text-decoration-style: solid;
     line-height: 1;
@@ -119,11 +119,10 @@
     margin: 0;
     font-size: 0.8125rem;
     color: #495057;
-    line-height: 1.4;
+    line-height: 1.6;
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.375rem;
 }
 
 .dateLabel {
