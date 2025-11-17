@@ -804,6 +804,18 @@ const SubscriptionPlanList: React.FC = () => {
         });
     };
 
+    const getSliderTransform = () => {
+        if (cardsVisible === 1) {
+            return `translateX(-${currentSlide * 100}%)`;
+        }
+
+        if (cardsVisible === 2) {
+            return `translateX(calc(-${currentSlide} * ((100% - 0.75rem) / 2 + 0.75rem)))`;
+        }
+
+        return `translateX(calc(-${currentSlide} * ((100% - 2rem) / 3 + 1rem)))`;
+    };
+
     return (
         <div className={styles.subscriptionPlan}>
             <div className={styles.container}>
@@ -885,12 +897,7 @@ const SubscriptionPlanList: React.FC = () => {
                         <div
                             className={styles.plansSlider}
                             style={{
-                                transform:
-                                    cardsVisible === 1
-                                        ? `translateX(-${currentSlide * 100}%)`
-                                        : cardsVisible === 2
-                                          ? `translateX(calc(-${currentSlide} * ((100% - 0.75rem) / 2 + 0.75rem)))`
-                                          : `translateX(calc(-${currentSlide} * ((100% - 2rem) / 3 + 1rem)))`,
+                                transform: getSliderTransform(),
                             }}
                         >
                             {renderPlansContent()}

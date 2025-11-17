@@ -38,11 +38,12 @@ export const useDoctorFormOptions = (): DoctorFormOptions => {
     const isDoctor = roles.some((role) => role.toUpperCase() === 'DOCTOR');
 
     // Determine hospitalId to use for filtering
-    const hospitalIdToFilter = isHospitalStaff
-        ? hospitalProfile?.id
-        : isDoctor && doctorProfile?.hospital?.id
-          ? doctorProfile.hospital.id
-          : null;
+    let hospitalIdToFilter: string | null = null;
+    if (isHospitalStaff) {
+        hospitalIdToFilter = hospitalProfile?.id || null;
+    } else if (isDoctor && doctorProfile?.hospital?.id) {
+        hospitalIdToFilter = doctorProfile.hospital.id;
+    }
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -89,8 +90,10 @@ export const useDoctorFormOptions = (): DoctorFormOptions => {
                               .filter(Boolean)
                         : [];
 
+                    const userRoleLabel = isHospitalStaff ? 'STAFF' : isDoctor ? 'DOCTOR' : 'OTHER';
+
                     console.log('🏥 Hospital Configuration:', {
-                        userRole: isHospitalStaff ? 'STAFF' : isDoctor ? 'DOCTOR' : 'OTHER',
+                        userRole: userRoleLabel,
                         hospitalId: hospitalIdToFilter,
                         specialtyIds,
                         serviceTypeIds,

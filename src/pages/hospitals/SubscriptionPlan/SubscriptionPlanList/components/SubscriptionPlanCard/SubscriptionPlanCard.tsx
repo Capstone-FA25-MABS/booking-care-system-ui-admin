@@ -39,6 +39,12 @@ const SubscriptionPlanCard = ({
     startDate,
     endDate,
 }: SubscriptionPlanCardProps) => {
+    const getBadgeClass = (type: string) => {
+        if (type === 'free') return styles.badgeFree;
+        if (type === 'discount') return styles.badgeDiscount;
+        return '';
+    };
+
     // Format date to display
     const formatDisplayDate = (dateString?: string): string => {
         if (!dateString) return '';
@@ -112,15 +118,7 @@ const SubscriptionPlanCard = ({
                     </div>
                 </div>
                 {topBadge && (
-                    <span
-                        className={`${styles.badge} ${
-                            topBadge.type === 'free'
-                                ? styles.badgeFree
-                                : topBadge.type === 'discount'
-                                  ? styles.badgeDiscount
-                                  : ''
-                        }`}
-                    >
+                    <span className={`${styles.badge} ${getBadgeClass(topBadge.type)}`}>
                         {topBadge.text}
                     </span>
                 )}

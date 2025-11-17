@@ -11,6 +11,24 @@ import {
 } from '@/hooks/useSubscriptionPlanFormValidation';
 import { selectCustomStyles } from '@/constants/select.styles';
 
+const BILLING_CYCLE_KEYS = ['MONTHLY', 'QUARTERLY', 'YEARLY'] as const;
+type BillingCycleKey = (typeof BILLING_CYCLE_KEYS)[number];
+
+const BILLING_CYCLE_LABELS: Record<BillingCycleKey, string> = {
+    MONTHLY: 'Hàng tháng',
+    QUARTERLY: 'Hàng quý',
+    YEARLY: 'Hàng năm',
+};
+
+const isBillingCycleKey = (value: string | undefined): value is BillingCycleKey => {
+    return !!value && BILLING_CYCLE_KEYS.includes(value as BillingCycleKey);
+};
+
+const BILLING_CYCLE_OPTIONS = BILLING_CYCLE_KEYS.map((value) => ({
+    value,
+    label: BILLING_CYCLE_LABELS[value],
+}));
+
 interface SubscriptionPlanFormFieldsProps {
     formData: SubscriptionPlanFormData;
     errors: SubscriptionPlanValidationErrors;
@@ -87,6 +105,19 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
         );
     }
 
+    const isAutoCycleAddMode = autoCreateAllCycles && !isEdit;
+    const priceFieldLabel = isAutoCycleAddMode ? 'Giá gói tháng (VNĐ)' : 'Giá (VNĐ)';
+    const priceFieldPlaceholder = isAutoCycleAddMode
+        ? 'Nhập giá gói theo tháng (hệ thống tự tính giá quý và năm)'
+        : 'Nhập giá gói dịch vụ';
+    const billingCycleValue = isBillingCycleKey(formData.billingCycle)
+        ? {
+              value: formData.billingCycle,
+              label: BILLING_CYCLE_LABELS[formData.billingCycle],
+          }
+        : null;
+    const limitFieldColumnClass = 'col-12 col-lg-6 col-xl-3';
+
     return (
         <form onSubmit={onSubmit}>
             {/* Basic Information Card */}
@@ -155,29 +186,21 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                     )}
 
                     <div className="row">
-                        <div className={autoCreateAllCycles && !isEdit ? 'col-md-12' : 'col-md-6'}>
+                        <div className={isAutoCycleAddMode ? 'col-md-12' : 'col-md-6'}>
                             <Input
                                 wrapperClassName="mb-3"
-                                label={
-                                    autoCreateAllCycles && !isEdit
-                                        ? 'Giá gói tháng (VNĐ)'
-                                        : 'Giá (VNĐ)'
-                                }
+                                label={priceFieldLabel}
                                 type="number"
                                 required
                                 name="price"
                                 value={formData.price}
                                 onChange={(e) => onPriceChange(e.target.value)}
-                                placeholder={
-                                    autoCreateAllCycles && !isEdit
-                                        ? 'Nhập giá gói theo tháng (hệ thống tự tính giá quý và năm)'
-                                        : 'Nhập giá gói dịch vụ'
-                                }
+                                placeholder={priceFieldPlaceholder}
                                 error={errors.price}
                                 min="0"
                                 step="1000"
                             />
-                            {autoCreateAllCycles && !isEdit && (
+                            {isAutoCycleAddMode && (
                                 <small className="text-muted">
                                     <i className="ti ti-info-circle me-1"></i> Giá gói Quý sẽ giảm
                                     10%, gói Năm sẽ giảm 20% so với giá tổng các tháng
@@ -193,28 +216,8 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 </label>
                                 <Select
                                     inputId="billingCycle"
-                                    options={[
-                                        { value: 'MONTHLY', label: 'Hàng tháng' },
-                                        { value: 'QUARTERLY', label: 'Hàng quý' },
-                                        { value: 'YEARLY', label: 'Hàng năm' },
-                                    ]}
-                                    value={
-                                        formData.billingCycle
-                                            ? (() => {
-                                                  const getBillingCycleLabel = () => {
-                                                      if (formData.billingCycle === 'MONTHLY')
-                                                          return 'Hàng tháng';
-                                                      if (formData.billingCycle === 'QUARTERLY')
-                                                          return 'Hàng quý';
-                                                      return 'Hàng năm';
-                                                  };
-                                                  return {
-                                                      value: formData.billingCycle,
-                                                      label: getBillingCycleLabel(),
-                                                  };
-                                              })()
-                                            : null
-                                    }
+                                    options={BILLING_CYCLE_OPTIONS}
+                                    value={billingCycleValue}
                                     onChange={(selectedOption) => {
                                         onBillingCycleChange(selectedOption?.value || '');
                                     }}
@@ -230,7 +233,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                             </div>
                         )}
 
-                        <div className="col-md-4">
+                        <div className={limitFieldColumnClass}>
                             <label htmlFor="maxDoctors" className="form-label">
                                 Số bác sĩ tối đa
                             </label>
@@ -268,7 +271,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 <div className="form-text text-danger">{errors.maxDoctors}</div>
                             )}
                         </div>
-                        <div className="col-md-4">
+                        <div className={limitFieldColumnClass}>
                             <label htmlFor="maxSpecialties" className="form-label">
                                 Số chuyên khoa tối đa
                             </label>
@@ -308,7 +311,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 <div className="form-text text-danger">{errors.maxSpecialties}</div>
                             )}
                         </div>
-                        <div className="col-md-4">
+                        <div className={limitFieldColumnClass}>
                             <label htmlFor="maxAppointments" className="form-label">
                                 Số lịch hẹn tối đa
                             </label>
@@ -350,7 +353,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                                 </div>
                             )}
                         </div>
-                        <div className="col-md-4">
+                        <div className={limitFieldColumnClass}>
                             <label htmlFor="maxServices" className="form-label">
                                 Số dịch vụ tối đa
                             </label>

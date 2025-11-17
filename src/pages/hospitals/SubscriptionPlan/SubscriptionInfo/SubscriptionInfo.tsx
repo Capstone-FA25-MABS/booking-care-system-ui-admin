@@ -84,17 +84,17 @@ const UsageProgressBar: React.FC<UsageProgressBarProps> = ({
             </div>
             {!isUnlimited && (
                 <div className={styles.progressBar}>
-                    <div
+                    <progress
                         className={styles.progressBarFill}
-                        role="progressbar"
-                        style={{
-                            width: `${Math.min(displayPercentage, 100)}%`,
-                            background: isExceeded ? '#ef4444' : '#2E37A4',
-                        }}
+                        value={Math.min(displayPercentage, 100)}
+                        max={100}
                         aria-valuenow={displayPercentage}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                    ></div>
+                        style={{
+                            accentColor: isExceeded ? '#ef4444' : '#2E37A4',
+                        }}
+                    />
                 </div>
             )}
             {isExceeded && (
@@ -150,7 +150,7 @@ const SubscriptionInfo: React.FC = () => {
     }, [hospitalId, loadHospitalSubscriptions, loadUsageData]);
 
     useEffect(() => {
-        if (hospitalSubscriptions && hospitalSubscriptions.length > 0) {
+        if ((hospitalSubscriptions?.length ?? 0) > 0) {
             // Find active subscription - sắp xếp để đảm bảo active luôn được ưu tiên
             const sorted = [...hospitalSubscriptions].sort((a, b) => {
                 const aIsActive =
@@ -169,11 +169,7 @@ const SubscriptionInfo: React.FC = () => {
                     (sub.status === 'TRIAL' && new Date(sub.endDate) > new Date())
             );
             setActiveSubscription(active || sorted[0]);
-        } else if (
-            hospitalSubscriptions &&
-            hospitalSubscriptions.length === 0 &&
-            !isLoadingSubscriptions
-        ) {
+        } else if ((hospitalSubscriptions?.length ?? 0) === 0 && !isLoadingSubscriptions) {
             // Chỉ set null khi đã load xong và không có subscription
             setActiveSubscription(null);
         }
@@ -184,13 +180,14 @@ const SubscriptionInfo: React.FC = () => {
             <div className={`content ${styles.subscriptionInfoPage}`}>
                 <div className={styles.contentWrapper}>
                     <div className={styles.loadingContainer}>
-                        <div
+                        <output
                             className="spinner-border text-primary"
-                            role="status"
+                            aria-live="polite"
+                            aria-busy="true"
                             style={{ width: '3rem', height: '3rem' }}
                         >
                             <span className="visually-hidden">Loading...</span>
-                        </div>
+                        </output>
                     </div>
                 </div>
             </div>
@@ -342,8 +339,7 @@ const SubscriptionInfo: React.FC = () => {
                             <div className={styles.subscriptionCard}>
                                 <div className={styles.cardHeader}>
                                     <h5>
-                                        <i className="ti ti-package me-2"></i>
-                                        Gói đăng ký hiện tại
+                                        <i className="ti ti-package me-2"></i> Gói đăng ký hiện tại
                                     </h5>
                                 </div>
                                 <div className={styles.cardBody}>
@@ -423,15 +419,24 @@ const SubscriptionInfo: React.FC = () => {
                                                                     (
                                                                         feature: any,
                                                                         index: number
-                                                                    ) => (
-                                                                        <li key={index}>
-                                                                            <i className="ti ti-check text-success me-2"></i>
-                                                                            <span>
-                                                                                {feature.text ||
-                                                                                    feature}
-                                                                            </span>
-                                                                        </li>
-                                                                    )
+                                                                    ) => {
+                                                                        const featureKey =
+                                                                            feature?.id ||
+                                                                            feature?.text ||
+                                                                            (typeof feature ===
+                                                                            'string'
+                                                                                ? feature
+                                                                                : `feature-${index}`);
+                                                                        return (
+                                                                            <li key={featureKey}>
+                                                                                <i className="ti ti-check text-success me-2"></i>
+                                                                                <span>
+                                                                                    {feature.text ||
+                                                                                        feature}
+                                                                                </span>
+                                                                            </li>
+                                                                        );
+                                                                    }
                                                                 )}
                                                             </ul>
                                                         </div>
@@ -448,8 +453,7 @@ const SubscriptionInfo: React.FC = () => {
                             <div className={styles.subscriptionCard}>
                                 <div className={styles.cardHeader}>
                                     <h5>
-                                        <i className="ti ti-package me-2"></i>
-                                        Gói đăng ký hiện tại
+                                        <i className="ti ti-package me-2"></i> Gói đăng ký hiện tại
                                     </h5>
                                 </div>
                                 <div className={styles.cardBody}>
@@ -475,7 +479,7 @@ const SubscriptionInfo: React.FC = () => {
                                 <h5>Sử dụng gói đăng ký</h5>
                             </div>
                             <div className={styles.cardBody}>
-                                {usageData && usageData.hasActiveSubscription ? (
+                                {usageData?.hasActiveSubscription ? (
                                     <>
                                         {/* Doctor Usage */}
                                         <UsageProgressBar
@@ -531,7 +535,7 @@ const SubscriptionInfo: React.FC = () => {
                 </div>
 
                 {/* Upgrade Information */}
-                {usageData && usageData.hasActiveSubscription && (
+                {usageData?.hasActiveSubscription && (
                     <div className={styles.upgradeCard}>
                         <div className={styles.cardBody}>
                             <p className={styles.upgradeText}>

@@ -143,15 +143,19 @@ const HospitalSpecialtiesManagement: React.FC = () => {
 
             // Check if adding these specialties would exceed the limit
             const newCount = currentCount + specialtiesToAdd.length;
+            const maxSpecialties = usageData?.maxSpecialties;
+            const hasLimitedSpecialties =
+                maxSpecialties !== null &&
+                maxSpecialties !== undefined &&
+                maxSpecialties !== Number.MAX_SAFE_INTEGER &&
+                maxSpecialties !== -1;
+
             if (
-                usageData &&
-                usageData.maxSpecialties !== null &&
-                usageData.maxSpecialties !== undefined &&
-                usageData.maxSpecialties !== Number.MAX_SAFE_INTEGER &&
-                usageData.maxSpecialties !== -1 &&
-                newCount > usageData.maxSpecialties
+                hasLimitedSpecialties &&
+                maxSpecialties !== undefined &&
+                newCount > maxSpecialties
             ) {
-                const displayMax = usageData.maxSpecialties.toString();
+                const displayMax = maxSpecialties.toString();
                 toast.error(
                     `Không thể thêm ${specialtiesToAdd.length} chuyên khoa. Giới hạn hiện tại: ${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
                 );

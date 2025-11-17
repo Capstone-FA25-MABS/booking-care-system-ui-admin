@@ -143,10 +143,10 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
         const savedStep = localStorage.getItem(STAFF_TOUR_CURRENT_STEP_KEY);
         const savedPageStep = localStorage.getItem(STAFF_TOUR_CURRENT_PAGE_STEP_KEY);
         if (savedStep !== null) {
-            currentStepRef.current = parseInt(savedStep, 10);
+            currentStepRef.current = Number.parseInt(savedStep, 10);
         }
         if (savedPageStep !== null) {
-            currentPageStepRef.current = parseInt(savedPageStep, 10);
+            currentPageStepRef.current = Number.parseInt(savedPageStep, 10);
         }
 
         // Wait for DOM to be ready and check if elements exist
@@ -166,8 +166,8 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
             if (firstElement && !isNavigatingRef.current && !userClosedRef.current) {
                 // If we have a saved state, resume from there
                 if (savedStep !== null && savedPageStep !== null) {
-                    const stepIdx = parseInt(savedStep, 10);
-                    const pageStepIdx = parseInt(savedPageStep, 10);
+                    const stepIdx = Number.parseInt(savedStep, 10);
+                    const pageStepIdx = Number.parseInt(savedPageStep, 10);
                     const step = tourSteps[stepIdx];
                     // Check if we're already on the correct page
                     if (step && location.pathname === step.path) {
@@ -599,7 +599,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 ],
                 onDestroyStarted: (_element: any, _step: any, options: any) => {
                     // Check if it's close button
-                    if (options && options.isCloseClick) {
+                    if (options?.isCloseClick) {
                         // User clicked close button - mark tour as completed and stop immediately
                         userClosedRef.current = true;
                         localStorage.setItem(STAFF_TOUR_USER_CLOSED_KEY, 'true');
@@ -617,19 +617,19 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                         return;
                     }
                     // Navigate to page if not already there (when clicking Next button)
-                    if (!userClosedRef.current) {
-                        if (location.pathname !== step.path) {
-                            navigate(step.path);
-                            setTimeout(() => {
-                                if (!userClosedRef.current) {
-                                    showPageGuide(stepIndex, 0);
-                                }
-                            }, 1000);
-                        } else {
+                    if (userClosedRef.current) {
+                        return;
+                    }
+
+                    if (location.pathname !== step.path) {
+                        navigate(step.path);
+                        setTimeout(() => {
                             if (!userClosedRef.current) {
                                 showPageGuide(stepIndex, 0);
                             }
-                        }
+                        }, 1000);
+                    } else if (!userClosedRef.current) {
+                        showPageGuide(stepIndex, 0);
                     }
                 },
                 onDestroyed: () => {
@@ -735,6 +735,24 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
         );
     };
 
+    const extractTextSelector = (selector: string) => {
+        const textSelectors = [':contains("', ':has-text("'];
+        for (const textSelector of textSelectors) {
+            const keywordIndex = selector.indexOf(textSelector);
+            if (keywordIndex === -1) continue;
+
+            const baseSelector = selector.slice(0, keywordIndex).trim();
+            const textStartIndex = keywordIndex + textSelector.length;
+            const closingIndex = selector.indexOf('")', textStartIndex);
+
+            if (closingIndex === -1) return null;
+
+            const text = selector.slice(textStartIndex, closingIndex);
+            return { baseSelector, text };
+        }
+        return null;
+    };
+
     // Helper function to find element using multiple selectors (including text-based)
     const findElement = (selectorString: string): HTMLElement | null => {
         // Split by comma to handle multiple selectors
@@ -743,12 +761,13 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
         for (const selector of selectors) {
             // Check if it's a text-based selector (contains :contains or :has-text)
             if (selector.includes(':contains(') || selector.includes(':has-text(')) {
-                // Extract base selector and text
-                const match = selector.match(/([\w[\]="\s*-]+):(?:contains|has-text)\("([^"]+)"\)/);
-                if (match) {
-                    const baseSelector = match[1].trim();
-                    const text = match[2];
-                    const found = findElementByText(baseSelector, text);
+                // Extract base selector and text without regex backtracking
+                const parsedSelector = extractTextSelector(selector);
+                if (parsedSelector) {
+                    const found = findElementByText(
+                        parsedSelector.baseSelector,
+                        parsedSelector.text
+                    );
                     if (found) return found;
                 }
             } else {
