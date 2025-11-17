@@ -387,13 +387,27 @@ const TagManager: React.FC<TagManagerProps> = ({
                             aria-label="Đóng hộp thoại"
                             type="button"
                         />
-                        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
-                            <div
-                                className="modal-dialog modal-dialog-centered"
-                                role="dialog"
-                                aria-modal="true"
-                                aria-labelledby="create-tag-modal-title"
-                            >
+                        <dialog
+                            open
+                            className="modal fade show d-block"
+                            aria-labelledby="create-tag-modal-title"
+                            aria-modal="true"
+                            style={{
+                                zIndex: 1050,
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                border: 'none',
+                                background: 'transparent',
+                                padding: 0,
+                                margin: 0,
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                            }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
                                 <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title" id="create-tag-modal-title">
@@ -568,7 +582,7 @@ const TagManager: React.FC<TagManagerProps> = ({
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </dialog>
                     </>,
                     document.body
                 )}
@@ -584,15 +598,28 @@ const TagManager: React.FC<TagManagerProps> = ({
                             aria-label="Đóng hộp thoại"
                             type="button"
                         />
-                        <div
+                        <dialog
+                            open
                             className="modal fade show d-block"
-                            role="dialog"
-                            aria-modal="true"
                             aria-labelledby="edit-tag-modal-title"
-                            style={{ zIndex: 1050 }}
+                            aria-modal="true"
+                            style={{
+                                zIndex: 1050,
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                border: 'none',
+                                background: 'transparent',
+                                padding: 0,
+                                margin: 0,
+                                maxWidth: 'none',
+                                maxHeight: 'none',
+                            }}
                         >
                             <div className="modal-dialog modal-dialog-centered">
-                                <div className="modal-content" role="document">
+                                <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title" id="edit-tag-modal-title">
                                             Chỉnh sửa nhãn
@@ -757,7 +784,7 @@ const TagManager: React.FC<TagManagerProps> = ({
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </dialog>
                     </>,
                     document.body
                 )}

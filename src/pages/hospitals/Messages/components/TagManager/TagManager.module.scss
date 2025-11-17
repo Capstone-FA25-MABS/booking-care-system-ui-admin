@@ -95,7 +95,7 @@
 
         .deleteBtn {
             border: none;
-            background: rgba(239, 68, 68, 0.1);
+            background-color: #fee2e2;
             color: #7f1d1d;
             padding: 0;
             cursor: pointer;
@@ -109,7 +109,7 @@
             backdrop-filter: blur(8px);
 
             &:hover:not(:disabled) {
-                background: rgba(239, 68, 68, 0.2);
+                background-color: #fecaca;
                 color: #7f1d1d;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
@@ -117,7 +117,7 @@
 
             &:active {
                 transform: scale(0.95);
-                background: rgba(220, 38, 38, 0.25);
+                background-color: #fca5a5;
                 color: #450a0a;
             }
 
@@ -134,7 +134,7 @@
 
         .editBtn {
             border: none;
-            background: rgba(59, 130, 246, 0.1);
+            background-color: #dbeafe;
             color: #1e3a8a;
             padding: 0;
             cursor: pointer;
@@ -148,7 +148,7 @@
             backdrop-filter: blur(8px);
 
             &:hover:not(:disabled) {
-                background: rgba(59, 130, 246, 0.2);
+                background-color: #bfdbfe;
                 color: #1e3a8a;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
@@ -156,7 +156,7 @@
 
             &:active {
                 transform: scale(0.95);
-                background: rgba(37, 99, 235, 0.25);
+                background-color: #93c5fd;
                 color: #172554;
             }
 
