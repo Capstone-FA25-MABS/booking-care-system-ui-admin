@@ -69,7 +69,7 @@
 
         .tagCount {
             font-size: 0.75rem;
-            color: #64748b;
+            color: #475569;
             background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             padding: 0.25rem 0.625rem;
             border-radius: 0.75rem;
@@ -96,7 +96,7 @@
         .deleteBtn {
             border: none;
             background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
+            color: #dc2626;
             padding: 0;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -110,7 +110,7 @@
 
             &:hover:not(:disabled) {
                 background: rgba(239, 68, 68, 0.15);
-                color: #dc2626;
+                color: #b91c1c;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
             }
@@ -134,7 +134,7 @@
         .editBtn {
             border: none;
             background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
+            color: #2563eb;
             padding: 0;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -148,7 +148,7 @@
 
             &:hover:not(:disabled) {
                 background: rgba(59, 130, 246, 0.15);
-                color: #2563eb;
+                color: #1d4ed8;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
             }

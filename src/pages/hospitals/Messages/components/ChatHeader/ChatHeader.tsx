@@ -170,14 +170,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                         margin: 0,
                         maxWidth: '300px',
                     }}
-                    onMouseDown={(e) => {
-                        // Prevent event from bubbling up to handleClickOutside
-                        e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                        // Prevent event from bubbling up
-                        e.stopPropagation();
-                    }}
                     onKeyDown={(e) => {
                         if (e.key === 'Escape') {
                             setShowTagManager(false);

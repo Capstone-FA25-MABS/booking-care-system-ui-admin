@@ -381,11 +381,17 @@ const TagManager: React.FC<TagManagerProps> = ({
                 ReactDOM.createPortal(
                     <div
                         className="modal fade show d-block"
+                        role="dialog"
                         tabIndex={-1}
                         style={{ zIndex: 1050 }}
                         onClick={(e) => {
                             // Close modal when clicking backdrop
                             if (e.target === e.currentTarget) {
+                                setShowCreateModal(false);
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
                                 setShowCreateModal(false);
                             }
                         }}
@@ -416,19 +422,18 @@ const TagManager: React.FC<TagManagerProps> = ({
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="create-tag-color" className="form-label">
-                                            Màu sắc
-                                        </label>
-                                        <div
+                                        <label className="form-label">Màu sắc</label>
+                                        <fieldset
                                             id="create-tag-color"
-                                            role="group"
                                             aria-label="Chọn màu sắc cho nhãn"
                                             style={{
                                                 display: 'grid',
                                                 gridTemplateColumns: 'repeat(5, 1fr)',
                                                 gap: '16px',
-                                                marginTop: '16px',
-                                                padding: '8px',
+                                                marginTop: '8px',
+                                                padding: 0,
+                                                border: 'none',
+                                                margin: 0,
                                             }}
                                         >
                                             {TAG_COLORS.map((color, index) => (
@@ -509,7 +514,7 @@ const TagManager: React.FC<TagManagerProps> = ({
                                                     )}
                                                 </button>
                                             ))}
-                                        </div>
+                                        </fieldset>
                                         <style>{`
                                             @keyframes pulse {
                                                 0%, 100% { transform: translate(-50%, -50%) scale(1); }
@@ -565,10 +570,16 @@ const TagManager: React.FC<TagManagerProps> = ({
                 ReactDOM.createPortal(
                     <div
                         className="modal fade show d-block"
+                        role="dialog"
                         tabIndex={-1}
                         style={{ zIndex: 1050 }}
                         onClick={(e) => {
                             if (e.target === e.currentTarget) {
+                                cancelEditTag();
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
                                 cancelEditTag();
                             }
                         }}
@@ -599,19 +610,18 @@ const TagManager: React.FC<TagManagerProps> = ({
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="edit-tag-color" className="form-label">
-                                            Màu sắc
-                                        </label>
-                                        <div
+                                        <label className="form-label">Màu sắc</label>
+                                        <fieldset
                                             id="edit-tag-color"
-                                            role="group"
                                             aria-label="Chọn màu sắc cho nhãn"
                                             style={{
                                                 display: 'grid',
                                                 gridTemplateColumns: 'repeat(5, 1fr)',
                                                 gap: '16px',
-                                                marginTop: '16px',
-                                                padding: '8px',
+                                                marginTop: '8px',
+                                                padding: 0,
+                                                border: 'none',
+                                                margin: 0,
                                             }}
                                         >
                                             {TAG_COLORS.map((color, index) => (
@@ -692,7 +702,7 @@ const TagManager: React.FC<TagManagerProps> = ({
                                                     )}
                                                 </button>
                                             ))}
-                                        </div>
+                                        </fieldset>
                                     </div>
                                     <div className="mb-3">
                                         <label htmlFor="edit-tag-type" className="form-label">
