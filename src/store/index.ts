@@ -23,6 +23,7 @@ import languageReducer from './slices/languageSlice';
 import specialtyReducer from './slices/specialtySlice';
 import serviceTypeReducer from './slices/serviceTypeSlice';
 import hospitalReducer from './slices/hospitalSlice';
+import notificationReducer from './slices/notificationSlice';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
     specialty: specialtyReducer,
     serviceType: serviceTypeReducer,
     hospital: hospitalReducer,
+    notification: notificationReducer,
 });
 
 // Redux persist configuration
@@ -43,7 +45,7 @@ const persistConfig: PersistConfig<RootState> = {
     key: 'booking-care-root',
     storage,
     whitelist: ['auth', 'user', 'ui'], // Only persist auth, user, and UI state
-    blacklist: ['discount'], // Don't persist these (fetch fresh on app load)
+    blacklist: ['discount', 'notification'], // Don't persist these (fetch fresh on app load)
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

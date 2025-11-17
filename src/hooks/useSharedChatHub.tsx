@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import * as signalR from '@microsoft/signalr';
 import { useChatHubConnection } from '@/contexts/ChatHubContext';
 import { SendMessageHub } from '@/types/communication.types';
 import { ChatHubCallbacks } from './useChatHub';
@@ -147,30 +148,49 @@ export const useSharedChatHub = (callbacks?: ChatHubCallbacks) => {
         // Cleanup - remove handlers on unmount
         return () => {
             console.log('[useSharedChatHub] 🧹 Removing event handlers');
-            connection.off('ReceiveMessage', receiveMessageHandler);
-            connection.off('MessageRead', messageReadHandler);
-            connection.off('AllMessagesRead', allMessagesReadHandler);
-            connection.off('MessageRecalled', messageRecalledHandler);
-            connection.off('UserStartedTyping', userStartedTypingHandler);
-            connection.off('UserStoppedTyping', userStoppedTypingHandler);
-            connection.off('UserOnline', userOnlineHandler);
-            connection.off('UserOffline', userOfflineHandler);
-            connection.off('OnlineUsers', onlineUsersHandler);
-            connection.off('JoinedConversation', joinedConversationHandler);
-            connection.off('LeftConversation', leftConversationHandler);
-            connection.off('ErrorMessage', errorHandler);
-            connection.off('Error', errorHandler);
-            connection.off('error', errorHandler);
-            // WebRTC Call events
-            connection.off('IncomingCall', incomingCallHandler);
-            connection.off('CallAccepted', callAcceptedHandler);
-            connection.off('CallDeclined', callDeclinedHandler);
-            connection.off('CallEnded', callEndedHandler);
-            connection.off('UserBusy', userBusyHandler);
-            connection.off('ReceiveOffer', receiveOfferHandler);
-            connection.off('ReceiveAnswer', receiveAnswerHandler);
-            connection.off('ReceiveIceCandidate', receiveIceCandidateHandler);
-            connection.off('CallLogUpdated', callLogUpdatedHandler);
+            // Check if connection still exists and is in a valid state before removing handlers
+            if (!connection) {
+                // Silently skip if connection is null (already cleaned up)
+                return;
+            }
+
+            try {
+                const state = connection.state;
+                // Only remove handlers if connection is in a stable state
+                if (
+                    state === signalR.HubConnectionState.Connected ||
+                    state === signalR.HubConnectionState.Disconnected
+                ) {
+                    connection.off('ReceiveMessage', receiveMessageHandler);
+                    connection.off('MessageRead', messageReadHandler);
+                    connection.off('AllMessagesRead', allMessagesReadHandler);
+                    connection.off('MessageRecalled', messageRecalledHandler);
+                    connection.off('UserStartedTyping', userStartedTypingHandler);
+                    connection.off('UserStoppedTyping', userStoppedTypingHandler);
+                    connection.off('UserOnline', userOnlineHandler);
+                    connection.off('UserOffline', userOfflineHandler);
+                    connection.off('OnlineUsers', onlineUsersHandler);
+                    connection.off('JoinedConversation', joinedConversationHandler);
+                    connection.off('LeftConversation', leftConversationHandler);
+                    connection.off('ErrorMessage', errorHandler);
+                    connection.off('Error', errorHandler);
+                    connection.off('error', errorHandler);
+                    // WebRTC Call events
+                    connection.off('IncomingCall', incomingCallHandler);
+                    connection.off('CallAccepted', callAcceptedHandler);
+                    connection.off('CallDeclined', callDeclinedHandler);
+                    connection.off('CallEnded', callEndedHandler);
+                    connection.off('UserBusy', userBusyHandler);
+                    connection.off('ReceiveOffer', receiveOfferHandler);
+                    connection.off('ReceiveAnswer', receiveAnswerHandler);
+                    connection.off('ReceiveIceCandidate', receiveIceCandidateHandler);
+                    connection.off('CallLogUpdated', callLogUpdatedHandler);
+                }
+                // Silently skip cleanup if connection is not in stable state (Connecting/Reconnecting)
+                // This is expected behavior during React Strict Mode double mount
+            } catch {
+                // Silently fail during cleanup - connection might already be disposed
+            }
         };
     }, [connection]);
 
