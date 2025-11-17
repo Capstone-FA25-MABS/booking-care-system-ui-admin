@@ -18,13 +18,6 @@ export const listGroupMenuItemHospital: MenuConfig = [
     {
         title: 'Hospital',
         items: [
-            createDoctorsMenuItem(),
-            createSimpleMenuItem(
-                'Quản lý tài khoản',
-                'ti ti-users-group',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
-            ),
-            createAppointmentsMenuItem('staff'),
             createSimpleMenuItem(
                 'Quản lí chuyên khoa',
                 'ti ti-stethoscope',
@@ -35,23 +28,30 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-medical-cross',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_TYPES.ROOT)
             ),
+            createDoctorsMenuItem(),
             createSimpleMenuItem(
                 'Quản lý dịch vụ bệnh viện',
                 'ti ti-building-hospital',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
             ),
             createSimpleMenuItem(
+                'Quản lí dịch vụ y tế',
+                'ti ti-briefcase',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
+            ),
+            createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem(
+                'Quản lý tài khoản',
+                'ti ti-users-group',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
+            ),
+            createHospitalSubscriptionPlansMenuItem(),
+            createMessagesMenuItem('staff'),
+            createSimpleMenuItem(
                 'Hoàn tiền',
                 'ti ti-receipt-refund',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
             ),
-            createSimpleMenuItem(
-                'Dịch vụ',
-                'ti ti-briefcase',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
-            ),
-            createHospitalSubscriptionPlansMenuItem(),
-            createMessagesMenuItem('staff'),
         ],
     },
     {
