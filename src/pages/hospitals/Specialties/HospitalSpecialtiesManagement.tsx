@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { AppDispatch } from '@/store';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
-import { updateHospitalProfile, fetchProfileByRole } from '@/store/slices/userSlice';
 import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { Specialty } from '@/types/specialty.types';
-import { Role } from '@/enums/common.enums';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
+import HospitalService from '@/services/hospital.service';
+import { useSubscription } from '@/hooks/useSubscription';
 import styles from './HospitalSpecialtiesManagement.module.scss';
 
 const HospitalSpecialtiesManagement: React.FC = () => {
-    const dispatch = useDispatch<AppDispatch>();
     const { profile, hospitalProfile } = useCurrentUserProfile();
     const hospitalId = hospitalProfile?.id || (profile as any)?.id;
+    const { checkSpecialtyLimit, usageData, loadUsageData } = useSubscription();
 
     // State
     const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([]);
     const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<string[]>([]);
+    const [initialSpecialtyIds, setInitialSpecialtyIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Load usage data on mount
+    useEffect(() => {
+        if (hospitalId) {
+            loadUsageData(hospitalId);
+        }
+    }, [hospitalId, loadUsageData]);
 
     // Load all specialties and current hospital specialties
     useEffect(() => {
@@ -55,15 +61,19 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                     setAllSpecialties(activeSpecialties);
                 }
 
-                // Load current hospital specialties
-                if (hospitalProfile?.specialties && hospitalProfile.specialties.length > 0) {
-                    const currentSpecialtyIds = hospitalProfile.specialties
-                        .map((s: any) => {
-                            // Handle both structures: { specialtyId: string } or { id: string }
-                            return s.specialtyId || s.id;
-                        })
-                        .filter(Boolean); // Remove any undefined/null values
-                    setSelectedSpecialtyIds(currentSpecialtyIds);
+                // Load current hospital specialties via lightweight endpoint
+                if (hospitalId) {
+                    const idsResponse = await HospitalService.getHospitalSpecialtyIds(hospitalId);
+                    const idsData = idsResponse.data as any;
+                    const ids: string[] = Array.isArray(idsData)
+                        ? idsData
+                              .map((x: any) =>
+                                  typeof x === 'string' ? x : x?.specialtyId || x?.id
+                              )
+                              .filter(Boolean)
+                        : [];
+                    setSelectedSpecialtyIds(ids);
+                    setInitialSpecialtyIds(ids);
                 }
             } catch (error: any) {
                 console.error('Error loading specialties:', error);
@@ -106,23 +116,64 @@ const HospitalSpecialtiesManagement: React.FC = () => {
             return;
         }
 
+        // Calculate how many specialties are being added
+        const specialtiesToAdd = selectedSpecialtyIds.filter(
+            (id) => !initialSpecialtyIds.includes(id)
+        );
+
+        // Check limit before saving if adding specialties
+        if (specialtiesToAdd.length > 0) {
+            const currentCount = usageData?.currentSpecialtyCount || initialSpecialtyIds.length;
+
+            // Check if we can add all new specialties
+            const canAdd = await checkSpecialtyLimit(hospitalId);
+            if (!canAdd) {
+                const maxCount = usageData?.maxSpecialties ?? Number.MAX_SAFE_INTEGER;
+                const isUnlimited =
+                    maxCount === null ||
+                    maxCount === undefined ||
+                    maxCount === -1 ||
+                    maxCount === Number.MAX_SAFE_INTEGER;
+                const displayMax = isUnlimited ? '∞' : maxCount.toString();
+                toast.error(
+                    `Bạn đã đạt giới hạn số lượng chuyên khoa cho phép trong gói đăng ký. Hiện tại: ${currentCount}/${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+
+            // Check if adding these specialties would exceed the limit
+            const newCount = currentCount + specialtiesToAdd.length;
+            const maxSpecialties = usageData?.maxSpecialties;
+            const hasLimitedSpecialties =
+                maxSpecialties !== null &&
+                maxSpecialties !== undefined &&
+                maxSpecialties !== Number.MAX_SAFE_INTEGER &&
+                maxSpecialties !== -1;
+
+            if (
+                hasLimitedSpecialties &&
+                maxSpecialties !== undefined &&
+                newCount > maxSpecialties
+            ) {
+                const displayMax = maxSpecialties.toString();
+                toast.error(
+                    `Không thể thêm ${specialtiesToAdd.length} chuyên khoa. Giới hạn hiện tại: ${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
-            // Include required fields from current hospital profile
-            await dispatch(
-                updateHospitalProfile({
-                    hospitalId,
-                    updateData: {
-                        name: hospitalProfile.name,
-                        address: hospitalProfile.address || '',
-                        description: hospitalProfile.description || '',
-                        specialtyIds: selectedSpecialtyIds,
-                    },
-                })
-            ).unwrap();
+            // Update only hospital specialties
+            await HospitalService.updateHospitalSpecialties(hospitalId, selectedSpecialtyIds);
+            // No need to refresh profile - update local state only for better performance
+            setInitialSpecialtyIds(selectedSpecialtyIds);
 
-            // Reload hospital profile to get updated data
-            await dispatch(fetchProfileByRole({ role: Role.STAFF }));
+            // Reload usage data to reflect changes
+            if (hospitalId) {
+                await loadUsageData(hospitalId);
+            }
 
             toast.success('Cập nhật chuyên khoa thành công!');
         } catch (error: any) {
@@ -136,12 +187,10 @@ const HospitalSpecialtiesManagement: React.FC = () => {
     };
 
     // Check if has changes
-    const currentSpecialtyIds =
-        hospitalProfile?.specialties?.map((s: any) => s.specialtyId || s.id).filter(Boolean) || [];
     const hasChanges =
-        selectedSpecialtyIds.length !== currentSpecialtyIds.length ||
-        selectedSpecialtyIds.some((id) => !currentSpecialtyIds.includes(id)) ||
-        currentSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
+        selectedSpecialtyIds.length !== initialSpecialtyIds.length ||
+        selectedSpecialtyIds.some((id) => !initialSpecialtyIds.includes(id)) ||
+        initialSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
 
     if (isLoading) {
         return (
@@ -171,7 +220,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                 <div
                     className={`d-flex align-items-center flex-wrap gap-3 mb-4 ${styles.searchBar}`}
                 >
-                    <div className={styles.searchInput}>
+                    <div className={styles.searchInput} data-tour-id="specialty-search-input">
                         <div className={styles.inputIconStart}>
                             <i className={`ti ti-search ${styles.inputIconAddon}`}></i>
                             <input
@@ -193,7 +242,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                 </div>
 
                 {/* Specialties grid */}
-                <div className={styles.specialtiesGrid}>
+                <div className={styles.specialtiesGrid} data-tour-id="specialty-grid">
                     {filteredSpecialties.length === 0 ? (
                         <div className="text-center py-5">
                             <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
@@ -215,6 +264,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                                     aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
                                     aria-pressed={isSelected}
                                     className={`${styles.specialtyCard} ${isSelected ? styles.selected : ''}`}
+                                    data-tour-id="specialty-card"
                                     onClick={() => handleSpecialtyToggle(specialty.id)}
                                     onKeyDown={handleKeyDown}
                                 >

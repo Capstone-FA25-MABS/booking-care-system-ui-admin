@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 import badgeCheck from '@/assets/img/icons/badge-check.svg';
 import styles from './AvatarUpload.module.scss';
 import { useDragAndDropFileUpload } from '@/hooks/useDragAndDropFileUpload';
@@ -17,6 +17,7 @@ interface AvatarUploadProps {
     className?: string;
     badgeIconSrc?: string;
     showBadge?: boolean;
+    wrapperProps?: HTMLAttributes<HTMLDivElement>;
 }
 
 /**
@@ -37,6 +38,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     className = '',
     badgeIconSrc = badgeCheck,
     showBadge = true,
+    wrapperProps,
 }) => {
     const {
         isDragOver,
@@ -106,7 +108,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     };
 
     return (
-        <div className={`col-md-3 mb-4 ${className}`}>
+        <div className={`col-md-3 mb-4 ${className}`} {...wrapperProps}>
             <div className="text-center">
                 <div className="position-relative d-inline-block">
                     <div

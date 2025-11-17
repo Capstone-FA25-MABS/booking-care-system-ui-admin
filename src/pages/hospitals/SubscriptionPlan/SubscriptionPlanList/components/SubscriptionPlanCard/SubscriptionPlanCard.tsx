@@ -39,6 +39,12 @@ const SubscriptionPlanCard = ({
     startDate,
     endDate,
 }: SubscriptionPlanCardProps) => {
+    const getBadgeClass = (type: string) => {
+        if (type === 'free') return styles.badgeFree;
+        if (type === 'discount') return styles.badgeDiscount;
+        return '';
+    };
+
     // Format date to display
     const formatDisplayDate = (dateString?: string): string => {
         if (!dateString) return '';
@@ -54,17 +60,32 @@ const SubscriptionPlanCard = ({
         }
     };
 
+    // Determine badge to show on top right
+    const getTopBadge = () => {
+        if (badge) return { text: badge, type: 'popular' };
+        if (originalPrice) return { text: 'Giảm giá', type: 'discount' };
+        if (price === '0 VNĐ') return { text: 'Miễn phí', type: 'free' };
+        return null;
+    };
+
+    const topBadge = getTopBadge();
+
     return (
         <div className={`${styles.card} ${highlighted ? styles.highlighted : styles.normal}`}>
             <div className={styles.header}>
                 <div className={styles.headerContent}>
                     <div className={styles.titleSection}>
-                        <p className={styles.title}>{title}</p>
+                        <span
+                            className={`${styles.titleBadge} badge rounded fw-bold badge-soft-info text-info`}
+                        >
+                            {title}
+                        </span>
                         <div className={styles.priceContainer}>
                             {originalPrice && (
                                 <div className={styles.originalPriceWrapper}>
                                     <span className={styles.originalPriceLabel}>Giá gốc:</span>
                                     <h2 className={styles.originalPrice}>{originalPrice}</h2>
+                                    <span className={styles.originalPriceBadge}>Tiết kiệm</span>
                                 </div>
                             )}
                             <h2 className={styles.price}>{price}</h2>
@@ -74,32 +95,33 @@ const SubscriptionPlanCard = ({
                         </div>
                         {(startDate || endDate) && (
                             <div className={styles.dateInfo}>
-                                <p className={styles.dateText}>
+                                <div className={styles.dateText}>
                                     {startDate && (
-                                        <>
-                                            <span className={styles.dateLabel}>Bắt đầu:</span>{' '}
+                                        <div>
+                                            <span className={styles.dateLabel}>Ngày bắt đầu:</span>{' '}
                                             <span className="fs-13 badge rounded fw-medium badge-soft-info text-info">
                                                 {formatDisplayDate(startDate)}
                                             </span>
-                                        </>
-                                    )}
-                                    {startDate && endDate && (
-                                        <span className={styles.dateSeparator}> • </span>
+                                        </div>
                                     )}
                                     {endDate && (
-                                        <>
-                                            <span className={styles.dateLabel}>Hết hạn:</span>{' '}
+                                        <div>
+                                            <span className={styles.dateLabel}>Ngày hết hạn:</span>{' '}
                                             <span className="fs-13 badge rounded fw-medium badge-soft-info text-info">
                                                 {formatDisplayDate(endDate)}
                                             </span>
-                                        </>
+                                        </div>
                                     )}
-                                </p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
-                {badge && <span className={styles.badge}>{badge}</span>}
+                {topBadge && (
+                    <span className={`${styles.badge} ${getBadgeClass(topBadge.type)}`}>
+                        {topBadge.text}
+                    </span>
+                )}
             </div>
 
             <Button

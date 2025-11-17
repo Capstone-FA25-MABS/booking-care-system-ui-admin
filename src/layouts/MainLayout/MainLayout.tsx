@@ -2,10 +2,14 @@ import { ReactNode, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import clsx from 'clsx';
 import type { MenuConfig } from '@/types/menu.types';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 import MainHeader from '../components/MainHeader';
 import Sidenav from '../components/Sidenav';
 import { useSidebarToggle } from '@/hooks/useSidebarToggle';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import { useStaffTour } from '@/hooks/useStaffTour';
 import styles from './MainLayout.module.scss';
 import { AppFooter } from '@/components/AppFooter';
 
@@ -18,9 +22,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, listGroupMenuItem }) 
     const sidebarRef = useRef<HTMLDivElement>(null);
     const sidebarOverlayRef = useRef<HTMLDivElement>(null);
     const mainWrapperRef = useRef<HTMLDivElement>(null);
+    const { role } = useCurrentUserProfile();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
     // Initialize sidebar toggle functionality
     useSidebarToggle();
+
+    // Initialize staff tour guide
+    useStaffTour(role, isAuthenticated);
 
     const toggleSidebarExpand = (expand: boolean) => {
         sidebarRef.current?.classList.toggle('expand-menu', expand);

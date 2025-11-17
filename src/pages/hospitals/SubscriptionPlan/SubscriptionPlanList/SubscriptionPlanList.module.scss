@@ -18,7 +18,8 @@
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
+    width: 100%;
 }
 
 .header {
@@ -80,18 +81,65 @@
     color: #ff6b35;
 }
 
-.plansContainer {
+.plansContainerWrapper {
+    position: relative;
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
+}
+
+.plansContainer {
+    overflow: hidden;
+    flex: 1;
+    width: 100%;
+}
+
+.plansSlider {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 2rem) / 3);
+    gap: 1rem;
+    transition: transform 0.3s ease-in-out;
 }
 
 .planColumn {
-    flex: 1;
-    min-width: 300px;
-    max-width: 400px;
+    min-width: 0;
+    width: 100%;
+}
+
+.carouselButton {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    color: #2e37a4;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:hover:not(:disabled) {
+        background-color: #2e37a4;
+        color: white;
+        border-color: #2e37a4;
+        box-shadow: 0 4px 12px rgba(46, 55, 164, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
 }
 
 .backButton {
@@ -304,19 +352,147 @@
     font-size: 0.8125rem;
 }
 
-@media (max-width: 768px) {
-    .plansContainer {
-        flex-direction: column;
-        align-items: center;
+@media (max-width: 1400px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .container {
+        max-width: 1000px;
     }
 
-    .planColumn {
-        width: 100%;
-        max-width: 100%;
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: calc((100% - 0.75rem) / 2);
+        gap: 0.75rem;
+    }
+
+    .carouselButton {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
     }
 
     .title {
-        font-size: 2rem;
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        max-width: 800px;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: calc((100% - 0.75rem) / 2);
+        gap: 0.75rem;
+    }
+
+    .carouselButton {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    .title {
+        font-size: 2.25rem;
+    }
+
+    .billingToggle {
+        max-width: 100%;
+    }
+
+    .billingButton {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    .savingsText {
+        font-size: 0.65rem;
+        margin-left: 0.35rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        max-width: 600px;
+        padding: 0 0.75rem;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: 100%;
+        gap: 0;
+    }
+
+    .planColumn {
+        min-width: 0;
+    }
+
+    .carouselButton {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .title {
+        font-size: 1.85rem;
+    }
+
+    .subtitle,
+    .subtitleSecond {
+        font-size: 0.875rem;
+    }
+
+    .billingToggle {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        padding: 0.25rem;
+        gap: 0.25rem;
+        border-radius: 12px;
+    }
+
+    .billingButton {
+        width: 100%;
+        text-align: center;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 10px;
+    }
+
+    .savingsText {
+        display: inline;
+        margin-left: 0.5rem;
+        font-size: 0.7rem;
     }
 
     .termsContent {
@@ -326,5 +502,64 @@
 
     .termHeading {
         font-size: 0.9375rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+
+    .title {
+        font-size: 1.65rem;
+    }
+
+    .subtitle,
+    .subtitleSecond {
+        font-size: 0.8rem;
+    }
+
+    .billingToggle {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        padding: 0.25rem;
+        gap: 0.25rem;
+        border-radius: 12px;
+    }
+
+    .billingButton {
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 10px;
+    }
+
+    .savingsText {
+        display: inline;
+        margin-left: 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.25rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: 100%;
+        gap: 0;
+    }
+
+    .carouselButton {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 }

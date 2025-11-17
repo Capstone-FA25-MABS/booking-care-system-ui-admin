@@ -22,6 +22,7 @@ import positionReducer from './slices/positionSlice';
 import languageReducer from './slices/languageSlice';
 import specialtyReducer from './slices/specialtySlice';
 import serviceTypeReducer from './slices/serviceTypeSlice';
+import hospitalReducer from './slices/hospitalSlice';
 import notificationReducer from './slices/notificationSlice';
 
 // Root reducer
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
     language: languageReducer,
     specialty: specialtyReducer,
     serviceType: serviceTypeReducer,
+    hospital: hospitalReducer,
     notification: notificationReducer,
 });
 

@@ -3,7 +3,7 @@ import { CustomPlansConfig } from '@/hooks/useSubscriptionPlanFormValidation';
 
 interface PreviewLimitInputProps {
     label: string;
-    type: 'doctors' | 'specialties' | 'appointments';
+    type: 'doctors' | 'specialties' | 'appointments' | 'services';
     billingCycle: 'QUARTERLY' | 'YEARLY';
     value: string;
     unlimited: boolean;
@@ -24,12 +24,14 @@ const PreviewLimitInput: React.FC<PreviewLimitInputProps> = ({
     const getMaxFieldName = () => {
         if (type === 'doctors') return 'maxDoctors';
         if (type === 'specialties') return 'maxSpecialties';
-        return 'maxAppointments';
+        if (type === 'appointments') return 'maxAppointments';
+        return 'maxServices';
     };
     const getUnlimitedFieldName = () => {
         if (type === 'doctors') return 'unlimitedDoctors';
         if (type === 'specialties') return 'unlimitedSpecialties';
-        return 'unlimitedAppointments';
+        if (type === 'appointments') return 'unlimitedAppointments';
+        return 'unlimitedServices';
     };
     const maxFieldName = getMaxFieldName();
     const unlimitedFieldName = getUnlimitedFieldName();

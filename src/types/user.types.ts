@@ -1,6 +1,7 @@
 // src/types/user.types.ts
 
 import { Gender, Status } from '../enums/common.enums';
+import { DoctorByIdResponse } from './doctor.types';
 
 // ========== ADMIN PROFILE (from User Service) ==========
 export interface AdminProfile {
@@ -19,26 +20,8 @@ export interface AdminProfile {
 }
 
 // ========== DOCTOR PROFILE (from Doctor Service) ==========
-export interface DoctorProfile {
-    id: string;
-    accountId: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone?: string;
-    gender?: Gender;
-    dateOfBirth?: string;
-    avatarUrl?: string;
-    hospitalId?: string;
-    specialtyId?: string;
-    positionId?: string;
-    yearsOfExperience?: number;
-    consultationFee?: number;
-    biography?: string;
-    status?: Status;
-    createdAt: string;
-    updatedAt: string;
-}
+// Use DoctorByIdResponse as DoctorProfile (returned from /doctors/profile endpoint)
+export type DoctorProfile = DoctorByIdResponse;
 
 // ========== HOSPITAL PROFILE (from Hospital Service) ==========
 export interface HospitalProfile {

@@ -41,11 +41,26 @@ const MenuItem: React.FC<MenuItemProps> = ({
         }
     };
 
+    // Generate data attribute for tour guide
+    const getDataTourId = () => {
+        // Normalize label: convert to lowercase, trim, replace spaces with hyphens
+        // Keep Vietnamese characters and alphanumeric characters
+        const normalizedLabel = label
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(
+                /[^\w\-àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/gi,
+                ''
+            );
+        return `menu-item-${normalizedLabel}`;
+    };
+
     // Render different structure based on whether item has subItems
     if (showArrow) {
         // Item with submenu
         return (
-            <li className={clsx('submenu', isOpen && 'subdrop')}>
+            <li className={clsx('submenu', isOpen && 'subdrop')} data-tour-id={getDataTourId()}>
                 <a
                     href="#"
                     onClick={handleClick}
@@ -77,7 +92,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     // Item without submenu (use regular link if no valid route)
     if (!link || link === '#') {
         return (
-            <li>
+            <li data-tour-id={getDataTourId()}>
                 <a href="#" onClick={(e) => e.preventDefault()}>
                     <i className={iconClassName}></i>
                     <span>{label}</span>
@@ -87,7 +102,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     }
 
     return (
-        <li>
+        <li data-tour-id={getDataTourId()}>
             <NavLink to={link} end className={({ isActive }) => (isActive ? 'active' : '')}>
                 <i className={iconClassName}></i>
                 <span>{label}</span>
