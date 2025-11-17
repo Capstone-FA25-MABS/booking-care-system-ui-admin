@@ -985,10 +985,13 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
 
                                         // User clicked "Bỏ qua" button, move to next page step
                                         driverObj.destroy();
+                                        const moveToNextPageStep = () =>
+                                            showPageGuide(stepIndex, pageStepIndex + 1);
+                                        const shouldProceed = () => !wasClosedByUser;
                                         scheduleActionIfTourActive(
-                                            () => showPageGuide(stepIndex, pageStepIndex + 1),
+                                            moveToNextPageStep,
                                             300,
-                                            () => !wasClosedByUser
+                                            shouldProceed
                                         );
                                     },
                                 },
@@ -1048,10 +1051,8 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                     );
 
                     // Automatically move to next step after a short delay
-                    scheduleActionIfTourActive(
-                        () => showPageGuide(stepIndex, pageStepIndex + 1),
-                        500
-                    );
+                    const skipToNextStep = () => showPageGuide(stepIndex, pageStepIndex + 1);
+                    scheduleActionIfTourActive(skipToNextStep, 500);
                 }
             };
 
@@ -1139,10 +1140,8 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
 
                                         isNavigatingRef.current = true;
                                         driverObj.destroy();
-                                        scheduleActionIfTourActive(
-                                            () => navigateToStep(stepIndex + 1),
-                                            300
-                                        );
+                                        const goToNextStep = () => navigateToStep(stepIndex + 1);
+                                        scheduleActionIfTourActive(goToNextStep, 300);
                                     },
                                 },
                             },
