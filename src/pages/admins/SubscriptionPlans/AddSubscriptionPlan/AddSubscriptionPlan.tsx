@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import SubscriptionPlanFormFields from '../components/SubscriptionPlanFormFields';
-import PreviewLimitInput from '../components/PreviewLimitInput';
+import CustomPlanLimitsSection from '../components/CustomPlanLimitsSection';
+import PlanFeaturesPreview from '../components/PlanFeaturesPreview';
 import FeaturesInput from '@/components/FormComponents/FeaturesInput';
 import {
     useSubscriptionPlanFormValidation,
@@ -19,22 +20,12 @@ import {
 const DISCOUNT_QUARTER = 0.1;
 const DISCOUNT_YEAR = 0.2;
 
-// Helper function to safely parse JSON
-
-const safeParseJSON = (jsonString: string): any[] | null => {
-    try {
-        const parsed = JSON.parse(jsonString);
-        return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
-    } catch {
-        return null;
-    }
-};
-
 const AddSubscriptionPlan: React.FC = () => {
     const navigate = useNavigate();
     const [isUnlimitedDoctors, setIsUnlimitedDoctors] = useState(false);
     const [isUnlimitedSpecialties, setIsUnlimitedSpecialties] = useState(false);
     const [isUnlimitedAppointments, setIsUnlimitedAppointments] = useState(false);
+    const [isUnlimitedServices, setIsUnlimitedServices] = useState(false);
     const [autoCreateAllCycles, setAutoCreateAllCycles] = useState(true); // Mặc định tạo 3 gói
 
     const {
@@ -49,6 +40,7 @@ const AddSubscriptionPlan: React.FC = () => {
         handleMaxDoctorsChange,
         handleMaxSpecialtiesChange,
         handleMaxAppointmentsChange,
+        handleMaxServicesChange,
         handleFeaturesChange,
         handleStatusChange,
         resetForm,
@@ -78,9 +70,11 @@ const AddSubscriptionPlan: React.FC = () => {
                 maxDoctors: formData.maxDoctors,
                 maxSpecialties: formData.maxSpecialties,
                 maxAppointments: formData.maxAppointments,
+                maxServices: formData.maxServices,
                 unlimitedDoctors: isUnlimitedDoctors,
                 unlimitedSpecialties: isUnlimitedSpecialties,
                 unlimitedAppointments: isUnlimitedAppointments,
+                unlimitedServices: isUnlimitedServices,
                 features: formData.features,
                 status: formData.status,
             },
@@ -96,12 +90,15 @@ const AddSubscriptionPlan: React.FC = () => {
                     customPlansConfig.quarterly?.maxSpecialties || formData.maxSpecialties,
                 maxAppointments:
                     customPlansConfig.quarterly?.maxAppointments || formData.maxAppointments,
+                maxServices: customPlansConfig.quarterly?.maxServices || formData.maxServices,
                 unlimitedDoctors:
                     customPlansConfig.quarterly?.unlimitedDoctors ?? isUnlimitedDoctors,
                 unlimitedSpecialties:
                     customPlansConfig.quarterly?.unlimitedSpecialties ?? isUnlimitedSpecialties,
                 unlimitedAppointments:
                     customPlansConfig.quarterly?.unlimitedAppointments ?? isUnlimitedAppointments,
+                unlimitedServices:
+                    customPlansConfig.quarterly?.unlimitedServices ?? isUnlimitedServices,
                 features: customPlansConfig.quarterly?.features || formData.features,
                 status: customPlansConfig.quarterly?.status || formData.status,
             },
@@ -116,11 +113,14 @@ const AddSubscriptionPlan: React.FC = () => {
                 maxSpecialties: customPlansConfig.yearly?.maxSpecialties || formData.maxSpecialties,
                 maxAppointments:
                     customPlansConfig.yearly?.maxAppointments || formData.maxAppointments,
+                maxServices: customPlansConfig.yearly?.maxServices || formData.maxServices,
                 unlimitedDoctors: customPlansConfig.yearly?.unlimitedDoctors ?? isUnlimitedDoctors,
                 unlimitedSpecialties:
                     customPlansConfig.yearly?.unlimitedSpecialties ?? isUnlimitedSpecialties,
                 unlimitedAppointments:
                     customPlansConfig.yearly?.unlimitedAppointments ?? isUnlimitedAppointments,
+                unlimitedServices:
+                    customPlansConfig.yearly?.unlimitedServices ?? isUnlimitedServices,
                 features: customPlansConfig.yearly?.features || formData.features,
                 status: customPlansConfig.yearly?.status || formData.status,
             },
@@ -131,12 +131,14 @@ const AddSubscriptionPlan: React.FC = () => {
         formData.maxDoctors,
         formData.maxSpecialties,
         formData.maxAppointments,
+        formData.maxServices,
         formData.features,
         formData.status,
         autoCreateAllCycles,
         isUnlimitedDoctors,
         isUnlimitedSpecialties,
         isUnlimitedAppointments,
+        isUnlimitedServices,
         customPlansConfig,
     ]);
 
@@ -149,6 +151,7 @@ const AddSubscriptionPlan: React.FC = () => {
             isUnlimitedDoctors,
             isUnlimitedSpecialties,
             isUnlimitedAppointments,
+            isUnlimitedServices,
             !autoCreateAllCycles
         );
 
@@ -179,6 +182,7 @@ const AddSubscriptionPlan: React.FC = () => {
                             formData.maxAppointments,
                             isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(formData.maxServices, isUnlimitedServices),
                         features: formData.features || undefined,
                         status: formData.status,
                     },
@@ -202,6 +206,10 @@ const AddSubscriptionPlan: React.FC = () => {
                             customPlansConfig.quarterly?.unlimitedAppointments ??
                                 isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(
+                            customPlansConfig.quarterly?.maxServices || formData.maxServices,
+                            customPlansConfig.quarterly?.unlimitedServices ?? isUnlimitedServices
+                        ),
                         features:
                             customPlansConfig.quarterly?.features || formData.features || undefined,
                         status: customPlansConfig.quarterly?.status || formData.status,
@@ -224,6 +232,10 @@ const AddSubscriptionPlan: React.FC = () => {
                             customPlansConfig.yearly?.unlimitedAppointments ??
                                 isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(
+                            customPlansConfig.yearly?.maxServices || formData.maxServices,
+                            customPlansConfig.yearly?.unlimitedServices ?? isUnlimitedServices
+                        ),
                         features:
                             customPlansConfig.yearly?.features || formData.features || undefined,
                         status: customPlansConfig.yearly?.status || formData.status,
@@ -243,6 +255,7 @@ const AddSubscriptionPlan: React.FC = () => {
                             formData.maxAppointments,
                             isUnlimitedAppointments
                         ),
+                        maxServices: parseLimit(formData.maxServices, isUnlimitedServices),
                         features: formData.features || undefined,
                         status: formData.status,
                     },
@@ -307,6 +320,7 @@ const AddSubscriptionPlan: React.FC = () => {
                         onMaxDoctorsChange={handleMaxDoctorsChange}
                         onMaxSpecialtiesChange={handleMaxSpecialtiesChange}
                         onMaxAppointmentsChange={handleMaxAppointmentsChange}
+                        onMaxServicesChange={handleMaxServicesChange}
                         onFeaturesChange={handleFeaturesChange}
                         onStatusChange={handleStatusChange}
                         onSubmit={handleSubmit}
@@ -317,9 +331,11 @@ const AddSubscriptionPlan: React.FC = () => {
                         isUnlimitedDoctors={isUnlimitedDoctors}
                         isUnlimitedSpecialties={isUnlimitedSpecialties}
                         isUnlimitedAppointments={isUnlimitedAppointments}
+                        isUnlimitedServices={isUnlimitedServices}
                         onToggleUnlimitedDoctors={setIsUnlimitedDoctors}
                         onToggleUnlimitedSpecialties={setIsUnlimitedSpecialties}
                         onToggleUnlimitedAppointments={setIsUnlimitedAppointments}
+                        onToggleUnlimitedServices={setIsUnlimitedServices}
                         // Auto create all cycles option
                         autoCreateAllCycles={autoCreateAllCycles}
                         onToggleAutoCreateAllCycles={setAutoCreateAllCycles}
@@ -372,172 +388,28 @@ const AddSubscriptionPlan: React.FC = () => {
 
                                             {/* Cột 2: Tính năng hiện tại */}
                                             <div className="col-md-4">
-                                                {preview.features &&
-                                                    (() => {
-                                                        const parsedFeatures = safeParseJSON(
-                                                            preview.features
-                                                        );
-
-                                                        if (
-                                                            parsedFeatures &&
-                                                            parsedFeatures.length > 0
-                                                        ) {
-                                                            return (
-                                                                <div>
-                                                                    <h6 className="fw-bold mb-2">
-                                                                        <i className="ti ti-star text-warning me-1"></i>{' '}
-                                                                        Tính năng:
-                                                                    </h6>
-                                                                    <ul className="mb-0 ps-3">
-                                                                        {parsedFeatures.map(
-                                                                            (
-                                                                                feature: any,
-                                                                                idx: number
-                                                                            ) => (
-                                                                                <li
-                                                                                    key={`feature-${idx}-${feature.text}`}
-                                                                                    className="text-muted mb-1"
-                                                                                >
-                                                                                    {feature.text}
-                                                                                </li>
-                                                                            )
-                                                                        )}
-                                                                    </ul>
-                                                                </div>
-                                                            );
+                                                {preview.features && (
+                                                    <PlanFeaturesPreview
+                                                        features={preview.features}
+                                                        title={
+                                                            <>
+                                                                <i className="ti ti-star text-warning me-1"></i>{' '}
+                                                                Tính năng:
+                                                            </>
                                                         }
-                                                        return (
+                                                        emptyState={
                                                             <div className="text-muted small">
                                                                 <i className="ti ti-arrow-up me-1"></i>{' '}
                                                                 Tính năng từ form trên
                                                             </div>
-                                                        );
-                                                    })()}
+                                                        }
+                                                    />
+                                                )}
                                             </div>
 
                                             {/* Cột 3: Giới hạn (cho gói Quý và Năm) hoặc thông tin cho gói Tháng */}
                                             <div className="col-md-4">
-                                                {index > 0 ? (
-                                                    <div>
-                                                        <h6 className="fw-bold mb-2">
-                                                            <i className="ti ti-settings text-info me-1"></i>{' '}
-                                                            Tùy chỉnh giới hạn:
-                                                        </h6>
-                                                        <div className="small">
-                                                            {/* Bác sĩ */}
-                                                            <PreviewLimitInput
-                                                                label="Bác sĩ"
-                                                                type="doctors"
-                                                                billingCycle={
-                                                                    preview.billingCycle as
-                                                                        | 'QUARTERLY'
-                                                                        | 'YEARLY'
-                                                                }
-                                                                value={preview.maxDoctors}
-                                                                unlimited={preview.unlimitedDoctors}
-                                                                placeholder={
-                                                                    formData.maxDoctors || '10'
-                                                                }
-                                                                setCustomPlansConfig={
-                                                                    setCustomPlansConfig
-                                                                }
-                                                            />
-
-                                                            {/* Chuyên khoa */}
-                                                            <PreviewLimitInput
-                                                                label="Chuyên khoa"
-                                                                type="specialties"
-                                                                billingCycle={
-                                                                    preview.billingCycle as
-                                                                        | 'QUARTERLY'
-                                                                        | 'YEARLY'
-                                                                }
-                                                                value={preview.maxSpecialties}
-                                                                unlimited={
-                                                                    preview.unlimitedSpecialties
-                                                                }
-                                                                placeholder={
-                                                                    formData.maxSpecialties || '5'
-                                                                }
-                                                                setCustomPlansConfig={
-                                                                    setCustomPlansConfig
-                                                                }
-                                                            />
-
-                                                            {/* Lịch hẹn */}
-                                                            <PreviewLimitInput
-                                                                label="Lịch hẹn"
-                                                                type="appointments"
-                                                                billingCycle={
-                                                                    preview.billingCycle as
-                                                                        | 'QUARTERLY'
-                                                                        | 'YEARLY'
-                                                                }
-                                                                value={preview.maxAppointments}
-                                                                unlimited={
-                                                                    preview.unlimitedAppointments
-                                                                }
-                                                                placeholder={
-                                                                    formData.maxAppointments ||
-                                                                    '100'
-                                                                }
-                                                                setCustomPlansConfig={
-                                                                    setCustomPlansConfig
-                                                                }
-                                                            />
-
-                                                            <small className="text-muted">
-                                                                <i className="ti ti-check me-1"></i>{' '}
-                                                                = Không giới hạn
-                                                            </small>
-
-                                                            {/* Status dropdown cho gói Quý và Năm */}
-                                                            <div className="mt-3">
-                                                                <label
-                                                                    htmlFor={`status-${preview.billingCycle}-${index}`}
-                                                                    className="form-label small mb-1"
-                                                                >
-                                                                    Trạng thái:
-                                                                </label>
-                                                                <select
-                                                                    id={`status-${preview.billingCycle}-${index}`}
-                                                                    className="form-select form-select-sm"
-                                                                    value={
-                                                                        preview.status || 'ACTIVE'
-                                                                    }
-                                                                    onChange={(e) => {
-                                                                        const key =
-                                                                            preview.billingCycle ===
-                                                                            'QUARTERLY'
-                                                                                ? 'quarterly'
-                                                                                : 'yearly';
-                                                                        setCustomPlansConfig(
-                                                                            (prev) => ({
-                                                                                ...prev,
-                                                                                [key]: {
-                                                                                    ...prev[
-                                                                                        key as keyof typeof prev
-                                                                                    ],
-                                                                                    status: e.target
-                                                                                        .value as
-                                                                                        | 'ACTIVE'
-                                                                                        | 'INACTIVE',
-                                                                                },
-                                                                            })
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <option value="ACTIVE">
-                                                                        Active
-                                                                    </option>
-                                                                    <option value="INACTIVE">
-                                                                        Inactive
-                                                                    </option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
+                                                {preview.billingCycle === 'MONTHLY' ? (
                                                     <div className="text-muted small">
                                                         <i className="ti ti-arrow-up me-1"></i>
                                                         <strong>Gói tháng sử dụng:</strong>
@@ -546,6 +418,60 @@ const AddSubscriptionPlan: React.FC = () => {
                                                             <li>Tính năng từ form trên</li>
                                                         </ul>
                                                     </div>
+                                                ) : (
+                                                    (() => {
+                                                        const billingCycle: 'QUARTERLY' | 'YEARLY' =
+                                                            preview.billingCycle === 'QUARTERLY'
+                                                                ? 'QUARTERLY'
+                                                                : 'YEARLY';
+                                                        const limitPreview = {
+                                                            billingCycle,
+                                                            maxDoctors: preview.maxDoctors,
+                                                            maxSpecialties: preview.maxSpecialties,
+                                                            maxAppointments:
+                                                                preview.maxAppointments,
+                                                            maxServices: preview.maxServices,
+                                                            unlimitedDoctors:
+                                                                preview.unlimitedDoctors,
+                                                            unlimitedSpecialties:
+                                                                preview.unlimitedSpecialties,
+                                                            unlimitedAppointments:
+                                                                preview.unlimitedAppointments,
+                                                            unlimitedServices:
+                                                                preview.unlimitedServices,
+                                                            status: preview.status,
+                                                        };
+
+                                                        return (
+                                                            <CustomPlanLimitsSection
+                                                                title={
+                                                                    <>
+                                                                        <i className="ti ti-settings text-info me-1"></i>{' '}
+                                                                        Tùy chỉnh giới hạn:
+                                                                    </>
+                                                                }
+                                                                preview={limitPreview}
+                                                                configKey={
+                                                                    billingCycle === 'QUARTERLY'
+                                                                        ? 'quarterly'
+                                                                        : 'yearly'
+                                                                }
+                                                                placeholders={{
+                                                                    maxDoctors: formData.maxDoctors,
+                                                                    maxSpecialties:
+                                                                        formData.maxSpecialties,
+                                                                    maxAppointments:
+                                                                        formData.maxAppointments,
+                                                                    maxServices:
+                                                                        formData.maxServices,
+                                                                }}
+                                                                selectId={`status-${preview.billingCycle}-${index}`}
+                                                                setCustomPlansConfig={
+                                                                    setCustomPlansConfig
+                                                                }
+                                                            />
+                                                        );
+                                                    })()
                                                 )}
                                             </div>
                                         </div>

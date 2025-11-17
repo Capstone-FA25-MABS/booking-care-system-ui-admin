@@ -1,0 +1,647 @@
+// Page container with background
+.subscriptionInfoPage {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+
+    // Subtle pattern overlay
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(46, 55, 164, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(46, 55, 164, 0.03) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    // Ensure content is above background
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.contentWrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 1;
+}
+
+.headerSection {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+
+    h4 {
+        color: #212529;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    p {
+        color: #6b7280;
+        font-size: 0.9375rem;
+        margin-top: 0.5rem;
+    }
+}
+
+.subscriptionCard {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    height: 100%;
+    transition: all 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: #2e37a4;
+    }
+}
+
+.cardHeader {
+    background: #fafbfc;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.25rem 1.5rem;
+
+    h5 {
+        color: #212529;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.infoItem {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    small {
+        color: #6b7280;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 0.5rem;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    h4,
+    h5 {
+        color: #212529;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.125rem;
+    }
+
+    p {
+        color: #4b5563;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    // Highlight important items
+    &:has(h4),
+    &:has(h5[style*='color: #2E37A4']) {
+        small {
+            font-weight: 600;
+            color: #4b5563;
+        }
+    }
+}
+
+.badgeCustom {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-block;
+}
+
+.featuresList {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+
+    li {
+        padding: 0.25rem 0;
+        font-size: 0.875rem;
+        color: #4b5563;
+        display: flex;
+        align-items: flex-start;
+        line-height: 1.5;
+
+        i {
+            margin-top: 0.125rem;
+            flex-shrink: 0;
+        }
+
+        span {
+            flex: 1;
+        }
+    }
+}
+
+.upgradeButton {
+    background: #2e37a4;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+        background: #1e2a8a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(46, 55, 164, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.upgradeButtonOutline {
+    background: transparent;
+    border: 2px solid #2e37a4;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: #2e37a4;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+        background: #2e37a4;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(46, 55, 164, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.dateRow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.usageCard {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: #2e37a4;
+    }
+}
+
+.usageHeader {
+    background: #fafbfc;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.25rem 1.5rem;
+
+    h5 {
+        color: #212529;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+    }
+}
+
+.progressBarContainer {
+    position: relative;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    // Normal state - màu xanh nhạt
+    &.normal {
+        background: #f0fdf4;
+        border-left: 3px solid #10b981;
+
+        &:hover {
+            background: #dcfce7;
+        }
+    }
+
+    // Warning state - màu vàng nhạt (>= 90%)
+    &.warning {
+        background: #fffbeb;
+        border-left: 3px solid #f59e0b;
+
+        &:hover {
+            background: #fef3c7;
+        }
+    }
+
+    // Exceeded state - màu đỏ nhạt
+    &.exceeded {
+        background: #fef2f2;
+        border-left: 3px solid #ef4444;
+
+        &:hover {
+            background: #fee2e2;
+        }
+    }
+
+    // Unlimited state - màu xanh dương nhạt
+    &.unlimited {
+        background: #eff6ff;
+        border-left: 3px solid #2e37a4;
+
+        &:hover {
+            background: #dbeafe;
+        }
+    }
+}
+
+.progressBarLabel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+
+    label {
+        font-weight: 700;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+
+        i {
+            font-size: 1rem;
+            color: #2e37a4;
+        }
+    }
+}
+
+.progressBarBadge {
+    padding: 0;
+    border-radius: 0;
+    font-weight: 700;
+    font-size: 0.875rem;
+    background: transparent !important;
+    color: #212529 !important;
+}
+
+.usageDisplay {
+    font-weight: 700;
+    color: #212529;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.usageDescription {
+    color: #6b7280;
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.usageRemaining {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    text-align: right;
+
+    .remainingAmount {
+        font-weight: 700;
+        color: #212529;
+        font-size: 0.875rem;
+        display: block;
+    }
+
+    .usageSince {
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+}
+
+.unlimitedText {
+    color: #2e37a4;
+    font-weight: 700;
+    font-style: italic;
+}
+
+.progressBar {
+    height: 6px;
+    border-radius: 999px;
+    background: #e9ecef;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: var(--progress-fill, 0%);
+        background: var(--progress-color, #2e37a4);
+        border-radius: inherit;
+        transition: width 0.4s ease;
+    }
+}
+
+.progressBarFill {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.alertText {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.limitExceededAlert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 3px solid #ef4444;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #991b1b;
+
+    i {
+        font-size: 1rem;
+        color: #ef4444;
+        flex-shrink: 0;
+    }
+
+    span {
+        flex: 1;
+        line-height: 1.5;
+    }
+}
+
+// Upgrade Card
+.upgradeCard {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.upgradeText {
+    color: #856404;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+// History Card
+.historyCard {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-top: 1.5rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+}
+
+.historyHeader {
+    background: #fafbfc;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.25rem 1.5rem;
+
+    h5 {
+        color: #212529;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.historyItem {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border-left: 3px solid #2e37a4;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: #f0f0f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+}
+
+.historyItemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.historyItemPlan {
+    font-weight: 600;
+    color: #212529;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.activeBadge {
+    background-color: #1a7a47;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.historyItemDetails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #495057;
+
+    strong {
+        color: #212529;
+        font-weight: 600;
+    }
+}
+
+.dateBadge {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.cardBody {
+    padding: 1.5rem;
+}
+
+// Specific padding for usage card body
+.usageCard .cardBody {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 3rem 1rem;
+
+    i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    p {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    background: #fff;
+    border-radius: 12px;
+    margin: 2rem;
+}
+
+.errorContainer {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem;
+    border-left: 3px solid #dc2626; // darker red for better contrast
+    color: #991b1b;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .subscriptionInfoPage {
+        padding: 1rem;
+    }
+
+    .contentWrapper {
+        padding: 1.5rem;
+    }
+
+    .headerSection {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        text-align: left;
+
+        h4 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .cardBody {
+        padding: 1rem;
+    }
+
+    .progressBarContainer {
+        padding: 1rem;
+    }
+
+    .usageRemaining {
+        position: static;
+        margin-top: 0.75rem;
+        text-align: left;
+    }
+
+    .historyItemDetails {
+        grid-template-columns: 1fr;
+    }
+}

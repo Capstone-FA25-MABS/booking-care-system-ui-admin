@@ -126,6 +126,24 @@ export const createSubscriptionPlansMenuItem = (): MenuItem => ({
 });
 
 /**
+ * Create Hospital Subscription Plans menu item (Hospital/Staff only)
+ */
+export const createHospitalSubscriptionPlansMenuItem = (): MenuItem => ({
+    label: 'Quản lí gói dịch vụ',
+    icon: 'ti ti-package',
+    subItems: [
+        {
+            label: 'Thông tin gói đăng ký',
+            link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_INFO),
+        },
+        {
+            label: 'Gói dịch vụ',
+            link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SUBSCRIPTION_PLAN),
+        },
+    ],
+});
+
+/**
  * Create Dashboard menu item for Admin with multiple dashboards
  */
 export const createDashboardMenuItem = (): MenuItem => ({

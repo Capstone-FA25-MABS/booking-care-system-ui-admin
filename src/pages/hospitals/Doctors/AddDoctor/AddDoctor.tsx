@@ -10,11 +10,15 @@ import { RegisterDoctorRequest } from '@/types/auth.types';
 import { Gender, Role } from '@/enums/common.enums';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const AddDoctor: React.FC = () => {
     const navigate = useNavigate();
     const { roles } = useSelector((state: RootState) => state.auth);
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
+    const { checkDoctorLimit, usageData, loadUsageData } = useSubscription();
+    const hospitalId = hospitalProfile?.id;
+
     const initialData: AddDoctorFormData = {
         fullName: '',
         email: '',
@@ -52,6 +56,13 @@ const AddDoctor: React.FC = () => {
     } = useDoctorFormOptions();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Load usage data on mount
+    useEffect(() => {
+        if (hospitalId) {
+            loadUsageData(hospitalId);
+        }
+    }, [hospitalId, loadUsageData]);
 
     useEffect(() => {
         const primaryRole = roles[0]?.toUpperCase();
@@ -92,12 +103,34 @@ const AddDoctor: React.FC = () => {
         return hasEmail && hasDuplicatePattern;
     };
 
+    // Helper function to check if error is subscription limit error
+    const isSubscriptionLimitError = (errorMessage: string): boolean => {
+        const errorLower = errorMessage.toLowerCase();
+        return (
+            errorLower.includes('giới hạn') ||
+            errorLower.includes('limit') ||
+            errorLower.includes('subscription') ||
+            errorLower.includes('gói đăng ký') ||
+            errorLower.includes('grpc error')
+        );
+    };
+
     // Helper function to display error with appropriate message
     const displayError = (errorMessage: string) => {
         if (isEmailDuplicateError(errorMessage)) {
             toast.error('Email này đã được sử dụng. Vui lòng chọn email khác.', {
                 autoClose: 5000,
             });
+        } else if (isSubscriptionLimitError(errorMessage)) {
+            // Extract current count and max from usageData if available
+            const currentCount = usageData?.currentDoctorCount || 0;
+            const maxCount = usageData?.maxDoctors || Number.MAX_SAFE_INTEGER;
+            const displayMax = maxCount === Number.MAX_SAFE_INTEGER ? '∞' : maxCount.toString();
+
+            toast.warning(
+                `Bạn đã đạt giới hạn số lượng bác sĩ cho phép trong gói đăng ký. Hiện tại: ${currentCount}/${displayMax}. Vui lòng nâng cấp gói để thêm bác sĩ.`,
+                { autoClose: 5000 }
+            );
         } else {
             toast.error(errorMessage, { autoClose: 5000 });
         }
@@ -159,12 +192,32 @@ const AddDoctor: React.FC = () => {
             return;
         }
 
+        // Check subscription limit before submitting
+        if (hospitalId) {
+            const currentCount = usageData?.currentDoctorCount || 0;
+            const canAdd = await checkDoctorLimit(hospitalId);
+            if (!canAdd) {
+                const maxCount = usageData?.maxDoctors || Number.MAX_SAFE_INTEGER;
+                const displayMax = maxCount === Number.MAX_SAFE_INTEGER ? '∞' : maxCount.toString();
+                toast.warning(
+                    `Bạn đã đạt giới hạn số lượng bác sĩ cho phép trong gói đăng ký. Hiện tại: ${currentCount}/${displayMax}. Vui lòng nâng cấp gói để thêm bác sĩ.`,
+                    { autoClose: 5000 }
+                );
+                return;
+            }
+        }
+
         try {
             setIsSubmitting(true);
             const { doctorData, doctorLanguages, doctorPrices } = prepareSubmitData();
             const registerRequest = buildRegisterRequest(doctorData, doctorLanguages, doctorPrices);
             const response = await registerDoctor(registerRequest);
             handleRegistrationResponse(response);
+
+            // Reload usage data after successful creation
+            if (hospitalId) {
+                await loadUsageData(hospitalId);
+            }
         } catch (error: any) {
             const errorMessage = extractErrorMessage(error);
             displayError(errorMessage);

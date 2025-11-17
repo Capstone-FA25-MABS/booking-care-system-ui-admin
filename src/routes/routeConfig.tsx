@@ -36,7 +36,8 @@ import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListS
 import ListServiceCategories from '@/pages/admins/ServiceCategories/ListServiceCategories';
 import ListServices from '@/pages/admins/Services/ListServices';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
-import SubscriptionPlan from '@/pages/hospitals/SubscriptionPlan';
+import SubscriptionPlanList from '@/pages/hospitals/SubscriptionPlan/SubscriptionPlanList';
+import SubscriptionInfo from '@/pages/hospitals/SubscriptionPlan/SubscriptionInfo';
 import ListSubscriptionPlans from '@/pages/admins/SubscriptionPlans/ListSubscriptionPlans';
 import ManageHospitalSubscriptions from '@/pages/admins/SubscriptionPlans/ManageHospitalSubscriptions';
 import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptionPlan';
@@ -237,7 +238,8 @@ const routes: RouteObject[] = [
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
-            { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlan /> },
+            { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlanList /> },
+            { path: PATHS.HOSPITAL.SUBSCRIPTION_INFO, element: <SubscriptionInfo /> },
             {
                 path: PATHS.HOSPITAL.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],

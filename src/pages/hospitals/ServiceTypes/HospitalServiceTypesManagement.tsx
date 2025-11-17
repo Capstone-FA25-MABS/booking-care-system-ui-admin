@@ -3,25 +3,53 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { AppDispatch } from '@/store';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
-import { updateHospitalProfile, fetchProfileByRole } from '@/store/slices/userSlice';
+import { fetchProfileByRole } from '@/store/slices/userSlice';
 import { getAllServiceTypesSimple } from '@/services/serviceType.service';
 import { ServiceType } from '@/types/serviceType.types';
 import { Role } from '@/enums/common.enums';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
 import styles from './HospitalServiceTypesManagement.module.scss';
+import HospitalService from '@/services/hospital.service';
 
 const HospitalServiceTypesManagement: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { profile, hospitalProfile } = useCurrentUserProfile();
+    const { profile, hospitalProfile, role } = useCurrentUserProfile();
     const hospitalId = hospitalProfile?.id || (profile as any)?.id;
 
     // State
     const [allServiceTypes, setAllServiceTypes] = useState<ServiceType[]>([]);
     const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<string[]>([]);
+    const [initialServiceTypeIds, setInitialServiceTypeIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Ensure hospital profile is loaded for STAFF role
+    useEffect(() => {
+        if (role === Role.STAFF && !hospitalProfile) {
+            dispatch(fetchProfileByRole({ role }));
+        }
+    }, [role, hospitalProfile, dispatch]);
+
+    // Helper: safely extract serviceTypeId from various backend shapes
+    const extractServiceTypeId = (item: any): string | undefined => {
+        if (!item) return undefined;
+        // Common shapes:
+        // - { serviceTypeId: string }
+        // - { id: string }
+        // - { ServiceTypeId: string } (legacy/casing)
+        // - { Id: string } (legacy/casing)
+        // - { serviceType: { id: string } } (nested)
+        return (
+            item.serviceTypeId ||
+            item.id ||
+            item.ServiceTypeId ||
+            item.Id ||
+            item.serviceType?.id ||
+            item.ServiceType?.Id
+        );
+    };
 
     // Load all service types and current hospital service types
     useEffect(() => {
@@ -55,24 +83,19 @@ const HospitalServiceTypesManagement: React.FC = () => {
                     setAllServiceTypes(activeServiceTypes);
                 }
 
-                // Load current hospital service types
-                // Try multiple ways to access serviceTypes
-                const serviceTypes =
-                    hospitalProfile?.serviceTypes ||
-                    (hospitalProfile as any)?.ServiceTypes ||
-                    (hospitalProfile as any)?.service_types ||
-                    [];
-
-                if (serviceTypes && serviceTypes.length > 0) {
-                    const currentServiceTypeIds = serviceTypes
-                        .map((s: any) => {
-                            // Handle both structures: { serviceTypeId: string } or { id: string }
-                            const id = s.serviceTypeId || s.id || s.ServiceTypeId || s.Id;
-                            return id;
-                        })
-                        .filter(Boolean); // Remove any undefined/null values
-
-                    setSelectedServiceTypeIds(currentServiceTypeIds);
+                // Load current hospital service types via lightweight endpoint
+                if (hospitalId) {
+                    const idsResponse = await HospitalService.getHospitalServiceTypeIds(hospitalId);
+                    const idsData = idsResponse.data as any;
+                    const currentIds: string[] = Array.isArray(idsData)
+                        ? (idsData
+                              .map((x: any) =>
+                                  typeof x === 'string' ? x : extractServiceTypeId(x)
+                              )
+                              .filter(Boolean) as string[])
+                        : [];
+                    setSelectedServiceTypeIds(currentIds);
+                    setInitialServiceTypeIds(currentIds);
                 }
             } catch (error: any) {
                 console.error('Error loading service types:', error);
@@ -117,21 +140,12 @@ const HospitalServiceTypesManagement: React.FC = () => {
 
         setIsSaving(true);
         try {
-            // Include required fields from current hospital profile
-            await dispatch(
-                updateHospitalProfile({
-                    hospitalId,
-                    updateData: {
-                        name: hospitalProfile.name,
-                        address: hospitalProfile.address || '',
-                        description: hospitalProfile.description || '',
-                        serviceTypeIds: selectedServiceTypeIds,
-                    },
-                })
-            ).unwrap();
+            // Update only hospital service types
+            await HospitalService.updateHospitalServiceTypes(hospitalId, selectedServiceTypeIds);
+            // No need to refresh profile - update local state only for better performance
 
-            // Reload hospital profile to get updated data
-            await dispatch(fetchProfileByRole({ role: Role.STAFF }));
+            // Update baseline for change detection
+            setInitialServiceTypeIds(selectedServiceTypeIds);
 
             toast.success('Cập nhật dịch vụ bác sĩ thành công!');
         } catch (error: any) {
@@ -144,14 +158,11 @@ const HospitalServiceTypesManagement: React.FC = () => {
         }
     };
 
-    // Check if has changes
-    const currentServiceTypeIds =
-        hospitalProfile?.serviceTypes?.map((s: any) => s.serviceTypeId || s.id).filter(Boolean) ||
-        [];
+    // Check if there are changes based on initial snapshot
     const hasChanges =
-        selectedServiceTypeIds.length !== currentServiceTypeIds.length ||
-        selectedServiceTypeIds.some((id) => !currentServiceTypeIds.includes(id)) ||
-        currentServiceTypeIds.some((id) => !selectedServiceTypeIds.includes(id));
+        selectedServiceTypeIds.length !== initialServiceTypeIds.length ||
+        selectedServiceTypeIds.some((id) => !initialServiceTypeIds.includes(id)) ||
+        initialServiceTypeIds.some((id) => !selectedServiceTypeIds.includes(id));
 
     if (isLoading) {
         return (
@@ -181,7 +192,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                 <div
                     className={`d-flex align-items-center flex-wrap gap-3 mb-4 ${styles.searchBar}`}
                 >
-                    <div className={styles.searchInput}>
+                    <div className={styles.searchInput} data-tour-id="service-type-search-input">
                         <div className={styles.inputIconStart}>
                             <i className={`ti ti-search ${styles.inputIconAddon}`}></i>
                             <input
@@ -203,7 +214,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                 </div>
 
                 {/* Service types grid */}
-                <div className={styles.serviceTypesGrid}>
+                <div className={styles.serviceTypesGrid} data-tour-id="service-type-grid">
                     {filteredServiceTypes.length === 0 ? (
                         <div className="text-center py-5">
                             <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
@@ -225,6 +236,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                                     aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${serviceType.name}`}
                                     aria-pressed={isSelected}
                                     className={`${styles.serviceTypeCard} ${isSelected ? styles.selected : ''}`}
+                                    data-tour-id="service-type-card"
                                     onClick={() => handleServiceTypeToggle(serviceType.id)}
                                     onKeyDown={handleKeyDown}
                                 >

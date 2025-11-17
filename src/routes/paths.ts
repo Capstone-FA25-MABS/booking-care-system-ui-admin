@@ -99,6 +99,7 @@ export const PATHS = {
         },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
+        SUBSCRIPTION_INFO: 'subscription-info',
         PROFILE_SETTINGS: 'profile-settings',
         NOTIFICATIONS: {
             ROOT: 'notifications',
