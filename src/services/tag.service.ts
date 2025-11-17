@@ -10,51 +10,7 @@ import type {
     GroupedConversations,
     PaginatedResponse,
 } from '@/types/tag.types';
-
-/**
- * Check if a string is a valid GUID/UUID or MongoDB ObjectId format
- */
-const isGuid = (value: string): boolean => {
-    const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const objectIdRegex = /^[0-9a-f]{24}$/i;
-    return guidRegex.test(value) || objectIdRegex.test(value);
-};
-
-/**
- * Convert camelCase to PascalCase
- */
-const toPascalCase = (str: string): string => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-/**
- * Transform object keys to PascalCase and uppercase GUIDs
- */
-const transformToPascalCase = (obj: any): any => {
-    if (obj === null || obj === undefined) {
-        return obj;
-    }
-
-    if (Array.isArray(obj)) {
-        return obj.map((item) => transformToPascalCase(item));
-    }
-
-    if (typeof obj === 'object' && obj.constructor === Object) {
-        return Object.keys(obj).reduce((acc, key) => {
-            const pascalKey = toPascalCase(key);
-            let transformedValue = transformToPascalCase(obj[key]);
-
-            if (typeof transformedValue === 'string' && isGuid(transformedValue)) {
-                transformedValue = transformedValue.toUpperCase();
-            }
-
-            acc[pascalKey] = transformedValue;
-            return acc;
-        }, {} as any);
-    }
-
-    return obj;
-};
+import { transformToPascalCase } from '@/utils/communication.utils';
 
 // API Endpoints
 const TAG_ENDPOINTS = {
