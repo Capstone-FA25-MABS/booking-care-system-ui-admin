@@ -379,371 +379,398 @@ const TagManager: React.FC<TagManagerProps> = ({
             {/* Create Tag Modal */}
             {showCreateModal &&
                 ReactDOM.createPortal(
-                    <div
-                        className="modal fade show d-block"
-                        role="dialog"
-                        tabIndex={-1}
-                        style={{ zIndex: 1050 }}
-                        onClick={(e) => {
-                            // Close modal when clicking backdrop
-                            if (e.target === e.currentTarget) {
-                                setShowCreateModal(false);
-                            }
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                setShowCreateModal(false);
-                            }
-                        }}
-                    >
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Tạo nhãn mới</h5>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={() => setShowCreateModal(false)}
-                                    ></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label htmlFor="create-tag-name" className="form-label">
-                                            Tên nhãn
-                                        </label>
-                                        <input
-                                            id="create-tag-name"
-                                            type="text"
-                                            className="form-control"
-                                            value={newTagName}
-                                            onChange={(e) => setNewTagName(e.target.value)}
-                                            placeholder="Nhập tên nhãn..."
-                                            autoFocus
-                                        />
+                    <>
+                        <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                        <div
+                            className="modal fade show d-block"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="create-tag-modal-title"
+                            tabIndex={-1}
+                            style={{ zIndex: 1050 }}
+                            onClick={(e) => {
+                                // Close modal when clicking backdrop
+                                if (e.target === e.currentTarget) {
+                                    setShowCreateModal(false);
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                    setShowCreateModal(false);
+                                }
+                            }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title" id="create-tag-modal-title">
+                                            Tạo nhãn mới
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={() => setShowCreateModal(false)}
+                                        ></button>
                                     </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Màu sắc</label>
-                                        <fieldset
-                                            id="create-tag-color"
-                                            aria-label="Chọn màu sắc cho nhãn"
-                                            style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: 'repeat(5, 1fr)',
-                                                gap: '16px',
-                                                marginTop: '8px',
-                                                padding: 0,
-                                                border: 'none',
-                                                margin: 0,
-                                            }}
-                                        >
-                                            {TAG_COLORS.map((color, index) => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => setNewTagColor(color)}
-                                                    aria-label={`Chọn màu ${color}`}
-                                                    aria-pressed={newTagColor === color}
-                                                    style={{
-                                                        width: '48px',
-                                                        height: '48px',
-                                                        background: `linear-gradient(135deg, ${color}e6, ${color})`,
-                                                        borderRadius: '50%',
-                                                        cursor: 'pointer',
-                                                        position: 'relative',
-                                                        border: 'none',
-                                                        boxShadow:
-                                                            newTagColor === color
-                                                                ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
-                                                                : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
-                                                        transition:
-                                                            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        transform:
-                                                            newTagColor === color
-                                                                ? 'scale(1.1)'
-                                                                : 'scale(1)',
-                                                        animationDelay: `${index * 50}ms`,
-                                                        backdropFilter: 'blur(8px)',
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (newTagColor !== color) {
-                                                            e.currentTarget.style.transform =
-                                                                'scale(1.15)';
-                                                            e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
-                                                        }
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (newTagColor !== color) {
-                                                            e.currentTarget.style.transform =
-                                                                'scale(1)';
-                                                            e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
-                                                        }
-                                                    }}
-                                                >
-                                                    {newTagColor === color && (
-                                                        <div
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: '50%',
-                                                                left: '50%',
-                                                                transform: 'translate(-50%, -50%)',
-                                                                width: '20px',
-                                                                height: '20px',
-                                                                backgroundColor:
-                                                                    'rgba(255,255,255,0.9)',
-                                                                borderRadius: '50%',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                animation: 'pulse 2s infinite',
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                width="12"
-                                                                height="12"
-                                                                viewBox="0 0 24 24"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                strokeWidth="3"
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                style={{ color: '#3b82f6' }}
+                                    <div className="modal-body">
+                                        <div className="mb-3">
+                                            <label htmlFor="create-tag-name" className="form-label">
+                                                Tên nhãn
+                                            </label>
+                                            <input
+                                                id="create-tag-name"
+                                                type="text"
+                                                className="form-control"
+                                                value={newTagName}
+                                                onChange={(e) => setNewTagName(e.target.value)}
+                                                placeholder="Nhập tên nhãn..."
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label
+                                                htmlFor="create-tag-color"
+                                                className="form-label"
+                                            >
+                                                Màu sắc
+                                            </label>
+                                            <fieldset
+                                                id="create-tag-color"
+                                                aria-label="Chọn màu sắc cho nhãn"
+                                                style={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(5, 1fr)',
+                                                    gap: '16px',
+                                                    marginTop: '8px',
+                                                    padding: 0,
+                                                    border: 'none',
+                                                    margin: 0,
+                                                }}
+                                            >
+                                                {TAG_COLORS.map((color, index) => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() => setNewTagColor(color)}
+                                                        aria-label={`Chọn màu ${color}`}
+                                                        aria-pressed={newTagColor === color}
+                                                        style={{
+                                                            width: '48px',
+                                                            height: '48px',
+                                                            background: `linear-gradient(135deg, ${color}e6, ${color})`,
+                                                            borderRadius: '50%',
+                                                            cursor: 'pointer',
+                                                            position: 'relative',
+                                                            border: 'none',
+                                                            boxShadow:
+                                                                newTagColor === color
+                                                                    ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
+                                                                    : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                                            transition:
+                                                                'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                            transform:
+                                                                newTagColor === color
+                                                                    ? 'scale(1.1)'
+                                                                    : 'scale(1)',
+                                                            animationDelay: `${index * 50}ms`,
+                                                            backdropFilter: 'blur(8px)',
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if (newTagColor !== color) {
+                                                                e.currentTarget.style.transform =
+                                                                    'scale(1.15)';
+                                                                e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if (newTagColor !== color) {
+                                                                e.currentTarget.style.transform =
+                                                                    'scale(1)';
+                                                                e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
+                                                            }
+                                                        }}
+                                                    >
+                                                        {newTagColor === color && (
+                                                            <div
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: '50%',
+                                                                    left: '50%',
+                                                                    transform:
+                                                                        'translate(-50%, -50%)',
+                                                                    width: '20px',
+                                                                    height: '20px',
+                                                                    backgroundColor:
+                                                                        'rgba(255,255,255,0.9)',
+                                                                    borderRadius: '50%',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    animation: 'pulse 2s infinite',
+                                                                }}
                                                             >
-                                                                <polyline points="20,6 9,17 4,12"></polyline>
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </fieldset>
-                                        <style>{`
+                                                                <svg
+                                                                    width="12"
+                                                                    height="12"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="3"
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    style={{ color: '#3b82f6' }}
+                                                                >
+                                                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </fieldset>
+                                            <style>{`
                                             @keyframes pulse {
                                                 0%, 100% { transform: translate(-50%, -50%) scale(1); }
                                                 50% { transform: translate(-50%, -50()) scale(1.1); }
                                             }
                                         `}</style>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="create-tag-type" className="form-label">
+                                                Loại nhãn
+                                            </label>
+                                            <select
+                                                id="create-tag-type"
+                                                className="form-select"
+                                                value={newTagType}
+                                                onChange={(e) =>
+                                                    setNewTagType(Number(e.target.value))
+                                                }
+                                            >
+                                                {Object.entries(TAG_TYPE_LABELS).map(
+                                                    ([value, label]) => (
+                                                        <option key={value} value={value}>
+                                                            {label}
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="mb-3">
-                                        <label htmlFor="create-tag-type" className="form-label">
-                                            Loại nhãn
-                                        </label>
-                                        <select
-                                            id="create-tag-type"
-                                            className="form-select"
-                                            value={newTagType}
-                                            onChange={(e) => setNewTagType(Number(e.target.value))}
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary"
+                                            onClick={() => setShowCreateModal(false)}
                                         >
-                                            {Object.entries(TAG_TYPE_LABELS).map(
-                                                ([value, label]) => (
-                                                    <option key={value} value={value}>
-                                                        {label}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
+                                            Hủy
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            onClick={handleCreateTag}
+                                            disabled={!newTagName.trim()}
+                                        >
+                                            Tạo
+                                        </button>
                                     </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => setShowCreateModal(false)}
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-primary"
-                                        onClick={handleCreateTag}
-                                        disabled={!newTagName.trim()}
-                                    >
-                                        Tạo
-                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>,
+                    </>,
                     document.body
                 )}
 
             {/* Edit Tag Modal */}
             {showEditModal &&
                 ReactDOM.createPortal(
-                    <div
-                        className="modal fade show d-block"
-                        role="dialog"
-                        tabIndex={-1}
-                        style={{ zIndex: 1050 }}
-                        onClick={(e) => {
-                            if (e.target === e.currentTarget) {
-                                cancelEditTag();
-                            }
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                cancelEditTag();
-                            }
-                        }}
-                    >
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Chỉnh sửa nhãn</h5>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={cancelEditTag}
-                                    ></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label htmlFor="edit-tag-name" className="form-label">
-                                            Tên nhãn
-                                        </label>
-                                        <input
-                                            id="edit-tag-name"
-                                            type="text"
-                                            className="form-control"
-                                            value={editTagName}
-                                            onChange={(e) => setEditTagName(e.target.value)}
-                                            placeholder="Nhập tên nhãn..."
-                                            autoFocus
-                                        />
+                    <>
+                        <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                        <div
+                            className="modal fade show d-block"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="edit-tag-modal-title"
+                            tabIndex={-1}
+                            style={{ zIndex: 1050 }}
+                            onClick={(e) => {
+                                if (e.target === e.currentTarget) {
+                                    cancelEditTag();
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                    cancelEditTag();
+                                }
+                            }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title" id="edit-tag-modal-title">
+                                            Chỉnh sửa nhãn
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={cancelEditTag}
+                                        ></button>
                                     </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Màu sắc</label>
-                                        <fieldset
-                                            id="edit-tag-color"
-                                            aria-label="Chọn màu sắc cho nhãn"
-                                            style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: 'repeat(5, 1fr)',
-                                                gap: '16px',
-                                                marginTop: '8px',
-                                                padding: 0,
-                                                border: 'none',
-                                                margin: 0,
-                                            }}
-                                        >
-                                            {TAG_COLORS.map((color, index) => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => setEditTagColor(color)}
-                                                    aria-label={`Chọn màu ${color}`}
-                                                    aria-pressed={editTagColor === color}
-                                                    style={{
-                                                        width: '48px',
-                                                        height: '48px',
-                                                        background: `linear-gradient(135deg, ${color}e6, ${color})`,
-                                                        borderRadius: '50%',
-                                                        cursor: 'pointer',
-                                                        position: 'relative',
-                                                        border: 'none',
-                                                        boxShadow:
-                                                            editTagColor === color
-                                                                ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
-                                                                : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
-                                                        transition:
-                                                            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        transform:
-                                                            editTagColor === color
-                                                                ? 'scale(1.1)'
-                                                                : 'scale(1)',
-                                                        animationDelay: `${index * 50}ms`,
-                                                        backdropFilter: 'blur(8px)',
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (editTagColor !== color) {
-                                                            e.currentTarget.style.transform =
-                                                                'scale(1.15)';
-                                                            e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
-                                                        }
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (editTagColor !== color) {
-                                                            e.currentTarget.style.transform =
-                                                                'scale(1)';
-                                                            e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
-                                                        }
-                                                    }}
-                                                >
-                                                    {editTagColor === color && (
-                                                        <div
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: '50%',
-                                                                left: '50%',
-                                                                transform: 'translate(-50%, -50%)',
-                                                                width: '20px',
-                                                                height: '20px',
-                                                                backgroundColor:
-                                                                    'rgba(255,255,255,0.9)',
-                                                                borderRadius: '50%',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                animation: 'pulse 2s infinite',
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                width="12"
-                                                                height="12"
-                                                                viewBox="0 0 24 24"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                strokeWidth="3"
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                style={{ color: '#3b82f6' }}
+                                    <div className="modal-body">
+                                        <div className="mb-3">
+                                            <label htmlFor="edit-tag-name" className="form-label">
+                                                Tên nhãn
+                                            </label>
+                                            <input
+                                                id="edit-tag-name"
+                                                type="text"
+                                                className="form-control"
+                                                value={editTagName}
+                                                onChange={(e) => setEditTagName(e.target.value)}
+                                                placeholder="Nhập tên nhãn..."
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="edit-tag-color" className="form-label">
+                                                Màu sắc
+                                            </label>
+                                            <fieldset
+                                                id="edit-tag-color"
+                                                aria-label="Chọn màu sắc cho nhãn"
+                                                style={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(5, 1fr)',
+                                                    gap: '16px',
+                                                    marginTop: '8px',
+                                                    padding: 0,
+                                                    border: 'none',
+                                                    margin: 0,
+                                                }}
+                                            >
+                                                {TAG_COLORS.map((color, index) => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() => setEditTagColor(color)}
+                                                        aria-label={`Chọn màu ${color}`}
+                                                        aria-pressed={editTagColor === color}
+                                                        style={{
+                                                            width: '48px',
+                                                            height: '48px',
+                                                            background: `linear-gradient(135deg, ${color}e6, ${color})`,
+                                                            borderRadius: '50%',
+                                                            cursor: 'pointer',
+                                                            position: 'relative',
+                                                            border: 'none',
+                                                            boxShadow:
+                                                                editTagColor === color
+                                                                    ? `0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 0 6px #3b82f6, 0 8px 20px rgba(0,0,0,0.15)`
+                                                                    : `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                                            transition:
+                                                                'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                            transform:
+                                                                editTagColor === color
+                                                                    ? 'scale(1.1)'
+                                                                    : 'scale(1)',
+                                                            animationDelay: `${index * 50}ms`,
+                                                            backdropFilter: 'blur(8px)',
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if (editTagColor !== color) {
+                                                                e.currentTarget.style.transform =
+                                                                    'scale(1.15)';
+                                                                e.currentTarget.style.boxShadow = `0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)`;
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if (editTagColor !== color) {
+                                                                e.currentTarget.style.transform =
+                                                                    'scale(1)';
+                                                                e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3)`;
+                                                            }
+                                                        }}
+                                                    >
+                                                        {editTagColor === color && (
+                                                            <div
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: '50%',
+                                                                    left: '50%',
+                                                                    transform:
+                                                                        'translate(-50%, -50%)',
+                                                                    width: '20px',
+                                                                    height: '20px',
+                                                                    backgroundColor:
+                                                                        'rgba(255,255,255,0.9)',
+                                                                    borderRadius: '50%',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    animation: 'pulse 2s infinite',
+                                                                }}
                                                             >
-                                                                <polyline points="20,6 9,17 4,12"></polyline>
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </fieldset>
+                                                                <svg
+                                                                    width="12"
+                                                                    height="12"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="3"
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    style={{ color: '#3b82f6' }}
+                                                                >
+                                                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </fieldset>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="edit-tag-type" className="form-label">
+                                                Loại nhãn
+                                            </label>
+                                            <select
+                                                id="edit-tag-type"
+                                                className="form-select"
+                                                value={editTagType}
+                                                onChange={(e) =>
+                                                    setEditTagType(Number(e.target.value))
+                                                }
+                                            >
+                                                {Object.entries(TAG_TYPE_LABELS).map(
+                                                    ([value, label]) => (
+                                                        <option key={value} value={value}>
+                                                            {label}
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="mb-3">
-                                        <label htmlFor="edit-tag-type" className="form-label">
-                                            Loại nhãn
-                                        </label>
-                                        <select
-                                            id="edit-tag-type"
-                                            className="form-select"
-                                            value={editTagType}
-                                            onChange={(e) => setEditTagType(Number(e.target.value))}
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary"
+                                            onClick={cancelEditTag}
                                         >
-                                            {Object.entries(TAG_TYPE_LABELS).map(
-                                                ([value, label]) => (
-                                                    <option key={value} value={value}>
-                                                        {label}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
+                                            Hủy
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            onClick={handleUpdateTag}
+                                            disabled={!editTagName.trim()}
+                                        >
+                                            Cập nhật
+                                        </button>
                                     </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={cancelEditTag}
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-primary"
-                                        onClick={handleUpdateTag}
-                                        disabled={!editTagName.trim()}
-                                    >
-                                        Cập nhật
-                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>,
+                    </>,
                     document.body
                 )}
 

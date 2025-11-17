@@ -170,11 +170,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                         margin: 0,
                         maxWidth: '300px',
                     }}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                            setShowTagManager(false);
-                        }
-                    }}
                 >
                     <TagManager
                         userId={currentUserId}
