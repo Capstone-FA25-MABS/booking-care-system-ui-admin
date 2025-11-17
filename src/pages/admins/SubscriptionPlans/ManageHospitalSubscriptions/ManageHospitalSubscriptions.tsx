@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import StatusBadge from '@/components/StatusBadge';
+import SubscriptionHistoryItem from '@/components/SubscriptionHistoryItem';
 import TableSkeleton from '@/components/TableSkeleton';
 import ActionDropdown from '@/components/ActionDropdown';
 import Button from '@/components/Button';
@@ -228,61 +229,6 @@ const ManageHospitalSubscriptions: React.FC = () => {
         }
     };
 
-    // Helper function to render subscription history item
-    const renderSubscriptionHistoryItem = (subscription: HospitalSubscription) => {
-        const isActive = subscription.status === 'ACTIVE';
-        const planName = subscription.subscriptionPlan?.name || 'Không xác định';
-        const planPrice = subscription.subscriptionPlan?.price;
-        const billingCycle = subscription.subscriptionPlan?.billingCycle || '';
-
-        return (
-            <div
-                key={subscription.hospitalSubscriptionId}
-                className="p-2 bg-light rounded border-start border-primary border-3"
-            >
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                    <div className="fw-semibold">
-                        {planName}
-                        {isActive && (
-                            <span className="badge bg-success ms-2 fs-11">(Hiện tại)</span>
-                        )}
-                    </div>
-                    <StatusBadge
-                        status={subscription.status}
-                        variant={getStatusColor(subscription.status)}
-                        customText={getStatusText(subscription.status)}
-                    />
-                </div>
-                <div className="row g-2 small">
-                    <div className="col-md-3">
-                        <strong>Giá:</strong>{' '}
-                        {planPrice
-                            ? formatPrice(planPrice) + ' / ' + getBillingCycleText(billingCycle)
-                            : 'N/A'}
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Bắt đầu:</strong>{' '}
-                        <span className="badge badge-soft-info fs-12">
-                            {formatDate(subscription.startDate)}
-                        </span>
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Hết hạn:</strong>{' '}
-                        <span className="badge badge-soft-warning fs-12">
-                            {formatDate(subscription.endDate)}
-                        </span>
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Đăng ký:</strong>{' '}
-                        <span className="badge badge-soft-secondary fs-12">
-                            {formatDate(subscription.createdAt)}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     // Helper function to render subscription history list
     const renderSubscriptionHistory = (hospital: HospitalWithSubscription) => {
         const sortedSubscriptions = [...hospital.allSubscriptions].sort(
@@ -298,7 +244,17 @@ const ManageHospitalSubscriptions: React.FC = () => {
                             Lịch sử đăng ký/nâng cấp gói
                         </h6>
                         <div className="d-flex flex-column gap-2">
-                            {sortedSubscriptions.map(renderSubscriptionHistoryItem)}
+                            {sortedSubscriptions.map((subscription) => (
+                                <SubscriptionHistoryItem
+                                    key={subscription.hospitalSubscriptionId}
+                                    subscription={subscription}
+                                    formatDate={formatDate}
+                                    formatPrice={formatPrice}
+                                    getBillingCycleText={getBillingCycleText}
+                                    getStatusColor={getStatusColor}
+                                    getStatusText={getStatusText}
+                                />
+                            ))}
                         </div>
                     </div>
                 </td>

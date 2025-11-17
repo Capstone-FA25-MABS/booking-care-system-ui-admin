@@ -4,6 +4,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { HospitalSubscription } from '@/services/subscription.service';
 import StatusBadge from '@/components/StatusBadge';
+import SubscriptionHistoryItem from '@/components/SubscriptionHistoryItem';
 import Button from '@/components/Button';
 import styles from './SubscriptionInfo.module.scss';
 
@@ -34,6 +35,9 @@ const UsageProgressBar: React.FC<UsageProgressBarProps> = ({
     const displayPercentage = Math.min(percentage, 100);
     const displayCurrent = current.toFixed(0);
     const displayMaxFormatted = isUnlimited ? '∞' : max.toFixed(0);
+    const progressFillValue = Math.min(displayPercentage, 100);
+    const progressColor = isUnlimited ? '#2e37a4' : isExceeded ? '#ef4444' : '#10b981';
+    const progressFill = isUnlimited ? '100%' : `${progressFillValue}%`;
 
     const getDescription = () => {
         if (label === 'Bác sĩ') return 'Số lượng bác sĩ đã đăng ký trong gói hiện tại.';
@@ -82,21 +86,24 @@ const UsageProgressBar: React.FC<UsageProgressBarProps> = ({
                     </span>
                 )}
             </div>
-            {!isUnlimited && (
-                <div className={styles.progressBar}>
-                    <progress
-                        className={styles.progressBarFill}
-                        value={Math.min(displayPercentage, 100)}
-                        max={100}
-                        aria-valuenow={displayPercentage}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        style={{
-                            accentColor: isExceeded ? '#ef4444' : '#2E37A4',
-                        }}
-                    />
-                </div>
-            )}
+            <div
+                className={styles.progressBar}
+                style={
+                    {
+                        '--progress-fill': progressFill,
+                        '--progress-color': progressColor,
+                    } as React.CSSProperties
+                }
+            >
+                <progress
+                    className={styles.progressBarFill}
+                    value={progressFillValue}
+                    max={100}
+                    aria-valuenow={displayPercentage}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                />
+            </div>
             {isExceeded && (
                 <div className={styles.limitExceededAlert}>
                     <i className="ti ti-alert-circle"></i>
@@ -265,60 +272,6 @@ const SubscriptionInfo: React.FC = () => {
             default:
                 return status;
         }
-    };
-
-    const renderSubscriptionHistoryItem = (subscription: HospitalSubscription) => {
-        const isActive = subscription.status === 'ACTIVE';
-        const planName = subscription.subscriptionPlan?.name || 'Không xác định';
-        const planPrice = subscription.subscriptionPlan?.price;
-        const billingCycle = subscription.subscriptionPlan?.billingCycle || '';
-
-        return (
-            <div
-                key={subscription.hospitalSubscriptionId}
-                className="p-2 bg-light rounded border-start border-primary border-3"
-            >
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                    <div className="fw-semibold">
-                        {planName}
-                        {isActive && (
-                            <span className="badge bg-success ms-2 fs-11">(Hiện tại)</span>
-                        )}
-                    </div>
-                    <StatusBadge
-                        status={subscription.status}
-                        variant={getStatusColor(subscription.status)}
-                        customText={getStatusText(subscription.status)}
-                    />
-                </div>
-                <div className="row g-2 small">
-                    <div className="col-md-3">
-                        <strong>Giá:</strong>{' '}
-                        {planPrice !== null && planPrice !== undefined && planPrice > 0
-                            ? formatPrice(planPrice) + ' / ' + getBillingCycleText(billingCycle)
-                            : '0 VNĐ'}
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Bắt đầu:</strong>{' '}
-                        <span className="badge badge-soft-info fs-12">
-                            {formatDate(subscription.startDate)}
-                        </span>
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Hết hạn:</strong>{' '}
-                        <span className="badge badge-soft-warning fs-12">
-                            {formatDate(subscription.endDate)}
-                        </span>
-                    </div>
-                    <div className="col-md-3">
-                        <strong>Đăng ký:</strong>{' '}
-                        <span className="badge badge-soft-secondary fs-12">
-                            {formatDate(subscription.createdAt)}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        );
     };
 
     return (
@@ -569,7 +522,29 @@ const SubscriptionInfo: React.FC = () => {
                                             new Date(b.createdAt).getTime() -
                                             new Date(a.createdAt).getTime()
                                     )
-                                    .map(renderSubscriptionHistoryItem)}
+                                    .map((subscription) => (
+                                        <SubscriptionHistoryItem
+                                            key={subscription.hospitalSubscriptionId}
+                                            subscription={subscription}
+                                            formatDate={formatDate}
+                                            formatPrice={formatPrice}
+                                            getBillingCycleText={getBillingCycleText}
+                                            getStatusColor={getStatusColor}
+                                            getStatusText={getStatusText}
+                                            priceFormatter={(price, billingCycle, helpers) => {
+                                                if (
+                                                    price !== null &&
+                                                    price !== undefined &&
+                                                    price > 0
+                                                ) {
+                                                    return `${helpers.formatPrice(price)} / ${helpers.getBillingCycleText(
+                                                        billingCycle
+                                                    )}`;
+                                                }
+                                                return '0 VNĐ';
+                                            }}
+                                        />
+                                    ))}
                             </div>
                         </div>
                     </div>

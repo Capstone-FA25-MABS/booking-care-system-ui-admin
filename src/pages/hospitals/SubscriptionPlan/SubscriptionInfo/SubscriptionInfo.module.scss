@@ -370,30 +370,36 @@
 }
 
 .progressBar {
-    height: 4px;
-    border-radius: 2px;
+    height: 6px;
+    border-radius: 999px;
     background: #e9ecef;
     overflow: hidden;
     margin-top: 0.5rem;
-}
-
-.progressBarFill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.4s ease;
     position: relative;
-    overflow: hidden;
 
     &::after {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
         bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        animation: shimmer 2s infinite;
+        width: var(--progress-fill, 0%);
+        background: var(--progress-color, #2e37a4);
+        border-radius: inherit;
+        transition: width 0.4s ease;
     }
+}
+
+.progressBarFill {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
 }
 
 @keyframes shimmer {
