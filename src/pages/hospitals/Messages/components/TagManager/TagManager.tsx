@@ -380,20 +380,16 @@ const TagManager: React.FC<TagManagerProps> = ({
             {showCreateModal &&
                 ReactDOM.createPortal(
                     <>
-                        <div
+                        <button
                             className="modal-backdrop fade show"
-                            style={{ zIndex: 1040 }}
+                            style={{ zIndex: 1040, border: 'none', padding: 0, cursor: 'default' }}
                             onClick={() => setShowCreateModal(false)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Escape') setShowCreateModal(false);
-                            }}
-                            role="button"
-                            tabIndex={0}
                             aria-label="Đóng hộp thoại"
-                        ></div>
+                            type="button"
+                        />
                         <div
                             className="modal fade show d-block"
-                            role="presentation"
+                            role="dialog"
                             aria-modal="true"
                             aria-labelledby="create-tag-modal-title"
                             style={{ zIndex: 1050 }}
@@ -582,20 +578,16 @@ const TagManager: React.FC<TagManagerProps> = ({
             {showEditModal &&
                 ReactDOM.createPortal(
                     <>
-                        <div
+                        <button
                             className="modal-backdrop fade show"
-                            style={{ zIndex: 1040 }}
+                            style={{ zIndex: 1040, border: 'none', padding: 0, cursor: 'default' }}
                             onClick={() => cancelEditTag()}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Escape') cancelEditTag();
-                            }}
-                            role="button"
-                            tabIndex={0}
                             aria-label="Đóng hộp thoại"
-                        ></div>
+                            type="button"
+                        />
                         <div
                             className="modal fade show d-block"
-                            role="presentation"
+                            role="dialog"
                             aria-modal="true"
                             aria-labelledby="edit-tag-modal-title"
                             style={{ zIndex: 1050 }}
