@@ -380,25 +380,17 @@ const TagManager: React.FC<TagManagerProps> = ({
             {showCreateModal &&
                 ReactDOM.createPortal(
                     <>
-                        <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                        <div
+                            className="modal-backdrop fade show"
+                            style={{ zIndex: 1040 }}
+                            onClick={() => setShowCreateModal(false)}
+                        ></div>
                         <div
                             className="modal fade show d-block"
                             role="dialog"
                             aria-modal="true"
                             aria-labelledby="create-tag-modal-title"
-                            tabIndex={-1}
                             style={{ zIndex: 1050 }}
-                            onClick={(e) => {
-                                // Close modal when clicking backdrop
-                                if (e.target === e.currentTarget) {
-                                    setShowCreateModal(false);
-                                }
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                    setShowCreateModal(false);
-                                }
-                            }}
                         >
                             <div className="modal-dialog modal-dialog-centered">
                                 <div className="modal-content">
@@ -584,24 +576,17 @@ const TagManager: React.FC<TagManagerProps> = ({
             {showEditModal &&
                 ReactDOM.createPortal(
                     <>
-                        <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                        <div
+                            className="modal-backdrop fade show"
+                            style={{ zIndex: 1040 }}
+                            onClick={() => cancelEditTag()}
+                        ></div>
                         <div
                             className="modal fade show d-block"
                             role="dialog"
                             aria-modal="true"
                             aria-labelledby="edit-tag-modal-title"
-                            tabIndex={-1}
                             style={{ zIndex: 1050 }}
-                            onClick={(e) => {
-                                if (e.target === e.currentTarget) {
-                                    cancelEditTag();
-                                }
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                    cancelEditTag();
-                                }
-                            }}
                         >
                             <div className="modal-dialog modal-dialog-centered">
                                 <div className="modal-content">
