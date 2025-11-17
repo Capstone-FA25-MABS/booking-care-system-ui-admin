@@ -384,10 +384,16 @@ const TagManager: React.FC<TagManagerProps> = ({
                             className="modal-backdrop fade show"
                             style={{ zIndex: 1040 }}
                             onClick={() => setShowCreateModal(false)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') setShowCreateModal(false);
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Đóng hộp thoại"
                         ></div>
                         <div
                             className="modal fade show d-block"
-                            role="dialog"
+                            role="presentation"
                             aria-modal="true"
                             aria-labelledby="create-tag-modal-title"
                             style={{ zIndex: 1050 }}
@@ -580,10 +586,16 @@ const TagManager: React.FC<TagManagerProps> = ({
                             className="modal-backdrop fade show"
                             style={{ zIndex: 1040 }}
                             onClick={() => cancelEditTag()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') cancelEditTag();
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Đóng hộp thoại"
                         ></div>
                         <div
                             className="modal fade show d-block"
-                            role="dialog"
+                            role="presentation"
                             aria-modal="true"
                             aria-labelledby="edit-tag-modal-title"
                             style={{ zIndex: 1050 }}

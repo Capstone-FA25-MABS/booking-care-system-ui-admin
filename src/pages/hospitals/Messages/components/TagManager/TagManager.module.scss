@@ -96,7 +96,7 @@
         .deleteBtn {
             border: none;
             background: rgba(239, 68, 68, 0.1);
-            color: #b91c1c;
+            color: #991b1b;
             padding: 0;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -110,7 +110,7 @@
 
             &:hover:not(:disabled) {
                 background: rgba(239, 68, 68, 0.15);
-                color: #991b1b;
+                color: #7f1d1d;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
             }
@@ -118,7 +118,7 @@
             &:active {
                 transform: scale(0.95);
                 background: rgba(220, 38, 38, 0.2);
-                color: #7f1d1d;
+                color: #450a0a;
             }
 
             &:disabled {
@@ -135,7 +135,7 @@
         .editBtn {
             border: none;
             background: rgba(59, 130, 246, 0.1);
-            color: #1d4ed8;
+            color: #1e40af;
             padding: 0;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -149,7 +149,7 @@
 
             &:hover:not(:disabled) {
                 background: rgba(59, 130, 246, 0.15);
-                color: #1e40af;
+                color: #1e3a8a;
                 transform: scale(1.05);
                 box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
             }
@@ -157,7 +157,7 @@
             &:active {
                 transform: scale(0.95);
                 background: rgba(37, 99, 235, 0.2);
-                color: #1e3a8a;
+                color: #172554;
             }
 
             i {
