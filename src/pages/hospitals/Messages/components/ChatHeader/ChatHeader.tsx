@@ -24,7 +24,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
     // Function to reload conversation tags (can be called from TagManager)
     const loadConversationTags = async () => {
         // Dispatch custom event to notify ChatUserNav to reload tags
-        window.dispatchEvent(new CustomEvent('conversationTagsUpdated'));
+        globalThis.dispatchEvent(new CustomEvent('conversationTagsUpdated'));
     };
 
     // Close tag manager when clicking outside
@@ -134,6 +134,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
             {showTagManager && activeConversation && (
                 <div
                     ref={tagManagerRef}
+                    role="dialog"
+                    aria-label="Tag Manager"
+                    tabIndex={-1}
                     style={{
                         position: 'absolute',
                         top: '3.5rem',
@@ -153,6 +156,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                     onClick={(e) => {
                         // Prevent event from bubbling up
                         e.stopPropagation();
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            setShowTagManager(false);
+                        }
                     }}
                 >
                     <TagManager

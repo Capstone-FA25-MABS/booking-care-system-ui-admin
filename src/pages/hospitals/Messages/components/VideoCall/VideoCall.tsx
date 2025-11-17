@@ -86,8 +86,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
         // Check for doctor/admin profile (has 'firstName' and 'lastName')
         if ('firstName' in userProfile && 'lastName' in userProfile) {
-            const firstName = userProfile.firstName as string;
-            const lastName = userProfile.lastName as string;
+            const firstName = userProfile.firstName;
+            const lastName = userProfile.lastName;
             return `${firstName} ${lastName}`;
         }
 

@@ -63,7 +63,7 @@ const MessagesContent: React.FC = () => {
             });
 
             // Clear navigation state after using
-            window.history.replaceState({}, document.title);
+            globalThis.history.replaceState({}, document.title);
             return;
         }
 
@@ -82,7 +82,7 @@ const MessagesContent: React.FC = () => {
 
             // Clear URL params after selecting
             const newUrl = location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
+            globalThis.history.replaceState({}, document.title, newUrl);
         }
     }, [location.search, location.state, selectConversation]);
 

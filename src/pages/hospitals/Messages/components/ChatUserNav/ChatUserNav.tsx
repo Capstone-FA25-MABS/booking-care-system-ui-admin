@@ -163,9 +163,9 @@ const ChatUserNav: React.FC = () => {
             loadConversationTags();
         };
 
-        window.addEventListener('conversationTagsUpdated', handleTagsUpdated);
+        globalThis.addEventListener('conversationTagsUpdated', handleTagsUpdated);
         return () => {
-            window.removeEventListener('conversationTagsUpdated', handleTagsUpdated);
+            globalThis.removeEventListener('conversationTagsUpdated', handleTagsUpdated);
         };
     }, [conversations, currentUserId]);
 
