@@ -387,14 +387,15 @@ const TagManager: React.FC<TagManagerProps> = ({
                             aria-label="Đóng hộp thoại"
                             type="button"
                         />
-                        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
-                            <div
-                                className="modal-dialog modal-dialog-centered"
-                                role="dialog"
-                                aria-modal="true"
-                                aria-labelledby="create-tag-modal-title"
-                            >
-                                <div className="modal-content">
+                        <div
+                            className="modal fade show d-block"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="create-tag-modal-title"
+                            style={{ zIndex: 1050 }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content" role="document">
                                     <div className="modal-header">
                                         <h5 className="modal-title" id="create-tag-modal-title">
                                             Tạo nhãn mới
@@ -584,14 +585,15 @@ const TagManager: React.FC<TagManagerProps> = ({
                             aria-label="Đóng hộp thoại"
                             type="button"
                         />
-                        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
-                            <div
-                                className="modal-dialog modal-dialog-centered"
-                                role="dialog"
-                                aria-modal="true"
-                                aria-labelledby="edit-tag-modal-title"
-                            >
-                                <div className="modal-content">
+                        <div
+                            className="modal fade show d-block"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="edit-tag-modal-title"
+                            style={{ zIndex: 1050 }}
+                        >
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content" role="document">
                                     <div className="modal-header">
                                         <h5 className="modal-title" id="edit-tag-modal-title">
                                             Chỉnh sửa nhãn
