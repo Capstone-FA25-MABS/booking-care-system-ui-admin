@@ -43,6 +43,23 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
     const currentPageStepRef = useRef<number>(0);
     const isNavigatingRef = useRef<boolean>(false);
     const userClosedRef = useRef<boolean>(false);
+    const isTourInactive = () => {
+        const userClosedValue = localStorage.getItem(STAFF_TOUR_USER_CLOSED_KEY);
+        const tourCompletedValue = localStorage.getItem(STAFF_TOUR_STORAGE_KEY);
+        return userClosedRef.current || userClosedValue === 'true' || tourCompletedValue === 'true';
+    };
+
+    const scheduleActionIfTourActive = (
+        action: () => void,
+        delay = 0,
+        extraCondition: () => boolean = () => true
+    ) => {
+        setTimeout(() => {
+            if (!isTourInactive() && extraCondition()) {
+                action();
+            }
+        }, delay);
+    };
 
     // Inject custom CSS for yellow theme
     useEffect(() => {
@@ -197,6 +214,17 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
     }, [role, isAuthenticated, location.pathname]);
 
     // Define tour steps with navigation paths and detailed page steps
+    const completeTour = () => {
+        localStorage.setItem(STAFF_TOUR_STORAGE_KEY, 'true');
+        localStorage.removeItem(STAFF_TOUR_CURRENT_STEP_KEY);
+        localStorage.removeItem(STAFF_TOUR_CURRENT_PAGE_STEP_KEY);
+        if (driverObjRef.current) {
+            driverObjRef.current.destroy();
+            driverObjRef.current = null;
+        }
+        isNavigatingRef.current = false;
+    };
+
     const tourSteps: TourStep[] = [
         {
             menuSelector: '[data-tour-id="menu-item-cài-đặt-tài-khoản"]',
@@ -584,14 +612,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
         }
 
         if (stepIndex >= tourSteps.length) {
-            // Tour completed
-            localStorage.setItem(STAFF_TOUR_STORAGE_KEY, 'true');
-            localStorage.removeItem(STAFF_TOUR_CURRENT_STEP_KEY);
-            localStorage.removeItem(STAFF_TOUR_CURRENT_PAGE_STEP_KEY);
-            if (driverObjRef.current) {
-                driverObjRef.current.destroy();
-            }
-            isNavigatingRef.current = false;
+            completeTour();
             return;
         }
 
@@ -639,11 +660,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                                     navigate(step.path);
                                 }
                                 // Wait for page to load, then show page guide
-                                setTimeout(() => {
-                                    if (!userClosedRef.current) {
-                                        showPageGuide(stepIndex);
-                                    }
-                                }, 1000);
+                                scheduleActionIfTourActive(() => showPageGuide(stepIndex), 1000);
                             },
                         },
                     },
@@ -674,11 +691,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
 
                     if (location.pathname !== step.path) {
                         navigate(step.path);
-                        setTimeout(() => {
-                            if (!userClosedRef.current) {
-                                showPageGuide(stepIndex, 0);
-                            }
-                        }, 1000);
+                        scheduleActionIfTourActive(() => showPageGuide(stepIndex, 0), 1000);
                     } else if (!userClosedRef.current) {
                         showPageGuide(stepIndex, 0);
                     }
@@ -736,22 +749,27 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 }
             };
 
-            const menuObserver = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) {
-                            const element = node as HTMLElement;
-                            if (
-                                element.classList?.contains('driver-popover') ||
-                                element.querySelector?.('.driver-popover')
-                            ) {
-                                setTimeout(() => {
-                                    overrideMenuCloseButton();
-                                }, 10);
-                            }
-                        }
-                    });
+            const isDriverPopoverNode = (node: Node): node is HTMLElement => {
+                if (node.nodeType !== 1) return false;
+                const element = node as HTMLElement;
+                return (
+                    element.classList?.contains('driver-popover') ||
+                    Boolean(element.querySelector?.('.driver-popover'))
+                );
+            };
+
+            const handleAddedNodes = (nodes: NodeList) => {
+                nodes.forEach((node) => {
+                    if (isDriverPopoverNode(node)) {
+                        setTimeout(overrideMenuCloseButton, 10);
+                    }
                 });
+            };
+
+            const menuObserver = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    handleAddedNodes(mutation.addedNodes);
+                }
             });
 
             menuObserver.observe(document.body, {
@@ -759,9 +777,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 subtree: true,
             });
 
-            setTimeout(() => {
-                overrideMenuCloseButton();
-            }, 100);
+            setTimeout(overrideMenuCloseButton, 100);
 
             menuDriver.drive();
         } else {
@@ -769,9 +785,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
             if (location.pathname !== step.path) {
                 navigate(step.path);
             }
-            setTimeout(() => {
-                showPageGuide(stepIndex);
-            }, 1000);
+            scheduleActionIfTourActive(() => showPageGuide(stepIndex), 1000);
         }
     };
 
@@ -850,14 +864,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
         }
 
         if (stepIndex >= tourSteps.length) {
-            // Tour completed
-            localStorage.setItem(STAFF_TOUR_STORAGE_KEY, 'true');
-            localStorage.removeItem(STAFF_TOUR_CURRENT_STEP_KEY);
-            localStorage.removeItem(STAFF_TOUR_CURRENT_PAGE_STEP_KEY);
-            if (driverObjRef.current) {
-                driverObjRef.current.destroy();
-            }
-            isNavigatingRef.current = false;
+            completeTour();
             return;
         }
 
@@ -874,18 +881,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
             // Show detailed page steps
             if (pageStepIndex >= step.pageSteps.length) {
                 // All page steps completed, move to next page
-                setTimeout(() => {
-                    // Double-check before continuing - check multiple sources
-                    const checkUserClosed = localStorage.getItem(STAFF_TOUR_USER_CLOSED_KEY);
-                    const checkTourCompleted = localStorage.getItem(STAFF_TOUR_STORAGE_KEY);
-                    if (
-                        !userClosedRef.current &&
-                        checkUserClosed !== 'true' &&
-                        checkTourCompleted !== 'true'
-                    ) {
-                        navigateToStep(stepIndex + 1);
-                    }
-                }, 300);
+                scheduleActionIfTourActive(() => navigateToStep(stepIndex + 1), 300);
                 return;
             }
 
@@ -989,20 +985,11 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
 
                                         // User clicked "Bỏ qua" button, move to next page step
                                         driverObj.destroy();
-                                        setTimeout(() => {
-                                            // Double-check before continuing
-                                            const checkUserClosed = localStorage.getItem(
-                                                STAFF_TOUR_USER_CLOSED_KEY
-                                            );
-
-                                            if (
-                                                checkUserClosed !== 'true' &&
-                                                !userClosedRef.current &&
-                                                !wasClosedByUser
-                                            ) {
-                                                showPageGuide(stepIndex, pageStepIndex + 1);
-                                            }
-                                        }, 300);
+                                        scheduleActionIfTourActive(
+                                            () => showPageGuide(stepIndex, pageStepIndex + 1),
+                                            300,
+                                            () => !wasClosedByUser
+                                        );
                                     },
                                 },
                             },
@@ -1052,7 +1039,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                     driverObj.drive();
                 } else if (retries > 0) {
                     // Element not found, retry
-                    setTimeout(() => checkElement(retries - 1), 500);
+                    setTimeout(checkElement.bind(null, retries - 1), 500);
                 } else {
                     // Element not found after max retries - skip this step and continue
                     // This handles cases where buttons don't appear when data hasn't changed
@@ -1061,13 +1048,10 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                     );
 
                     // Automatically move to next step after a short delay
-                    setTimeout(() => {
-                        // Double-check before continuing
-                        const checkUserClosed = localStorage.getItem(STAFF_TOUR_USER_CLOSED_KEY);
-                        if (checkUserClosed !== 'true' && !userClosedRef.current) {
-                            showPageGuide(stepIndex, pageStepIndex + 1);
-                        }
-                    }, 500);
+                    scheduleActionIfTourActive(
+                        () => showPageGuide(stepIndex, pageStepIndex + 1),
+                        500
+                    );
                 }
             };
 
@@ -1155,9 +1139,10 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
 
                                         isNavigatingRef.current = true;
                                         driverObj.destroy();
-                                        setTimeout(() => {
-                                            navigateToStep(stepIndex + 1);
-                                        }, 300);
+                                        scheduleActionIfTourActive(
+                                            () => navigateToStep(stepIndex + 1),
+                                            300
+                                        );
                                     },
                                 },
                             },
@@ -1184,7 +1169,7 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                     driverObjRef.current = driverObj;
                     driverObj.drive();
                 } else {
-                    setTimeout(() => checkPageContent(retries - 1), 500);
+                    setTimeout(checkPageContent.bind(null, retries - 1), 500);
                 }
             };
 

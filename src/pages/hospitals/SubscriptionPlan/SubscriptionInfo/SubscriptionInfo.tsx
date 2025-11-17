@@ -36,7 +36,12 @@ const UsageProgressBar: React.FC<UsageProgressBarProps> = ({
     const displayCurrent = current.toFixed(0);
     const displayMaxFormatted = isUnlimited ? '∞' : max.toFixed(0);
     const progressFillValue = Math.min(displayPercentage, 100);
-    const progressColor = isUnlimited ? '#2e37a4' : isExceeded ? '#ef4444' : '#10b981';
+    let progressColor = '#10b981';
+    if (isUnlimited) {
+        progressColor = '#2e37a4';
+    } else if (isExceeded) {
+        progressColor = '#ef4444';
+    }
     const progressFill = isUnlimited ? '100%' : `${progressFillValue}%`;
 
     const getDescription = () => {

@@ -90,7 +90,12 @@ export const useDoctorFormOptions = (): DoctorFormOptions => {
                               .filter(Boolean)
                         : [];
 
-                    const userRoleLabel = isHospitalStaff ? 'STAFF' : isDoctor ? 'DOCTOR' : 'OTHER';
+                    let userRoleLabel = 'OTHER';
+                    if (isHospitalStaff) {
+                        userRoleLabel = 'STAFF';
+                    } else if (isDoctor) {
+                        userRoleLabel = 'DOCTOR';
+                    }
 
                     console.log('🏥 Hospital Configuration:', {
                         userRole: userRoleLabel,
