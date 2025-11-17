@@ -12,7 +12,8 @@ interface ChatHeaderProps {
 const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
     const { activeConversation, onlineUsers } = useChat();
     const [showTagManager, setShowTagManager] = useState(false);
-    const tagManagerRef = React.useRef<HTMLDivElement>(null);
+    const tagManagerRef = React.useRef<HTMLDialogElement>(null);
+    const tagButtonRef = React.useRef<HTMLButtonElement>(null);
 
     // Get current user profile
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -60,6 +61,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
         };
     }, [showTagManager]);
 
+    // Position tag manager dialog below the tag button
+    React.useEffect(() => {
+        if (showTagManager && tagManagerRef.current && tagButtonRef.current) {
+            const buttonRect = tagButtonRef.current.getBoundingClientRect();
+            const dialog = tagManagerRef.current;
+
+            // Position dialog below and aligned with the right edge of the button
+            dialog.style.top = `${buttonRect.bottom + 8}px`;
+            dialog.style.left = `${buttonRect.right - 300}px`; // 300px is dialog width
+        }
+    }, [showTagManager]);
+
     // Get other participant info
     const otherParticipant = activeConversation?.participantDetails?.find(
         (p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId
@@ -105,6 +118,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                     <i className="ti ti-video"></i>
                 </button>
                 <button
+                    ref={tagButtonRef}
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
@@ -132,15 +146,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
 
             {/* Tag Manager Dropdown */}
             {showTagManager && activeConversation && (
-                <div
+                <dialog
                     ref={tagManagerRef}
-                    role="dialog"
+                    open
                     aria-label="Tag Manager"
-                    tabIndex={-1}
                     style={{
-                        position: 'absolute',
-                        top: '3.5rem',
-                        right: '1rem',
+                        position: 'fixed',
+                        top: 'auto',
+                        bottom: 'auto',
+                        left: 'auto',
+                        right: 'auto',
+                        transform: 'none',
+                        inset: 'auto',
                         zIndex: 1000,
                         backgroundColor: 'white',
                         borderRadius: '0.375rem',
@@ -148,6 +165,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                         width: '300px',
                         maxHeight: '400px',
                         overflow: 'auto',
+                        border: 'none',
+                        padding: 0,
+                        margin: 0,
+                        maxWidth: '300px',
                     }}
                     onMouseDown={(e) => {
                         // Prevent event from bubbling up to handleClickOutside
@@ -169,7 +190,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
                         showConversationTags={true}
                         onTagsUpdated={loadConversationTags}
                     />
-                </div>
+                </dialog>
             )}
         </div>
     );
