@@ -85,14 +85,14 @@ const MessageList = () => {
     // Helper to get scrollable container
     const getScrollContainer = () => {
         const messagesDiv = messagesContainerRef.current;
-        const scrollContainer = messagesDiv?.parentElement;
 
-        if (!scrollContainer) {
+        if (!messagesDiv) {
             console.warn('[MessageList] Could not find scroll container');
             return null;
         }
 
-        return scrollContainer;
+        // The messageList div itself is the scrollable container (has overflow-y: auto in SCSS)
+        return messagesDiv;
     };
 
     // Preserve scroll position when loading more old messages

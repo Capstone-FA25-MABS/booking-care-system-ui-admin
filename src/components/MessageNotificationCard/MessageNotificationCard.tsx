@@ -48,19 +48,21 @@ const MessageNotificationCard: React.FC<MessageNotificationCardProps> = ({
                         damping: 30,
                     }}
                 >
-                    <button className={styles.card} onClick={handleClick} type="button">
-                        {/* Icon Badge */}
-                        <div className={styles.iconBadge}>
-                            <i className="fa-solid fa-envelope"></i>
-                        </div>
+                    <div className={styles.cardWrapper}>
+                        <button className={styles.card} onClick={handleClick} type="button">
+                            {/* Icon Badge */}
+                            <div className={styles.iconBadge}>
+                                <i className="fa-solid fa-envelope"></i>
+                            </div>
 
-                        {/* Content */}
-                        <div className={styles.content}>
-                            <h6 className={styles.title}>💬 Bạn có tin nhắn mới!</h6>
-                            <p className={styles.subtitle}>Nhấp để xem chi tiết</p>
-                        </div>
+                            {/* Content */}
+                            <div className={styles.content}>
+                                <h6 className={styles.title}>💬 Bạn có tin nhắn mới!</h6>
+                                <p className={styles.subtitle}>Nhấp để xem chi tiết</p>
+                            </div>
+                        </button>
 
-                        {/* Close button */}
+                        {/* Close button - positioned absolutely outside the card button */}
                         <button
                             className={styles.closeButton}
                             onClick={(e) => {
@@ -72,7 +74,7 @@ const MessageNotificationCard: React.FC<MessageNotificationCardProps> = ({
                         >
                             <i className="fa-solid fa-times"></i>
                         </button>
-                    </button>
+                    </div>
 
                     {/* Progress bar */}
                     {duration > 0 && (

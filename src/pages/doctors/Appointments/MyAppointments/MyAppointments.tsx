@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Skeleton, Stack } from '@mui/material';
 import Pagination from '@/components/Pagination';
@@ -22,6 +23,8 @@ import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { AppointmentService } from '@/services/appointment.service';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import { PATHS } from '@/routes/paths';
+import { createConversationAndNavigate } from '@/utils/chat-utils';
 
 // Table Skeleton Component
 const AppointmentTableSkeleton: React.FC<{
@@ -141,6 +144,7 @@ const MyAppointments: React.FC = () => {
     // Get auth and doctor profile from Redux
     const { roles } = useSelector((state: RootState) => state.auth);
     const { doctorProfile } = useSelector((state: RootState) => state.user);
+    const navigate = useNavigate();
 
     // API data states
     const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
@@ -318,6 +322,17 @@ const MyAppointments: React.FC = () => {
         });
     };
 
+    const handleChatWithPatient = async (appointment: AppointmentCardData) => {
+        const messagesPath = `${PATHS.DOCTOR.ROOT}/${PATHS.DOCTOR.MESSAGES}`;
+        await createConversationAndNavigate(
+            appointment,
+            doctorProfile?.accountId,
+            messagesPath,
+            navigate,
+            'MyAppointments'
+        );
+    };
+
     const handleClosePreview = () => {
         setPreviewModal({
             isOpen: false,
@@ -435,6 +450,7 @@ const MyAppointments: React.FC = () => {
                                 activeStatusTab={activeStatusTab}
                                 onCompleteAppointment={handleCompleteAppointment}
                                 onPreviewFile={handlePreviewFile}
+                                onChatWithPatient={handleChatWithPatient}
                                 skeletonComponent={
                                     <AppointmentTableSkeleton
                                         rows={itemsPerPage}

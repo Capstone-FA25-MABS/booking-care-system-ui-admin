@@ -49,6 +49,8 @@ export interface HospitalInfo {
 // Appointment Response from API
 export interface AppointmentResponse {
     id: string;
+    patientId?: string;
+    patientAccountId?: string;
     specialtyId: string;
     appointmentDate: string;
     appointmentTimeId: AppointmentTime;
@@ -124,6 +126,8 @@ export type AppointmentUITab = 'waiting' | 'upcoming' | 'cancelled' | 'completed
 // Appointment Card Data (optimized for UI display)
 export interface AppointmentCardData {
     appointmentId: string;
+    patientId?: string;
+    patientAccountId?: string;
     appointmentDate: string;
     appointmentTime: string;
     appointmentTimeId: AppointmentTime;
@@ -321,6 +325,8 @@ export const mapUITabToStatus = (tab: AppointmentUITab): AppointmentStatus => {
 export const transformToCardData = (apiResponse: AppointmentResponse): AppointmentCardData => {
     return {
         appointmentId: apiResponse.id,
+        patientId: apiResponse.patientId,
+        patientAccountId: apiResponse.patientAccountId,
         appointmentDate: apiResponse.appointmentDate,
         appointmentTime: getAppointmentTimeText(apiResponse.appointmentTimeId),
         appointmentTimeId: apiResponse.appointmentTimeId,

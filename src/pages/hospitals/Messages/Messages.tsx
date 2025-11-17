@@ -25,7 +25,7 @@ const MessagesContent: React.FC = () => {
     const handlingCallRef = React.useRef<string | null>(null);
 
     // Get active conversation from ChatProvider
-    const { activeConversation } = useChat();
+    const { activeConversation, selectConversation } = useChat();
 
     // Get current user info
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -41,6 +41,50 @@ const MessagesContent: React.FC = () => {
 
     // Get incoming call from global context
     const { clearIncomingCall } = useGlobalChat();
+
+    // ✅ Track if we've already processed the initial navigation state
+    const processedNavStateRef = React.useRef(false);
+
+    // ✅ Auto-select conversation from URL query params OR navigation state (for appointments)
+    useEffect(() => {
+        // Check navigation state first (priority)
+        const navState = location.state as { conversationId?: string };
+
+        if (navState?.conversationId && !processedNavStateRef.current) {
+            console.log(
+                '[Messages] 📞 Auto-selecting conversation from state:',
+                navState.conversationId
+            );
+            processedNavStateRef.current = true;
+
+            selectConversation(navState.conversationId).catch((error) => {
+                console.error('[Messages] Error selecting conversation:', error);
+                processedNavStateRef.current = false; // Allow retry on error
+            });
+
+            // Clear navigation state after using
+            globalThis.history.replaceState({}, document.title);
+            return;
+        }
+
+        // Fallback to query params
+        const searchParams = new URLSearchParams(location.search);
+        const conversationId = searchParams.get('conversationId');
+
+        if (conversationId && !activeConversation && !processedNavStateRef.current) {
+            console.log('[Messages] 📞 Auto-selecting conversation from URL:', conversationId);
+            processedNavStateRef.current = true;
+
+            selectConversation(conversationId).catch((error) => {
+                console.error('[Messages] Error selecting conversation:', error);
+                processedNavStateRef.current = false; // Allow retry on error
+            });
+
+            // Clear URL params after selecting
+            const newUrl = location.pathname;
+            globalThis.history.replaceState({}, document.title, newUrl);
+        }
+    }, [location.search, location.state, selectConversation]);
 
     // Handle incoming call from navigation state (when accepting from notification)
     useEffect(() => {
@@ -92,11 +136,6 @@ const MessagesContent: React.FC = () => {
         handlingCallRef.current = null;
     };
 
-    const handleVoiceCallStart = () => {
-        // Future implementation for voice call
-        console.log('Bắt đầu cuộc gọi thoại');
-    };
-
     return (
         <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
             {/* Start Content */}
@@ -132,10 +171,7 @@ const MessagesContent: React.FC = () => {
                                 <div className="card border-0 mb-0 h-100 d-flex flex-column">
                                     {/* Chat Header */}
                                     <div className={styles.chatHeader}>
-                                        <ChatHeader
-                                            onVideoCallStart={handleVideoCallStart}
-                                            onVoiceCallStart={handleVoiceCallStart}
-                                        />
+                                        <ChatHeader onVideoCallStart={handleVideoCallStart} />
                                     </div>
 
                                     {/* Messages Container */}

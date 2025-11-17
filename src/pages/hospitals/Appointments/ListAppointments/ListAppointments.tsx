@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import styles from './ListAppointments.module.scss';
@@ -15,6 +15,7 @@ import StatusDropdown from '@/components/StatusDropdown';
 import TableSkeleton from '@/components/TableSkeleton';
 import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { AppointmentService } from '@/services/appointment.service';
+import { createConversationAndNavigate } from '@/utils/chat-utils';
 import {
     AppointmentCardData,
     AppointmentQueryRequest,
@@ -31,6 +32,7 @@ import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffc
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
+import { PATHS } from '@/routes/paths';
 import {
     mockPatients as importedMockPatients,
     appointmentStatuses as importedAppointmentStatuses,
@@ -83,6 +85,7 @@ const ListAppointments: React.FC = () => {
     // Get auth and user profile from Redux
     const { roles } = useSelector((state: RootState) => state.auth);
     const { doctorProfile, hospitalProfile } = useSelector((state: RootState) => state.user);
+    const navigate = useNavigate();
 
     // API data states
     const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
@@ -349,6 +352,17 @@ const ListAppointments: React.FC = () => {
         setCurrentPage(1);
     };
 
+    const handleChatWithPatient = async (appointment: AppointmentCardData) => {
+        const messagesPath = `${PATHS.HOSPITAL.ROOT}/${PATHS.HOSPITAL.MESSAGES}`;
+        await createConversationAndNavigate(
+            appointment,
+            hospitalProfile?.accountId,
+            messagesPath,
+            navigate,
+            'ListAppointments'
+        );
+    };
+
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
@@ -449,7 +463,20 @@ const ListAppointments: React.FC = () => {
                         </Link>
                     </div>
                 </td>
-                <td>{getAppointmentTypeText(appointment.appointmentType)}</td>
+                <td>
+                    <div className="d-flex align-items-center gap-2">
+                        <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
+
+                        <button
+                            type="button"
+                            className="btn btn-icon btn-sm btn-primary-light"
+                            onClick={() => handleChatWithPatient(appointment)}
+                            title="Chat với bệnh nhân"
+                        >
+                            <i className="ti ti-message-circle"></i>
+                        </button>
+                    </div>
+                </td>
                 <td>
                     <StatusBadge status={appointment.status} />
                 </td>

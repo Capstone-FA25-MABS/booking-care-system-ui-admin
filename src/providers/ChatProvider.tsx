@@ -245,14 +245,48 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
             );
         }, []),
 
-        onAllMessagesRead: useCallback((data: any) => {
-            // Reset unread count for conversation
-            setConversations((prev) =>
-                prev.map((conv) =>
-                    conv.id === data.conversationId ? { ...conv, unreadCount: 0 } : conv
-                )
-            );
-        }, []),
+        onAllMessagesRead: useCallback(
+            (data: any) => {
+                console.log('[ChatProvider] 📖📖 AllMessagesRead event received:', data);
+
+                // Extract data (handle both PascalCase and camelCase)
+                const conversationId = data.conversationId || data.ConversationId;
+                const readBy = data.readBy || data.ReadBy;
+
+                if (!conversationId) {
+                    console.error('[ChatProvider] ❌ No conversationId in AllMessagesRead event');
+                    return;
+                }
+
+                console.log(
+                    '[ChatProvider] 📖 Marking all messages as read for conversation:',
+                    conversationId,
+                    'by user:',
+                    readBy
+                );
+
+                // Reset unread count for conversation
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+                    )
+                );
+
+                // Update all messages in active conversation to READ status
+                if (activeConversation?.id === conversationId) {
+                    setMessages((prev) =>
+                        prev.map((msg) => ({
+                            ...msg,
+                            status: MessageStatus.READ,
+                            readAt: data.readAt || data.ReadAt || new Date().toISOString(),
+                        }))
+                    );
+                }
+
+                console.log('[ChatProvider] ✅ All messages marked as read successfully');
+            },
+            [activeConversation]
+        ),
 
         onMessageRecalled: useCallback((data: any) => {
             console.log('[ChatProvider] 🔄 Message recalled - Raw data:', data);
@@ -481,6 +515,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
     const selectConversation = useCallback(
         async (conversationId: string) => {
+            console.log('[ChatProvider] 🎯 Starting to select conversation:', conversationId);
             setIsLoadingMessages(true);
 
             // Reset pagination state when selecting new conversation
@@ -492,10 +527,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
             try {
                 // Load conversation details
+                console.log('[ChatProvider] 📡 Fetching conversation details...');
                 const convResponse = await ChatService.getConversation(conversationId);
+                console.log('[ChatProvider] ✅ Conversation loaded:', convResponse.data);
                 setActiveConversation(convResponse.data);
 
                 // Load messages with cursor pagination
+                console.log('[ChatProvider] 📡 Fetching messages...');
                 const messagesResponse = await ChatService.getMessages(conversationId, {
                     limit: 50,
                     messagesOnly: false,
@@ -511,6 +549,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                     ? [...timelineItems].reverse() // Reverse to show oldest first, newest last
                     : [];
 
+                console.log('[ChatProvider] ✅ Messages loaded:', extractedMessages.length);
+
                 // Update messages and pagination state
                 setMessages(extractedMessages);
                 setNextCursor(paginationData.nextCursor);
@@ -518,39 +558,61 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 setHasMoreOldMessages(paginationData.hasNext);
                 setHasMoreNewMessages(paginationData.hasPrevious);
 
-                // Check if conversation has unread messages before calling mark-all-as-read
-                const conversation = conversations.find((conv) => conv.id === conversationId);
-                const hasUnreadMessages = conversation?.unreadCount && conversation.unreadCount > 0;
+                // ✅ Always mark messages as read when opening conversation
+                // Don't check unreadCount because:
+                // 1. Backend might have auto-reset it when fetching conversation
+                // 2. SignalR events might not have updated the count yet
+                // 3. Better to be safe and always mark as read
+                console.log('[ChatProvider] 📧 Marking messages as read...', {
+                    conversationId,
+                    unreadCount: convResponse.data?.unreadCount,
+                    isHubConnected: chatHub.isConnected,
+                    userId,
+                });
 
-                if (hasUnreadMessages) {
-                    // Only mark as read if there are unread messages
-                    try {
-                        if (chatHub.isConnected) {
-                            await chatHub.markAllMessagesAsRead(conversationId);
-                        } else {
-                            await ChatService.markAllMessagesAsRead({
-                                conversationId,
-                                userId,
-                            });
-                        }
-
-                        // Update local state (reset unread count)
-                        setConversations((prev) =>
-                            prev.map((conv) =>
-                                conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
-                            )
-                        );
-                    } catch (markError) {
-                        // Log but don't fail the whole selection
-                        console.warn('[ChatProvider] Could not mark messages as read:', markError);
+                try {
+                    if (chatHub.isConnected) {
+                        console.log('[ChatProvider] Using SignalR hub to mark messages as read');
+                        await chatHub.markAllMessagesAsRead(conversationId);
+                    } else {
+                        console.log('[ChatProvider] Using REST API to mark messages as read');
+                        await ChatService.markAllMessagesAsRead({
+                            conversationId,
+                            userId,
+                        });
                     }
-                } else {
-                    console.log('[ChatProvider] Skipping mark-all-as-read, no unread messages');
+
+                    // Update local state (reset unread count)
+                    setConversations((prev) =>
+                        prev.map((conv) =>
+                            conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+                        )
+                    );
+
+                    console.log('[ChatProvider] ✅ Messages marked as read successfully');
+                } catch (markError: any) {
+                    // Log detailed error information
+                    console.error('[ChatProvider] ❌ Failed to mark messages as read:', {
+                        error: markError,
+                        errorMessage: markError?.message,
+                        conversationId,
+                        userId,
+                        isHubConnected: chatHub.isConnected,
+                    });
+                    // Don't fail the whole selection, but log the error clearly
                 }
-            } catch (error) {
-                console.error('[ChatProvider] Error selecting conversation:', error);
+
+                console.log('[ChatProvider] ✅ Conversation selected successfully');
+            } catch (error: any) {
+                console.error('[ChatProvider] ❌ Error selecting conversation:', error);
+                console.error('[ChatProvider] ❌ Error details:', {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status,
+                });
                 toast.error('Không thể tải hội thoại');
-                // Don't clear activeConversation if it was already set
+                // Re-throw to let caller know it failed
+                throw error;
             } finally {
                 setIsLoadingMessages(false);
             }

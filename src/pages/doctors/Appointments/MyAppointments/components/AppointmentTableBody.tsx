@@ -18,6 +18,7 @@ interface AppointmentTableBodyProps {
     activeStatusTab: AppointmentUITab;
     onCompleteAppointment: (appointment: AppointmentCardData) => void;
     onPreviewFile: (fileUrl: string, fileName: string) => void;
+    onChatWithPatient: (appointment: AppointmentCardData) => void;
     skeletonComponent: React.ReactNode;
 }
 
@@ -35,6 +36,7 @@ const parseAttachmentUrls = (attachmentUrls: string[] | string | undefined): str
         try {
             // Try to parse as JSON if it's a string
             const parsed = JSON.parse(attachmentUrls);
+
             return Array.isArray(parsed) ? parsed : [];
         } catch {
             // If not JSON, treat as comma-separated string
@@ -87,6 +89,7 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
     activeStatusTab,
     onCompleteAppointment,
     onPreviewFile,
+    onChatWithPatient,
     skeletonComponent,
 }) => {
     if (isLoading) {
@@ -160,7 +163,25 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
                             </Link>
                         </div>
                     </td>
-                    <td>{getAppointmentTypeText(appointment.appointmentType)}</td>
+                    <td>
+                        <div className="d-flex align-items-center gap-2">
+                            <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
+                            {appointment.appointmentType === 'TELEHEALTH' && (
+                                <button
+                                    type="button"
+                                    className="btn btn-soft-info btn-sm p-1"
+                                    onClick={() => onChatWithPatient(appointment)}
+                                    title="Chat với bệnh nhân"
+                                    style={{ width: '28px', height: '28px' }}
+                                >
+                                    <i
+                                        className="ti ti-message-circle"
+                                        style={{ fontSize: '16px' }}
+                                    ></i>
+                                </button>
+                            )}
+                        </div>
+                    </td>
 
                     {/* Conditional columns based on status */}
                     {activeStatusTab === 'upcoming' && (

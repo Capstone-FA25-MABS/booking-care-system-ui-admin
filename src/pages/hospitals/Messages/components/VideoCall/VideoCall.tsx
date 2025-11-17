@@ -80,8 +80,22 @@ const VideoCall: React.FC<VideoCallProps> = ({
     // Helper: Get user display name
     const getUserDisplayName = useCallback(() => {
         if (!userProfile) return undefined;
-        if ('fullName' in userProfile) return userProfile.fullName as string | undefined;
+
+        // Check for hospital profile (has 'name' property)
         if ('name' in userProfile) return userProfile.name as string | undefined;
+
+        // Check for doctor/admin profile (has 'firstName' and 'lastName')
+        if ('firstName' in userProfile && 'lastName' in userProfile) {
+            const firstName = userProfile.firstName;
+            const lastName = userProfile.lastName;
+            return `${firstName} ${lastName}`;
+        }
+
+        // Fallback for fullName property (if exists)
+        if ('fullName' in userProfile) {
+            return (userProfile as any).fullName as string | undefined;
+        }
+
         return undefined;
     }, [userProfile]);
 

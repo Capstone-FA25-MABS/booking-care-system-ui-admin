@@ -4,6 +4,10 @@ import clsx from 'clsx';
 import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
 import { MessageType } from '@/types/communication.types';
+import TagManager from '../TagManager';
+
+import TagService from '@/services/tag.service';
+import { Tag } from '@/types/tag.types';
 import styles from '../../Messages.module.scss';
 import UserListItem from './UserListItem';
 
@@ -11,6 +15,9 @@ const ChatUserNav: React.FC = () => {
     const { conversations, selectConversation, activeConversation, onlineUsers, isLoading } =
         useChat();
     const [searchKeyword, setSearchKeyword] = useState('');
+    const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+    const [showTagPanel, setShowTagPanel] = useState(false);
+    const [conversationTags, setConversationTags] = useState<Map<string, Tag[]>>(new Map());
 
     // Get current user profile
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -33,16 +40,14 @@ const ChatUserNav: React.FC = () => {
         return 'Nhân viên';
     };
 
-    // Filter and sort conversations based on search
+    // Filter and sort conversations based on search and tags
     const filteredConversations = useMemo(() => {
         // Ensure conversations is always an array
         const convs = conversations || [];
 
         // Filter by search keyword
-        const filtered = searchKeyword
+        let filtered = searchKeyword
             ? convs.filter((conv) => {
-                  // Search in participant names or last message
-                  // Search in participant names or last message
                   const participantName = conv.participantDetails
                       ?.filter((p) => (p.id || p.accountId || '').toUpperCase() !== currentUserId)
                       .map((p) => p.fullName)
@@ -56,15 +61,23 @@ const ChatUserNav: React.FC = () => {
               })
             : convs;
 
+        // Filter by selected tags
+        if (selectedTagIds.length > 0) {
+            filtered = filtered.filter((conv) => {
+                const convTags = conversationTags.get(conv.id) || [];
+                // Check if conversation has at least one of the selected tags
+                return convTags.some((tag) => selectedTagIds.includes(tag.id));
+            });
+        }
+
         // Sort by most recent message (newest first)
-        // Use updatedAt or lastMessage.createdAt as fallback
         return filtered.sort((a, b) => {
             const timeA = a.lastMessage?.createdAt || a.updatedAt || a.createdAt;
             const timeB = b.lastMessage?.createdAt || b.updatedAt || b.createdAt;
 
             return new Date(timeB).getTime() - new Date(timeA).getTime();
         });
-    }, [conversations, searchKeyword, currentUserId]);
+    }, [conversations, searchKeyword, currentUserId, selectedTagIds, conversationTags]);
 
     // Helper to get attachment preview text
     const getAttachmentPreview = (type: string, fileName?: string) => {
@@ -117,6 +130,55 @@ const ChatUserNav: React.FC = () => {
         return date.toLocaleDateString('vi-VN');
     };
 
+    // Load tags for all conversations
+    const loadConversationTags = async () => {
+        if (!currentUserId) return;
+
+        const tagsMap = new Map<string, Tag[]>();
+
+        for (const conv of conversations || []) {
+            try {
+                const response = await TagService.getConversationTags(currentUserId, conv.id);
+                if (response.success && response.data) {
+                    tagsMap.set(conv.id, response.data);
+                }
+            } catch (error) {
+                console.error(`Failed to load tags for conversation ${conv.id}:`, error);
+            }
+        }
+
+        setConversationTags(tagsMap);
+    };
+
+    // Load conversation tags when conversations change
+    React.useEffect(() => {
+        if (conversations && conversations.length > 0) {
+            loadConversationTags();
+        }
+    }, [conversations?.length, currentUserId]);
+
+    // Listen for tag updates from other components
+    React.useEffect(() => {
+        const handleTagsUpdated = () => {
+            loadConversationTags();
+        };
+
+        globalThis.addEventListener('conversationTagsUpdated', handleTagsUpdated);
+        return () => {
+            globalThis.removeEventListener('conversationTagsUpdated', handleTagsUpdated);
+        };
+    }, [conversations, currentUserId]);
+
+    // Handle tag filter selection
+    const handleTagSelect = (tagId: string) => {
+        setSelectedTagIds((prev) => {
+            if (prev.includes(tagId)) {
+                return prev.filter((id) => id !== tagId);
+            }
+            return [...prev, tagId];
+        });
+    };
+
     return (
         <div className={clsx(styles.chatUserNav, 'chat-user-nav')}>
             {/* Current User Info */}
@@ -143,15 +205,38 @@ const ChatUserNav: React.FC = () => {
                         <p className="mb-0">{getUserRole()}</p>
                     </div>
                 </div>
-                <button
-                    className="btn p-2 btn-primary"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    data-bs-title="Cuộc trò chuyện mới"
-                    type="button"
-                >
-                    <i className="ti ti-plus"></i>
-                </button>
+                <div className="d-flex gap-2">
+                    <button
+                        className={clsx(
+                            'btn p-2 position-relative',
+                            showTagPanel ? 'btn-primary' : 'btn-outline-primary'
+                        )}
+                        onClick={() => setShowTagPanel(!showTagPanel)}
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        data-bs-title={showTagPanel ? 'Ẩn nhãn' : 'Hiện nhãn'}
+                        type="button"
+                    >
+                        <i className="ti ti-tag"></i>
+                        {selectedTagIds.length > 0 && (
+                            <span
+                                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style={{ fontSize: '0.625rem', padding: '0.15rem 0.35rem' }}
+                            >
+                                {selectedTagIds.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        className="btn p-2 btn-primary"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        data-bs-title="Cuộc trò chuyện mới"
+                        type="button"
+                    >
+                        <i className="ti ti-plus"></i>
+                    </button>
+                </div>
             </div>
 
             {/* Search Section */}
@@ -168,6 +253,34 @@ const ChatUserNav: React.FC = () => {
                         onChange={(e) => setSearchKeyword(e.target.value)}
                     />
                 </div>
+
+                {/* Active Filter Indicator */}
+                {selectedTagIds.length > 0 && (
+                    <div className="d-flex align-items-center justify-content-between mt-2 px-2">
+                        <span className="text-muted small">
+                            <i className="ti ti-filter me-1"></i>
+                            Lọc theo {selectedTagIds.length} nhãn
+                        </span>
+                        <button
+                            className="btn btn-sm btn-ghost-danger"
+                            onClick={() => setSelectedTagIds([])}
+                            type="button"
+                        >
+                            <i className="ti ti-x"></i> Xóa lọc
+                        </button>
+                    </div>
+                )}
+
+                {/* Tag Filter Panel */}
+                {showTagPanel && (
+                    <div className="mt-3">
+                        <TagManager
+                            userId={currentUserId}
+                            onTagSelect={handleTagSelect}
+                            selectedTags={selectedTagIds}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* User List Container */}
@@ -224,22 +337,27 @@ const ChatUserNav: React.FC = () => {
                                     isRead: (conv.unreadCount || 0) === 0,
                                 };
 
+                                // Get tags for this conversation
+                                const convTags = conversationTags.get(conv.id) || [];
+
                                 return (
-                                    <button
-                                        key={conv.id}
-                                        type="button"
-                                        onClick={() => selectConversation(conv.id)}
-                                        style={{
-                                            cursor: 'pointer',
-                                            border: 'none',
-                                            background: 'none',
-                                            padding: 0,
-                                            width: '100%',
-                                            textAlign: 'left',
-                                        }}
-                                    >
-                                        <UserListItem user={user} />
-                                    </button>
+                                    <div key={conv.id} className={clsx(styles.conversationItem)}>
+                                        <button
+                                            type="button"
+                                            onClick={() => selectConversation(conv.id)}
+                                            className={clsx(styles.conversationButton)}
+                                            style={{
+                                                cursor: 'pointer',
+                                                border: 'none',
+                                                background: 'none',
+                                                padding: 0,
+                                                width: '100%',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            <UserListItem user={user} conversationTags={convTags} />
+                                        </button>
+                                    </div>
                                 );
                             })}
                         </>

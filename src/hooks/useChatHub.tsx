@@ -398,11 +398,21 @@ export const useChatHub = (
 
     const markAllMessagesAsRead = useCallback(async (conversationId: string) => {
         if (!connectionRef.current || !isConnectedRef.current) {
+            console.error('[ChatHub] ❌ Cannot mark messages as read - hub not connected');
             throw new Error('ChatHub is not connected');
         }
         try {
+            console.log(
+                '[ChatHub] 📨 Invoking MarkAllMessagesAsRead for conversation:',
+                conversationId
+            );
+            console.log('[ChatHub] Hub connection state:', connectionRef.current.state);
+
             await connectionRef.current.invoke('MarkAllMessagesAsRead', conversationId);
-            console.log(`[ChatHub] Marked all messages as read in conversation: ${conversationId}`);
+
+            console.log(
+                `[ChatHub] ✅ Successfully marked all messages as read in conversation: ${conversationId}`
+            );
         } catch (error: any) {
             // Extract error message from SignalR error
             const errorMessage = error?.message || error?.toString() || '';
@@ -414,11 +424,10 @@ export const useChatHub = (
                 errorMessage.includes('no unread messages') ||
                 errorMessage.toLowerCase().includes('already read')
             ) {
-                console.log('[ChatHub] All messages already read, skipping mark as read');
+                console.log('[ChatHub] ℹ️ All messages already read, treating as success');
                 return; // Don't throw error
             }
 
-            console.error('[ChatHub] Error marking all messages as read:', error);
             throw error;
         }
     }, []);
