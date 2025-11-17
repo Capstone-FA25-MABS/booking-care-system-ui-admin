@@ -53,7 +53,6 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-receipt-refund',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
             ),
-            createMessagesMenuItem('staff'),
             createNotificationsMenuItem('staff'),
         ],
     },

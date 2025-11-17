@@ -192,7 +192,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                 <div
                     className={`d-flex align-items-center flex-wrap gap-3 mb-4 ${styles.searchBar}`}
                 >
-                    <div className={styles.searchInput}>
+                    <div className={styles.searchInput} data-tour-id="service-type-search-input">
                         <div className={styles.inputIconStart}>
                             <i className={`ti ti-search ${styles.inputIconAddon}`}></i>
                             <input
@@ -214,7 +214,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                 </div>
 
                 {/* Service types grid */}
-                <div className={styles.serviceTypesGrid}>
+                <div className={styles.serviceTypesGrid} data-tour-id="service-type-grid">
                     {filteredServiceTypes.length === 0 ? (
                         <div className="text-center py-5">
                             <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
@@ -236,6 +236,7 @@ const HospitalServiceTypesManagement: React.FC = () => {
                                     aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} dịch vụ ${serviceType.name}`}
                                     aria-pressed={isSelected}
                                     className={`${styles.serviceTypeCard} ${isSelected ? styles.selected : ''}`}
+                                    data-tour-id="service-type-card"
                                     onClick={() => handleServiceTypeToggle(serviceType.id)}
                                     onKeyDown={handleKeyDown}
                                 >

@@ -24,7 +24,7 @@ const HospitalImagesSection: React.FC<{
     onRemoveImage: (id: string) => void;
 }> = ({ images, newImages, onAddImages, onRemoveImage }) => {
     return (
-        <div className="card mb-4">
+        <div className="card mb-4" data-tour-id="hospital-gallery-upload">
             <div className={`card-body ${styles.sectionBorder}`}>
                 <h5 className="card-title mb-4">Ảnh của bệnh viện</h5>
                 <div className="row">
@@ -139,7 +139,7 @@ const BackgroundImageSection: React.FC<{
     };
 
     return (
-        <div className="card mb-4">
+        <div className="card mb-4" data-tour-id="hospital-background-upload">
             <div className={`card-body ${styles.sectionBorder}`}>
                 <h5 className="card-title mb-4">Ảnh nền</h5>
                 <div className="row">
@@ -614,6 +614,11 @@ const HospitalProfileSettings: React.FC = () => {
                                     iconClassName="feather-building"
                                     label="Ảnh đại diện"
                                     placeholderText="Kéo thả hoặc nhấp để chọn ảnh"
+                                    wrapperProps={
+                                        {
+                                            ['data-tour-id']: 'hospital-avatar-upload',
+                                        } as React.HTMLAttributes<HTMLDivElement>
+                                    }
                                 />
                                 <BasicInfoFields
                                     formData={formData}

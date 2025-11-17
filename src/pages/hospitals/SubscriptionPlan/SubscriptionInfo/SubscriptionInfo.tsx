@@ -326,8 +326,7 @@ const SubscriptionInfo: React.FC = () => {
                                                 ? formatPrice(
                                                       activeSubscription.subscriptionPlan.price
                                                   )
-                                                : '0'}{' '}
-                                            VNĐ
+                                                : '0 VNĐ'}
                                         </h5>
                                     </div>
 

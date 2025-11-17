@@ -220,7 +220,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                 <div
                     className={`d-flex align-items-center flex-wrap gap-3 mb-4 ${styles.searchBar}`}
                 >
-                    <div className={styles.searchInput}>
+                    <div className={styles.searchInput} data-tour-id="specialty-search-input">
                         <div className={styles.inputIconStart}>
                             <i className={`ti ti-search ${styles.inputIconAddon}`}></i>
                             <input
@@ -242,7 +242,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                 </div>
 
                 {/* Specialties grid */}
-                <div className={styles.specialtiesGrid}>
+                <div className={styles.specialtiesGrid} data-tour-id="specialty-grid">
                     {filteredSpecialties.length === 0 ? (
                         <div className="text-center py-5">
                             <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
@@ -264,6 +264,7 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                                     aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
                                     aria-pressed={isSelected}
                                     className={`${styles.specialtyCard} ${isSelected ? styles.selected : ''}`}
+                                    data-tour-id="specialty-card"
                                     onClick={() => handleSpecialtyToggle(specialty.id)}
                                     onKeyDown={handleKeyDown}
                                 >

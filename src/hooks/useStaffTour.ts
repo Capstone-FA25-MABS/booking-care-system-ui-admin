@@ -5,10 +5,11 @@ import 'driver.js/dist/driver.css';
 import { Role } from '@/enums/common.enums';
 import { buildPath, PATHS } from '@/routes/paths';
 
-const STAFF_TOUR_STORAGE_KEY = 'staff_tour_completed';
-const STAFF_TOUR_CURRENT_STEP_KEY = 'staff_tour_current_step';
-const STAFF_TOUR_CURRENT_PAGE_STEP_KEY = 'staff_tour_current_page_step';
-const STAFF_TOUR_USER_CLOSED_KEY = 'staff_tour_user_closed';
+const STAFF_TOUR_VERSION = 'v2';
+const STAFF_TOUR_STORAGE_KEY = `staff_tour_completed_${STAFF_TOUR_VERSION}`;
+const STAFF_TOUR_CURRENT_STEP_KEY = `staff_tour_current_step_${STAFF_TOUR_VERSION}`;
+const STAFF_TOUR_CURRENT_PAGE_STEP_KEY = `staff_tour_current_page_step_${STAFF_TOUR_VERSION}`;
+const STAFF_TOUR_USER_CLOSED_KEY = `staff_tour_user_closed_${STAFF_TOUR_VERSION}`;
 
 // Define types for tour steps
 interface PageStep {
@@ -209,6 +210,27 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 'Đầu tiên, bạn cần cập nhật thông tin tài khoản bệnh viện của mình. Nhấp vào "Cài đặt tài khoản" để bắt đầu.',
             pageSteps: [
                 {
+                    selector: '[data-tour-id="hospital-avatar-upload"]',
+                    title: 'Tải ảnh đại diện',
+                    description:
+                        'Nhấp hoặc kéo thả vào vùng này để tải ảnh đại diện cho bệnh viện. Ảnh đại diện giúp hồ sơ trông chuyên nghiệp hơn.',
+                    waitForAction: 'optional',
+                },
+                {
+                    selector: '[data-tour-id="hospital-background-upload"]',
+                    title: 'Cập nhật ảnh nền',
+                    description:
+                        'Dùng vùng kéo thả để chọn ảnh nền thương hiệu của bệnh viện. Ảnh nền sẽ hiển thị trên trang thông tin công khai.',
+                    waitForAction: 'optional',
+                },
+                {
+                    selector: '[data-tour-id="hospital-gallery-upload"]',
+                    title: 'Bộ sưu tập hình ảnh',
+                    description:
+                        'Nhấp để tải lên nhiều hình ảnh giới thiệu cơ sở vật chất. Bạn có thể kéo thả hoặc chọn nhiều ảnh cùng lúc.',
+                    waitForAction: 'optional',
+                },
+                {
                     selector: 'input[name="name"]',
                     title: 'Nhập tên bệnh viện',
                     description:
@@ -259,22 +281,21 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 'Quản lý các chuyên khoa mà bệnh viện của bạn cung cấp. Đây là bước đầu tiên trong việc thiết lập dịch vụ.',
             pageSteps: [
                 {
-                    selector: 'input[type="search"]',
+                    selector: '[data-tour-id="specialty-search-input"] input',
                     title: 'Tìm kiếm chuyên khoa',
                     description:
                         'Sử dụng thanh tìm kiếm để tìm nhanh chuyên khoa bạn muốn chọn. Bạn có thể nhập tên chuyên khoa vào đây.',
                     waitForAction: 'optional', // Tùy chọn
                 },
                 {
-                    selector:
-                        '.specialties-grid, [class*="specialtiesGrid"], [class*="specialties-grid"]',
+                    selector: '[data-tour-id="specialty-grid"]',
                     title: 'Danh sách chuyên khoa',
                     description:
                         'Đây là danh sách tất cả các chuyên khoa có sẵn. Hãy xem qua danh sách này.',
                     waitForAction: 'view',
                 },
                 {
-                    selector: 'input[type="checkbox"]',
+                    selector: '[data-tour-id="specialty-card"] input[type="checkbox"]',
                     title: 'Chọn chuyên khoa',
                     description:
                         'Click vào checkbox bên cạnh các chuyên khoa mà bệnh viện của bạn cung cấp để chọn. Hãy chọn ít nhất một chuyên khoa.',
@@ -297,20 +318,20 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                 'Thiết lập các loại dịch vụ mà bác sĩ trong bệnh viện có thể cung cấp cho bệnh nhân.',
             pageSteps: [
                 {
-                    selector: 'input[type="search"]',
+                    selector: '[data-tour-id="service-type-search-input"] input',
                     title: 'Tìm kiếm loại dịch vụ',
                     description: 'Sử dụng thanh tìm kiếm để tìm nhanh loại dịch vụ bạn muốn chọn.',
                     waitForAction: 'optional',
                 },
                 {
-                    selector: '[class*="serviceTypesGrid"], [class*="service-types-grid"], .grid',
+                    selector: '[data-tour-id="service-type-grid"]',
                     title: 'Danh sách loại dịch vụ',
                     description:
                         'Đây là danh sách tất cả các loại dịch vụ có sẵn. Hãy xem qua danh sách này.',
                     waitForAction: 'view',
                 },
                 {
-                    selector: 'input[type="checkbox"]',
+                    selector: '[data-tour-id="service-type-card"] input[type="checkbox"]',
                     title: 'Chọn loại dịch vụ',
                     description:
                         'Click vào checkbox để chọn các loại dịch vụ mà bác sĩ có thể cung cấp. Hãy chọn ít nhất một loại dịch vụ.',
@@ -510,6 +531,36 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
                     title: 'Gửi tin nhắn',
                     description: 'Nhấp vào nút "Gửi" để gửi tin nhắn sau khi đã nhập nội dung.',
                     waitForAction: 'click',
+                },
+            ],
+        },
+        {
+            menuSelector: '[data-tour-id="menu-item-thông-báo"]',
+            path: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.NOTIFICATIONS.ROOT),
+            title: 'Bước 11: Thông báo hệ thống',
+            description:
+                'Theo dõi thông báo từ bệnh nhân, bác sĩ và hệ thống để không bỏ lỡ các sự kiện quan trọng.',
+            pageSteps: [
+                {
+                    selector: '.nav.nav-tabs, .nav-tabs',
+                    title: 'Chọn danh mục thông báo',
+                    description:
+                        'Các tab giúp bạn lọc nhanh thông báo theo nhóm (đăng ký, thanh toán, hệ thống...). Nhấp vào tab để xem chi tiết.',
+                    waitForAction: 'optional',
+                },
+                {
+                    selector: 'button:contains("Đọc tất cả")',
+                    title: 'Đánh dấu đã đọc',
+                    description:
+                        'Sử dụng nút "Đọc tất cả" để đánh dấu mọi thông báo chưa đọc. Bạn cũng có thể chọn từng dòng và bấm các hành động tương ứng.',
+                    waitForAction: 'optional',
+                },
+                {
+                    selector: '.table-responsive, table.table',
+                    title: 'Danh sách thông báo',
+                    description:
+                        'Theo dõi nội dung, trạng thái và thời gian. Nhấp vào từng thông báo để xem chi tiết hoặc mở liên kết hành động.',
+                    waitForAction: 'view',
                 },
             ],
         },
