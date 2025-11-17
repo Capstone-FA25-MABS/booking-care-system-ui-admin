@@ -136,11 +136,6 @@ const MessagesContent: React.FC = () => {
         handlingCallRef.current = null;
     };
 
-    const handleVoiceCallStart = () => {
-        // Future implementation for voice call
-        console.log('Bắt đầu cuộc gọi thoại');
-    };
-
     return (
         <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
             {/* Start Content */}
@@ -176,10 +171,7 @@ const MessagesContent: React.FC = () => {
                                 <div className="card border-0 mb-0 h-100 d-flex flex-column">
                                     {/* Chat Header */}
                                     <div className={styles.chatHeader}>
-                                        <ChatHeader
-                                            onVideoCallStart={handleVideoCallStart}
-                                            onVoiceCallStart={handleVoiceCallStart}
-                                        />
+                                        <ChatHeader onVideoCallStart={handleVideoCallStart} />
                                     </div>
 
                                     {/* Messages Container */}

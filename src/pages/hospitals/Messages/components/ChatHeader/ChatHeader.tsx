@@ -7,10 +7,9 @@ import trustcare from '@/assets/img/icons/trustcare.svg';
 
 interface ChatHeaderProps {
     onVideoCallStart?: () => void;
-    onVoiceCallStart?: () => void;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallStart }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart }) => {
     const { activeConversation, onlineUsers } = useChat();
     const [showTagManager, setShowTagManager] = useState(false);
     const tagManagerRef = React.useRef<HTMLDivElement>(null);
@@ -94,17 +93,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onVideoCallStart, onVoiceCallSt
                 )}
             </div>
             <div className="gap-2 d-flex align-items-center flex-wrap">
-                <button
-                    className="btn btn-icon btn-light"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    data-bs-original-title="Cuộc gọi thoại"
-                    type="button"
-                    onClick={onVoiceCallStart}
-                    disabled={!activeConversation}
-                >
-                    <i className="ti ti-phone"></i>
-                </button>
                 <button
                     className="btn btn-icon btn-light"
                     data-bs-toggle="tooltip"
