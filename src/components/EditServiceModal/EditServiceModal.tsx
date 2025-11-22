@@ -5,6 +5,8 @@ import Button from '@/components/Button';
 import ServiceFormFields from '@/components/ServiceFormFields';
 import { updateService, updateServiceWithImage, getServiceById } from '@/services/service.service';
 import { useServiceForm } from '@/hooks/useServiceForm';
+import { getAllServiceCategories } from '@/services/serviceCategory.service';
+import { ServiceCategory } from '@/types/serviceCategory.types';
 
 interface EditServiceModalProps {
     isOpen: boolean;
@@ -17,12 +19,34 @@ interface EditServiceModalProps {
 const EditServiceModal: React.FC<EditServiceModalProps> = ({
     isOpen,
     serviceId,
-    serviceCategories,
+    serviceCategories: _serviceCategories,
     onClose,
     onSuccess,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
+    const [serviceCategoriesWithParent, setServiceCategoriesWithParent] = useState<
+        ServiceCategory[]
+    >([]);
+
+    // Fetch service categories with parentId when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchServiceCategories();
+        }
+    }, [isOpen]);
+
+    const fetchServiceCategories = async () => {
+        try {
+            const response = await getAllServiceCategories();
+            if (response.success && response.data) {
+                setServiceCategoriesWithParent(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching service categories:', error);
+            toast.error('Không thể tải danh sách loại dịch vụ');
+        }
+    };
 
     const {
         formData,
@@ -132,7 +156,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                         <ServiceFormFields
                             formData={formData}
                             errors={errors}
-                            serviceCategories={serviceCategories}
+                            serviceCategories={serviceCategoriesWithParent}
                             imagePreview={imagePreview}
                             onInputChange={handleInputChange}
                             onImageFileChange={handleImageFileChange}

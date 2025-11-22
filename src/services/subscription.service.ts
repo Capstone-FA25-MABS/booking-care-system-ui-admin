@@ -180,6 +180,8 @@ const SUBSCRIPTION_ENDPOINTS = {
     USAGE_BY_HOSPITAL: (hospitalId: string) => `/subscription-usage/hospital/${hospitalId}`,
     USAGE_DOCTOR_LIMIT: (hospitalId: string) =>
         `/subscription-usage/hospital/${hospitalId}/doctor-limit`,
+    USAGE_SERVICE_LIMIT: (hospitalId: string) =>
+        `/subscription-usage/hospital/${hospitalId}/service-limit`,
     USAGE_SPECIALTY_LIMIT: (hospitalId: string) =>
         `/subscription-usage/hospital/${hospitalId}/specialty-limit`,
     USAGE_APPOINTMENT_LIMIT: (hospitalId: string) =>
@@ -751,6 +753,26 @@ export class SubscriptionService {
     }
 
     /**
+     * Check service limit for a hospital
+     */
+    static async checkServiceLimit(
+        hospitalId: string
+    ): Promise<ApiResponse<{ canAddService: boolean; hospitalId: string }>> {
+        try {
+            const response: any = await axiosInstance.get(
+                SUBSCRIPTION_ENDPOINTS.USAGE_SERVICE_LIMIT(hospitalId)
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Service limit check completed',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to check service limit');
+        }
+    }
+
+    /**
      * Check specialty limit for a hospital
      */
     static async checkSpecialtyLimit(
@@ -866,6 +888,7 @@ export const {
     getExpiringSubscriptions,
     getSubscriptionUsage,
     checkDoctorLimit,
+    checkServiceLimit,
     checkSpecialtyLimit,
     checkAppointmentLimit,
     getUsageAlerts,
