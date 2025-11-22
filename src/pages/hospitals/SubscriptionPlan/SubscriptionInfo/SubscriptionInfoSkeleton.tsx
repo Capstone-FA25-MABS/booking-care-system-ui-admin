@@ -1,6 +1,35 @@
 import React from 'react';
 import styles from './SubscriptionInfo.module.scss';
 
+interface SkeletonInfoItemProps {
+    labelWidth: string;
+    contentWidth: string;
+    contentHeight?: string;
+    contentType?: 'text' | 'badge';
+}
+
+const SkeletonInfoItem: React.FC<SkeletonInfoItemProps> = ({
+    labelWidth,
+    contentWidth,
+    contentHeight = '24px',
+    contentType = 'text',
+}) => {
+    const ContentComponent = contentType === 'badge' ? styles.skeletonBadge : styles.skeletonText;
+    return (
+        <div className={styles.infoItem}>
+            <div className={styles.skeletonLabel} style={{ width: labelWidth }}></div>
+            <div
+                className={ContentComponent}
+                style={{
+                    width: contentWidth,
+                    height: contentHeight,
+                    marginTop: '0.5rem',
+                }}
+            ></div>
+        </div>
+    );
+};
+
 const SubscriptionInfoSkeleton: React.FC = () => {
     return (
         <div className={`content ${styles.subscriptionInfoPage}`}>
@@ -29,52 +58,17 @@ const SubscriptionInfoSkeleton: React.FC = () => {
                             </div>
                             <div className={styles.cardBody}>
                                 {/* Package Name */}
-                                <div className={styles.infoItem}>
-                                    <div
-                                        className={styles.skeletonLabel}
-                                        style={{ width: '80px' }}
-                                    ></div>
-                                    <div
-                                        className={styles.skeletonText}
-                                        style={{
-                                            width: '150px',
-                                            height: '24px',
-                                            marginTop: '0.5rem',
-                                        }}
-                                    ></div>
-                                </div>
+                                <SkeletonInfoItem labelWidth="80px" contentWidth="150px" />
 
                                 {/* Billing Cycle */}
-                                <div className={styles.infoItem}>
-                                    <div
-                                        className={styles.skeletonLabel}
-                                        style={{ width: '120px' }}
-                                    ></div>
-                                    <div
-                                        className={styles.skeletonBadge}
-                                        style={{
-                                            width: '100px',
-                                            height: '24px',
-                                            marginTop: '0.5rem',
-                                        }}
-                                    ></div>
-                                </div>
+                                <SkeletonInfoItem
+                                    labelWidth="120px"
+                                    contentWidth="100px"
+                                    contentType="badge"
+                                />
 
                                 {/* Price */}
-                                <div className={styles.infoItem}>
-                                    <div
-                                        className={styles.skeletonLabel}
-                                        style={{ width: '50px' }}
-                                    ></div>
-                                    <div
-                                        className={styles.skeletonText}
-                                        style={{
-                                            width: '120px',
-                                            height: '24px',
-                                            marginTop: '0.5rem',
-                                        }}
-                                    ></div>
-                                </div>
+                                <SkeletonInfoItem labelWidth="50px" contentWidth="120px" />
 
                                 {/* Date Range */}
                                 <div className={styles.infoItem}>
@@ -99,20 +93,11 @@ const SubscriptionInfoSkeleton: React.FC = () => {
                                 </div>
 
                                 {/* Status */}
-                                <div className={styles.infoItem}>
-                                    <div
-                                        className={styles.skeletonLabel}
-                                        style={{ width: '80px' }}
-                                    ></div>
-                                    <div
-                                        className={styles.skeletonBadge}
-                                        style={{
-                                            width: '100px',
-                                            height: '24px',
-                                            marginTop: '0.5rem',
-                                        }}
-                                    ></div>
-                                </div>
+                                <SkeletonInfoItem
+                                    labelWidth="80px"
+                                    contentWidth="100px"
+                                    contentType="badge"
+                                />
 
                                 {/* Features */}
                                 <div className={styles.infoItem}>
