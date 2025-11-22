@@ -6,6 +6,7 @@ import { HospitalSubscription } from '@/services/subscription.service';
 import StatusBadge from '@/components/StatusBadge';
 import SubscriptionHistoryItem from '@/components/SubscriptionHistoryItem';
 import Button from '@/components/Button';
+import SubscriptionInfoSkeleton from './SubscriptionInfoSkeleton';
 import styles from './SubscriptionInfo.module.scss';
 
 interface UsageProgressBarProps {
@@ -187,23 +188,8 @@ const SubscriptionInfo: React.FC = () => {
         }
     }, [hospitalSubscriptions]);
 
-    if (loading) {
-        return (
-            <div className={`content ${styles.subscriptionInfoPage}`}>
-                <div className={styles.contentWrapper}>
-                    <div className={styles.loadingContainer}>
-                        <output
-                            className="spinner-border text-primary"
-                            aria-live="polite"
-                            aria-busy="true"
-                            style={{ width: '3rem', height: '3rem' }}
-                        >
-                            <span className="visually-hidden">Loading...</span>
-                        </output>
-                    </div>
-                </div>
-            </div>
-        );
+    if (loading || isLoadingSubscriptions) {
+        return <SubscriptionInfoSkeleton />;
     }
 
     if (error) {
