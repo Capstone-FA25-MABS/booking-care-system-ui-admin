@@ -23,6 +23,7 @@ const SERVICE_ENDPOINTS = {
     GET_ALL_ENTITIES: '/services/all',
     GET_ALL_DETAILS: '/medical-services/services/all-details', // New endpoint
     GET_FILTER_OPTIONS: '/medical-services/services/filter-options', // Filter options endpoint
+    GET_BY_HOSPITAL: (hospitalId: string) => `/medical-services/services/hospital/${hospitalId}`, // Get services by hospital
     CREATE_ENTITY: '/medical-services/services', // Updated to match new API pattern
     UPDATE_ENTITY: (id: string) => `/medical-services/services/${id}`, // Updated to match new API pattern
     DELETE_ENTITY: (id: string) => `/medical-services/services/${id}`, // Updated to match new API pattern
@@ -372,6 +373,38 @@ export class ServiceService extends BaseService {
             this.handleError(error);
         }
     }
+
+    /**
+     * Get services by hospital ID
+     * Backend returns List<ServiceResponse> directly (ActionResult<List<ServiceResponse>>)
+     * Axios interceptor returns response.data, so response is the array directly
+     */
+    async getServicesByHospital(hospitalId: string): Promise<ApiResponse<Service[]>> {
+        try {
+            this.validateEntityId(hospitalId);
+            const response: any = await axiosInstance.get(
+                SERVICE_ENDPOINTS.GET_BY_HOSPITAL(hospitalId)
+            );
+
+            // Axios interceptor returns response.data, so response is the array directly
+            // But formatResponse expects { data: ... }, so we need to handle it
+            const services = Array.isArray(response)
+                ? response
+                : response?.data && Array.isArray(response.data)
+                  ? response.data
+                  : Array.isArray(response?.data?.data)
+                    ? response.data.data
+                    : [];
+
+            return {
+                success: true,
+                data: services,
+                message: `Lấy danh sách ${this.entityNamePlural.toLowerCase()} theo bệnh viện thành công`,
+            };
+        } catch (error: any) {
+            this.handleError(error);
+        }
+    }
 }
 
 // Export singleton instance
@@ -427,4 +460,10 @@ export const updateServiceWithImage = async (
     data: ServiceFormData & { imageFile: File }
 ): Promise<ApiResponse<Service>> => {
     return serviceService.updateServiceWithImage(id, data);
+};
+
+export const getServicesByHospital = async (
+    hospitalId: string
+): Promise<ApiResponse<Service[]>> => {
+    return serviceService.getServicesByHospital(hospitalId);
 };

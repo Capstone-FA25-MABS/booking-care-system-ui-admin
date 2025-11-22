@@ -36,6 +36,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
             ),
             createSimpleMenuItem(
+                'Thống kê & báo cáo',
+                'ti ti-chart-bar',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DASHBOARD)
+            ),
+            createSimpleMenuItem(
                 'Quản lí dịch vụ y tế',
                 'ti ti-briefcase',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
