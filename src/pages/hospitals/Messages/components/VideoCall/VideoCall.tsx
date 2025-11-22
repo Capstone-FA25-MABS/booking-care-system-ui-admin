@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import styles from './VideoCall.module.scss';
 import videojpg from '@/assets/img/media/video.jpg';
 import { useWebRTC } from '@/hooks/useWebRTC';
+import { useCallRecording } from '@/hooks/useCallRecording';
 import type { RootState } from '@/store';
 import { useGlobalChat } from '@/providers/GlobalChatProvider';
+import { MessageType, type MessageResponse } from '@/types/communication.types';
+import VoiceTranscriptionService from '@/services/voiceTranscription.service';
 
 interface VideoCallProps {
     isVisible: boolean;
@@ -17,6 +21,9 @@ interface VideoCallProps {
     participantAvatar?: string;
     callType?: 'video' | 'audio';
     isIncoming?: boolean; // true if receiving call, false if initiating
+    appointmentId?: string; // For AI medical summary
+    messages?: MessageResponse[]; // For generating transcript
+    onShowMedicalSummary?: (transcript: string, appointmentId?: string) => void; // Callback to show modal
 }
 
 const VideoCall: React.FC<VideoCallProps> = ({
@@ -28,6 +35,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
     participantAvatar: _participantAvatar = '/src/assets/img/users/user-01.jpg', // Not used - showing current user info
     callType: _callType = 'video', // Reserved for future use (audio/video mode)
     isIncoming = false,
+    appointmentId,
+    messages = [],
+    onShowMedicalSummary,
 }) => {
     // Get current user ID from Redux
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -99,6 +109,39 @@ const VideoCall: React.FC<VideoCallProps> = ({
         return undefined;
     }, [userProfile]);
 
+    /**
+     * Build transcript from conversation messages
+     * Filters only text messages and formats them as conversation
+     */
+    const buildTranscript = useCallback((): string => {
+        console.log('[VideoCall] Building transcript from messages:', {
+            totalMessages: messages.length,
+            messageTypes: messages.map((m) => m.type),
+        });
+
+        if (!messages || messages.length === 0) {
+            console.log('[VideoCall] No messages to build transcript');
+            return '';
+        }
+
+        const textMessages = messages.filter((msg) => msg.type === MessageType.TEXT);
+        console.log('[VideoCall] Filtered text messages:', textMessages.length);
+
+        const transcript = textMessages
+            .map((msg) => {
+                const senderName = msg.senderId === userId ? 'Bác sĩ' : 'Bệnh nhân';
+                const timestamp = new Date(msg.createdAt).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                });
+                return `[${timestamp}] ${senderName}: ${msg.content}`;
+            })
+            .join('\n');
+
+        console.log('[VideoCall] Built transcript length:', transcript.length);
+        return transcript;
+    }, [messages, userId]);
+
     // Helper: Attempt to play remote video
     const attemptRemoteVideoPlay = useCallback(() => {
         console.log(
@@ -155,6 +198,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     // WebRTC Hook Integration
     const {
         callState,
+        localStream,
         remoteStream,
         isMuted,
         isVideoOff,
@@ -241,6 +285,17 @@ const VideoCall: React.FC<VideoCallProps> = ({
     // Ref to track current callState for cleanup
     const callStateRef = useRef(callState);
 
+    // Call Recording Integration
+    const {
+        recordingState,
+        startRecording: startCallRecording,
+        stopRecording: stopCallRecording,
+    } = useCallRecording();
+
+    // Track audio transcript from call recording
+    const audioTranscriptRef = useRef<string>('');
+    const isTranscribingRef = useRef(false);
+
     // Helper: Calculate target corner position
     const calculateTargetCorner = useCallback(
         (centerX: number, centerY: number, containerWidth: number, containerHeight: number) => {
@@ -270,6 +325,36 @@ const VideoCall: React.FC<VideoCallProps> = ({
     useEffect(() => {
         callStateRef.current = callState;
     }, [callState]);
+
+    // Auto-start recording when call connects and streams are ready
+    useEffect(() => {
+        const shouldStartRecording =
+            callState === 'connected' &&
+            localStream &&
+            remoteStream &&
+            !recordingState.isRecording &&
+            appointmentId; // Only record if there's an appointment
+
+        if (shouldStartRecording) {
+            console.log('[VideoCall] 🎙️ Auto-starting call recording');
+            startCallRecording(localStream, remoteStream)
+                .then(() => {
+                    console.log('[VideoCall] ✅ Call recording started successfully');
+                    toast.info('Đang ghi âm cuộc gọi tư vấn...');
+                })
+                .catch((err) => {
+                    console.error('[VideoCall] ❌ Failed to start recording:', err);
+                    toast.error('Không thể ghi âm cuộc gọi');
+                });
+        }
+    }, [
+        callState,
+        localStream,
+        remoteStream,
+        recordingState.isRecording,
+        appointmentId,
+        startCallRecording,
+    ]);
 
     // Call duration timer - use callState instead of isCallActive
     useEffect(() => {
@@ -326,8 +411,114 @@ const VideoCall: React.FC<VideoCallProps> = ({
     };
 
     // Handle end call
-    const handleEndCall = () => {
+    const handleEndCall = async () => {
         console.log('[VideoCall] Ending call with:', participantId);
+
+        // Stop call recording first
+        if (recordingState.isRecording) {
+            console.log('[VideoCall] 🛑 Stopping call recording...');
+            try {
+                const blob = await stopCallRecording();
+                if (blob) {
+                    console.log(
+                        '[VideoCall] ✅ Recording stopped, blob saved:',
+                        blob.size,
+                        'bytes'
+                    );
+
+                    // Start transcription immediately and set flag
+                    isTranscribingRef.current = true;
+                    console.log('[VideoCall] 🚀 Starting transcription synchronously...');
+
+                    // Trigger transcription in background
+                    const transcribeAudio = async () => {
+                        console.log('[VideoCall] 📤 Transcribing call recording...', {
+                            size: blob.size,
+                            type: blob.type,
+                        });
+
+                        try {
+                            const fileName = `call-${appointmentId}-${Date.now()}.webm`;
+                            const response = await VoiceTranscriptionService.uploadAndTranscribe(
+                                blob,
+                                fileName,
+                                (progress) => {
+                                    console.log(
+                                        '[VideoCall] Upload progress:',
+                                        progress.percentage,
+                                        '%'
+                                    );
+                                }
+                            );
+
+                            console.log('[VideoCall] 📦 Full response:', response);
+                            console.log('[VideoCall] 📦 Response data:', response.data);
+                            console.log(
+                                '[VideoCall] 📦 Transcript field:',
+                                response.data?.transcript
+                            );
+
+                            const transcript = response.data.transcript;
+                            audioTranscriptRef.current = transcript;
+
+                            console.log('[VideoCall] ✅ Transcription complete:', {
+                                length: transcript.length,
+                                preview: transcript.substring(0, 100),
+                                fullTranscript: transcript,
+                            });
+
+                            toast.success(
+                                `Đã chuyển đổi ${recordingState.duration}s ghi âm thành ${transcript.length} ký tự`
+                            );
+                        } catch (err) {
+                            console.error('[VideoCall] ❌ Transcription failed:', err);
+                            toast.error('Không thể chuyển đổi ghi âm thành văn bản');
+                            audioTranscriptRef.current = '';
+                        } finally {
+                            isTranscribingRef.current = false;
+                            console.log('[VideoCall] 🏁 Transcription flag cleared');
+                        }
+                    };
+
+                    transcribeAudio(); // Start but don't await
+
+                    // Wait for transcription to complete before showing modal
+                    console.log('[VideoCall] ⏳ Waiting for transcription to complete...');
+                    console.log(
+                        '[VideoCall] isTranscribing (before wait):',
+                        isTranscribingRef.current
+                    );
+
+                    const maxWaitTime = 30000; // 30 seconds max
+                    const startTime = Date.now();
+
+                    // Poll until transcription completes or timeout
+                    while (isTranscribingRef.current && Date.now() - startTime < maxWaitTime) {
+                        await new Promise((resolve) => setTimeout(resolve, 100));
+                    }
+
+                    const waitTime = Date.now() - startTime;
+                    console.log('[VideoCall] Wait completed after:', waitTime, 'ms');
+                    console.log(
+                        '[VideoCall] isTranscribing (after wait):',
+                        isTranscribingRef.current
+                    );
+                    console.log(
+                        '[VideoCall] audioTranscript length:',
+                        audioTranscriptRef.current.length
+                    );
+                    console.log('[VideoCall] audioTranscript content:', audioTranscriptRef.current);
+
+                    if (isTranscribingRef.current) {
+                        console.log('[VideoCall] ⚠️ Transcription timeout after 30s');
+                    } else {
+                        console.log('[VideoCall] ✅ Transcription completed, proceeding...');
+                    }
+                }
+            } catch (err) {
+                console.error('[VideoCall] ❌ Failed to stop recording:', err);
+            }
+        }
 
         // ✅ Clear video srcObject FIRST to release camera/mic immediately
         if (localVideoRef.current) {
@@ -340,8 +531,54 @@ const VideoCall: React.FC<VideoCallProps> = ({
         }
 
         endCall(participantId, 'User ended call');
-        // Don't call cleanup() here - endCall already does it
-        onClose();
+
+        // Check if should show AI summary modal
+        const isDoctor = !!doctorProfile; // Check if doctorProfile exists
+        const hasAppointment = !!appointmentId;
+
+        // Use audio transcript if available, otherwise fall back to text messages
+        const audioTranscript = audioTranscriptRef.current;
+        const textTranscript = buildTranscript();
+        const finalTranscript = audioTranscript || textTranscript;
+
+        console.log('[VideoCall] End call check:', {
+            isDoctor,
+            doctorProfile: !!doctorProfile,
+            adminProfile: !!adminProfile,
+            hospitalProfile: !!hospitalProfile,
+            hasAppointment,
+            appointmentId,
+            audioTranscriptLength: audioTranscript.length,
+            textTranscriptLength: textTranscript.length,
+            finalTranscriptLength: finalTranscript.length,
+            recordingDuration: recordingState.duration,
+            messagesCount: messages.length,
+            isTranscribing: isTranscribingRef.current,
+        });
+
+        // Show AI summary modal only for doctors with valid appointment
+        // Note: Empty transcript is OK - doctor can still write summary manually
+        if (isDoctor && hasAppointment && onShowMedicalSummary) {
+            console.log('[VideoCall] ✅ Requesting parent to show medical summary modal');
+            console.log(
+                '[VideoCall] Transcript source:',
+                audioTranscript ? '🎙️ Audio' : '💬 Text messages'
+            );
+            console.log('[VideoCall] Final transcript to modal:', finalTranscript);
+            // Call parent callback to show modal (modal will persist after VideoCall unmounts)
+            onShowMedicalSummary(finalTranscript, appointmentId);
+        } else {
+            console.log('[VideoCall] ❌ Not showing summary modal:', {
+                reason: !isDoctor
+                    ? 'Not a doctor'
+                    : !hasAppointment
+                      ? 'No appointment'
+                      : 'No callback provided',
+            });
+        }
+
+        // Always close VideoCall component after handling summary
+        // (Modal will be managed by parent)
     };
 
     // Initialize call when component becomes visible

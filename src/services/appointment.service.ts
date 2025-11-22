@@ -12,6 +12,7 @@ const APPOINTMENT_ENDPOINTS = {
     HEALTH: '/appointments/health',
     MANAGEMENT: '/appointments/management',
     STATUS: (id: string) => `/appointments/status/${id}`,
+    RESULT: (id: string) => `/appointments/result/${id}`,
     CANCEL: (id: string) => `/appointments/cancel/${id}`,
     BY_ID: (id: string) => `/appointments/${id}`,
     ASSIGN_NEW_DOCTOR: (id: string) => `/appointments/${id}/assign-new-doctor`,
@@ -106,6 +107,29 @@ export class AppointmentService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Failed to update appointment status');
+        }
+    }
+
+    /**
+     * Update appointment result and automatically mark as completed
+     * Used by doctors after completing consultation
+     */
+    static async updateAppointmentResult(
+        appointmentId: string,
+        summary: string
+    ): Promise<ApiResponse<void>> {
+        try {
+            const response: any = await axiosInstance.put(
+                APPOINTMENT_ENDPOINTS.RESULT(appointmentId),
+                { appointmentId, result: summary }
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Appointment result updated successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to update appointment result');
         }
     }
 
@@ -278,6 +302,7 @@ export const {
     getAppointmentById,
     getAppointmentsForManagement,
     updateAppointmentStatus,
+    updateAppointmentResult,
     cancelAppointment,
     assignNewDoctor,
     getAvailableDoctors,
