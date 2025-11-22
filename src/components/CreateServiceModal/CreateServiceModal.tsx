@@ -5,8 +5,7 @@ import Button from '@/components/Button';
 import ServiceFormFields from '@/components/ServiceFormFields';
 import { createService, createServiceWithImage } from '@/services/service.service';
 import { useServiceForm } from '@/hooks/useServiceForm';
-import { getAllServiceCategories } from '@/services/serviceCategory.service';
-import { ServiceCategory } from '@/types/serviceCategory.types';
+import { useServiceCategories } from '@/hooks/useServiceCategories';
 import { SubscriptionService } from '@/services/subscription.service';
 
 interface CreateServiceModalProps {
@@ -25,28 +24,17 @@ const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
     onSuccess,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
-    const [serviceCategoriesWithParent, setServiceCategoriesWithParent] = useState<
-        ServiceCategory[]
-    >([]);
 
     // Fetch service categories with parentId when modal opens
+    const { serviceCategories: serviceCategoriesWithParent, fetchServiceCategories } =
+        useServiceCategories(false);
+
     useEffect(() => {
         if (isOpen) {
             fetchServiceCategories();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
-
-    const fetchServiceCategories = async () => {
-        try {
-            const response = await getAllServiceCategories();
-            if (response.success && response.data) {
-                setServiceCategoriesWithParent(response.data);
-            }
-        } catch (error) {
-            console.error('Error fetching service categories:', error);
-            toast.error('Không thể tải danh sách loại dịch vụ');
-        }
-    };
 
     const {
         formData,
