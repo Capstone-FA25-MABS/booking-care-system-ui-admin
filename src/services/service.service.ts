@@ -388,13 +388,15 @@ export class ServiceService extends BaseService {
 
             // Axios interceptor returns response.data, so response is the array directly
             // But formatResponse expects { data: ... }, so we need to handle it
-            const services = Array.isArray(response)
-                ? response
-                : response?.data && Array.isArray(response.data)
-                  ? response.data
-                  : Array.isArray(response?.data?.data)
-                    ? response.data.data
-                    : [];
+            let services: Service[] = [];
+
+            if (Array.isArray(response)) {
+                services = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                services = response.data;
+            } else if (Array.isArray(response?.data?.data)) {
+                services = response.data.data;
+            }
 
             return {
                 success: true,

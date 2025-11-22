@@ -108,7 +108,7 @@ const SubscriptionInfoSkeleton: React.FC = () => {
                                     <div className="mt-2">
                                         {Array.from({ length: 3 }).map((_, index) => (
                                             <div
-                                                key={index}
+                                                key={`subscription-feature-${index}`}
                                                 className="d-flex align-items-center mb-2"
                                             >
                                                 <div
@@ -146,7 +146,10 @@ const SubscriptionInfoSkeleton: React.FC = () => {
                             <div className={styles.cardBody}>
                                 {/* Usage Progress Bars */}
                                 {Array.from({ length: 4 }).map((_, index) => (
-                                    <div key={index} className={styles.skeletonProgressBar}>
+                                    <div
+                                        key={`usage-progress-${index}`}
+                                        className={styles.skeletonProgressBar}
+                                    >
                                         <div className="d-flex justify-content-between align-items-center mb-2">
                                             <div
                                                 className={styles.skeletonLabel}
@@ -210,7 +213,10 @@ const SubscriptionInfoSkeleton: React.FC = () => {
                         ></div>
                         <div className="d-flex flex-column gap-2">
                             {Array.from({ length: 3 }).map((_, index) => (
-                                <div key={index} className={styles.skeletonHistoryItem}>
+                                <div
+                                    key={`subscription-history-${index}`}
+                                    className={styles.skeletonHistoryItem}
+                                >
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div className="d-flex align-items-center gap-3">
                                             <div

@@ -76,7 +76,10 @@ const DoctorFormSkeleton: React.FC = () => {
                     <div className={styles.skeletonTitle}></div>
                     <div className={styles.skeletonLanguageGrid}>
                         {Array.from({ length: 6 }).map((_, index) => (
-                            <div key={index} className={styles.skeletonLanguageItem}></div>
+                            <div
+                                key={`skeleton-language-${index}`}
+                                className={styles.skeletonLanguageItem}
+                            ></div>
                         ))}
                     </div>
                 </div>
@@ -94,7 +97,10 @@ const DoctorFormSkeleton: React.FC = () => {
                     </div>
                     <div className={styles.skeletonServicePriceList}>
                         {Array.from({ length: 2 }).map((_, index) => (
-                            <div key={index} className={styles.skeletonServicePriceItem}>
+                            <div
+                                key={`skeleton-service-price-${index}`}
+                                className={styles.skeletonServicePriceItem}
+                            >
                                 <div className="row">
                                     <div className="col-md-6 mb-3">
                                         <div className={styles.skeletonLabel}></div>

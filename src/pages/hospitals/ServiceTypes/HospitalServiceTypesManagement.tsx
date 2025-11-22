@@ -202,17 +202,23 @@ const HospitalServiceTypesManagement: React.FC = () => {
 
                 {/* Service types grid */}
                 <div className={styles.serviceTypesGrid} data-tour-id="service-type-grid">
-                    {isLoading ? (
-                        // Show skeleton cards while loading
-                        Array.from({ length: 12 }).map((_, index) => (
-                            <ServiceTypeCardSkeleton key={`skeleton-${index}`} />
-                        ))
-                    ) : filteredServiceTypes.length === 0 ? (
-                        <div className="text-center py-5">
-                            <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
-                        </div>
-                    ) : (
-                        filteredServiceTypes.map((serviceType) => {
+                    {(() => {
+                        if (isLoading) {
+                            // Show skeleton cards while loading
+                            return Array.from({ length: 12 }, (_, index) => (
+                                <ServiceTypeCardSkeleton key={`service-type-skeleton-${index}`} />
+                            ));
+                        }
+
+                        if (filteredServiceTypes.length === 0) {
+                            return (
+                                <div className="text-center py-5">
+                                    <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
+                                </div>
+                            );
+                        }
+
+                        return filteredServiceTypes.map((serviceType) => {
                             const isSelected = selectedServiceTypeIds.includes(serviceType.id);
                             const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
@@ -260,8 +266,8 @@ const HospitalServiceTypesManagement: React.FC = () => {
                                     </div>
                                 </div>
                             );
-                        })
-                    )}
+                        });
+                    })()}
                 </div>
 
                 {/* Save button at bottom */}

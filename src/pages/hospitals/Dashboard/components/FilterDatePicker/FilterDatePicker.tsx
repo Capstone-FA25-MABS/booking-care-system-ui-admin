@@ -12,6 +12,7 @@ interface FilterDatePickerProps {
     disabled?: boolean;
     minDate?: Date;
     maxDate?: Date;
+    id?: string;
 }
 
 // Common styling for date picker
@@ -83,6 +84,7 @@ const FilterDatePicker: React.FC<FilterDatePickerProps> = ({
     value,
     onChange,
     disabled = false,
+    id,
     ...otherProps
 }) => {
     return (
@@ -92,7 +94,13 @@ const FilterDatePicker: React.FC<FilterDatePickerProps> = ({
                 onChange={onChange}
                 disabled={disabled}
                 format="dd/MM/yyyy"
-                slotProps={datePickerSlotProps}
+                slotProps={{
+                    ...datePickerSlotProps,
+                    textField: {
+                        ...datePickerSlotProps.textField,
+                        id: id,
+                    },
+                }}
                 sx={datePickerSx}
                 dayOfWeekFormatter={dayOfWeekFormatter}
                 {...otherProps}

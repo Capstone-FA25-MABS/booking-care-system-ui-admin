@@ -486,8 +486,8 @@ const HospitalDashboard: React.FC = () => {
         return (
             <div className="content">
                 <div className="alert alert-warning" role="alert">
-                    <i className="ti ti-alert-triangle me-2" />
-                    Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.
+                    <i className="ti ti-alert-triangle me-2" /> Không tìm thấy thông tin bệnh viện.
+                    Vui lòng đăng nhập lại.
                 </div>
             </div>
         );
@@ -512,8 +512,9 @@ const HospitalDashboard: React.FC = () => {
                     <div className={styles.filtersHeader}>
                         <div className={styles.filtersRow}>
                             <div className={styles.filterControl}>
-                                <label>Từ ngày</label>
+                                <label htmlFor="dateFrom">Từ ngày</label>
                                 <FilterDatePicker
+                                    id="dateFrom"
                                     value={dateRange.start}
                                     onChange={(newValue) => {
                                         if (newValue) {
@@ -528,8 +529,9 @@ const HospitalDashboard: React.FC = () => {
                                 />
                             </div>
                             <div className={styles.filterControl}>
-                                <label>Đến ngày</label>
+                                <label htmlFor="dateTo">Đến ngày</label>
                                 <FilterDatePicker
+                                    id="dateTo"
                                     value={dateRange.end}
                                     onChange={(newValue) => {
                                         if (newValue) {
@@ -542,8 +544,9 @@ const HospitalDashboard: React.FC = () => {
                                 />
                             </div>
                             <div className={styles.filterControl}>
-                                <label>Chu kỳ thống kê</label>
+                                <label htmlFor="periodSelect">Chu kỳ thống kê</label>
                                 <Select
+                                    inputId="periodSelect"
                                     options={periodOptions.map((opt) => ({
                                         value: opt.value,
                                         label: opt.label,
@@ -961,8 +964,8 @@ const HospitalDashboard: React.FC = () => {
 
                     {!stats && !hospitalOverview && (
                         <div className={styles.emptyState}>
-                            <i className="ti ti-database-search mb-2 fs-4 d-block" />
-                            Chưa có dữ liệu thống kê. Vui lòng điều chỉnh bộ lọc hoặc thử lại sau.
+                            <i className="ti ti-database-search mb-2 fs-4 d-block" /> Chưa có dữ
+                            liệu thống kê. Vui lòng điều chỉnh bộ lọc hoặc thử lại sau.
                         </div>
                     )}
                 </>

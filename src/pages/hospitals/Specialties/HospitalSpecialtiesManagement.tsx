@@ -230,17 +230,23 @@ const HospitalSpecialtiesManagement: React.FC = () => {
 
                 {/* Specialties grid */}
                 <div className={styles.specialtiesGrid} data-tour-id="specialty-grid">
-                    {isLoading ? (
-                        // Show skeleton cards while loading
-                        Array.from({ length: 12 }).map((_, index) => (
-                            <SpecialtyCardSkeleton key={`skeleton-${index}`} />
-                        ))
-                    ) : filteredSpecialties.length === 0 ? (
-                        <div className="text-center py-5">
-                            <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
-                        </div>
-                    ) : (
-                        filteredSpecialties.map((specialty) => {
+                    {(() => {
+                        if (isLoading) {
+                            // Show skeleton cards while loading
+                            return Array.from({ length: 12 }, (_, index) => (
+                                <SpecialtyCardSkeleton key={`specialty-skeleton-${index}`} />
+                            ));
+                        }
+
+                        if (filteredSpecialties.length === 0) {
+                            return (
+                                <div className="text-center py-5">
+                                    <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
+                                </div>
+                            );
+                        }
+
+                        return filteredSpecialties.map((specialty) => {
                             const isSelected = selectedSpecialtyIds.includes(specialty.id);
                             const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
@@ -284,8 +290,8 @@ const HospitalSpecialtiesManagement: React.FC = () => {
                                     </div>
                                 </div>
                             );
-                        })
-                    )}
+                        });
+                    })()}
                 </div>
 
                 {/* Save button at bottom */}
