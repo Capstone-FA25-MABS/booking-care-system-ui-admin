@@ -4,9 +4,9 @@ import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { Specialty } from '@/types/specialty.types';
 import Button from '@/components/Button';
-import Spinner from '@/components/Spinner';
 import HospitalService from '@/services/hospital.service';
 import { useSubscription } from '@/hooks/useSubscription';
+import SpecialtyCardSkeleton from './SpecialtyCardSkeleton';
 import styles from './HospitalSpecialtiesManagement.module.scss';
 
 const HospitalSpecialtiesManagement: React.FC = () => {
@@ -192,19 +192,6 @@ const HospitalSpecialtiesManagement: React.FC = () => {
         selectedSpecialtyIds.some((id) => !initialSpecialtyIds.includes(id)) ||
         initialSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
 
-    if (isLoading) {
-        return (
-            <div className="content">
-                <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ minHeight: '400px' }}
-                >
-                    <Spinner size="large" variant="primary" />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={`content ${styles.pageContainer}`}>
             <div className={styles.contentWrapper}>
@@ -243,7 +230,12 @@ const HospitalSpecialtiesManagement: React.FC = () => {
 
                 {/* Specialties grid */}
                 <div className={styles.specialtiesGrid} data-tour-id="specialty-grid">
-                    {filteredSpecialties.length === 0 ? (
+                    {isLoading ? (
+                        // Show skeleton cards while loading
+                        Array.from({ length: 12 }).map((_, index) => (
+                            <SpecialtyCardSkeleton key={`skeleton-${index}`} />
+                        ))
+                    ) : filteredSpecialties.length === 0 ? (
                         <div className="text-center py-5">
                             <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
                         </div>
