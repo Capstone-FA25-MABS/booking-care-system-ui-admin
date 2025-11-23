@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import Select from 'react-select';
-import FilterDatePicker from './components/FilterDatePicker';
+import FilterDatePicker from '@/components/FilterDatePicker';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
 import ActionDropdown from '@/components/ActionDropdown';
@@ -14,9 +14,8 @@ import { HospitalService } from '@/services/hospital.service';
 import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
-import { MetricCard, MetricCardSkeleton } from './components/MetricCard';
-import { ChartJsLine, ChartSkeleton } from './components/ChartJsLine';
-import { ChartJsMultiLine } from './components/ChartJsLine/ChartJsMultiLine';
+import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
+import { ChartJsLine, ChartSkeleton, ChartJsMultiLine } from '@/components/ChartJsLine';
 
 const periodOptions: Array<{ value: StatisticsPeriod; label: string }> = [
     { value: StatisticsPeriod.Daily, label: 'Theo ngày' },
@@ -481,17 +480,6 @@ const HospitalDashboard: React.FC = () => {
             },
         ];
     }, [reviewStats]);
-
-    if (!hospitalProfile?.id) {
-        return (
-            <div className="content">
-                <div className="alert alert-warning" role="alert">
-                    <i className="ti ti-alert-triangle me-2" /> Không tìm thấy thông tin bệnh viện.
-                    Vui lòng đăng nhập lại.
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className={`content ${styles.dashboardPage}`} id="hospitalDashboardPage">
