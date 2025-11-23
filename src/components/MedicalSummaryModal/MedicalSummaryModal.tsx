@@ -369,7 +369,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
         <Modal show={show} onHide={handleClose} size="lg" centered backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <i className="bi bi-stars me-2" />
+                    <i className="bi bi-stars me-2"></i>
                     Tóm tắt kết quả khám bệnh (AI)
                 </Modal.Title>
             </Modal.Header>
@@ -377,7 +377,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
             <Modal.Body className={styles.modalBody}>
                 {error && (
                     <Alert variant="danger" dismissible onClose={() => setError(null)}>
-                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        <i className="bi bi-exclamation-triangle me-2" />
                         {error}
                     </Alert>
                 )}
@@ -464,7 +464,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                         onClick={handleRegenerate}
                                         disabled={isGenerating}
                                     >
-                                        <i className="bi bi-arrow-clockwise me-1" />
+                                        <i className="bi bi-arrow-clockwise me-1"></i>
                                         Tạo lại
                                     </Button>
                                 </div>
@@ -481,7 +481,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         {!aiResponse && transcript && transcript.trim().length > 0 && (
                             <div className="mb-3">
                                 <Alert variant="info">
-                                    <i className="bi bi-info-circle me-2" />
+                                    <i className="bi bi-info-circle me-2"></i>
                                     Có dữ liệu cuộc trò chuyện khả dụng. Bạn có thể sử dụng AI để
                                     tạo tóm tắt tự động.
                                 </Alert>
@@ -490,7 +490,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                     onClick={generateSummary}
                                     disabled={isGenerating}
                                 >
-                                    <i className="bi bi-stars me-2" />
+                                    <i className="bi bi-stars me-2"></i>
                                     Tạo tóm tắt bằng AI
                                 </Button>
                             </div>
@@ -500,7 +500,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         {!aiResponse && (!transcript || transcript.trim().length === 0) && (
                             <>
                                 <Alert variant="warning" className="mb-3">
-                                    <i className="bi bi-exclamation-triangle me-2"></i>
+                                    <i className="bi bi-exclamation-triangle me-2" />
                                     <strong>Không có dữ liệu cuộc trò chuyện.</strong> Vui lòng nhập
                                     tóm tắt thủ công bên dưới hoặc sử dụng ghi âm giọng nói.
                                 </Alert>
@@ -513,7 +513,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                             onClick={startRecording}
                                             disabled={isGenerating || isSaving}
                                         >
-                                            <i className="bi bi-mic-fill me-2" />
+                                            <i className="bi bi-mic-fill me-2"></i>
                                             Ghi âm tóm tắt
                                         </Button>
                                         <small className="text-muted align-self-center">
@@ -559,7 +559,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         </Form.Group>
 
                         <Alert variant="info" className="mt-3 mb-0">
-                            <i className="bi bi-info-circle me-2"></i>
+                            <i className="bi bi-info-circle me-2" />
                             <strong>Lưu ý:</strong> Vui lòng kiểm tra và chỉnh sửa kỹ nội dung do AI
                             tạo trước khi lưu. AI chỉ là công cụ hỗ trợ, bác sĩ cần đảm bảo tính
                             chính xác của thông tin y tế.
@@ -588,7 +588,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         </>
                     ) : (
                         <>
-                            <i className="bi bi-check-circle me-2" />
+                            <i className="bi bi-check-circle me-2"></i>
                             Xác nhận & Lưu
                         </>
                     )}
