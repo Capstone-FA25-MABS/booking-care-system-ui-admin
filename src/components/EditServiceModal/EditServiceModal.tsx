@@ -5,6 +5,7 @@ import Button from '@/components/Button';
 import ServiceFormFields from '@/components/ServiceFormFields';
 import { updateService, updateServiceWithImage, getServiceById } from '@/services/service.service';
 import { useServiceForm } from '@/hooks/useServiceForm';
+import { useServiceCategories } from '@/hooks/useServiceCategories';
 
 interface EditServiceModalProps {
     isOpen: boolean;
@@ -17,12 +18,23 @@ interface EditServiceModalProps {
 const EditServiceModal: React.FC<EditServiceModalProps> = ({
     isOpen,
     serviceId,
-    serviceCategories,
+    serviceCategories: _serviceCategories,
     onClose,
     onSuccess,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
+
+    // Fetch service categories with parentId when modal opens
+    const { serviceCategories: serviceCategoriesWithParent, fetchServiceCategories } =
+        useServiceCategories(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchServiceCategories();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 
     const {
         formData,
@@ -132,7 +144,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                         <ServiceFormFields
                             formData={formData}
                             errors={errors}
-                            serviceCategories={serviceCategories}
+                            serviceCategories={serviceCategoriesWithParent}
                             imagePreview={imagePreview}
                             onInputChange={handleInputChange}
                             onImageFileChange={handleImageFileChange}
