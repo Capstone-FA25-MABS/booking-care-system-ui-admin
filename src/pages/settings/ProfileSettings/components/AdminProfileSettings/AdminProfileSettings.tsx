@@ -6,6 +6,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { vi } from 'date-fns/locale';
 import { format } from 'date-fns';
+import Select from 'react-select';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Spinner from '@/components/Spinner';
@@ -15,6 +16,7 @@ import { updateAdminProfile, setAdminProfile } from '@/store/slices/userSlice';
 import { UpdateAdminRequest, AdminProfile } from '@/types/user.types';
 import { UserService } from '@/services/user.service';
 import { Gender } from '@/enums/common.enums';
+import { selectCustomStyles } from '@/constants/select.styles';
 
 const AdminProfileSettings: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -25,7 +27,7 @@ const AdminProfileSettings: React.FC = () => {
         lastName: '',
         email: '',
         phone: '',
-        gender: undefined,
+        gender: Gender.MALE,
         dateOfBirth: '',
         address: '',
         avatarUrl: '',
@@ -36,7 +38,7 @@ const AdminProfileSettings: React.FC = () => {
         lastName: '',
         email: '',
         phone: '',
-        gender: undefined,
+        gender: Gender.MALE,
         dateOfBirth: '',
         address: '',
         avatarUrl: '',
@@ -54,7 +56,7 @@ const AdminProfileSettings: React.FC = () => {
                 lastName: adminProfile.lastName || '',
                 email: adminProfile.email || '',
                 phone: adminProfile.phone || '',
-                gender: adminProfile.gender,
+                gender: adminProfile.gender !== undefined ? adminProfile.gender : Gender.MALE,
                 dateOfBirth: adminProfile.dateOfBirth || '',
                 address: adminProfile.address || '',
                 avatarUrl: adminProfile.avatarUrl || '',
@@ -94,6 +96,20 @@ const AdminProfileSettings: React.FC = () => {
         }
     };
 
+    const handleGenderChange = (selectedOption: { value: Gender; label: string } | null) => {
+        setFormData((prev) => ({
+            ...prev,
+            gender: selectedOption?.value ?? Gender.MALE,
+        }));
+        // Clear error when user selects
+        if (errors.gender) {
+            setErrors((prev) => ({
+                ...prev,
+                gender: undefined,
+            }));
+        }
+    };
+
     const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
             setAvatarFile(e.target.files[0]);
@@ -125,12 +141,26 @@ const AdminProfileSettings: React.FC = () => {
                 }
             }
         }
+        if (formData.gender === undefined || formData.gender === null) {
+            newErrors.gender = 'Giới tính là bắt buộc! Vui lòng chọn giới tính';
+        } else if (![Gender.MALE, Gender.FEMALE, Gender.OTHER].includes(Number(formData.gender))) {
+            newErrors.gender = 'Giới tính không hợp lệ! Vui lòng chọn giới tính';
+        }
 
         return Object.keys(newErrors).length > 0 ? newErrors : null;
     };
 
     // Update admin profile with files
     const updateProfileWithFiles = async (): Promise<AdminProfile | null> => {
+        // Ensure gender is always a number (enum value)
+        const updatePayload: UpdateAdminRequest = {
+            ...formData,
+            gender: formData.gender !== undefined ? Number(formData.gender) : Gender.MALE,
+        };
+
+        console.log('Update payload:', updatePayload);
+        console.log('Gender value:', updatePayload.gender, 'Type:', typeof updatePayload.gender);
+
         if (avatarFile) {
             console.log('Uploading avatar file:', avatarFile.name);
             try {
@@ -138,8 +168,6 @@ const AdminProfileSettings: React.FC = () => {
                 await UserService.uploadAdminAvatar(avatarFile);
                 console.log('Avatar uploaded successfully');
 
-                // Then update profile with other fields (avatarUrl is already updated by backend)
-                const updatePayload = { ...formData };
                 // Remove avatarUrl from payload since backend already updated it
                 delete updatePayload.avatarUrl;
 
@@ -156,7 +184,7 @@ const AdminProfileSettings: React.FC = () => {
         }
 
         // No avatar file, just update profile
-        return await dispatch(updateAdminProfile(formData)).unwrap();
+        return await dispatch(updateAdminProfile(updatePayload)).unwrap();
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -189,7 +217,8 @@ const AdminProfileSettings: React.FC = () => {
                     lastName: updatedProfile.lastName || '',
                     email: updatedProfile.email || '',
                     phone: updatedProfile.phone || '',
-                    gender: updatedProfile.gender,
+                    gender:
+                        updatedProfile.gender !== undefined ? updatedProfile.gender : Gender.MALE,
                     dateOfBirth: updatedProfile.dateOfBirth || '',
                     address: updatedProfile.address || '',
                     avatarUrl: updatedProfile.avatarUrl || '',
@@ -327,24 +356,33 @@ const AdminProfileSettings: React.FC = () => {
                                             <label htmlFor="gender" className="form-label">
                                                 Giới tính <span className="text-danger">*</span>
                                             </label>
-                                            <select
-                                                id="gender"
-                                                className={`form-control ${errors.gender ? 'is-invalid' : ''}`}
-                                                name="gender"
+                                            <Select
+                                                inputId="gender"
+                                                options={[
+                                                    { value: Gender.MALE, label: 'Nam' },
+                                                    { value: Gender.FEMALE, label: 'Nữ' },
+                                                ]}
                                                 value={
+                                                    formData.gender !== null &&
                                                     formData.gender !== undefined
-                                                        ? formData.gender
-                                                        : ''
+                                                        ? {
+                                                              value: formData.gender,
+                                                              label:
+                                                                  formData.gender === Gender.MALE
+                                                                      ? 'Nam'
+                                                                      : 'Nữ',
+                                                          }
+                                                        : null
                                                 }
-                                                onChange={handleInputChange}
-                                            >
-                                                <option value="">Chọn giới tính</option>
-                                                <option value={Gender.MALE}>Nam</option>
-                                                <option value={Gender.FEMALE}>Nữ</option>
-                                                <option value={Gender.OTHER}>Khác</option>
-                                            </select>
+                                                onChange={handleGenderChange}
+                                                placeholder="Chọn giới tính"
+                                                className={errors.gender ? 'is-invalid' : ''}
+                                                classNamePrefix="select2"
+                                                styles={selectCustomStyles}
+                                                menuPortalTarget={document.body}
+                                            />
                                             {errors.gender && (
-                                                <div className="invalid-feedback">
+                                                <div className="text-danger mt-1">
                                                     {errors.gender}
                                                 </div>
                                             )}
