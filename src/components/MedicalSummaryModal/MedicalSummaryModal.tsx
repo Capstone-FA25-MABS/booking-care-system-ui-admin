@@ -172,6 +172,45 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
         }
     };
 
+    const handleTranscription = async (blob: Blob) => {
+        setIsTranscribing(true);
+        setTranscriptionProgress(0);
+
+        try {
+            const result = await VoiceTranscriptionService.uploadAndTranscribe(
+                blob,
+                `medical-note-${appointmentId}-${Date.now()}.webm`,
+                (progress) => {
+                    setTranscriptionProgress(progress.percentage);
+                }
+            );
+
+            const transcriptText = result.data.transcript;
+            setLocalTranscript(transcriptText);
+
+            console.log(
+                '[MedicalSummaryModal] ✅ Transcription successful:',
+                transcriptText.length,
+                'characters'
+            );
+
+            toast.success('Chuyển đổi giọng nói thành công');
+
+            // Auto-generate summary from transcript
+            await generateSummaryFromText(transcriptText);
+        } catch (err) {
+            console.error('[MedicalSummaryModal] ❌ Transcription failed:', err);
+            const errorMessage =
+                err instanceof Error ? err.message : 'Không thể chuyển đổi giọng nói';
+            toast.error(errorMessage);
+            setError(errorMessage);
+        } finally {
+            setIsTranscribing(false);
+            setTranscriptionProgress(0);
+            stopRecordingInternal();
+        }
+    };
+
     const stopRecordingAndTranscribe = async () => {
         if (!mediaRecorderRef.current) {
             return;
@@ -202,51 +241,14 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                     return;
                 }
 
-                // Transcribe audio
-                setIsTranscribing(true);
-                setTranscriptionProgress(0);
-
-                try {
-                    const result = await VoiceTranscriptionService.uploadAndTranscribe(
-                        blob,
-                        `medical-note-${appointmentId}-${Date.now()}.webm`,
-                        (progress) => {
-                            setTranscriptionProgress(progress.percentage);
-                        }
-                    );
-
-                    const transcriptText = result.data.transcript;
-                    setLocalTranscript(transcriptText);
-
-                    console.log(
-                        '[MedicalSummaryModal] ✅ Transcription successful:',
-                        transcriptText.length,
-                        'characters'
-                    );
-
-                    toast.success('Chuyển đổi giọng nói thành công');
-
-                    // Auto-generate summary from transcript
-                    await generateSummaryFromText(transcriptText);
-                } catch (err) {
-                    console.error('[MedicalSummaryModal] ❌ Transcription failed:', err);
-                    const errorMessage =
-                        err instanceof Error ? err.message : 'Không thể chuyển đổi giọng nói';
-                    toast.error(errorMessage);
-                    setError(errorMessage);
-                } finally {
-                    setIsTranscribing(false);
-                    setTranscriptionProgress(0);
-                    stopRecordingInternal();
-                }
-
+                await handleTranscription(blob);
                 resolve();
             };
 
-            if (mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            } else {
+            if (mediaRecorder.state === 'inactive') {
                 resolve();
+            } else {
+                mediaRecorder.stop();
             }
         });
     };
@@ -367,7 +369,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
         <Modal show={show} onHide={handleClose} size="lg" centered backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <i className="bi bi-stars me-2"></i>
+                    <i className="bi bi-stars me-2" />
                     Tóm tắt kết quả khám bệnh (AI)
                 </Modal.Title>
             </Modal.Header>
@@ -401,16 +403,12 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                             <div className="flex-grow-1">
                                 <strong>Đang chuyển đổi giọng nói thành văn bản...</strong>
                                 {transcriptionProgress > 0 && transcriptionProgress < 100 && (
-                                    <div className="progress mt-2" style={{ height: '4px' }}>
-                                        <div
-                                            className="progress-bar"
-                                            role="progressbar"
-                                            style={{ width: `${transcriptionProgress}%` }}
-                                            aria-valuenow={transcriptionProgress}
-                                            aria-valuemin={0}
-                                            aria-valuemax={100}
-                                        />
-                                    </div>
+                                    <progress
+                                        className="mt-2"
+                                        value={transcriptionProgress}
+                                        max={100}
+                                        style={{ width: '100%', height: '4px' }}
+                                    />
                                 )}
                             </div>
                         </div>
@@ -457,16 +455,16 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         {aiResponse && (
                             <div className="mb-3">
                                 <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <label className="form-label mb-0">
+                                    <div className="form-label mb-0">
                                         <strong>Kết quả từ AI:</strong>
-                                    </label>
+                                    </div>
                                     <Button
                                         variant="outline-primary"
                                         size="sm"
                                         onClick={handleRegenerate}
                                         disabled={isGenerating}
                                     >
-                                        <i className="bi bi-arrow-clockwise me-1"></i>
+                                        <i className="bi bi-arrow-clockwise me-1" />
                                         Tạo lại
                                     </Button>
                                 </div>
@@ -483,7 +481,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         {!aiResponse && transcript && transcript.trim().length > 0 && (
                             <div className="mb-3">
                                 <Alert variant="info">
-                                    <i className="bi bi-info-circle me-2"></i>
+                                    <i className="bi bi-info-circle me-2" />
                                     Có dữ liệu cuộc trò chuyện khả dụng. Bạn có thể sử dụng AI để
                                     tạo tóm tắt tự động.
                                 </Alert>
@@ -492,7 +490,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                     onClick={generateSummary}
                                     disabled={isGenerating}
                                 >
-                                    <i className="bi bi-stars me-2"></i>
+                                    <i className="bi bi-stars me-2" />
                                     Tạo tóm tắt bằng AI
                                 </Button>
                             </div>
@@ -515,7 +513,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                             onClick={startRecording}
                                             disabled={isGenerating || isSaving}
                                         >
-                                            <i className="bi bi-mic-fill me-2"></i>
+                                            <i className="bi bi-mic-fill me-2" />
                                             Ghi âm tóm tắt
                                         </Button>
                                         <small className="text-muted align-self-center">
@@ -590,7 +588,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         </>
                     ) : (
                         <>
-                            <i className="bi bi-check-circle me-2"></i>
+                            <i className="bi bi-check-circle me-2" />
                             Xác nhận & Lưu
                         </>
                     )}

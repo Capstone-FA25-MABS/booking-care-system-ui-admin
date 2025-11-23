@@ -132,7 +132,7 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
         a.download = filename;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(url);
     };
 
@@ -184,17 +184,7 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
 
             {/* Recording Controls */}
             <div className="d-flex gap-2">
-                {!recordingState.isRecording ? (
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={handleStartRecording}
-                        disabled={!isCallActive || !localStream || !remoteStream}
-                    >
-                        <i className="bi bi-record-circle me-1"></i>
-                        Bắt đầu ghi âm
-                    </Button>
-                ) : (
+                {recordingState.isRecording ? (
                     <>
                         <Button variant="warning" size="sm" onClick={handlePause}>
                             <i className="bi bi-pause-circle me-1"></i>
@@ -228,6 +218,16 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
                             )}
                         </Button>
                     </>
+                ) : (
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleStartRecording}
+                        disabled={!isCallActive || !localStream || !remoteStream}
+                    >
+                        <i className="bi bi-record-circle me-1"></i>
+                        Bắt đầu ghi âm
+                    </Button>
                 )}
             </div>
         </div>

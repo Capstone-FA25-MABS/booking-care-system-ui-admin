@@ -45,7 +45,7 @@ class CallRecordingService {
             const formData = new FormData();
 
             // Create a File object from Blob with proper filename
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-');
             const filename = `call-recording-${appointmentId}-${timestamp}.webm`;
             const file = new File([audioBlob], filename, { type: audioBlob.type });
 

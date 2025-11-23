@@ -188,6 +188,33 @@ export const useCallRecording = (): UseCallRecordingReturn => {
     );
 
     /**
+     * Cleanup recording resources
+     */
+    const cleanupRecording = useCallback(() => {
+        if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+        }
+
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+
+        if (mergedStreamRef.current) {
+            mergedStreamRef.current.getTracks().forEach((track) => track.stop());
+            mergedStreamRef.current = null;
+        }
+
+        setRecordingState((prev) => ({
+            ...prev,
+            isRecording: false,
+        }));
+
+        mediaRecorderRef.current = null;
+    }, []);
+
+    /**
      * Stop recording and return the recorded audio blob
      */
     const stopRecording = useCallback(async (): Promise<Blob | null> => {
@@ -216,47 +243,24 @@ export const useCallRecording = (): UseCallRecordingReturn => {
                     type: blob.type,
                 });
 
-                // Cleanup
-                if (durationIntervalRef.current) {
-                    clearInterval(durationIntervalRef.current);
-                    durationIntervalRef.current = null;
-                }
-
-                if (audioContextRef.current) {
-                    audioContextRef.current.close();
-                    audioContextRef.current = null;
-                }
-
-                if (mergedStreamRef.current) {
-                    mergedStreamRef.current.getTracks().forEach((track) => track.stop());
-                    mergedStreamRef.current = null;
-                }
-
-                setRecordingState((prev) => ({
-                    ...prev,
-                    isRecording: false,
-                }));
-
-                // Reset recorder
-                mediaRecorderRef.current = null;
-
+                cleanupRecording();
                 resolve(blob);
             };
 
             // Stop the recorder
-            if (mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            } else {
+            if (mediaRecorder.state === 'inactive') {
                 resolve(null);
+            } else {
+                mediaRecorder.stop();
             }
         });
-    }, []);
+    }, [cleanupRecording]);
 
     /**
      * Pause recording
      */
     const pauseRecording = useCallback(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        if (mediaRecorderRef.current?.state === 'recording') {
             mediaRecorderRef.current.pause();
             if (durationIntervalRef.current) {
                 clearInterval(durationIntervalRef.current);
@@ -270,7 +274,7 @@ export const useCallRecording = (): UseCallRecordingReturn => {
      * Resume recording
      */
     const resumeRecording = useCallback(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+        if (mediaRecorderRef.current?.state === 'paused') {
             mediaRecorderRef.current.resume();
             durationIntervalRef.current = setInterval(() => {
                 setRecordingState((prev) => ({
