@@ -10,6 +10,7 @@ import Select from 'react-select';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Spinner from '@/components/Spinner';
+import SubmitButton from '../SubmitButton';
 import AvatarUpload from '@/components/AvatarUpload';
 import { AppDispatch, RootState } from '@/store';
 import { updateAdminProfile, setAdminProfile } from '@/store/slices/userSlice';
@@ -250,18 +251,6 @@ const AdminProfileSettings: React.FC = () => {
             setAvatarFile(null);
             setErrors({});
         }
-    };
-
-    const renderSubmitButtonText = (): React.ReactNode => {
-        if (isSubmitting) {
-            return (
-                <>
-                    <Spinner size="small" variant="primary" className="me-2" />
-                    Đang cập nhật...
-                </>
-            );
-        }
-        return 'Cập nhật thông tin';
     };
 
     if (isLoading) {
@@ -576,7 +565,10 @@ const AdminProfileSettings: React.FC = () => {
                                         Hủy
                                     </Button>
                                     <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                        {renderSubmitButtonText()}
+                                        <SubmitButton
+                                            isSubmitting={isSubmitting}
+                                            submitText="Cập nhật thông tin"
+                                        />
                                     </Button>
                                 </div>
                             </div>

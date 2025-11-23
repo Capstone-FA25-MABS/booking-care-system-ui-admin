@@ -14,8 +14,8 @@ import { getAllServiceTypesSimple } from '@/services/serviceType.service';
 import { getAllPositionsSimple } from '@/services/position.service';
 import { getAllLanguagesSimple } from '@/services/language.service';
 import { StatisticsPeriod } from '@/types/statistics.types';
-import { AppointmentStatus, AppointmentType, AppointmentTime } from '@/enums/appointment.enums';
-import { getAppointmentTimeText } from '@/types/appointment.types';
+import { AppointmentStatus } from '@/enums/appointment.enums';
+import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
 import { ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
 import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
@@ -257,80 +257,11 @@ const AdminDashboard: React.FC = () => {
         []
     );
 
-    // Calculate additional statistics
-    const calculateAdditionalStatistics = useCallback(async (appointments: any[]) => {
-        // Peak hours analysis - sử dụng AppointmentTimeId
-        const hourCounts: Record<string, number> = {};
-        appointments.forEach((apt) => {
-            if (apt.appointmentTimeId) {
-                try {
-                    // Lấy text từ AppointmentTimeId (ví dụ: "08:00 - 08:30")
-                    const timeText = getAppointmentTimeText(
-                        apt.appointmentTimeId as AppointmentTime
-                    );
-                    if (timeText && timeText !== 'Chưa xác định') {
-                        // Extract giờ từ text (lấy phần đầu, ví dụ "08:00" từ "08:00 - 08:30")
-                        const hourMatch = timeText.match(/^(\d{2}):\d{2}/);
-                        if (hourMatch) {
-                            const hourLabel = `${hourMatch[1]}:00`;
-                            hourCounts[hourLabel] = (hourCounts[hourLabel] || 0) + 1;
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Error parsing appointmentTimeId:', apt.appointmentTimeId, error);
-                }
-            }
-        });
-
-        const peakHours = Object.entries(hourCounts)
-            .map(([hour, count]) => ({ hour, count }))
-            .sort((a, b) => a.hour.localeCompare(b.hour));
-
-        // Appointment type statistics
-        let telehealth = 0;
-        let inPerson = 0;
-        appointments.forEach((apt) => {
-            if (
-                apt.appointmentType === AppointmentType.TELEHEALTH ||
-                apt.appointmentType === 'TELEHEALTH'
-            ) {
-                telehealth++;
-            } else if (
-                apt.appointmentType === AppointmentType.IN_PERSON ||
-                apt.appointmentType === 'IN_PERSON'
-            ) {
-                inPerson++;
-            }
-        });
-
-        // Returning patients (patients with more than 1 appointment)
-        const patientAppointmentCounts: Record<string, number> = {};
-        appointments.forEach((apt) => {
-            if (apt.patientId) {
-                patientAppointmentCounts[apt.patientId] =
-                    (patientAppointmentCounts[apt.patientId] || 0) + 1;
-            }
-        });
-
-        const returningPatients = Object.values(patientAppointmentCounts).filter(
-            (count) => count > 1
-        ).length;
-
-        // Completion rate
-        const totalCompletedOrConfirmed = appointments.filter(
-            (a) =>
-                a.status === AppointmentStatus.COMPLETED || a.status === AppointmentStatus.CONFIRMED
-        ).length;
-        const completionRate =
-            appointments.length > 0 ? (totalCompletedOrConfirmed / appointments.length) * 100 : 0;
-
-        return {
-            peakHours,
-            appointmentTypeStats: { telehealth, inPerson },
-            returningPatients,
-            completionRate,
-        };
-    }, []);
+    // Calculate additional statistics using shared utility
+    const calculateAdditionalStatistics = useCallback(
+        (appointments: any[]) => calculateAdditionalStatisticsUtil(appointments),
+        []
+    );
 
     // Calculate trend data based on period
     const calculateTrends = useCallback((appointments: any[], period: StatisticsPeriod) => {
@@ -622,18 +553,36 @@ const AdminDashboard: React.FC = () => {
                     }));
 
                 // Combine rating distribution from all doctors and services
+                const extractRatingDistributions = (
+                    statsObj: Record<string, any>
+                ): Array<{ rating: number; count: number }> => {
+                    const stats = Object.values(statsObj) as any[];
+                    return stats
+                        .filter(
+                            (stat: any) =>
+                                stat.ratingDistribution && Array.isArray(stat.ratingDistribution)
+                        )
+                        .flatMap((stat: any) => stat.ratingDistribution);
+                };
+
+                const updateRatingDistributionMap = (
+                    map: Record<number, { count: number }>,
+                    dist: { rating: number; count?: number }
+                ): void => {
+                    if (!map[dist.rating]) {
+                        map[dist.rating] = { count: 0 };
+                    }
+                    map[dist.rating].count += dist.count || 0;
+                };
+
                 const ratingDistributionMap: Record<number, { count: number }> = {};
-                [doctorsStats, servicesStats].forEach((statsObj) => {
-                    Object.values(statsObj).forEach((stat: any) => {
-                        if (stat.ratingDistribution && Array.isArray(stat.ratingDistribution)) {
-                            stat.ratingDistribution.forEach((dist: any) => {
-                                if (!ratingDistributionMap[dist.rating]) {
-                                    ratingDistributionMap[dist.rating] = { count: 0 };
-                                }
-                                ratingDistributionMap[dist.rating].count += dist.count || 0;
-                            });
-                        }
-                    });
+                const allDistributions = [
+                    ...extractRatingDistributions(doctorsStats),
+                    ...extractRatingDistributions(servicesStats),
+                ];
+
+                allDistributions.forEach((dist) => {
+                    updateRatingDistributionMap(ratingDistributionMap, dist);
                 });
 
                 const totalRatingCount = Object.values(ratingDistributionMap).reduce(
@@ -733,7 +682,7 @@ const AdminDashboard: React.FC = () => {
                 if (hospitalSubs.length < 2) return;
 
                 // Sort by creation date
-                const sorted = hospitalSubs.sort(
+                const sorted = [...hospitalSubs].sort(
                     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
                 );
 
