@@ -112,8 +112,18 @@ const AdminProfileSettings: React.FC = () => {
         }
         if (!formData.email?.trim()) {
             newErrors.email = 'Email là bắt buộc! Vui lòng nhập email';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Email không hợp lệ! Vui lòng nhập email đúng định dạng';
+        } else {
+            // Simple email validation with length limit to prevent ReDoS
+            const email = formData.email.trim();
+            if (email.length > 254) {
+                newErrors.email = 'Email quá dài! Vui lòng nhập email hợp lệ';
+            } else {
+                // Simplified regex without backtracking vulnerability
+                const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    newErrors.email = 'Email không hợp lệ! Vui lòng nhập email đúng định dạng';
+                }
+            }
         }
 
         return Object.keys(newErrors).length > 0 ? newErrors : null;
@@ -314,10 +324,11 @@ const AdminProfileSettings: React.FC = () => {
                                             error={errors.phone}
                                         />
                                         <div className="col-md-6 mb-3">
-                                            <label className="form-label">
+                                            <label htmlFor="gender" className="form-label">
                                                 Giới tính <span className="text-danger">*</span>
                                             </label>
                                             <select
+                                                id="gender"
                                                 className={`form-control ${errors.gender ? 'is-invalid' : ''}`}
                                                 name="gender"
                                                 value={
@@ -339,7 +350,7 @@ const AdminProfileSettings: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="col-md-6 mb-3">
-                                            <label className="form-label">
+                                            <label htmlFor="dateOfBirth" className="form-label">
                                                 Ngày sinh{' '}
                                                 {errors.dateOfBirth && (
                                                     <span className="text-danger">*</span>
@@ -412,6 +423,7 @@ const AdminProfileSettings: React.FC = () => {
                                                     }}
                                                     slotProps={{
                                                         textField: {
+                                                            id: 'dateOfBirth',
                                                             size: 'small' as const,
                                                             placeholder: 'Chọn ngày sinh',
                                                             error: !!errors.dateOfBirth,
