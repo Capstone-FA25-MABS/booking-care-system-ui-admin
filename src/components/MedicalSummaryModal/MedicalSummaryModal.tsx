@@ -369,8 +369,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
         <Modal show={show} onHide={handleClose} size="lg" centered backdrop="static">
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <i className="bi bi-stars me-2"></i>
-                    Tóm tắt kết quả khám bệnh (AI)
+                    <i className="bi bi-stars me-2"></i> Tóm tắt kết quả khám bệnh (AI)
                 </Modal.Title>
             </Modal.Header>
 
@@ -464,8 +463,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                         onClick={handleRegenerate}
                                         disabled={isGenerating}
                                     >
-                                        <i className="bi bi-arrow-clockwise me-1"></i>
-                                        Tạo lại
+                                        <i className="bi bi-arrow-clockwise me-1"></i> Tạo lại
                                     </Button>
                                 </div>
                                 <div className={styles.aiSummaryBox}>
@@ -481,17 +479,15 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         {!aiResponse && transcript && transcript.trim().length > 0 && (
                             <div className="mb-3">
                                 <Alert variant="info">
-                                    <i className="bi bi-info-circle me-2"></i>
-                                    Có dữ liệu cuộc trò chuyện khả dụng. Bạn có thể sử dụng AI để
-                                    tạo tóm tắt tự động.
+                                    <i className="bi bi-info-circle me-2"></i> Có dữ liệu cuộc trò
+                                    chuyện khả dụng. Bạn có thể sử dụng AI để tạo tóm tắt tự động.
                                 </Alert>
                                 <Button
                                     variant="primary"
                                     onClick={generateSummary}
                                     disabled={isGenerating}
                                 >
-                                    <i className="bi bi-stars me-2"></i>
-                                    Tạo tóm tắt bằng AI
+                                    <i className="bi bi-stars me-2"></i> Tạo tóm tắt bằng AI
                                 </Button>
                             </div>
                         )}
@@ -513,8 +509,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                                             onClick={startRecording}
                                             disabled={isGenerating || isSaving}
                                         >
-                                            <i className="bi bi-mic-fill me-2"></i>
-                                            Ghi âm tóm tắt
+                                            <i className="bi bi-mic-fill me-2"></i> Ghi âm tóm tắt
                                         </Button>
                                         <small className="text-muted align-self-center">
                                             Bấm để bắt đầu ghi âm và tự động chuyển thành văn bản
@@ -588,8 +583,7 @@ const MedicalSummaryModal: React.FC<MedicalSummaryModalProps> = ({
                         </>
                     ) : (
                         <>
-                            <i className="bi bi-check-circle me-2"></i>
-                            Xác nhận & Lưu
+                            <i className="bi bi-check-circle me-2"></i> Xác nhận & Lưu
                         </>
                     )}
                 </Button>

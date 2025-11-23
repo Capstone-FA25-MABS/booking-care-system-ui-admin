@@ -187,12 +187,10 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
                 {recordingState.isRecording ? (
                     <>
                         <Button variant="warning" size="sm" onClick={handlePause}>
-                            <i className="bi bi-pause-circle me-1"></i>
-                            Tạm dừng
+                            <i className="bi bi-pause-circle me-1"></i> Tạm dừng
                         </Button>
                         <Button variant="success" size="sm" onClick={handleResume}>
-                            <i className="bi bi-play-circle me-1"></i>
-                            Tiếp tục
+                            <i className="bi bi-play-circle me-1"></i> Tiếp tục
                         </Button>
                         <Button
                             variant="danger"
@@ -212,8 +210,7 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <i className="bi bi-stop-circle me-1"></i>
-                                    Dừng & Lưu
+                                    <i className="bi bi-stop-circle me-1"></i> Dừng & Lưu
                                 </>
                             )}
                         </Button>
@@ -225,8 +222,7 @@ const CallRecordingControls: React.FC<CallRecordingControlsProps> = ({
                         onClick={handleStartRecording}
                         disabled={!isCallActive || !localStream || !remoteStream}
                     >
-                        <i className="bi bi-record-circle me-1"></i>
-                        Bắt đầu ghi âm
+                        <i className="bi bi-record-circle me-1"></i> Bắt đầu ghi âm
                     </Button>
                 )}
             </div>
