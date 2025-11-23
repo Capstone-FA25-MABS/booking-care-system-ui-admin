@@ -542,7 +542,7 @@ const DoctorDashboard: React.FC = () => {
         if (!additionalStats?.appointmentTypeStats) return [];
         return [
             {
-                label: 'Tư vấn online',
+                label: 'Tư vấn trực tiếp',
                 value: additionalStats.appointmentTypeStats.telehealth,
             },
             {
@@ -656,7 +656,7 @@ const DoctorDashboard: React.FC = () => {
                                                 icon="ti ti-repeat"
                                             />
                                             <MetricCard
-                                                label="Tư vấn online"
+                                                label="Tư vấn trực tiếp"
                                                 value={
                                                     additionalStats.appointmentTypeStats.telehealth
                                                 }
@@ -736,7 +736,9 @@ const DoctorDashboard: React.FC = () => {
                                         <div className={styles.trendCard}>
                                             <div className={styles.cardHeader}>
                                                 <h5>Thống kê theo loại khám</h5>
-                                                <span>So sánh tư vấn online vs khám trực tiếp</span>
+                                                <span>
+                                                    So sánh tư vấn trực tiếp vs khám trực tiếp
+                                                </span>
                                             </div>
                                             <div className={styles.cardBody}>
                                                 <ChartJsLine

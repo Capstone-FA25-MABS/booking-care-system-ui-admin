@@ -2,22 +2,26 @@ import React, { useEffect } from 'react';
 import styles from './ChartJsLine.module.scss';
 import { useChartLoader, initializeChart } from '@/hooks/useChartLoader';
 
-type ChartDataPoint = { label: string; value1: number; value2: number };
+type ChartDataPoint = { label: string; value1: number; value2: number; value3: number };
 
-interface ChartJsMultiLineProps {
+interface ChartJsTripleLineProps {
     data: ChartDataPoint[];
     color1: string;
     color2: string;
+    color3: string;
     label1: string;
     label2: string;
+    label3: string;
 }
 
-export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
+export const ChartJsTripleLine: React.FC<ChartJsTripleLineProps> = ({
     data,
     color1,
     color2,
+    color3,
     label1,
     label2,
+    label3,
 }) => {
     const { canvasRef, chartRef, isMountedRef } = useChartLoader();
 
@@ -53,7 +57,19 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
                         pointRadius: 4,
                         pointBackgroundColor: '#fff',
                         tension: 0.45,
-                        yAxisID: 'y1',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: label3,
+                        data: trimmed.map((point) => point.value3),
+                        borderColor: color3,
+                        backgroundColor: color3,
+                        fill: false,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        tension: 0.45,
+                        yAxisID: 'y',
                     },
                 ],
             },
@@ -84,29 +100,6 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
                             color: '#94a3b8',
                             beginAtZero: true,
                         },
-                        title: {
-                            display: true,
-                            text: label1,
-                            color: color1,
-                        },
-                    },
-                    y1: {
-                        type: 'linear' as const,
-                        display: true,
-                        position: 'right' as const,
-                        min: 0,
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                        ticks: {
-                            color: '#94a3b8',
-                            beginAtZero: true,
-                        },
-                        title: {
-                            display: true,
-                            text: label2,
-                            color: color2,
-                        },
                     },
                     x: {
                         grid: { display: false },
@@ -134,7 +127,7 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
         };
 
         initializeChart(canvasRef, chartRef, isMountedRef, config);
-    }, [data, color1, color2, label1, label2]);
+    }, [data, color1, color2, color3, label1, label2, label3]);
 
     return (
         <div className={styles.chartJsWrapper}>
