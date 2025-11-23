@@ -2,66 +2,24 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
-import Select from 'react-select';
-import FilterDatePicker from '@/components/FilterDatePicker';
 import styles from '../../hospitals/Dashboard/Dashboard.module.scss';
 import { RootState } from '@/store';
-import ActionDropdown from '@/components/ActionDropdown';
-import { selectCustomStyles } from '@/constants/select.styles';
 import AppointmentService from '@/services/appointment.service';
 import ReviewService from '@/services/review.service';
 import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus, AppointmentType, AppointmentTime } from '@/enums/appointment.enums';
 import { getAppointmentTimeText } from '@/types/appointment.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsLine, ChartSkeleton, ChartJsMultiLine } from '@/components/ChartJsLine';
-
-const periodOptions: Array<{ value: StatisticsPeriod; label: string }> = [
-    { value: StatisticsPeriod.Daily, label: 'Theo ngày' },
-    { value: StatisticsPeriod.Weekly, label: 'Theo tuần' },
-    { value: StatisticsPeriod.Monthly, label: 'Theo tháng' },
-    { value: StatisticsPeriod.Quarterly, label: 'Theo quý' },
-    { value: StatisticsPeriod.Yearly, label: 'Theo năm' },
-];
-
-const numberFormatter = new Intl.NumberFormat('vi-VN');
-const formatPercent = (value: number) => (Number.isFinite(value) ? `${value.toFixed(2)}%` : '0%');
-
-const formatDateDisplay = (value?: string | Date) => {
-    if (!value) return '--';
-    try {
-        const date = typeof value === 'string' ? new Date(value) : value;
-        if (isNaN(date.getTime())) {
-            return '--';
-        }
-        return format(date, 'dd/MM/yyyy');
-    } catch {
-        return '--';
-    }
-};
-
-const formatTrendLabel = (periodStart: string, periodEnd: string): string => {
-    try {
-        const startDate = new Date(periodStart);
-        const endDate = new Date(periodEnd);
-
-        // Kiểm tra Date hợp lệ
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            return `${periodStart} - ${periodEnd}`;
-        }
-
-        const startFormatted = format(startDate, 'dd/MM/yyyy');
-        const endFormatted = format(endDate, 'dd/MM/yyyy');
-
-        if (startFormatted === endFormatted) {
-            return startFormatted;
-        }
-
-        return `${startFormatted} - ${endFormatted}`;
-    } catch {
-        return `${periodStart} - ${periodEnd}`;
-    }
-};
+import { ChartSkeleton, ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
+import { DashboardFilters } from '@/components/DashboardFilters';
+import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
+import {
+    periodOptions,
+    numberFormatter,
+    formatPercent,
+    formatDateDisplay,
+    formatTrendLabel,
+} from '@/utils/dashboard.utils';
 
 type ChartPoint = { label: string; value: number };
 
@@ -263,7 +221,7 @@ const DoctorDashboard: React.FC = () => {
 
             const date = new Date(apt.appointmentDate);
             // Kiểm tra Date hợp lệ
-            if (isNaN(date.getTime())) {
+            if (Number.isNaN(date.getTime())) {
                 console.warn('Invalid appointmentDate:', apt.appointmentDate);
                 return; // Skip invalid dates
             }
@@ -333,7 +291,7 @@ const DoctorDashboard: React.FC = () => {
                 }
 
                 // Kiểm tra Date hợp lệ
-                if (isNaN(periodStart.getTime())) {
+                if (Number.isNaN(periodStart.getTime())) {
                     console.warn(`Invalid date key: ${key}`);
                     return; // Skip invalid dates
                 }
@@ -371,7 +329,7 @@ const DoctorDashboard: React.FC = () => {
                 ).length;
 
                 // Kiểm tra periodEnd hợp lệ trước khi thêm
-                if (!isNaN(periodEnd.getTime())) {
+                if (!Number.isNaN(periodEnd.getTime())) {
                     appointmentTrendPoints.push({
                         label: key,
                         periodStart: periodStart.toISOString(),
@@ -616,18 +574,7 @@ const DoctorDashboard: React.FC = () => {
         ];
     }, [additionalStats]);
 
-    if (!doctorProfile?.id) {
-        return (
-            <div className="content">
-                <div className="alert alert-warning" role="alert">
-                    <i className="ti ti-alert-triangle me-2" /> Không tìm thấy thông tin bác sĩ. Vui
-                    lòng đăng nhập lại.
-                </div>
-            </div>
-        );
-    }
-
-    const doctorName = `${doctorProfile.firstName || ''} ${doctorProfile.lastName || ''}`.trim();
+    const doctorName = `${doctorProfile?.firstName || ''} ${doctorProfile?.lastName || ''}`.trim();
 
     return (
         <div className={`content ${styles.dashboardPage}`} id="doctorDashboardPage">
@@ -641,102 +588,18 @@ const DoctorDashboard: React.FC = () => {
                 </p>
             </div>
 
-            <div className={`card shadow-sm mb-4 ${styles.filtersCard}`}>
-                <div className="card-body">
-                    <div className={styles.filtersHeader}>
-                        <div className={styles.filtersRow}>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateFrom">Từ ngày</label>
-                                <FilterDatePicker
-                                    id="dateFrom"
-                                    value={dateRange.start}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange(
-                                                'start',
-                                                format(newValue, 'yyyy-MM-dd')
-                                            );
-                                        }
-                                    }}
-                                    maxDate={dateRange.end || undefined}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateTo">Đến ngày</label>
-                                <FilterDatePicker
-                                    id="dateTo"
-                                    value={dateRange.end}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange('end', format(newValue, 'yyyy-MM-dd'));
-                                        }
-                                    }}
-                                    minDate={dateRange.start || undefined}
-                                    maxDate={new Date()}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="periodSelect">Chu kỳ thống kê</label>
-                                <Select
-                                    inputId="periodSelect"
-                                    options={periodOptions.map((opt) => ({
-                                        value: opt.value,
-                                        label: opt.label,
-                                    }))}
-                                    value={periodOptions
-                                        .map((opt) => ({ value: opt.value, label: opt.label }))
-                                        .find((opt) => opt.value === period)}
-                                    onChange={(selectedOption) => {
-                                        if (selectedOption) {
-                                            setPeriod(selectedOption.value as StatisticsPeriod);
-                                        }
-                                    }}
-                                    placeholder="Chọn chu kỳ thống kê"
-                                    classNamePrefix="select2"
-                                    styles={{
-                                        ...selectCustomStyles,
-                                        control: (provided: any) => ({
-                                            ...selectCustomStyles.control(provided),
-                                            minHeight: '30px',
-                                            height: '30px',
-                                        }),
-                                    }}
-                                    menuPortalTarget={document.body}
-                                    isDisabled={isLoading}
-                                    isSearchable={false}
-                                />
-                            </div>
-                        </div>
-                        <div className={styles.exportAction}>
-                            <ActionDropdown
-                                type="export"
-                                options={[
-                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                    {
-                                        value: 'excel',
-                                        label: 'Tải xuống dạng Excel',
-                                        format: 'excel',
-                                    },
-                                ]}
-                                onExport={(format: string) => {
-                                    console.log('Exporting:', format);
-                                    // Handle export logic here
-                                }}
-                                size="sm"
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="alert alert-danger mb-0" role="alert">
-                            <i className="ti ti-alert-triangle me-2" />
-                            {error}
-                        </div>
-                    )}
-                </div>
-            </div>
+            <DashboardFilters
+                dateRange={dateRange}
+                period={period}
+                isLoading={isLoading}
+                error={error}
+                onDateChange={handleDateChange}
+                onPeriodChange={setPeriod}
+                onExport={(format: string) => {
+                    console.log('Exporting:', format);
+                    // Handle export logic here
+                }}
+            />
 
             {isLoading || isLoadingReviewStats ? (
                 <>
@@ -894,36 +757,11 @@ const DoctorDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={appointmentTrendPoints}
-                                        color="#36B6C5"
-                                        label="Xu hướng lịch hẹn"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={newPatientPoints}
-                                        color="#818CF8"
-                                        label="Bệnh nhân mới"
-                                    />
-                                </div>
-                            </div>
+                            <DashboardTrendCharts
+                                period={period}
+                                appointmentTrendPoints={appointmentTrendPoints}
+                                newPatientPoints={newPatientPoints}
+                            />
 
                             {additionalStats && (
                                 <>

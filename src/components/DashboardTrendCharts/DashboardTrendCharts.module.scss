@@ -1,0 +1,32 @@
+.trendCard {
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    overflow: hidden;
+
+    .cardHeader {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        span {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+    }
+
+    .cardBody {
+        padding: 1.25rem;
+    }
+}

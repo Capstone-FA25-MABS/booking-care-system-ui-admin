@@ -1,13 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
-import Select from 'react-select';
-import FilterDatePicker from '@/components/FilterDatePicker';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
-import ActionDropdown from '@/components/ActionDropdown';
-import { selectCustomStyles } from '@/constants/select.styles';
 import AppointmentService from '@/services/appointment.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
@@ -15,44 +11,16 @@ import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsLine, ChartSkeleton, ChartJsMultiLine } from '@/components/ChartJsLine';
-
-const periodOptions: Array<{ value: StatisticsPeriod; label: string }> = [
-    { value: StatisticsPeriod.Daily, label: 'Theo ngày' },
-    { value: StatisticsPeriod.Weekly, label: 'Theo tuần' },
-    { value: StatisticsPeriod.Monthly, label: 'Theo tháng' },
-    { value: StatisticsPeriod.Quarterly, label: 'Theo quý' },
-    { value: StatisticsPeriod.Yearly, label: 'Theo năm' },
-];
-
-const numberFormatter = new Intl.NumberFormat('vi-VN');
-const formatPercent = (value: number) => (Number.isFinite(value) ? `${value.toFixed(2)}%` : '0%');
-
-const formatDateDisplay = (value?: string | Date) => {
-    if (!value) return '--';
-    const date = typeof value === 'string' ? new Date(value) : value;
-    return format(date, 'dd/MM/yyyy');
-};
-
-const formatTrendLabel = (periodStart: string, periodEnd: string): string => {
-    try {
-        const startDate = new Date(periodStart);
-        const endDate = new Date(periodEnd);
-        const startFormatted = format(startDate, 'dd/MM/yyyy');
-        const endFormatted = format(endDate, 'dd/MM/yyyy');
-
-        // Nếu cùng một ngày, chỉ hiển thị một ngày
-        if (startFormatted === endFormatted) {
-            return startFormatted;
-        }
-
-        // Hiển thị khoảng thời gian
-        return `${startFormatted} - ${endFormatted}`;
-    } catch {
-        // Fallback nếu parse date thất bại
-        return `${periodStart} - ${periodEnd}`;
-    }
-};
+import { ChartSkeleton, ChartJsMultiLine } from '@/components/ChartJsLine';
+import { DashboardFilters } from '@/components/DashboardFilters';
+import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
+import {
+    periodOptions,
+    numberFormatter,
+    formatPercent,
+    formatDateDisplay,
+    formatTrendLabel,
+} from '@/utils/dashboard.utils';
 
 type ChartPoint = { label: string; value: number };
 
@@ -495,102 +463,18 @@ const HospitalDashboard: React.FC = () => {
                 </p>
             </div>
 
-            <div className={`card shadow-sm mb-4 ${styles.filtersCard}`}>
-                <div className="card-body">
-                    <div className={styles.filtersHeader}>
-                        <div className={styles.filtersRow}>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateFrom">Từ ngày</label>
-                                <FilterDatePicker
-                                    id="dateFrom"
-                                    value={dateRange.start}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange(
-                                                'start',
-                                                format(newValue, 'yyyy-MM-dd')
-                                            );
-                                        }
-                                    }}
-                                    maxDate={dateRange.end || undefined}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateTo">Đến ngày</label>
-                                <FilterDatePicker
-                                    id="dateTo"
-                                    value={dateRange.end}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange('end', format(newValue, 'yyyy-MM-dd'));
-                                        }
-                                    }}
-                                    minDate={dateRange.start || undefined}
-                                    maxDate={new Date()}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="periodSelect">Chu kỳ thống kê</label>
-                                <Select
-                                    inputId="periodSelect"
-                                    options={periodOptions.map((opt) => ({
-                                        value: opt.value,
-                                        label: opt.label,
-                                    }))}
-                                    value={periodOptions
-                                        .map((opt) => ({ value: opt.value, label: opt.label }))
-                                        .find((opt) => opt.value === period)}
-                                    onChange={(selectedOption) => {
-                                        if (selectedOption) {
-                                            setPeriod(selectedOption.value as StatisticsPeriod);
-                                        }
-                                    }}
-                                    placeholder="Chọn chu kỳ thống kê"
-                                    classNamePrefix="select2"
-                                    styles={{
-                                        ...selectCustomStyles,
-                                        control: (provided: any) => ({
-                                            ...selectCustomStyles.control(provided),
-                                            minHeight: '30px',
-                                            height: '30px',
-                                        }),
-                                    }}
-                                    menuPortalTarget={document.body}
-                                    isDisabled={isLoading}
-                                    isSearchable={false}
-                                />
-                            </div>
-                        </div>
-                        <div className={styles.exportAction}>
-                            <ActionDropdown
-                                type="export"
-                                options={[
-                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                    {
-                                        value: 'excel',
-                                        label: 'Tải xuống dạng Excel',
-                                        format: 'excel',
-                                    },
-                                ]}
-                                onExport={(format: string) => {
-                                    console.log('Exporting:', format);
-                                    // Handle export logic here
-                                }}
-                                size="sm"
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="alert alert-danger mb-0" role="alert">
-                            <i className="ti ti-alert-triangle me-2" />
-                            {error}
-                        </div>
-                    )}
-                </div>
-            </div>
+            <DashboardFilters
+                dateRange={dateRange}
+                period={period}
+                isLoading={isLoading}
+                error={error}
+                onDateChange={handleDateChange}
+                onPeriodChange={setPeriod}
+                onExport={(format: string) => {
+                    console.log('Exporting:', format);
+                    // Handle export logic here
+                }}
+            />
 
             {isLoading || isLoadingHospitalOverview || isLoadingReviewStats ? (
                 <>
@@ -877,36 +761,11 @@ const HospitalDashboard: React.FC = () => {
                                 </>
                             )}
 
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={appointmentTrendPoints}
-                                        color="#36B6C5"
-                                        label="Xu hướng lịch hẹn"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={newPatientPoints}
-                                        color="#818CF8"
-                                        label="Bệnh nhân mới"
-                                    />
-                                </div>
-                            </div>
+                            <DashboardTrendCharts
+                                period={period}
+                                appointmentTrendPoints={appointmentTrendPoints}
+                                newPatientPoints={newPatientPoints}
+                            />
                         </>
                     )}
 
