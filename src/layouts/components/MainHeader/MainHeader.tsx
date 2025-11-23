@@ -11,7 +11,7 @@ import { vi } from 'date-fns/locale';
 import logo from '@/assets/img/logo.svg';
 import logoSmall from '@/assets/img/logo-small.svg';
 import logoWhite from '@/assets/img/logo-white.svg';
-import user01 from '@/assets/img/users/user-01.jpg';
+import userDefault from '@/assets/img/users/user-default.jpg';
 import { RootState, AppDispatch } from '@/store';
 import { logoutAsync } from '@/store/slices/authSlice';
 import { fetchProfileByRole, clearAllUserProfiles } from '@/store/slices/userSlice';
@@ -158,7 +158,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
 
     // Get avatar URL with fallback
     const getAvatarUrl = () => {
-        return avatarUrl || user01;
+        return avatarUrl || userDefault;
     };
 
     return (
@@ -198,7 +198,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             <input
                                 type="text"
                                 className="form-control shadow-sm"
-                                placeholder="Search"
+                                placeholder="Tìm kiếm"
                             />
                             <span className="input-icon-addon text-dark shadow fs-18 d-inline-flex p-0 header-search-icon">
                                 <i className="ti ti-command"></i>
@@ -476,21 +476,59 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             </div>
 
                             {/* Item */}
-                            <a href="profile-settings.html" className="dropdown-item">
+                            <button
+                                type="button"
+                                className="dropdown-item"
+                                onClick={() => {
+                                    // Navigate based on current user role
+                                    switch (role) {
+                                        case Role.STAFF:
+                                            navigate(
+                                                buildPath(
+                                                    PATHS.HOSPITAL.ROOT,
+                                                    PATHS.HOSPITAL.SETTINGS.ROOT,
+                                                    PATHS.HOSPITAL.SETTINGS.PROFILE
+                                                )
+                                            );
+                                            break;
+                                        case Role.DOCTOR:
+                                            navigate(
+                                                buildPath(
+                                                    PATHS.DOCTOR.ROOT,
+                                                    PATHS.DOCTOR.SETTINGS.ROOT,
+                                                    PATHS.DOCTOR.SETTINGS.PROFILE
+                                                )
+                                            );
+                                            break;
+                                        case Role.ADMIN:
+                                        default:
+                                            // Default to admin settings for ADMIN role and any other roles
+                                            navigate(
+                                                buildPath(
+                                                    PATHS.ADMIN.ROOT,
+                                                    PATHS.ADMIN.SETTINGS.ROOT,
+                                                    PATHS.ADMIN.SETTINGS.PROFILE
+                                                )
+                                            );
+                                            break;
+                                    }
+                                }}
+                                style={{
+                                    cursor: 'pointer',
+                                    border: 'none',
+                                    background: 'none',
+                                    width: '100%',
+                                    textAlign: 'left',
+                                }}
+                            >
                                 <i className="ti ti-user-circle me-1 align-middle"></i>
-                                <span className="align-middle">Profile Settings</span>
-                            </a>
-
-                            {/* Item */}
-                            <a href="account-settings.html" className="dropdown-item">
-                                <i className="ti ti-settings me-1 align-middle"></i>
-                                <span className="align-middle">Cài đặt tài khoản</span>
-                            </a>
+                                <span className="align-middle">Thông tin tài khoản</span>
+                            </button>
 
                             {/* Item */}
                             <div className="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
                                 <label className="form-check-label" htmlFor="notify">
-                                    <i className="ti ti-bell me-1"></i>Notifications
+                                    <i className="ti ti-bell me-1"></i> Thông báo
                                 </label>
                                 <input
                                     className="form-check-input me-0"
@@ -501,12 +539,6 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                             </div>
 
                             {/* Item */}
-                            <a href="transactions.html" className="dropdown-item">
-                                <i className="ti ti-transition-right me-1 align-middle"></i>
-                                <span className="align-middle">Transactions</span>
-                            </a>
-
-                            {/* Item */}
                             <div className="pt-2 mt-2 border-top">
                                 <button
                                     onClick={handleLogout}
@@ -514,7 +546,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                     type="button"
                                 >
                                     <i className="ti ti-logout me-1 fs-17 align-middle"></i>
-                                    <span className="align-middle">Log Out</span>
+                                    <span className="align-middle">Đăng xuất</span>
                                 </button>
                             </div>
                         </div>

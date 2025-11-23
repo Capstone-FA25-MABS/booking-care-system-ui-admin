@@ -8,7 +8,7 @@ import { getAllServiceTypesSimple } from '@/services/serviceType.service';
 import { ServiceType } from '@/types/serviceType.types';
 import { Role } from '@/enums/common.enums';
 import Button from '@/components/Button';
-import Spinner from '@/components/Spinner';
+import ServiceTypeCardSkeleton from './ServiceTypeCardSkeleton';
 import styles from './HospitalServiceTypesManagement.module.scss';
 import HospitalService from '@/services/hospital.service';
 
@@ -164,19 +164,6 @@ const HospitalServiceTypesManagement: React.FC = () => {
         selectedServiceTypeIds.some((id) => !initialServiceTypeIds.includes(id)) ||
         initialServiceTypeIds.some((id) => !selectedServiceTypeIds.includes(id));
 
-    if (isLoading) {
-        return (
-            <div className="content">
-                <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ minHeight: '400px' }}
-                >
-                    <Spinner size="large" variant="primary" />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={`content ${styles.pageContainer}`}>
             <div className={styles.contentWrapper}>
@@ -215,12 +202,23 @@ const HospitalServiceTypesManagement: React.FC = () => {
 
                 {/* Service types grid */}
                 <div className={styles.serviceTypesGrid} data-tour-id="service-type-grid">
-                    {filteredServiceTypes.length === 0 ? (
-                        <div className="text-center py-5">
-                            <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
-                        </div>
-                    ) : (
-                        filteredServiceTypes.map((serviceType) => {
+                    {(() => {
+                        if (isLoading) {
+                            // Show skeleton cards while loading
+                            return Array.from({ length: 12 }, (_, index) => (
+                                <ServiceTypeCardSkeleton key={`service-type-skeleton-${index}`} />
+                            ));
+                        }
+
+                        if (filteredServiceTypes.length === 0) {
+                            return (
+                                <div className="text-center py-5">
+                                    <p className="text-muted">Không tìm thấy dịch vụ bác sĩ nào</p>
+                                </div>
+                            );
+                        }
+
+                        return filteredServiceTypes.map((serviceType) => {
                             const isSelected = selectedServiceTypeIds.includes(serviceType.id);
                             const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
@@ -268,8 +266,8 @@ const HospitalServiceTypesManagement: React.FC = () => {
                                     </div>
                                 </div>
                             );
-                        })
-                    )}
+                        });
+                    })()}
                 </div>
 
                 {/* Save button at bottom */}

@@ -67,7 +67,7 @@ export const createMessagesMenuItem = (role: 'staff' | 'doctor'): MenuItem => {
     const basePath = role === 'staff' ? PATHS.HOSPITAL : PATHS.DOCTOR;
 
     return {
-        label: 'Messages',
+        label: 'Tin nhắn',
         icon: 'ti ti-messages',
         link: buildPath(basePath.ROOT, basePath.MESSAGES),
     };
@@ -147,7 +147,7 @@ export const createHospitalSubscriptionPlansMenuItem = (): MenuItem => ({
  * Create Dashboard menu item for Admin with multiple dashboards
  */
 export const createDashboardMenuItem = (): MenuItem => ({
-    label: 'Dashboard',
+    label: 'Bảng điều khiển',
     icon: 'ti ti-layout-dashboard',
     subItems: [
         { label: 'Admin Dashboard', link: '/admin/dashboard' },

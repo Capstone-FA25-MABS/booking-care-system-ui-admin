@@ -17,8 +17,13 @@ import { Role } from '@/enums/common.enums';
 
 export const listGroupMenuItemHospital: MenuConfig = [
     {
-        title: 'Hospital',
+        title: 'Danh mục chính',
         items: [
+            createSimpleMenuItem(
+                'Bảng điều khiển',
+                'ti ti-layout-dashboard',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DASHBOARD)
+            ),
             createSimpleMenuItem(
                 'Quản lí chuyên khoa',
                 'ti ti-stethoscope',
@@ -57,7 +62,7 @@ export const listGroupMenuItemHospital: MenuConfig = [
         ],
     },
     {
-        title: 'Settings',
+        title: 'Cài đặt',
         items: [createHospitalAccountSettingsMenuItem()],
     },
 ];
@@ -67,10 +72,10 @@ export const listGroupMenuItemHospital: MenuConfig = [
  */
 export const listGroupMenuItemDoctor: MenuConfig = [
     {
-        title: 'Main Menu',
+        title: 'Danh mục chính',
         items: [
             createSimpleMenuItem(
-                'Dashboard',
+                'Bảng điều khiển',
                 'ti ti-layout-dashboard',
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.DASHBOARD)
             ),
@@ -90,7 +95,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
         ],
     },
     {
-        title: 'Settings',
+        title: 'Cài đặt',
         items: [createDoctorAccountSettingsMenuItem()],
     },
 ];
@@ -100,7 +105,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
  */
 export const listGroupMenuItemAdmin: MenuConfig = [
     {
-        title: 'Main Menu',
+        title: 'Danh mục chính',
         items: [
             createDashboardMenuItem(),
             {
@@ -117,7 +122,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         ],
     },
     {
-        title: 'Management',
+        title: 'Quản lý',
         items: [
             {
                 label: 'Quản lý tài khoản',
@@ -188,7 +193,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         ],
     },
     {
-        title: 'Settings',
+        title: 'Cài đặt',
         items: [createAccountSettingsMenuItem()],
     },
 ];

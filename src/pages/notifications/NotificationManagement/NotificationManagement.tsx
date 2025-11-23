@@ -21,6 +21,7 @@ import {
 import { getLocalizedNotification, Notification } from '@/types/notification.types';
 import TableSkeleton from '@/components/TableSkeleton/TableSkeleton';
 import ModalDelete from '@/components/ModalDelete/ModalDelete';
+import { MetricCard } from '@/components/MetricCard';
 
 const NotificationManagement: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -439,73 +440,41 @@ const NotificationManagement: React.FC = () => {
 
             {/* Summary Cards */}
             <div className="row">
-                <div className="col-xl-3 col-sm-6 col-12">
-                    <div className="card">
-                        <div className="card-body">
-                            <div className="dash-widget-header">
-                                <span className="dash-widget-icon text-primary border-primary">
-                                    <i className="ti ti-bell"></i>
-                                </span>
-                                <div className="dash-count">
-                                    <h3>{totalNotifications}</h3>
-                                </div>
-                            </div>
-                            <div className="dash-widget-info">
-                                <h6 className="text-muted">Tổng thông báo</h6>
-                            </div>
-                        </div>
-                    </div>
+                <div className="col-xl-3 col-sm-6 col-12 mb-3">
+                    <MetricCard
+                        label="Tổng thông báo"
+                        value={totalNotifications}
+                        sub="Tất cả thông báo"
+                        icon="ti ti-bell"
+                        className="total"
+                    />
                 </div>
-                <div className="col-xl-3 col-sm-6 col-12">
-                    <div className="card">
-                        <div className="card-body">
-                            <div className="dash-widget-header">
-                                <span className="dash-widget-icon text-warning border-warning">
-                                    <i className="ti ti-bell-ringing"></i>
-                                </span>
-                                <div className="dash-count">
-                                    <h3>{unreadCount}</h3>
-                                </div>
-                            </div>
-                            <div className="dash-widget-info">
-                                <h6 className="text-muted">Chưa đọc</h6>
-                            </div>
-                        </div>
-                    </div>
+                <div className="col-xl-3 col-sm-6 col-12 mb-3">
+                    <MetricCard
+                        label="Chưa đọc"
+                        value={unreadCount}
+                        sub="Thông báo chưa xem"
+                        icon="ti ti-bell-ringing"
+                        className="pending"
+                    />
                 </div>
-                <div className="col-xl-3 col-sm-6 col-12">
-                    <div className="card">
-                        <div className="card-body">
-                            <div className="dash-widget-header">
-                                <span className="dash-widget-icon text-success border-success">
-                                    <i className="ti ti-bell-check"></i>
-                                </span>
-                                <div className="dash-count">
-                                    <h3>{totalNotifications - unreadCount}</h3>
-                                </div>
-                            </div>
-                            <div className="dash-widget-info">
-                                <h6 className="text-muted">Đã đọc</h6>
-                            </div>
-                        </div>
-                    </div>
+                <div className="col-xl-3 col-sm-6 col-12 mb-3">
+                    <MetricCard
+                        label="Đã đọc"
+                        value={totalNotifications - unreadCount}
+                        sub="Thông báo đã xem"
+                        icon="ti ti-bell-check"
+                        className="completed"
+                    />
                 </div>
-                <div className="col-xl-3 col-sm-6 col-12">
-                    <div className="card">
-                        <div className="card-body">
-                            <div className="dash-widget-header">
-                                <span className="dash-widget-icon text-info border-info">
-                                    <i className="ti ti-check"></i>
-                                </span>
-                                <div className="dash-count">
-                                    <h3>{selectedNotifications.length}</h3>
-                                </div>
-                            </div>
-                            <div className="dash-widget-info">
-                                <h6 className="text-muted">Đã chọn</h6>
-                            </div>
-                        </div>
-                    </div>
+                <div className="col-xl-3 col-sm-6 col-12 mb-3">
+                    <MetricCard
+                        label="Đã chọn"
+                        value={selectedNotifications.length}
+                        sub="Thông báo được chọn"
+                        icon="ti ti-check"
+                        className="newPatients"
+                    />
                 </div>
             </div>
 

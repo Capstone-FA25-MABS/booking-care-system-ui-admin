@@ -40,11 +40,6 @@ const ProfileSettings = () => {
 
     return (
         <div className="content" id="profilePage">
-            {/* Page Header */}
-            <div className="mb-3 border-bottom pb-3">
-                <h4 className="fw-bold mb-0">Settings</h4>
-            </div>
-
             <div className="card">
                 <div className="card-body p-0">
                     <div className="card w-100 mb-0 border-0 bg-light-500 shadow-none">

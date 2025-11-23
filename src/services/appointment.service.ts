@@ -5,6 +5,10 @@ import {
     AppointmentQueryRequest,
     UpdateAppointmentStatusRequest,
 } from '@/types/appointment.types';
+import {
+    StaffHospitalStatisticsRequest,
+    StaffHospitalStatisticsResponse,
+} from '@/types/statistics.types';
 
 // Base API endpoints for appointments
 const APPOINTMENT_ENDPOINTS = {
@@ -17,6 +21,7 @@ const APPOINTMENT_ENDPOINTS = {
     BY_ID: (id: string) => `/appointments/${id}`,
     ASSIGN_NEW_DOCTOR: (id: string) => `/appointments/${id}/assign-new-doctor`,
     AVAILABLE_DOCTORS: '/appointments/available-doctors', // Now uses query params
+    STAFF_STATISTICS: '/appointments/staff/statistics',
 } as const;
 
 // Schedule Service endpoints
@@ -294,6 +299,27 @@ export class AppointmentService {
             throw new Error(error.message || 'Failed to fetch available slots');
         }
     }
+
+    /**
+     * Get staff dashboard statistics for a hospital
+     */
+    static async getHospitalStaffStatistics(
+        params: StaffHospitalStatisticsRequest
+    ): Promise<ApiResponse<StaffHospitalStatisticsResponse>> {
+        try {
+            const response: any = await axiosInstance.get(APPOINTMENT_ENDPOINTS.STAFF_STATISTICS, {
+                params,
+            });
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Staff statistics retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch hospital statistics');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -307,6 +333,7 @@ export const {
     assignNewDoctor,
     getAvailableDoctors,
     getAvailableSlots,
+    getHospitalStaffStatistics,
 } = AppointmentService;
 
 // Default export
