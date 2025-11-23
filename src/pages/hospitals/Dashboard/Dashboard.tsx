@@ -11,9 +11,11 @@ import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartSkeleton, ChartJsMultiLine } from '@/components/ChartJsLine';
+import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
+import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
+import DashboardReviewStats from '@/components/DashboardReviewStats';
 import {
     periodOptions,
     numberFormatter,
@@ -509,27 +511,12 @@ const HospitalDashboard: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
+                            <DashboardTrendCharts
+                                period={period}
+                                appointmentTrendPoints={[]}
+                                newPatientPoints={[]}
+                                isLoading={true}
+                            />
                         </>
                     )}
                 </>
@@ -562,57 +549,26 @@ const HospitalDashboard: React.FC = () => {
 
                     {stats && (
                         <>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Tổng quan lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <div className={`${styles.metricsGrid} ${styles.overviewGrid}`}>
-                                        {overviewMetrics.map((metric) => (
-                                            <MetricCard
-                                                key={metric.label}
-                                                label={metric.label}
-                                                value={metric.value}
-                                                sub={metric.sub}
-                                                className={metric.className}
-                                                icon={metric.icon}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            <DashboardOverviewMetrics
+                                period={period}
+                                metrics={overviewMetrics}
+                                trendCardClassName={styles.trendCard}
+                                cardHeaderClassName={styles.cardHeader}
+                                cardBodyClassName={styles.cardBody}
+                                metricsGridClassName={styles.metricsGrid}
+                                overviewGridClassName={styles.overviewGrid}
+                            />
 
                             {reviewStats && (
                                 <>
-                                    <div className={styles.trendCard}>
-                                        <div className={styles.cardHeader}>
-                                            <h5>Thống kê đánh giá</h5>
-                                            <span>Tổng hợp đánh giá từ bệnh nhân</span>
-                                        </div>
-                                        <div className={styles.cardBody}>
-                                            <div
-                                                className={`${styles.metricsGrid} ${styles.hospitalOverviewGrid}`}
-                                            >
-                                                {reviewMetrics.map((metric) => (
-                                                    <MetricCard
-                                                        key={metric.label}
-                                                        label={metric.label}
-                                                        value={metric.value}
-                                                        sub={metric.sub}
-                                                        className={metric.className}
-                                                        icon={metric.icon}
-                                                        formatDecimal={
-                                                            (metric as any).formatDecimal
-                                                        }
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <DashboardReviewStats
+                                        metrics={reviewMetrics}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                        metricsGridClassName={styles.metricsGrid}
+                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
+                                    />
 
                                     {(reviewStats.topDoctors.length > 0 ||
                                         reviewStats.topServices.length > 0) && (
@@ -765,6 +721,7 @@ const HospitalDashboard: React.FC = () => {
                                 period={period}
                                 appointmentTrendPoints={appointmentTrendPoints}
                                 newPatientPoints={newPatientPoints}
+                                isLoading={false}
                             />
                         </>
                     )}

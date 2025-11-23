@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChartJsLine } from '@/components/ChartJsLine';
+import { ChartJsLine, ChartSkeleton } from '@/components/ChartJsLine';
 import { StatisticsPeriod } from '@/types/statistics.types';
 import { periodOptions } from '@/utils/dashboard.utils';
 import styles from './DashboardTrendCharts.module.scss';
@@ -10,13 +10,42 @@ interface DashboardTrendChartsProps {
     period: StatisticsPeriod;
     appointmentTrendPoints: ChartPoint[];
     newPatientPoints: ChartPoint[];
+    isLoading?: boolean;
 }
 
 export const DashboardTrendCharts: React.FC<DashboardTrendChartsProps> = ({
     period,
     appointmentTrendPoints,
     newPatientPoints,
+    isLoading = false,
 }) => {
+    if (isLoading) {
+        return (
+            <>
+                <div className={styles.trendCard}>
+                    <div className={styles.cardHeader}>
+                        <h5>Xu hướng lịch hẹn</h5>
+                        <span>
+                            Số liệu theo: {periodOptions.find((p) => p.value === period)?.label}
+                        </span>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <ChartSkeleton />
+                    </div>
+                </div>
+                <div className={styles.trendCard}>
+                    <div className={styles.cardHeader}>
+                        <h5>Bệnh nhân mới</h5>
+                        <span>Theo dõi số lượt đặt lịch lần đầu</span>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <ChartSkeleton />
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <div className={styles.trendCard}>

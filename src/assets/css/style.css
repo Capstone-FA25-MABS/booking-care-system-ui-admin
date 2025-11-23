@@ -3628,6 +3628,7 @@ Author URL: https://themeforest.net/user/dreamstechnologies
   color: var(--success);
 }
 .alert.alert-danger {
+  margin: 10px 0;
   color: var(--danger);
   background-color: var(--danger-transparent);
   border-color: var(--danger-transparent);

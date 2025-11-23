@@ -30,7 +30,7 @@ export const formatDateDisplay = (value?: string | Date) => {
     if (!value) return '--';
     try {
         const date = typeof value === 'string' ? new Date(value) : value;
-        if (isNaN(date.getTime())) return '--';
+        if (Number.isNaN(date.getTime())) return '--';
         return format(date, 'dd/MM/yyyy');
     } catch {
         return '--';
@@ -45,7 +45,7 @@ export const formatTrendLabel = (periodStart: string, periodEnd: string): string
         const startDate = new Date(periodStart);
         const endDate = new Date(periodEnd);
 
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
             return periodStart;
         }
 
@@ -76,7 +76,7 @@ export const formatTrendLabel = (periodStart: string, periodEnd: string): string
  * Get period key for grouping statistics
  */
 export const getPeriodKey = (date: Date, period: StatisticsPeriod): string => {
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
         return format(new Date(), 'yyyy-MM-dd');
     }
 

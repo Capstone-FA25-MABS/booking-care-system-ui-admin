@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from '../../hospitals/Dashboard/Dashboard.module.scss';
 import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
@@ -10,15 +10,18 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus, AppointmentType, AppointmentTime } from '@/enums/appointment.enums';
 import { getAppointmentTimeText } from '@/types/appointment.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartSkeleton, ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
+import { ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
+import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
+import DashboardReviewStats from '@/components/DashboardReviewStats';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
     formatTrendLabel,
+    getPeriodKey,
 } from '@/utils/dashboard.utils';
 
 type ChartPoint = { label: string; value: number };
@@ -226,32 +229,7 @@ const DoctorDashboard: React.FC = () => {
                 return; // Skip invalid dates
             }
 
-            let key: string;
-
-            switch (period) {
-                case StatisticsPeriod.Daily:
-                    key = format(date, 'yyyy-MM-dd');
-                    break;
-                case StatisticsPeriod.Weekly: {
-                    // Get start of week
-                    const weekStart = subDays(date, date.getDay());
-                    key = format(weekStart, 'yyyy-MM-dd');
-                    break;
-                }
-                case StatisticsPeriod.Monthly:
-                    key = format(date, 'yyyy-MM');
-                    break;
-                case StatisticsPeriod.Quarterly: {
-                    const quarter = Math.floor(date.getMonth() / 3);
-                    key = `${date.getFullYear()}-Q${quarter + 1}`;
-                    break;
-                }
-                case StatisticsPeriod.Yearly:
-                    key = format(date, 'yyyy');
-                    break;
-                default:
-                    key = format(date, 'yyyy-MM-dd');
-            }
+            const key = getPeriodKey(date, period);
 
             if (!grouped[key]) {
                 grouped[key] = [];
@@ -619,83 +597,37 @@ const DoctorDashboard: React.FC = () => {
                         </div>
                     </div>
                     {isLoading && (
-                        <>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
-                        </>
+                        <DashboardTrendCharts
+                            period={period}
+                            appointmentTrendPoints={[]}
+                            newPatientPoints={[]}
+                            isLoading={true}
+                        />
                     )}
                 </>
             ) : (
                 <>
                     {stats && (
                         <>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Tổng quan lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <div className={`${styles.metricsGrid} ${styles.overviewGrid}`}>
-                                        {overviewMetrics.map((metric) => (
-                                            <MetricCard
-                                                key={metric.label}
-                                                label={metric.label}
-                                                value={metric.value}
-                                                sub={metric.sub}
-                                                className={metric.className}
-                                                icon={metric.icon}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            <DashboardOverviewMetrics
+                                period={period}
+                                metrics={overviewMetrics}
+                                trendCardClassName={styles.trendCard}
+                                cardHeaderClassName={styles.cardHeader}
+                                cardBodyClassName={styles.cardBody}
+                                metricsGridClassName={styles.metricsGrid}
+                                overviewGridClassName={styles.overviewGrid}
+                            />
 
                             {reviewStats && (
-                                <div className={styles.trendCard}>
-                                    <div className={styles.cardHeader}>
-                                        <h5>Thống kê đánh giá</h5>
-                                        <span>Tổng hợp đánh giá từ bệnh nhân</span>
-                                    </div>
-                                    <div className={styles.cardBody}>
-                                        <div
-                                            className={`${styles.metricsGrid} ${styles.hospitalOverviewGrid}`}
-                                        >
-                                            {reviewMetrics.map((metric) => (
-                                                <MetricCard
-                                                    key={metric.label}
-                                                    label={metric.label}
-                                                    value={metric.value}
-                                                    sub={metric.sub}
-                                                    className={metric.className}
-                                                    icon={metric.icon}
-                                                    formatDecimal={(metric as any).formatDecimal}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                <DashboardReviewStats
+                                    metrics={reviewMetrics}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                    metricsGridClassName={styles.metricsGrid}
+                                    hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
+                                />
                             )}
 
                             {additionalStats && (
@@ -761,6 +693,7 @@ const DoctorDashboard: React.FC = () => {
                                 period={period}
                                 appointmentTrendPoints={appointmentTrendPoints}
                                 newPatientPoints={newPatientPoints}
+                                isLoading={false}
                             />
 
                             {additionalStats && (
