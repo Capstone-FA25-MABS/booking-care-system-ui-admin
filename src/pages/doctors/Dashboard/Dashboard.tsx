@@ -251,9 +251,9 @@ const DoctorDashboard: React.FC = () => {
                 if (key.includes('Q')) {
                     // Quarterly format: "2024-Q1"
                     const [year, quarter] = key.split('-Q');
-                    const quarterNum = parseInt(quarter, 10);
+                    const quarterNum = Number.parseInt(quarter, 10);
                     const month = (quarterNum - 1) * 3; // Q1 = tháng 0-2, Q2 = 3-5, etc.
-                    periodStart = new Date(parseInt(year, 10), month, 1);
+                    periodStart = new Date(Number.parseInt(year, 10), month, 1);
                 } else if (key.match(/^\d{4}-\d{2}$/)) {
                     // Monthly format: "2024-01"
                     periodStart = new Date(`${key}-01`);
@@ -701,7 +701,7 @@ const DoctorDashboard: React.FC = () => {
                                     {completedVsCancelledData.length > 0 && (
                                         <div className={styles.trendCard}>
                                             <div className={styles.cardHeader}>
-                                                <h5>So sánh hoàn thành vs hủy</h5>
+                                                <h5>Thống kê cuộc hẹn hoàn thành và hủy</h5>
                                                 <span>Thống kê trạng thái lịch hẹn</span>
                                             </div>
                                             <div className={styles.cardBody}>
