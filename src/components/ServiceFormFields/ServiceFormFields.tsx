@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Input from '@/components/Input';
 import Textarea from '@/components/Textarea';
 import { ServiceFormData } from '@/types/service.types';
+import { ServiceCategory } from '@/types/serviceCategory.types';
 
 interface ServiceFormFieldsProps {
     formData: ServiceFormData;
     errors: Record<string, string>;
-    serviceCategories: Array<{ id: string; name: string }>;
+    serviceCategories: ServiceCategory[];
     imagePreview: string;
     onInputChange: (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -26,6 +27,56 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({
     onRemoveImage,
     isEditMode = false,
 }) => {
+    // Get current parent category ID from selected child (for edit mode)
+    const initialParentId = useMemo(() => {
+        if (formData.serviceTypeId) {
+            const selectedChild = serviceCategories.find(
+                (cat) => cat.id === formData.serviceTypeId
+            );
+            return selectedChild?.parentId || '';
+        }
+        return '';
+    }, [formData.serviceTypeId, serviceCategories]);
+
+    // State to track selected parent category
+    const [selectedParentId, setSelectedParentId] = useState<string>(initialParentId);
+
+    // Update selectedParentId when formData.serviceTypeId changes (for edit mode)
+    useEffect(() => {
+        if (formData.serviceTypeId) {
+            const selectedChild = serviceCategories.find(
+                (cat) => cat.id === formData.serviceTypeId
+            );
+            if (selectedChild?.parentId) {
+                setSelectedParentId(selectedChild.parentId);
+            }
+        } else {
+            setSelectedParentId('');
+        }
+    }, [formData.serviceTypeId, serviceCategories]);
+
+    // Separate parent and child categories
+    const parentCategories = useMemo(() => {
+        return serviceCategories.filter((cat) => !cat.parentId);
+    }, [serviceCategories]);
+
+    // Get child categories for selected parent
+    const availableChildCategories = useMemo(() => {
+        if (!selectedParentId) return [];
+        return serviceCategories.filter((cat) => cat.parentId === selectedParentId);
+    }, [selectedParentId, serviceCategories]);
+
+    // Handle parent category change
+    const handleParentCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const parentId = e.target.value;
+        setSelectedParentId(parentId);
+        // Reset child category when parent changes
+        const syntheticEvent = {
+            target: { name: 'serviceTypeId', value: '' },
+        } as React.ChangeEvent<HTMLSelectElement>;
+        onInputChange(syntheticEvent);
+    };
+
     return (
         <>
             {/* Name */}
@@ -146,10 +197,35 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({
                 </div>
             )}
 
-            {/* Service Category */}
+            {/* Service Category - Parent */}
+            <div className="mb-3">
+                <label htmlFor="parentCategoryId" className="form-label">
+                    Danh mục dịch vụ <span className="text-danger">*</span>
+                </label>
+                <select
+                    id="parentCategoryId"
+                    name="parentCategoryId"
+                    className={`form-select ${errors.serviceTypeId && !formData.serviceTypeId ? 'is-invalid' : ''}`}
+                    value={selectedParentId}
+                    onChange={handleParentCategoryChange}
+                    required
+                >
+                    <option value="">Chọn danh mục dịch vụ</option>
+                    {parentCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                            {category.name}
+                        </option>
+                    ))}
+                </select>
+                {errors.serviceTypeId && !formData.serviceTypeId && (
+                    <div className="invalid-feedback">{errors.serviceTypeId}</div>
+                )}
+            </div>
+
+            {/* Service Category - Child */}
             <div className="mb-3">
                 <label htmlFor="serviceTypeId" className="form-label">
-                    Loại dịch vụ <span className="text-danger">*</span>
+                    Dịch vụ <span className="text-danger">*</span>
                 </label>
                 <select
                     id="serviceTypeId"
@@ -158,9 +234,14 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({
                     value={formData.serviceTypeId}
                     onChange={onInputChange}
                     required
+                    disabled={!selectedParentId && !formData.serviceTypeId}
                 >
-                    <option value="">Chọn loại dịch vụ</option>
-                    {serviceCategories.map((category) => (
+                    <option value="">
+                        {selectedParentId || formData.serviceTypeId
+                            ? 'Chọn dịch vụ'
+                            : 'Vui lòng chọn danh mục dịch vụ trước'}
+                    </option>
+                    {availableChildCategories.map((category) => (
                         <option key={category.id} value={category.id}>
                             {category.name}
                         </option>
