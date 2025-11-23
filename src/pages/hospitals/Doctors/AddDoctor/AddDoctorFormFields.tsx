@@ -3,7 +3,6 @@ import Select from 'react-select';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import CKEditor from '@/components/CKEditor';
-import Spinner from '@/components/Spinner';
 import { AddDoctorFormData } from '@/types/doctor.types';
 import { DoctorPrice } from '@/types/serviceType.types';
 import { selectCustomStyles } from '@/constants/select.styles';
@@ -15,6 +14,7 @@ import { prepareBioForSave } from '@/utils/bioHtmlProcessor';
 import ServicePricesSection from '../components/shared/ServicePricesSection';
 import LanguagesSection from '../components/shared/LanguagesSection';
 import YearsOfExperienceField from '../components/shared/YearsOfExperienceField';
+import DoctorFormSkeleton from '../components/DoctorFormSkeleton';
 
 interface AddDoctorFormFieldsProps {
     formData: AddDoctorFormData;
@@ -52,20 +52,7 @@ const AddDoctorFormFields: React.FC<AddDoctorFormFieldsProps> = ({
     serviceTypes,
 }) => {
     if (isLoading) {
-        return (
-            <div
-                className="d-flex justify-content-center align-items-center"
-                style={{
-                    minHeight: 'calc(100vh - 300px)',
-                    width: '100%',
-                }}
-            >
-                <div className="text-center">
-                    <Spinner size="large" variant="primary" />
-                    <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
-                </div>
-            </div>
-        );
+        return <DoctorFormSkeleton />;
     }
 
     return (
