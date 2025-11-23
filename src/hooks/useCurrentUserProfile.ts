@@ -49,10 +49,10 @@ export const useCurrentUserProfile = () => {
 
     // Get role display text
     const getRoleDisplay = (): string => {
-        if (currentRole === Role.ADMIN) return 'Administrator';
-        if (currentRole === Role.DOCTOR) return 'Doctor';
-        if (currentRole === Role.STAFF) return 'Staff';
-        return 'User';
+        if (currentRole === Role.ADMIN) return 'Quản trị viên';
+        if (currentRole === Role.DOCTOR) return 'Bác sĩ';
+        if (currentRole === Role.STAFF) return 'Nhân viên bệnh viện';
+        return 'Người dùng';
     };
 
     // Get avatar URL based on role

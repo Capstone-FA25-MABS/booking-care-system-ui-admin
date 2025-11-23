@@ -1,59 +1,28 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
-import Select from 'react-select';
-import FilterDatePicker from './components/FilterDatePicker';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
-import ActionDropdown from '@/components/ActionDropdown';
-import { selectCustomStyles } from '@/constants/select.styles';
 import AppointmentService from '@/services/appointment.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
 import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
-import { MetricCard, MetricCardSkeleton } from './components/MetricCard';
-import { ChartJsLine, ChartSkeleton } from './components/ChartJsLine';
-import { ChartJsMultiLine } from './components/ChartJsLine/ChartJsMultiLine';
-
-const periodOptions: Array<{ value: StatisticsPeriod; label: string }> = [
-    { value: StatisticsPeriod.Daily, label: 'Theo ngày' },
-    { value: StatisticsPeriod.Weekly, label: 'Theo tuần' },
-    { value: StatisticsPeriod.Monthly, label: 'Theo tháng' },
-    { value: StatisticsPeriod.Quarterly, label: 'Theo quý' },
-    { value: StatisticsPeriod.Yearly, label: 'Theo năm' },
-];
-
-const numberFormatter = new Intl.NumberFormat('vi-VN');
-const formatPercent = (value: number) => (Number.isFinite(value) ? `${value.toFixed(2)}%` : '0%');
-
-const formatDateDisplay = (value?: string | Date) => {
-    if (!value) return '--';
-    const date = typeof value === 'string' ? new Date(value) : value;
-    return format(date, 'dd/MM/yyyy');
-};
-
-const formatTrendLabel = (periodStart: string, periodEnd: string): string => {
-    try {
-        const startDate = new Date(periodStart);
-        const endDate = new Date(periodEnd);
-        const startFormatted = format(startDate, 'dd/MM/yyyy');
-        const endFormatted = format(endDate, 'dd/MM/yyyy');
-
-        // Nếu cùng một ngày, chỉ hiển thị một ngày
-        if (startFormatted === endFormatted) {
-            return startFormatted;
-        }
-
-        // Hiển thị khoảng thời gian
-        return `${startFormatted} - ${endFormatted}`;
-    } catch {
-        // Fallback nếu parse date thất bại
-        return `${periodStart} - ${periodEnd}`;
-    }
-};
+import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
+import { ChartJsMultiLine } from '@/components/ChartJsLine';
+import { DashboardFilters } from '@/components/DashboardFilters';
+import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
+import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
+import DashboardReviewStats from '@/components/DashboardReviewStats';
+import {
+    periodOptions,
+    numberFormatter,
+    formatPercent,
+    formatDateDisplay,
+    formatTrendLabel,
+} from '@/utils/dashboard.utils';
 
 type ChartPoint = { label: string; value: number };
 
@@ -482,17 +451,6 @@ const HospitalDashboard: React.FC = () => {
         ];
     }, [reviewStats]);
 
-    if (!hospitalProfile?.id) {
-        return (
-            <div className="content">
-                <div className="alert alert-warning" role="alert">
-                    <i className="ti ti-alert-triangle me-2" /> Không tìm thấy thông tin bệnh viện.
-                    Vui lòng đăng nhập lại.
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={`content ${styles.dashboardPage}`} id="hospitalDashboardPage">
             <div className={styles.pageHeader}>
@@ -507,102 +465,18 @@ const HospitalDashboard: React.FC = () => {
                 </p>
             </div>
 
-            <div className={`card shadow-sm mb-4 ${styles.filtersCard}`}>
-                <div className="card-body">
-                    <div className={styles.filtersHeader}>
-                        <div className={styles.filtersRow}>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateFrom">Từ ngày</label>
-                                <FilterDatePicker
-                                    id="dateFrom"
-                                    value={dateRange.start}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange(
-                                                'start',
-                                                format(newValue, 'yyyy-MM-dd')
-                                            );
-                                        }
-                                    }}
-                                    maxDate={dateRange.end || undefined}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="dateTo">Đến ngày</label>
-                                <FilterDatePicker
-                                    id="dateTo"
-                                    value={dateRange.end}
-                                    onChange={(newValue) => {
-                                        if (newValue) {
-                                            handleDateChange('end', format(newValue, 'yyyy-MM-dd'));
-                                        }
-                                    }}
-                                    minDate={dateRange.start || undefined}
-                                    maxDate={new Date()}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className={styles.filterControl}>
-                                <label htmlFor="periodSelect">Chu kỳ thống kê</label>
-                                <Select
-                                    inputId="periodSelect"
-                                    options={periodOptions.map((opt) => ({
-                                        value: opt.value,
-                                        label: opt.label,
-                                    }))}
-                                    value={periodOptions
-                                        .map((opt) => ({ value: opt.value, label: opt.label }))
-                                        .find((opt) => opt.value === period)}
-                                    onChange={(selectedOption) => {
-                                        if (selectedOption) {
-                                            setPeriod(selectedOption.value as StatisticsPeriod);
-                                        }
-                                    }}
-                                    placeholder="Chọn chu kỳ thống kê"
-                                    classNamePrefix="select2"
-                                    styles={{
-                                        ...selectCustomStyles,
-                                        control: (provided: any) => ({
-                                            ...selectCustomStyles.control(provided),
-                                            minHeight: '30px',
-                                            height: '30px',
-                                        }),
-                                    }}
-                                    menuPortalTarget={document.body}
-                                    isDisabled={isLoading}
-                                    isSearchable={false}
-                                />
-                            </div>
-                        </div>
-                        <div className={styles.exportAction}>
-                            <ActionDropdown
-                                type="export"
-                                options={[
-                                    { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                    {
-                                        value: 'excel',
-                                        label: 'Tải xuống dạng Excel',
-                                        format: 'excel',
-                                    },
-                                ]}
-                                onExport={(format: string) => {
-                                    console.log('Exporting:', format);
-                                    // Handle export logic here
-                                }}
-                                size="sm"
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="alert alert-danger mb-0" role="alert">
-                            <i className="ti ti-alert-triangle me-2" />
-                            {error}
-                        </div>
-                    )}
-                </div>
-            </div>
+            <DashboardFilters
+                dateRange={dateRange}
+                period={period}
+                isLoading={isLoading}
+                error={error}
+                onDateChange={handleDateChange}
+                onPeriodChange={setPeriod}
+                onExport={(format: string) => {
+                    console.log('Exporting:', format);
+                    // Handle export logic here
+                }}
+            />
 
             {isLoading || isLoadingHospitalOverview || isLoadingReviewStats ? (
                 <>
@@ -637,27 +511,12 @@ const HospitalDashboard: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartSkeleton />
-                                </div>
-                            </div>
+                            <DashboardTrendCharts
+                                period={period}
+                                appointmentTrendPoints={[]}
+                                newPatientPoints={[]}
+                                isLoading={true}
+                            />
                         </>
                     )}
                 </>
@@ -690,57 +549,26 @@ const HospitalDashboard: React.FC = () => {
 
                     {stats && (
                         <>
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Tổng quan lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <div className={`${styles.metricsGrid} ${styles.overviewGrid}`}>
-                                        {overviewMetrics.map((metric) => (
-                                            <MetricCard
-                                                key={metric.label}
-                                                label={metric.label}
-                                                value={metric.value}
-                                                sub={metric.sub}
-                                                className={metric.className}
-                                                icon={metric.icon}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            <DashboardOverviewMetrics
+                                period={period}
+                                metrics={overviewMetrics}
+                                trendCardClassName={styles.trendCard}
+                                cardHeaderClassName={styles.cardHeader}
+                                cardBodyClassName={styles.cardBody}
+                                metricsGridClassName={styles.metricsGrid}
+                                overviewGridClassName={styles.overviewGrid}
+                            />
 
                             {reviewStats && (
                                 <>
-                                    <div className={styles.trendCard}>
-                                        <div className={styles.cardHeader}>
-                                            <h5>Thống kê đánh giá</h5>
-                                            <span>Tổng hợp đánh giá từ bệnh nhân</span>
-                                        </div>
-                                        <div className={styles.cardBody}>
-                                            <div
-                                                className={`${styles.metricsGrid} ${styles.hospitalOverviewGrid}`}
-                                            >
-                                                {reviewMetrics.map((metric) => (
-                                                    <MetricCard
-                                                        key={metric.label}
-                                                        label={metric.label}
-                                                        value={metric.value}
-                                                        sub={metric.sub}
-                                                        className={metric.className}
-                                                        icon={metric.icon}
-                                                        formatDecimal={
-                                                            (metric as any).formatDecimal
-                                                        }
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <DashboardReviewStats
+                                        metrics={reviewMetrics}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                        metricsGridClassName={styles.metricsGrid}
+                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
+                                    />
 
                                     {(reviewStats.topDoctors.length > 0 ||
                                         reviewStats.topServices.length > 0) && (
@@ -889,36 +717,12 @@ const HospitalDashboard: React.FC = () => {
                                 </>
                             )}
 
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Xu hướng lịch hẹn</h5>
-                                    <span>
-                                        Số liệu theo:{' '}
-                                        {periodOptions.find((p) => p.value === period)?.label}
-                                    </span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={appointmentTrendPoints}
-                                        color="#36B6C5"
-                                        label="Xu hướng lịch hẹn"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <h5>Bệnh nhân mới</h5>
-                                    <span>Theo dõi số lượt đặt lịch lần đầu</span>
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsLine
-                                        data={newPatientPoints}
-                                        color="#818CF8"
-                                        label="Bệnh nhân mới"
-                                    />
-                                </div>
-                            </div>
+                            <DashboardTrendCharts
+                                period={period}
+                                appointmentTrendPoints={appointmentTrendPoints}
+                                newPatientPoints={newPatientPoints}
+                                isLoading={false}
+                            />
                         </>
                     )}
 
