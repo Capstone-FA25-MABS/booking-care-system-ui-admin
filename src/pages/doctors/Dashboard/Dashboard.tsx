@@ -25,13 +25,12 @@ import {
 } from '@/utils/dashboard.utils';
 import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
 import {
-    buildAppointmentTrendPoints,
-    buildNewPatientTrendPoints,
     buildRatingChartData,
     buildPeakHoursChartData,
     buildAppointmentTypeChartData,
     ChartPoint,
 } from '@/utils/dashboardChartData';
+import { buildReviewMetrics, buildCompletionVsCancellationData } from '@/utils/reviewCharts';
 
 const appointmentMetricPresentation: Record<
     AppointmentMetricKey,
@@ -139,15 +138,21 @@ const DoctorDashboard: React.FC = () => {
         return response.data?.appointments ?? [];
     }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate]);
 
-    const { stats, appointmentTrend, newPatientTrend, additionalStats, isLoading, error } =
-        useAppointmentStatistics<DoctorStatistics, DoctorAdditionalStats>({
-            period,
-            fetchAppointments: fetchDoctorAppointments,
-            calculateStatistics,
-            calculateAdditionalStatistics,
-            onError: (message) => toast.error(message),
-            disabled: !doctorProfile?.id,
-        });
+    const {
+        stats,
+        appointmentTrendPoints,
+        newPatientTrendPoints,
+        additionalStats,
+        isLoading,
+        error,
+    } = useAppointmentStatistics<DoctorStatistics, DoctorAdditionalStats>({
+        period,
+        fetchAppointments: fetchDoctorAppointments,
+        calculateStatistics,
+        calculateAdditionalStatistics,
+        onError: (message) => toast.error(message),
+        disabled: !doctorProfile?.id,
+    });
 
     const loadReviewStatistics = useCallback(async () => {
         if (!doctorProfile?.id) return;
@@ -194,36 +199,29 @@ const DoctorDashboard: React.FC = () => {
         });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(
-        () => buildAppointmentTrendPoints(appointmentTrend),
-        [appointmentTrend]
-    );
+    type DoctorReviewStats = NonNullable<typeof reviewStats>;
 
-    const newPatientPoints = useMemo<ChartPoint[]>(
-        () => buildNewPatientTrendPoints(newPatientTrend),
-        [newPatientTrend]
+    const reviewMetrics = useMemo(
+        () =>
+            buildReviewMetrics<DoctorReviewStats>(reviewStats, [
+                {
+                    label: 'Tổng đánh giá',
+                    getValue: (stats) => stats.totalReviews,
+                    getSub: (stats) => `${stats.averageRating.toFixed(1)}⭐ điểm trung bình`,
+                    className: `${styles.metricCard} ${styles.cardSpecialty}`,
+                    icon: 'ti ti-star-filled',
+                },
+                {
+                    label: 'Điểm trung bình',
+                    getValue: (stats) => stats.averageRating,
+                    getSub: (stats) => `${stats.totalReviews} đánh giá`,
+                    className: `${styles.metricCard} ${styles.cardDoctorServices}`,
+                    icon: 'ti ti-star',
+                    formatDecimal: true,
+                },
+            ]),
+        [reviewStats]
     );
-
-    const reviewMetrics = useMemo(() => {
-        if (!reviewStats) return [];
-        return [
-            {
-                label: 'Tổng đánh giá',
-                value: reviewStats.totalReviews,
-                sub: `${reviewStats.averageRating.toFixed(1)}⭐ điểm trung bình`,
-                className: `${styles.metricCard} ${styles.cardSpecialty}`,
-                icon: 'ti ti-star-filled',
-            },
-            {
-                label: 'Điểm trung bình',
-                value: reviewStats.averageRating,
-                sub: `${reviewStats.totalReviews} đánh giá`,
-                className: `${styles.metricCard} ${styles.cardDoctorServices}`,
-                icon: 'ti ti-star',
-                formatDecimal: true,
-            },
-        ];
-    }, [reviewStats]);
 
     const ratingChartData = useMemo(
         () => buildRatingChartData(reviewStats?.ratingDistribution),
@@ -235,21 +233,10 @@ const DoctorDashboard: React.FC = () => {
         [additionalStats]
     );
 
-    const completedVsCancelledData = useMemo(() => {
-        if (!stats) return [];
-        return [
-            {
-                label: 'Hoàn thành',
-                value1: stats.completedAppointments,
-                value2: stats.confirmedAppointments,
-            },
-            {
-                label: 'Hủy/Vắng',
-                value1: stats.cancelledAppointments,
-                value2: stats.pendingAppointments,
-            },
-        ];
-    }, [stats]);
+    const completedVsCancelledData = useMemo(
+        () => buildCompletionVsCancellationData(stats),
+        [stats]
+    );
 
     const appointmentTypeChartData = useMemo(
         () => buildAppointmentTypeChartData(additionalStats?.appointmentTypeStats),
@@ -383,7 +370,7 @@ const DoctorDashboard: React.FC = () => {
                             <DashboardTrendCharts
                                 period={period}
                                 appointmentTrendPoints={appointmentTrendPoints}
-                                newPatientPoints={newPatientPoints}
+                                newPatientPoints={newPatientTrendPoints}
                                 isLoading={false}
                             />
 

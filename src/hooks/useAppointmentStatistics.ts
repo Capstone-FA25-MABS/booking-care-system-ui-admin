@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatisticsPeriod } from '@/types/statistics.types';
 import {
     AppointmentTrendPoint,
@@ -6,6 +6,11 @@ import {
     calculateAppointmentTrends,
 } from '@/utils/appointmentTrends';
 import { calculateAdditionalStatistics as defaultAdditionalStatistics } from '@/utils/dashboardStatistics';
+import {
+    buildAppointmentTrendPoints,
+    buildNewPatientTrendPoints,
+    ChartPoint,
+} from '@/utils/dashboardChartData';
 
 interface UseAppointmentStatisticsOptions<TStats, TAdditional> {
     period: StatisticsPeriod;
@@ -20,6 +25,8 @@ interface UseAppointmentStatisticsResult<TStats, TAdditional> {
     stats: TStats | null;
     appointmentTrend: AppointmentTrendPoint[];
     newPatientTrend: NewPatientTrendPoint[];
+    appointmentTrendPoints: ChartPoint[];
+    newPatientTrendPoints: ChartPoint[];
     additionalStats: TAdditional | null;
     isLoading: boolean;
     error: string | null;
@@ -102,10 +109,22 @@ export const useAppointmentStatistics = <
         loadStatistics();
     }, [loadStatistics]);
 
+    const appointmentTrendPoints = useMemo<ChartPoint[]>(
+        () => buildAppointmentTrendPoints(appointmentTrend),
+        [appointmentTrend]
+    );
+
+    const newPatientTrendPoints = useMemo<ChartPoint[]>(
+        () => buildNewPatientTrendPoints(newPatientTrend),
+        [newPatientTrend]
+    );
+
     return {
         stats,
         appointmentTrend,
         newPatientTrend,
+        appointmentTrendPoints,
+        newPatientTrendPoints,
         additionalStats,
         isLoading,
         error,

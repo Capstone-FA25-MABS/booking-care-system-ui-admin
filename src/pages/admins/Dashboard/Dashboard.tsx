@@ -24,13 +24,12 @@ import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
-import { useReviewInsights } from '@/hooks/useReviewInsights';
+import { useReviewInsights, ReviewStatsSummary } from '@/hooks/useReviewInsights';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
-    formatTrendLabel,
 } from '@/utils/dashboard.utils';
 import {
     AppointmentMetricKey,
@@ -38,13 +37,12 @@ import {
     buildAppointmentOverviewMetrics,
 } from '@/utils/appointmentMetrics';
 import {
-    buildAppointmentTrendPoints,
-    buildNewPatientTrendPoints,
     buildRatingChartData,
     buildPeakHoursChartData,
     buildAppointmentTypeChartData,
     ChartPoint,
 } from '@/utils/dashboardChartData';
+import { buildReviewMetrics, buildCompletionVsCancellationData } from '@/utils/reviewCharts';
 import { useAppointmentStatistics } from '@/hooks/useAppointmentStatistics';
 
 interface AdminStatistics {
@@ -288,14 +286,20 @@ const AdminDashboard: React.FC = () => {
         return response.data?.appointments ?? [];
     }, [isoRange.fromDate, isoRange.toDate]);
 
-    const { stats, appointmentTrend, newPatientTrend, additionalStats, isLoading, error } =
-        useAppointmentStatistics<AdminStatistics, AdminAdditionalStats>({
-            period,
-            fetchAppointments: fetchAdminAppointments,
-            calculateStatistics,
-            calculateAdditionalStatistics,
-            onError: (message) => toast.error(message),
-        });
+    const {
+        stats,
+        appointmentTrendPoints,
+        newPatientTrendPoints,
+        additionalStats,
+        isLoading,
+        error,
+    } = useAppointmentStatistics<AdminStatistics, AdminAdditionalStats>({
+        period,
+        fetchAppointments: fetchAdminAppointments,
+        calculateStatistics,
+        calculateAdditionalStatistics,
+        onError: (message) => toast.error(message),
+    });
 
     const loadSubscriptionChart = useCallback(async () => {
         setIsLoadingSubscriptionChart(true);
@@ -486,51 +490,42 @@ const AdminDashboard: React.FC = () => {
         });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(
-        () => buildAppointmentTrendPoints(appointmentTrend),
-        [appointmentTrend]
+    const reviewMetrics = useMemo(
+        () =>
+            buildReviewMetrics<ReviewStatsSummary>(reviewStats, [
+                {
+                    label: 'Tổng đánh giá bác sĩ',
+                    getValue: (stats) => stats.doctorTotalReviews,
+                    getSub: (stats) => `${stats.doctorAverageRating.toFixed(1)}⭐ điểm trung bình`,
+                    className: `${styles.metricCard} ${styles.cardReview}`,
+                    icon: 'ti ti-user',
+                },
+                {
+                    label: 'Tổng đánh giá dịch vụ',
+                    getValue: (stats) => stats.serviceTotalReviews,
+                    getSub: (stats) => `${stats.serviceAverageRating.toFixed(1)}⭐ điểm trung bình`,
+                    className: `${styles.metricCard} ${styles.cardServiceType}`,
+                    icon: 'ti ti-briefcase',
+                },
+                {
+                    label: 'Điểm trung bình bác sĩ',
+                    getValue: (stats) => stats.doctorAverageRating,
+                    getSub: (stats) => `${stats.doctorTotalReviews} đánh giá`,
+                    className: `${styles.metricCard} ${styles.cardRating}`,
+                    icon: 'ti ti-star',
+                    formatDecimal: true,
+                },
+                {
+                    label: 'Điểm trung bình dịch vụ',
+                    getValue: (stats) => stats.serviceAverageRating,
+                    getSub: (stats) => `${stats.serviceTotalReviews} đánh giá`,
+                    className: `${styles.metricCard} ${styles.cardPosition}`,
+                    icon: 'ti ti-star',
+                    formatDecimal: true,
+                },
+            ]),
+        [reviewStats]
     );
-
-    const newPatientPoints = useMemo<ChartPoint[]>(
-        () => buildNewPatientTrendPoints(newPatientTrend),
-        [newPatientTrend]
-    );
-
-    const reviewMetrics = useMemo(() => {
-        if (!reviewStats) return [];
-        return [
-            {
-                label: 'Tổng đánh giá bác sĩ',
-                value: reviewStats.doctorTotalReviews,
-                sub: `${reviewStats.doctorAverageRating.toFixed(1)}⭐ điểm trung bình`,
-                className: `${styles.metricCard} ${styles.cardReview}`,
-                icon: 'ti ti-user',
-            },
-            {
-                label: 'Tổng đánh giá dịch vụ',
-                value: reviewStats.serviceTotalReviews,
-                sub: `${reviewStats.serviceAverageRating.toFixed(1)}⭐ điểm trung bình`,
-                className: `${styles.metricCard} ${styles.cardServiceType}`,
-                icon: 'ti ti-briefcase',
-            },
-            {
-                label: 'Điểm trung bình bác sĩ',
-                value: reviewStats.doctorAverageRating,
-                sub: `${reviewStats.doctorTotalReviews} đánh giá`,
-                className: `${styles.metricCard} ${styles.cardRating}`,
-                icon: 'ti ti-star',
-                formatDecimal: true,
-            },
-            {
-                label: 'Điểm trung bình dịch vụ',
-                value: reviewStats.serviceAverageRating,
-                sub: `${reviewStats.serviceTotalReviews} đánh giá`,
-                className: `${styles.metricCard} ${styles.cardPosition}`,
-                icon: 'ti ti-star',
-                formatDecimal: true,
-            },
-        ];
-    }, [reviewStats]);
 
     const ratingChartData = useMemo(
         () => buildRatingChartData(reviewStats?.ratingDistribution),
@@ -542,14 +537,10 @@ const AdminDashboard: React.FC = () => {
         [additionalStats]
     );
 
-    const completedVsCancelledData = useMemo(() => {
-        if (!appointmentTrend || appointmentTrend.length === 0) return [];
-        return appointmentTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value1: point.completedAppointments,
-            value2: point.cancelledAppointments,
-        }));
-    }, [appointmentTrend]);
+    const completedVsCancelledData = useMemo(
+        () => buildCompletionVsCancellationData(stats),
+        [stats]
+    );
 
     const appointmentTypeChartData = useMemo<ChartPoint[]>(
         () => buildAppointmentTypeChartData(additionalStats?.appointmentTypeStats),
@@ -785,7 +776,7 @@ const AdminDashboard: React.FC = () => {
                             <DashboardTrendCharts
                                 period={period}
                                 appointmentTrendPoints={appointmentTrendPoints}
-                                newPatientPoints={newPatientPoints}
+                                newPatientPoints={newPatientTrendPoints}
                                 isLoading={false}
                             />
 
