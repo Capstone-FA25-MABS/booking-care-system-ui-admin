@@ -15,12 +15,16 @@ import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
+import DashboardTopRankings from '@/components/DashboardTopRankings/DashboardTopRankings';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
-import { periodOptions, formatDateDisplay, formatTrendLabel } from '@/utils/dashboard.utils';
+import { periodOptions, formatDateDisplay } from '@/utils/dashboard.utils';
 import { buildDoctorReviewInsights, buildServiceReviewInsights } from '@/utils/reviewStats';
 import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
-
-type ChartPoint = { label: string; value: number };
+import {
+    buildAppointmentTrendPoints,
+    buildNewPatientTrendPoints,
+    ChartPoint,
+} from '@/utils/dashboardChartData';
 
 const appointmentMetricPresentation: Record<
     AppointmentMetricKey,
@@ -216,21 +220,15 @@ const HospitalDashboard: React.FC = () => {
         });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(() => {
-        if (!stats) return [];
-        return stats.appointmentTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.totalAppointments,
-        }));
-    }, [stats]);
+    const appointmentTrendPoints = useMemo<ChartPoint[]>(
+        () => buildAppointmentTrendPoints(stats?.appointmentTrend ?? []),
+        [stats?.appointmentTrend]
+    );
 
-    const newPatientPoints = useMemo<ChartPoint[]>(() => {
-        if (!stats) return [];
-        return stats.newPatientTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.newPatients,
-        }));
-    }, [stats]);
+    const newPatientPoints = useMemo<ChartPoint[]>(
+        () => buildNewPatientTrendPoints(stats?.newPatientTrend ?? []),
+        [stats?.newPatientTrend]
+    );
 
     const hospitalOverviewMetrics = useMemo(() => {
         if (!hospitalOverview) return [];
@@ -421,150 +419,22 @@ const HospitalDashboard: React.FC = () => {
                                         hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
                                     />
 
-                                    {(reviewStats.topDoctors.length > 0 ||
-                                        reviewStats.topServices.length > 0) && (
-                                        <div className={styles.topRankingsContainer}>
-                                            {reviewStats.topDoctors.length > 0 && (
-                                                <div className={styles.trendCard}>
-                                                    <div className={styles.cardHeader}>
-                                                        <h5>Top bác sĩ được đánh giá cao</h5>
-                                                        <span>
-                                                            Top 5 bác sĩ có điểm đánh giá tốt nhất
-                                                        </span>
-                                                    </div>
-                                                    <div className={styles.cardBody}>
-                                                        <div className={styles.topList}>
-                                                            {reviewStats.topDoctors.map(
-                                                                (doctor, index) => (
-                                                                    <div
-                                                                        key={doctor.id}
-                                                                        className={styles.topItem}
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                styles.topRank
-                                                                            }
-                                                                        >
-                                                                            #{index + 1}
-                                                                        </div>
-                                                                        <div
-                                                                            className={
-                                                                                styles.topInfo
-                                                                            }
-                                                                        >
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topName
-                                                                                }
-                                                                            >
-                                                                                {doctor.name}
-                                                                            </div>
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topStats
-                                                                                }
-                                                                            >
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topRating
-                                                                                    }
-                                                                                >
-                                                                                    ⭐{' '}
-                                                                                    {doctor.rating.toFixed(
-                                                                                        1
-                                                                                    )}
-                                                                                </span>
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topReviews
-                                                                                    }
-                                                                                >
-                                                                                    (
-                                                                                    {doctor.reviews}{' '}
-                                                                                    đánh giá)
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {reviewStats.topServices.length > 0 && (
-                                                <div className={styles.trendCard}>
-                                                    <div className={styles.cardHeader}>
-                                                        <h5>Top dịch vụ được đánh giá cao</h5>
-                                                        <span>
-                                                            Top 5 dịch vụ có điểm đánh giá tốt nhất
-                                                        </span>
-                                                    </div>
-                                                    <div className={styles.cardBody}>
-                                                        <div className={styles.topList}>
-                                                            {reviewStats.topServices.map(
-                                                                (service, index) => (
-                                                                    <div
-                                                                        key={service.id}
-                                                                        className={styles.topItem}
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                styles.topRank
-                                                                            }
-                                                                        >
-                                                                            #{index + 1}
-                                                                        </div>
-                                                                        <div
-                                                                            className={
-                                                                                styles.topInfo
-                                                                            }
-                                                                        >
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topName
-                                                                                }
-                                                                            >
-                                                                                {service.name}
-                                                                            </div>
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topStats
-                                                                                }
-                                                                            >
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topRating
-                                                                                    }
-                                                                                >
-                                                                                    ⭐{' '}
-                                                                                    {service.rating.toFixed(
-                                                                                        1
-                                                                                    )}
-                                                                                </span>
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topReviews
-                                                                                    }
-                                                                                >
-                                                                                    (
-                                                                                    {
-                                                                                        service.reviews
-                                                                                    }{' '}
-                                                                                    đánh giá)
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                    <DashboardTopRankings
+                                        topDoctors={reviewStats.topDoctors}
+                                        topServices={reviewStats.topServices}
+                                        containerClassName={styles.topRankingsContainer}
+                                        cardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                        listClassName={styles.topList}
+                                        itemClassName={styles.topItem}
+                                        rankClassName={styles.topRank}
+                                        infoClassName={styles.topInfo}
+                                        nameClassName={styles.topName}
+                                        statsClassName={styles.topStats}
+                                        ratingClassName={styles.topRating}
+                                        reviewsClassName={styles.topReviews}
+                                    />
                                 </>
                             )}
 

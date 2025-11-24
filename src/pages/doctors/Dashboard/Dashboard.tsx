@@ -15,17 +15,13 @@ import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
+import { useAppointmentStatistics } from '@/hooks/useAppointmentStatistics';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
 } from '@/utils/dashboard.utils';
-import {
-    AppointmentTrendPoint,
-    NewPatientTrendPoint,
-    calculateAppointmentTrends,
-} from '@/utils/appointmentTrends';
 import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
 import {
     buildAppointmentTrendPoints,
@@ -59,28 +55,19 @@ interface DoctorStatistics {
     rescheduleRate: number;
 }
 
+type DoctorAdditionalStats = ReturnType<typeof calculateAdditionalStatisticsUtil>;
+
 const DoctorDashboard: React.FC = () => {
     const { doctorProfile } = useSelector((state: RootState) => state.user);
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
     const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
-    const [stats, setStats] = useState<DoctorStatistics | null>(null);
-    const [appointmentTrend, setAppointmentTrend] = useState<AppointmentTrendPoint[]>([]);
-    const [newPatientTrend, setNewPatientTrend] = useState<NewPatientTrendPoint[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [reviewStats, setReviewStats] = useState<{
         totalReviews: number;
         averageRating: number;
         ratingDistribution: Array<{ rating: number; count: number; percentage: number }>;
     } | null>(null);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
-    const [additionalStats, setAdditionalStats] = useState<{
-        peakHours: Array<{ hour: string; count: number }>;
-        appointmentTypeStats: { telehealth: number; inPerson: number };
-        returningPatients: number;
-        completionRate: number;
-    } | null>(null);
 
     // Calculate statistics from appointments
     const calculateStatistics = useCallback(
@@ -134,49 +121,32 @@ const DoctorDashboard: React.FC = () => {
         []
     );
 
-    // Calculate trend data based on period
-    const loadStatistics = useCallback(async () => {
+    const fetchDoctorAppointments = useCallback(async () => {
         if (!doctorProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
-            return;
+            return null;
         }
 
-        setIsLoading(true);
-        setError(null);
+        const response = await AppointmentService.getAppointmentsForManagement({
+            doctorId: doctorProfile.id,
+            fromDate: isoRange.fromDate.split('T')[0],
+            toDate: isoRange.toDate.split('T')[0],
+            pageNumber: 1,
+            pageSize: 10000, // Get all appointments
+            includeStatusCounts: false,
+        });
 
-        try {
-            // Fetch all appointments in the date range
-            const response = await AppointmentService.getAppointmentsForManagement({
-                doctorId: doctorProfile.id,
-                fromDate: isoRange.fromDate.split('T')[0],
-                toDate: isoRange.toDate.split('T')[0],
-                pageNumber: 1,
-                pageSize: 10000, // Get all appointments
-                includeStatusCounts: false,
-            });
+        return response.data?.appointments ?? [];
+    }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate]);
 
-            if (response.data?.appointments) {
-                const appointments = response.data.appointments;
-                const statistics = await calculateStatistics(appointments);
-                const trends = calculateAppointmentTrends(appointments, period);
-                const additional = await calculateAdditionalStatistics(appointments);
-
-                setStats(statistics);
-                setAppointmentTrend(trends.appointmentTrendPoints);
-                setNewPatientTrend(trends.newPatientTrendPoints);
-                setAdditionalStats(additional);
-            }
-        } catch (err: any) {
-            const message = err?.message || 'Không thể tải dữ liệu thống kê';
-            setError(message);
-            toast.error(message);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate, period, calculateStatistics]);
-
-    useEffect(() => {
-        loadStatistics();
-    }, [loadStatistics]);
+    const { stats, appointmentTrend, newPatientTrend, additionalStats, isLoading, error } =
+        useAppointmentStatistics<DoctorStatistics, DoctorAdditionalStats>({
+            period,
+            fetchAppointments: fetchDoctorAppointments,
+            calculateStatistics,
+            calculateAdditionalStatistics,
+            onError: (message) => toast.error(message),
+            disabled: !doctorProfile?.id,
+        });
 
     const loadReviewStatistics = useCallback(async () => {
         if (!doctorProfile?.id) return;
