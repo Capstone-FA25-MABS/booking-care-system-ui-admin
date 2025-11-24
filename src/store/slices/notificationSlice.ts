@@ -142,18 +142,31 @@ const notificationSlice = createSlice({
     initialState,
     reducers: {
         addNotification: (state, action: PayloadAction<Notification>) => {
-            // ✅ Check for duplicate before adding
-            const existingNotification = state.notifications.find(
-                (n) => n.id === action.payload.id
-            );
-            if (existingNotification) {
-                return; // Skip adding duplicate
-            }
+            try {
+                // ✅ Validate payload
+                if (!action.payload || !action.payload.id) {
+                    console.warn(
+                        '[NotificationSlice] Invalid notification payload:',
+                        action.payload
+                    );
+                    return;
+                }
 
-            // Add new notification to the beginning
-            state.notifications.unshift(action.payload);
-            if (!action.payload.isRead) {
-                state.unreadCount += 1;
+                // ✅ Check for duplicate before adding
+                const existingNotification = state.notifications.find(
+                    (n) => n.id === action.payload.id
+                );
+                if (existingNotification) {
+                    return; // Skip adding duplicate
+                }
+
+                // Add new notification to the beginning
+                state.notifications.unshift(action.payload);
+                if (!action.payload.isRead) {
+                    state.unreadCount += 1;
+                }
+            } catch (error) {
+                console.error('[NotificationSlice] Error adding notification:', error);
             }
         },
         updateNotification: (state, action: PayloadAction<{ id: string; isRead: boolean }>) => {

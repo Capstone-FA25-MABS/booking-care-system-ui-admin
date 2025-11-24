@@ -2,7 +2,7 @@ interface MainHeaderProps {
     handleClickMenuButton: () => void;
 }
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -121,30 +121,33 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
         }
     };
 
-    const handleNotificationClick = async (notificationId: string, actionUrl?: string) => {
-        try {
-            await dispatch(markNotificationAsRead(notificationId)).unwrap();
-            await dispatch(fetchNotificationCountsByType(false)).unwrap();
-            setShowNotifications(false);
+    const handleNotificationClick = useCallback(
+        async (notificationId: string, actionUrl?: string) => {
+            try {
+                await dispatch(markNotificationAsRead(notificationId)).unwrap();
+                await dispatch(fetchNotificationCountsByType(false)).unwrap();
+                setShowNotifications(false);
 
-            if (actionUrl) {
-                navigate(actionUrl);
+                if (actionUrl) {
+                    navigate(actionUrl);
+                }
+            } catch (error) {
+                console.error('Failed to mark notification as read:', error);
             }
-        } catch (error) {
-            console.error('Failed to mark notification as read:', error);
-        }
-    };
+        },
+        [dispatch, navigate]
+    );
 
-    const handleMarkAllAsRead = async () => {
+    const handleMarkAllAsRead = useCallback(async () => {
         try {
             await dispatch(markAllNotificationsAsRead()).unwrap();
             await dispatch(fetchNotificationCountsByType(false)).unwrap();
             toast.success('Đã đánh dấu tất cả là đã đọc');
         } catch (error) {
             console.error('Failed to mark all as read:', error);
-            toast.error('Không thể đánh dấu tất cả');
+            toast.error('Không thể đánh dấu tất cả là đã đọc');
         }
-    };
+    }, [dispatch]);
 
     const formatNotificationTime = (createdAt: string) => {
         const locale = vi; // Always use Vietnamese for admin panel
@@ -322,77 +325,84 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                                 </p>
                                             </div>
                                         ) : (
-                                            notifications.map((notification: Notification) => {
-                                                const localizedNotification =
-                                                    getLocalizedNotification(
-                                                        notification,
-                                                        currentLanguage as 'vi' | 'en'
-                                                    );
-                                                return (
-                                                    <button
-                                                        key={notification.id}
-                                                        type="button"
-                                                        className="dropdown-item notification-item py-3 text-wrap border-bottom btn btn-link text-start p-3"
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            border: 'none',
-                                                            background: 'none',
-                                                        }}
-                                                        onClick={() =>
-                                                            handleNotificationClick(
-                                                                notification.id,
-                                                                notification.actionUrl
-                                                            )
-                                                        }
-                                                    >
-                                                        <div className="d-flex">
-                                                            <div className="me-3 position-relative flex-shrink-0">
-                                                                <div
-                                                                    className="avatar-md rounded-circle d-flex align-items-center justify-content-center"
-                                                                    style={{
-                                                                        backgroundColor: '#e3f2fd',
-                                                                        width: '40px',
-                                                                        height: '40px',
-                                                                    }}
-                                                                >
-                                                                    <i
-                                                                        className={
-                                                                            notification.icon ||
-                                                                            'ti ti-bell fs-18'
-                                                                        }
-                                                                        style={{ color: '#1976d2' }}
-                                                                    ></i>
+                                            <div key="notifications-container">
+                                                {notifications.map((notification: Notification) => {
+                                                    const localizedNotification =
+                                                        getLocalizedNotification(
+                                                            notification,
+                                                            currentLanguage as 'vi' | 'en'
+                                                        );
+                                                    return (
+                                                        <button
+                                                            key={`notification-${notification.id}`}
+                                                            type="button"
+                                                            className="dropdown-item notification-item py-3 text-wrap border-bottom btn btn-link text-start p-3"
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                border: 'none',
+                                                                background: 'none',
+                                                            }}
+                                                            onClick={() =>
+                                                                handleNotificationClick(
+                                                                    notification.id,
+                                                                    notification.actionUrl
+                                                                )
+                                                            }
+                                                        >
+                                                            <div className="d-flex">
+                                                                <div className="me-3 position-relative flex-shrink-0">
+                                                                    <div
+                                                                        className="avatar-md rounded-circle d-flex align-items-center justify-content-center"
+                                                                        style={{
+                                                                            backgroundColor:
+                                                                                '#e3f2fd',
+                                                                            width: '40px',
+                                                                            height: '40px',
+                                                                        }}
+                                                                    >
+                                                                        <i
+                                                                            className={
+                                                                                notification.icon ||
+                                                                                'ti ti-bell fs-18'
+                                                                            }
+                                                                            style={{
+                                                                                color: '#1976d2',
+                                                                            }}
+                                                                        ></i>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div className="flex-grow-1">
-                                                                <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                    <p className="mb-0 fw-medium text-dark fs-14">
+                                                                <div className="flex-grow-1">
+                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                        <p className="mb-0 fw-medium text-dark fs-14">
+                                                                            {
+                                                                                localizedNotification.title
+                                                                            }
+                                                                        </p>
+                                                                        {!notification.isRead && (
+                                                                            <span className="badge bg-danger ms-2">
+                                                                                Mới
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="mb-2 text-wrap fs-13 text-muted">
                                                                         {
-                                                                            localizedNotification.title
+                                                                            localizedNotification.content
                                                                         }
                                                                     </p>
-                                                                    {!notification.isRead && (
-                                                                        <span className="badge bg-danger ms-2">
-                                                                            Mới
+                                                                    <div className="d-flex align-items-center">
+                                                                        <span className="fs-12 text-muted">
+                                                                            <i className="ti ti-clock me-1"></i>
+                                                                            {formatNotificationTime(
+                                                                                notification.createdAt
+                                                                            )}
                                                                         </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="mb-2 text-wrap fs-13 text-muted">
-                                                                    {localizedNotification.content}
-                                                                </p>
-                                                                <div className="d-flex align-items-center">
-                                                                    <span className="fs-12 text-muted">
-                                                                        <i className="ti ti-clock me-1"></i>
-                                                                        {formatNotificationTime(
-                                                                            notification.createdAt
-                                                                        )}
-                                                                    </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         )}
                                     </div>
 
