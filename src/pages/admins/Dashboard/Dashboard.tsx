@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import styles from './Dashboard.module.scss';
 import AppointmentService from '@/services/appointment.service';
-import ReviewService from '@/services/review.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
 import { DiscountService } from '@/services/discount.service';
@@ -16,14 +15,16 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
+import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
-import DashboardReviewStats from '@/components/DashboardReviewStats';
-import DashboardTopRankings from '@/components/DashboardTopRankings/DashboardTopRankings';
+import DashboardReviewSection from '@/components/DashboardReviewSection/DashboardReviewSection';
+import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart/DashboardRatingDistributionChart';
+import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts/DashboardAdditionalCharts';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
+import { useReviewInsights } from '@/hooks/useReviewInsights';
 import {
     periodOptions,
     numberFormatter,
@@ -36,11 +37,6 @@ import {
     AppointmentMetricOverride,
     buildAppointmentOverviewMetrics,
 } from '@/utils/appointmentMetrics';
-import {
-    buildDoctorReviewInsights,
-    buildServiceReviewInsights,
-    buildRatingDistribution,
-} from '@/utils/reviewStats';
 import {
     buildAppointmentTrendPoints,
     buildNewPatientTrendPoints,
@@ -107,17 +103,27 @@ const AdminDashboard: React.FC = () => {
 
     const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
     const [isLoadingOverview, setIsLoadingOverview] = useState(false);
-    const [reviewStats, setReviewStats] = useState<{
-        doctorTotalReviews: number;
-        serviceTotalReviews: number;
-        doctorAverageRating: number;
-        serviceAverageRating: number;
-        ratingDistribution: Array<{ rating: number; count: number; percentage: number }>;
-        topDoctors: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        topServices: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        doctorChartData: Array<{ label: string; value1: number; value2: number }>;
-        serviceChartData: Array<{ label: string; value1: number; value2: number }>;
-    } | null>(null);
+    const fetchAdminReviewEntities = useCallback(async () => {
+        const [doctorsRes, servicesRes] = await Promise.all([
+            DoctorService.filterDoctors({ pageNumber: 1, pageSize: 1000 }).catch(() => ({
+                data: { doctors: [], totalCount: 0 },
+            })),
+            serviceService.getAllServices(1, 1000).catch(() => ({
+                data: { items: [] },
+            })),
+        ]);
+
+        const doctors = (doctorsRes.data as any)?.doctors || [];
+        const services = Array.isArray((servicesRes.data as any)?.items)
+            ? (servicesRes.data as any).items
+            : [];
+
+        return { doctors, services };
+    }, []);
+    const { reviewStats, isLoadingReviewStats } = useReviewInsights({
+        fetchEntities: fetchAdminReviewEntities,
+        includeRatingDistribution: true,
+    });
     const [subscriptionChartData, setSubscriptionChartData] = useState<
         Array<{
             label: string;
@@ -126,7 +132,6 @@ const AdminDashboard: React.FC = () => {
             value3: number; // Tổng
         }>
     >([]);
-    const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
     const [isLoadingSubscriptionChart, setIsLoadingSubscriptionChart] = useState(false);
 
     // Load system overview (hospitals, doctors, etc.)
@@ -291,73 +296,6 @@ const AdminDashboard: React.FC = () => {
             calculateAdditionalStatistics,
             onError: (message) => toast.error(message),
         });
-
-    const loadReviewStatistics = useCallback(async () => {
-        setIsLoadingReviewStats(true);
-        try {
-            // Get all doctors and services to calculate overall review stats
-            const [doctorsRes, servicesRes] = await Promise.all([
-                DoctorService.filterDoctors({ pageNumber: 1, pageSize: 1000 }).catch(() => ({
-                    data: { doctors: [], totalCount: 0 },
-                })),
-                // Get all services - using service service
-                serviceService.getAllServices(1, 1000).catch(() => ({
-                    data: { items: [] },
-                })),
-            ]);
-
-            const doctors = (doctorsRes.data as any)?.doctors || [];
-            const services = Array.isArray((servicesRes.data as any)?.items)
-                ? (servicesRes.data as any).items
-                : [];
-
-            if (doctors.length > 0 || services.length > 0) {
-                const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
-                    doctors.length > 0
-                        ? ReviewService.getBatchDoctorsStatistics({
-                              doctorIds: doctors.map((d: any) => d.id),
-                          }).catch(() => ({ data: { doctorStatistics: {} } }))
-                        : Promise.resolve({ data: { doctorStatistics: {} } }),
-                    services.length > 0
-                        ? ReviewService.getBatchServicesStatistics({
-                              serviceIds: services.map((s: any) => s.id),
-                          }).catch(() => ({ data: { serviceStatistics: {} } }))
-                        : Promise.resolve({ data: { serviceStatistics: {} } }),
-                ]);
-
-                const doctorsStats = (doctorsStatsRes.data as any)?.doctorStatistics || {};
-                const servicesStats = (servicesStatsRes.data as any)?.serviceStatistics || {};
-
-                const doctorInsights = buildDoctorReviewInsights(doctors, doctorsStats);
-                const serviceInsights = buildServiceReviewInsights(services, servicesStats);
-                const ratingDistribution = buildRatingDistribution([
-                    doctorInsights.ratingDistributions,
-                    serviceInsights.ratingDistributions,
-                ]);
-
-                setReviewStats({
-                    doctorTotalReviews: doctorInsights.totalReviews,
-                    serviceTotalReviews: serviceInsights.totalReviews,
-                    doctorAverageRating: doctorInsights.averageRating,
-                    serviceAverageRating: serviceInsights.averageRating,
-                    ratingDistribution,
-                    topDoctors: doctorInsights.topEntities,
-                    topServices: serviceInsights.topEntities,
-                    doctorChartData: doctorInsights.chartData,
-                    serviceChartData: serviceInsights.chartData,
-                });
-            }
-        } catch (err: any) {
-            console.error('Failed to load review statistics:', err);
-            setReviewStats(null);
-        } finally {
-            setIsLoadingReviewStats(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadReviewStatistics();
-    }, [loadReviewStatistics]);
 
     const loadSubscriptionChart = useCallback(async () => {
         setIsLoadingSubscriptionChart(true);
@@ -771,51 +709,36 @@ const AdminDashboard: React.FC = () => {
 
                             {reviewStats && (
                                 <>
-                                    <DashboardReviewStats
+                                    <DashboardReviewSection
                                         metrics={reviewMetrics}
+                                        reviewStats={reviewStats}
                                         trendCardClassName={styles.trendCard}
                                         cardHeaderClassName={styles.cardHeader}
                                         cardBodyClassName={styles.cardBody}
                                         metricsGridClassName={styles.metricsGrid}
-                                        hospitalOverviewGridClassName={styles.overviewGrid}
+                                        overviewGridClassName={styles.overviewGrid}
+                                        rankingsClassNames={{
+                                            containerClassName: styles.topRankingsContainer,
+                                            cardClassName: styles.trendCard,
+                                            cardHeaderClassName: styles.cardHeader,
+                                            cardBodyClassName: styles.cardBody,
+                                            listClassName: styles.topList,
+                                            itemClassName: styles.topItem,
+                                            rankClassName: styles.topRank,
+                                            infoClassName: styles.topInfo,
+                                            nameClassName: styles.topName,
+                                            statsClassName: styles.topStats,
+                                            ratingClassName: styles.topRating,
+                                            reviewsClassName: styles.topReviews,
+                                        }}
                                     />
 
-                                    <DashboardTopRankings
-                                        topDoctors={reviewStats.topDoctors}
-                                        topServices={reviewStats.topServices}
-                                        containerClassName={styles.topRankingsContainer}
-                                        cardClassName={styles.trendCard}
+                                    <DashboardRatingDistributionChart
+                                        data={ratingChartData}
+                                        trendCardClassName={styles.trendCard}
                                         cardHeaderClassName={styles.cardHeader}
                                         cardBodyClassName={styles.cardBody}
-                                        listClassName={styles.topList}
-                                        itemClassName={styles.topItem}
-                                        rankClassName={styles.topRank}
-                                        infoClassName={styles.topInfo}
-                                        nameClassName={styles.topName}
-                                        statsClassName={styles.topStats}
-                                        ratingClassName={styles.topRating}
-                                        reviewsClassName={styles.topReviews}
                                     />
-
-                                    {ratingChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Phân bổ đánh giá</h5>
-                                                <span>
-                                                    Phân bổ số lượng và phần trăm đánh giá theo điểm
-                                                </span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
-                                                    data={ratingChartData}
-                                                    color1="#8b5cf6"
-                                                    color2="#10b981"
-                                                    label1="Số đánh giá"
-                                                    label2="Phần trăm (%)"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {reviewStats.doctorChartData.length > 0 && (
                                         <div className={styles.trendCard}>
@@ -867,59 +790,14 @@ const AdminDashboard: React.FC = () => {
                             />
 
                             {additionalStats && (
-                                <>
-                                    {completedVsCancelledData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê cuộc hẹn hoàn thành và hủy</h5>
-                                                <span>Thống kê trạng thái lịch hẹn</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
-                                                    data={completedVsCancelledData}
-                                                    color1="#10b981"
-                                                    color2="#ef4444"
-                                                    label1="Hoàn thành/Xác nhận"
-                                                    label2="Hủy/Chờ"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {peakHoursChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo giờ trong ngày</h5>
-                                                <span>Giờ cao điểm và giờ ít khách</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={peakHoursChartData}
-                                                    color="#f59e0b"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {appointmentTypeChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo loại khám</h5>
-                                                <span>
-                                                    So sánh tư vấn trực tiếp vs khám trực tiếp
-                                                </span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={appointmentTypeChartData}
-                                                    color="#06b6d4"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
+                                <DashboardAdditionalCharts
+                                    completedVsCancelledData={completedVsCancelledData}
+                                    peakHoursChartData={peakHoursChartData}
+                                    appointmentTypeChartData={appointmentTypeChartData}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                />
                             )}
 
                             {isLoadingSubscriptionChart ? (

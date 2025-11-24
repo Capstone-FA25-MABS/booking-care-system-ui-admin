@@ -1,3 +1,4 @@
+import ReviewService from '@/services/review.service';
 interface ReviewStatRecord {
     totalReviews?: number;
     averageRating?: number;
@@ -133,4 +134,48 @@ export const buildRatingDistribution = (
             percentage: totalRatingCount > 0 ? (dist.count / totalRatingCount) * 100 : 0,
         }))
         .sort((a, b) => b.rating - a.rating);
+};
+
+interface FetchReviewInsightsOptions {
+    doctors: any[];
+    services: any[];
+    includeRatingDistribution?: boolean;
+}
+
+export const fetchReviewInsights = async ({
+    doctors,
+    services,
+    includeRatingDistribution = false,
+}: FetchReviewInsightsOptions) => {
+    const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
+        doctors.length > 0
+            ? ReviewService.getBatchDoctorsStatistics({
+                  doctorIds: doctors.map((doctor: any) => doctor.id),
+              }).catch(() => ({ data: { doctorStatistics: {} } }))
+            : Promise.resolve({ data: { doctorStatistics: {} } }),
+        services.length > 0
+            ? ReviewService.getBatchServicesStatistics({
+                  serviceIds: services.map((service: any) => service.id),
+              }).catch(() => ({ data: { serviceStatistics: {} } }))
+            : Promise.resolve({ data: { serviceStatistics: {} } }),
+    ]);
+
+    const doctorsStats = doctorsStatsRes.data?.doctorStatistics || {};
+    const servicesStats = servicesStatsRes.data?.serviceStatistics || {};
+
+    const doctorInsights = buildDoctorReviewInsights(doctors, doctorsStats);
+    const serviceInsights = buildServiceReviewInsights(services, servicesStats);
+
+    const ratingDistribution = includeRatingDistribution
+        ? buildRatingDistribution([
+              doctorInsights.ratingDistributions,
+              serviceInsights.ratingDistributions,
+          ])
+        : [];
+
+    return {
+        doctorInsights,
+        serviceInsights,
+        ratingDistribution,
+    };
 };

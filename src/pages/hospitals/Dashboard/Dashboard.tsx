@@ -6,7 +6,6 @@ import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
-import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
@@ -14,11 +13,10 @@ import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
-import DashboardReviewStats from '@/components/DashboardReviewStats';
-import DashboardTopRankings from '@/components/DashboardTopRankings/DashboardTopRankings';
+import DashboardReviewSection from '@/components/DashboardReviewSection/DashboardReviewSection';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
+import { useReviewInsights } from '@/hooks/useReviewInsights';
 import { periodOptions, formatDateDisplay } from '@/utils/dashboard.utils';
-import { buildDoctorReviewInsights, buildServiceReviewInsights } from '@/utils/reviewStats';
 import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
 import {
     buildAppointmentTrendPoints,
@@ -52,17 +50,30 @@ const HospitalDashboard: React.FC = () => {
         serviceMedicalsCount: number;
     } | null>(null);
     const [isLoadingHospitalOverview, setIsLoadingHospitalOverview] = useState(false);
-    const [reviewStats, setReviewStats] = useState<{
-        doctorTotalReviews: number;
-        doctorAverageRating: number;
-        serviceTotalReviews: number;
-        serviceAverageRating: number;
-        topDoctors: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        topServices: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        doctorChartData: Array<{ label: string; value1: number; value2: number }>;
-        serviceChartData: Array<{ label: string; value1: number; value2: number }>;
-    } | null>(null);
-    const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
+    const fetchHospitalReviewEntities = useCallback(async () => {
+        if (!hospitalProfile?.id) {
+            return { doctors: [], services: [] };
+        }
+
+        const [doctorsRes, servicesRes] = await Promise.all([
+            DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1000).catch(() => ({
+                data: { doctors: [], totalCount: 0 },
+            })),
+            serviceService.getServicesByHospital(hospitalProfile.id).catch(() => ({
+                data: [],
+            })),
+        ]);
+
+        const doctors = doctorsRes.data?.doctors || [];
+        const services = Array.isArray(servicesRes.data) ? servicesRes.data : [];
+
+        return { doctors, services };
+    }, [hospitalProfile?.id]);
+
+    const { reviewStats, isLoadingReviewStats } = useReviewInsights({
+        fetchEntities: fetchHospitalReviewEntities,
+        enabled: !!hospitalProfile?.id,
+    });
 
     const loadStatistics = useCallback(async () => {
         if (!hospitalProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
@@ -144,67 +155,6 @@ const HospitalDashboard: React.FC = () => {
     useEffect(() => {
         loadHospitalOverview();
     }, [loadHospitalOverview]);
-
-    const loadReviewStatistics = useCallback(async () => {
-        if (!hospitalProfile?.id) return;
-
-        setIsLoadingReviewStats(true);
-        try {
-            // Lấy danh sách doctors và services của hospital
-            const [doctorsRes, servicesRes] = await Promise.all([
-                DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1000).catch(() => ({
-                    data: { doctors: [], totalCount: 0 },
-                })),
-                serviceService.getServicesByHospital(hospitalProfile.id).catch(() => ({
-                    data: [],
-                })),
-            ]);
-
-            const doctors = doctorsRes.data?.doctors || [];
-            // servicesRes is ApiResponse<Service[]>, so servicesRes.data is Service[]
-            const services = Array.isArray(servicesRes.data) ? servicesRes.data : [];
-
-            // Lấy statistics cho doctors và services
-            const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
-                doctors.length > 0
-                    ? ReviewService.getBatchDoctorsStatistics({
-                          doctorIds: doctors.map((d: any) => d.id),
-                      }).catch(() => ({ data: { doctorStatistics: {} } }))
-                    : Promise.resolve({ data: { doctorStatistics: {} } }),
-                services.length > 0
-                    ? ReviewService.getBatchServicesStatistics({
-                          serviceIds: services.map((s: any) => s.id),
-                      }).catch(() => ({ data: { serviceStatistics: {} } }))
-                    : Promise.resolve({ data: { serviceStatistics: {} } }),
-            ]);
-
-            const doctorsStats = doctorsStatsRes.data?.doctorStatistics || {};
-            const servicesStats = servicesStatsRes.data?.serviceStatistics || {};
-
-            const doctorInsights = buildDoctorReviewInsights(doctors, doctorsStats);
-            const serviceInsights = buildServiceReviewInsights(services, servicesStats);
-
-            setReviewStats({
-                doctorTotalReviews: doctorInsights.totalReviews,
-                doctorAverageRating: doctorInsights.averageRating,
-                serviceTotalReviews: serviceInsights.totalReviews,
-                serviceAverageRating: serviceInsights.averageRating,
-                topDoctors: doctorInsights.topEntities,
-                topServices: serviceInsights.topEntities,
-                doctorChartData: doctorInsights.chartData,
-                serviceChartData: serviceInsights.chartData,
-            });
-        } catch (err: any) {
-            console.error('Failed to load review statistics:', err);
-            setReviewStats(null);
-        } finally {
-            setIsLoadingReviewStats(false);
-        }
-    }, [hospitalProfile?.id]);
-
-    useEffect(() => {
-        loadReviewStatistics();
-    }, [loadReviewStatistics]);
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
@@ -409,33 +359,29 @@ const HospitalDashboard: React.FC = () => {
                             />
 
                             {reviewStats && (
-                                <>
-                                    <DashboardReviewStats
-                                        metrics={reviewMetrics}
-                                        trendCardClassName={styles.trendCard}
-                                        cardHeaderClassName={styles.cardHeader}
-                                        cardBodyClassName={styles.cardBody}
-                                        metricsGridClassName={styles.metricsGrid}
-                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
-                                    />
-
-                                    <DashboardTopRankings
-                                        topDoctors={reviewStats.topDoctors}
-                                        topServices={reviewStats.topServices}
-                                        containerClassName={styles.topRankingsContainer}
-                                        cardClassName={styles.trendCard}
-                                        cardHeaderClassName={styles.cardHeader}
-                                        cardBodyClassName={styles.cardBody}
-                                        listClassName={styles.topList}
-                                        itemClassName={styles.topItem}
-                                        rankClassName={styles.topRank}
-                                        infoClassName={styles.topInfo}
-                                        nameClassName={styles.topName}
-                                        statsClassName={styles.topStats}
-                                        ratingClassName={styles.topRating}
-                                        reviewsClassName={styles.topReviews}
-                                    />
-                                </>
+                                <DashboardReviewSection
+                                    metrics={reviewMetrics}
+                                    reviewStats={reviewStats}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                    metricsGridClassName={styles.metricsGrid}
+                                    overviewGridClassName={styles.hospitalOverviewGrid}
+                                    rankingsClassNames={{
+                                        containerClassName: styles.topRankingsContainer,
+                                        cardClassName: styles.trendCard,
+                                        cardHeaderClassName: styles.cardHeader,
+                                        cardBodyClassName: styles.cardBody,
+                                        listClassName: styles.topList,
+                                        itemClassName: styles.topItem,
+                                        rankClassName: styles.topRank,
+                                        infoClassName: styles.topInfo,
+                                        nameClassName: styles.topName,
+                                        statsClassName: styles.topStats,
+                                        ratingClassName: styles.topRating,
+                                        reviewsClassName: styles.topReviews,
+                                    }}
+                                />
                             )}
 
                             <DashboardTrendCharts

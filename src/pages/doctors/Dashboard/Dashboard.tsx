@@ -9,11 +9,12 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
+import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart/DashboardRatingDistributionChart';
+import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts/DashboardAdditionalCharts';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useAppointmentStatistics } from '@/hooks/useAppointmentStatistics';
 import {
@@ -372,25 +373,12 @@ const DoctorDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            {ratingChartData.length > 0 && (
-                                <div className={styles.trendCard}>
-                                    <div className={styles.cardHeader}>
-                                        <h5>Phân bổ đánh giá</h5>
-                                        <span>
-                                            Phân bổ số lượng và phần trăm đánh giá theo điểm
-                                        </span>
-                                    </div>
-                                    <div className={styles.cardBody}>
-                                        <ChartJsMultiLine
-                                            data={ratingChartData}
-                                            color1="#8b5cf6"
-                                            color2="#10b981"
-                                            label1="Số đánh giá"
-                                            label2="Phần trăm (%)"
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                            <DashboardRatingDistributionChart
+                                data={ratingChartData}
+                                trendCardClassName={styles.trendCard}
+                                cardHeaderClassName={styles.cardHeader}
+                                cardBodyClassName={styles.cardBody}
+                            />
 
                             <DashboardTrendCharts
                                 period={period}
@@ -400,59 +388,14 @@ const DoctorDashboard: React.FC = () => {
                             />
 
                             {additionalStats && (
-                                <>
-                                    {completedVsCancelledData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê cuộc hẹn hoàn thành và hủy</h5>
-                                                <span>Thống kê trạng thái lịch hẹn</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
-                                                    data={completedVsCancelledData}
-                                                    color1="#10b981"
-                                                    color2="#ef4444"
-                                                    label1="Hoàn thành/Xác nhận"
-                                                    label2="Hủy/Chờ"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {peakHoursChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo giờ trong ngày</h5>
-                                                <span>Giờ cao điểm và giờ ít khách</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={peakHoursChartData}
-                                                    color="#f59e0b"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {appointmentTypeChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo loại khám</h5>
-                                                <span>
-                                                    So sánh tư vấn trực tiếp vs khám trực tiếp
-                                                </span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={appointmentTypeChartData}
-                                                    color="#06b6d4"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
+                                <DashboardAdditionalCharts
+                                    completedVsCancelledData={completedVsCancelledData}
+                                    peakHoursChartData={peakHoursChartData}
+                                    appointmentTypeChartData={appointmentTypeChartData}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                />
                             )}
                         </>
                     )}
