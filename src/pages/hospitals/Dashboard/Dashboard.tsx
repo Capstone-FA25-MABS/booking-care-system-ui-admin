@@ -16,16 +16,22 @@ import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
-import {
-    periodOptions,
-    numberFormatter,
-    formatPercent,
-    formatDateDisplay,
-    formatTrendLabel,
-} from '@/utils/dashboard.utils';
+import { periodOptions, formatDateDisplay, formatTrendLabel } from '@/utils/dashboard.utils';
 import { buildDoctorReviewInsights, buildServiceReviewInsights } from '@/utils/reviewStats';
+import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
 
 type ChartPoint = { label: string; value: number };
+
+const appointmentMetricPresentation: Record<
+    AppointmentMetricKey,
+    { className: string; icon: string }
+> = {
+    total: { className: styles.total, icon: 'ti ti-calendar-event' },
+    completed: { className: styles.completed, icon: 'ti ti-circle-check' },
+    pending: { className: styles.pending, icon: 'ti ti-clock-hour-4' },
+    cancelled: { className: styles.cancelled, icon: 'ti ti-circle-x' },
+    newPatients: { className: styles.newPatients, icon: 'ti ti-user-plus' },
+};
 
 const HospitalDashboard: React.FC = () => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
@@ -198,44 +204,16 @@ const HospitalDashboard: React.FC = () => {
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
-        const { overview } = stats;
-        return [
-            {
-                label: 'Tổng lịch hẹn',
-                value: overview.totalAppointments,
-                sub: `${formatPercent(overview.noShowRate)} vắng/huỷ`,
-                className: `${styles.metricCard} ${styles.total}`,
-                icon: 'ti ti-calendar-event',
-            },
-            {
-                label: 'Hoàn thành',
-                value: overview.completedAppointments,
-                sub: `${numberFormatter.format(overview.confirmedAppointments)} đã xác nhận`,
-                className: `${styles.metricCard} ${styles.completed}`,
-                icon: 'ti ti-circle-check',
-            },
-            {
-                label: 'Đang chờ',
-                value: overview.pendingAppointments,
-                sub: `${numberFormatter.format(overview.rescheduledAppointments)} đã đổi lịch`,
-                className: `${styles.metricCard} ${styles.pending}`,
-                icon: 'ti ti-clock-hour-4',
-            },
-            {
-                label: 'Huỷ / Vắng',
-                value: overview.cancelledAppointments,
-                sub: `Tỷ lệ vắng: ${formatPercent(overview.noShowRate)}`,
-                className: `${styles.metricCard} ${styles.cancelled}`,
-                icon: 'ti ti-circle-x',
-            },
-            {
-                label: 'Bệnh nhân mới',
-                value: overview.newPatients,
-                sub: `Tỷ lệ đổi lịch: ${formatPercent(overview.rescheduleRate)}`,
-                className: `${styles.metricCard} ${styles.newPatients}`,
-                icon: 'ti ti-user-plus',
-            },
-        ];
+        return buildAppointmentOverviewMetrics(stats.overview).map((metric) => {
+            const presentation = appointmentMetricPresentation[metric.key];
+            return {
+                label: metric.label,
+                value: metric.value,
+                sub: metric.sub,
+                className: `${styles.metricCard} ${presentation.className}`,
+                icon: presentation.icon,
+            };
+        });
     }, [stats]);
 
     const appointmentTrendPoints = useMemo<ChartPoint[]>(() => {

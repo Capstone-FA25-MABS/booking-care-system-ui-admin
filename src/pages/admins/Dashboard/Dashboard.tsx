@@ -36,12 +36,23 @@ import {
     calculateAppointmentTrends,
 } from '@/utils/appointmentTrends';
 import {
+    AppointmentMetricKey,
+    AppointmentMetricOverride,
+    buildAppointmentOverviewMetrics,
+} from '@/utils/appointmentMetrics';
+import {
     buildDoctorReviewInsights,
     buildServiceReviewInsights,
     buildRatingDistribution,
 } from '@/utils/reviewStats';
-
-type ChartPoint = { label: string; value: number };
+import {
+    buildAppointmentTrendPoints,
+    buildNewPatientTrendPoints,
+    buildRatingChartData,
+    buildPeakHoursChartData,
+    buildAppointmentTypeChartData,
+    ChartPoint,
+} from '@/utils/dashboardChartData';
 
 interface AdminStatistics {
     totalAppointments: number;
@@ -66,6 +77,30 @@ interface SystemOverview {
     totalPositions: number;
     totalLanguages: number;
 }
+
+const appointmentMetricPresentation: Record<
+    AppointmentMetricKey,
+    { className: string; icon: string }
+> = {
+    total: { className: styles.total, icon: 'ti ti-calendar-event' },
+    completed: { className: styles.completed, icon: 'ti ti-circle-check' },
+    pending: { className: styles.pending, icon: 'ti ti-clock-hour-4' },
+    cancelled: { className: styles.cancelled, icon: 'ti ti-circle-x' },
+    newPatients: { className: styles.newPatients, icon: 'ti ti-user-plus' },
+};
+
+const adminMetricOverrides: Partial<Record<AppointmentMetricKey, AppointmentMetricOverride>> = {
+    total: {
+        getSub: (stats) =>
+            `Trong khoảng thời gian đã chọn | ${formatPercent(stats.noShowRate ?? 0)} vắng/huỷ`,
+    },
+    pending: {
+        sub: 'Chờ xác nhận',
+    },
+    newPatients: {
+        sub: 'Bệnh nhân đặt lịch lần đầu',
+    },
+};
 
 const AdminDashboard: React.FC = () => {
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
@@ -531,58 +566,27 @@ const AdminDashboard: React.FC = () => {
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
-        return [
-            {
-                label: 'Tổng lịch hẹn',
-                value: stats.totalAppointments,
-                sub: `Trong khoảng thời gian đã chọn | ${formatPercent(stats.noShowRate)} vắng/huỷ`,
-                className: `${styles.metricCard} ${styles.total}`,
-                icon: 'ti ti-calendar-event',
-            },
-            {
-                label: 'Hoàn thành',
-                value: stats.completedAppointments,
-                sub: `${numberFormatter.format(stats.confirmedAppointments)} đã xác nhận`,
-                className: `${styles.metricCard} ${styles.completed}`,
-                icon: 'ti ti-circle-check',
-            },
-            {
-                label: 'Đang chờ',
-                value: stats.pendingAppointments,
-                sub: 'Chờ xác nhận',
-                className: `${styles.metricCard} ${styles.pending}`,
-                icon: 'ti ti-clock-hour-4',
-            },
-            {
-                label: 'Huỷ / Vắng',
-                value: stats.cancelledAppointments,
-                sub: `Tỷ lệ vắng: ${formatPercent(stats.noShowRate)}`,
-                className: `${styles.metricCard} ${styles.cancelled}`,
-                icon: 'ti ti-circle-x',
-            },
-            {
-                label: 'Bệnh nhân mới',
-                value: stats.newPatients,
-                sub: 'Bệnh nhân đặt lịch lần đầu',
-                className: `${styles.metricCard} ${styles.newPatients}`,
-                icon: 'ti ti-user-plus',
-            },
-        ];
+        return buildAppointmentOverviewMetrics(stats, adminMetricOverrides).map((metric) => {
+            const presentation = appointmentMetricPresentation[metric.key];
+            return {
+                label: metric.label,
+                value: metric.value,
+                sub: metric.sub,
+                className: `${styles.metricCard} ${presentation.className}`,
+                icon: presentation.icon,
+            };
+        });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(() => {
-        return appointmentTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.totalAppointments,
-        }));
-    }, [appointmentTrend]);
+    const appointmentTrendPoints = useMemo<ChartPoint[]>(
+        () => buildAppointmentTrendPoints(appointmentTrend),
+        [appointmentTrend]
+    );
 
-    const newPatientPoints = useMemo<ChartPoint[]>(() => {
-        return newPatientTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.newPatients,
-        }));
-    }, [newPatientTrend]);
+    const newPatientPoints = useMemo<ChartPoint[]>(
+        () => buildNewPatientTrendPoints(newPatientTrend),
+        [newPatientTrend]
+    );
 
     const reviewMetrics = useMemo(() => {
         if (!reviewStats) return [];
@@ -620,32 +624,15 @@ const AdminDashboard: React.FC = () => {
         ];
     }, [reviewStats]);
 
-    const ratingChartData = useMemo(() => {
-        if (!reviewStats?.ratingDistribution) return [];
+    const ratingChartData = useMemo(
+        () => buildRatingChartData(reviewStats?.ratingDistribution),
+        [reviewStats]
+    );
 
-        const ratingDistribution = Array.isArray(reviewStats.ratingDistribution)
-            ? reviewStats.ratingDistribution
-            : [];
-
-        if (ratingDistribution.length === 0) return [];
-
-        return ratingDistribution
-            .slice()
-            .sort((a, b) => b.rating - a.rating)
-            .map((dist) => ({
-                label: `${dist.rating}⭐`,
-                value1: dist.count || 0,
-                value2: dist.percentage || 0,
-            }));
-    }, [reviewStats]);
-
-    const peakHoursChartData = useMemo<ChartPoint[]>(() => {
-        if (!additionalStats?.peakHours) return [];
-        return additionalStats.peakHours.map((item) => ({
-            label: item.hour,
-            value: item.count,
-        }));
-    }, [additionalStats]);
+    const peakHoursChartData = useMemo<ChartPoint[]>(
+        () => buildPeakHoursChartData(additionalStats?.peakHours),
+        [additionalStats]
+    );
 
     const completedVsCancelledData = useMemo(() => {
         if (!appointmentTrend || appointmentTrend.length === 0) return [];
@@ -656,19 +643,10 @@ const AdminDashboard: React.FC = () => {
         }));
     }, [appointmentTrend]);
 
-    const appointmentTypeChartData = useMemo<ChartPoint[]>(() => {
-        if (!additionalStats?.appointmentTypeStats) return [];
-        return [
-            {
-                label: 'Tư vấn trực tiếp',
-                value: additionalStats.appointmentTypeStats.telehealth,
-            },
-            {
-                label: 'Khám trực tiếp',
-                value: additionalStats.appointmentTypeStats.inPerson,
-            },
-        ];
-    }, [additionalStats]);
+    const appointmentTypeChartData = useMemo<ChartPoint[]>(
+        () => buildAppointmentTypeChartData(additionalStats?.appointmentTypeStats),
+        [additionalStats]
+    );
 
     return (
         <div className={`content ${styles.dashboardPage}`} id="adminDashboardPage">
