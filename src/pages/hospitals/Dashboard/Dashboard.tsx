@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
@@ -16,6 +15,7 @@ import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
+import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import {
     periodOptions,
     numberFormatter,
@@ -23,19 +23,14 @@ import {
     formatDateDisplay,
     formatTrendLabel,
 } from '@/utils/dashboard.utils';
+import { buildDoctorReviewInsights, buildServiceReviewInsights } from '@/utils/reviewStats';
 
 type ChartPoint = { label: string; value: number };
 
 const HospitalDashboard: React.FC = () => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
-    const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-        const end = new Date();
-        return {
-            end,
-            start: subDays(end, 29),
-        };
-    });
+    const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
     const [stats, setStats] = useState<StaffHospitalStatisticsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -58,12 +53,6 @@ const HospitalDashboard: React.FC = () => {
         serviceChartData: Array<{ label: string; value1: number; value2: number }>;
     } | null>(null);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
-
-    const isoRange = useMemo(() => {
-        const start = dateRange.start ? startOfDay(dateRange.start).toISOString() : undefined;
-        const end = dateRange.end ? endOfDay(dateRange.end).toISOString() : undefined;
-        return { fromDate: start, toDate: end };
-    }, [dateRange]);
 
     const loadStatistics = useCallback(async () => {
         if (!hospitalProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
@@ -182,126 +171,18 @@ const HospitalDashboard: React.FC = () => {
             const doctorsStats = doctorsStatsRes.data?.doctorStatistics || {};
             const servicesStats = servicesStatsRes.data?.serviceStatistics || {};
 
-            // Tính tổng số reviews và điểm trung bình cho doctors
-            let doctorTotalReviews = 0;
-            let doctorRatingSum = 0;
-            let doctorReviewCount = 0;
-
-            Object.values(doctorsStats).forEach((stat: any) => {
-                if (stat.totalReviews > 0) {
-                    doctorTotalReviews += stat.totalReviews;
-                    doctorRatingSum += stat.averageRating * stat.totalReviews;
-                    doctorReviewCount += stat.totalReviews;
-                }
-            });
-
-            const doctorAverageRating =
-                doctorReviewCount > 0 ? doctorRatingSum / doctorReviewCount : 0;
-
-            // Tính tổng số reviews và điểm trung bình cho services
-            let serviceTotalReviews = 0;
-            let serviceRatingSum = 0;
-            let serviceReviewCount = 0;
-
-            Object.values(servicesStats).forEach((stat: any) => {
-                if (stat.totalReviews > 0) {
-                    serviceTotalReviews += stat.totalReviews;
-                    serviceRatingSum += stat.averageRating * stat.totalReviews;
-                    serviceReviewCount += stat.totalReviews;
-                }
-            });
-
-            const serviceAverageRating =
-                serviceReviewCount > 0 ? serviceRatingSum / serviceReviewCount : 0;
-
-            // Tìm top doctors (top 5)
-            const topDoctors = doctors
-                .map((doctor: any) => {
-                    const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                    return {
-                        id: doctor.id,
-                        name:
-                            `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Bác sĩ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((d: any) => d.reviews > 0)
-                .sort((a: any, b: any) => {
-                    // Sắp xếp theo rating, sau đó theo số reviews
-                    if (b.rating !== a.rating) return b.rating - a.rating;
-                    return b.reviews - a.reviews;
-                })
-                .slice(0, 5);
-
-            // Tìm top services (top 5)
-            const topServices = services
-                .map((service: any) => {
-                    const stat = (servicesStats as Record<string, any>)[service.id];
-                    return {
-                        id: service.id,
-                        name: service.name || 'Dịch vụ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((s: any) => s.reviews > 0)
-                .sort((a: any, b: any) => {
-                    // Sắp xếp theo rating, sau đó theo số reviews
-                    if (b.rating !== a.rating) return b.rating - a.rating;
-                    return b.reviews - a.reviews;
-                })
-                .slice(0, 5);
-
-            // Tạo dữ liệu biểu đồ cho doctors (top 10) với rating và số cuộc hẹn
-            // Số cuộc hẹn = số reviews (tạm thời, có thể cải thiện bằng cách query appointment statistics)
-            const doctorChartData = doctors
-                .map((doctor: any) => {
-                    const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                    return {
-                        label:
-                            `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Bác sĩ',
-                        rating: stat?.averageRating || 0,
-                        appointments: stat?.totalReviews || 0, // Sử dụng số reviews làm proxy cho số cuộc hẹn
-                    };
-                })
-                .filter((d: any) => d.rating > 0)
-                .sort((a: any, b: any) => b.rating - a.rating)
-                .slice(0, 10)
-                .map((d: any) => ({
-                    label: d.label,
-                    value1: d.rating,
-                    value2: d.appointments,
-                }));
-
-            // Tạo dữ liệu biểu đồ cho services (top 10) với rating và số reviews
-            const serviceChartData = services
-                .map((service: any) => {
-                    const stat = (servicesStats as Record<string, any>)[service.id];
-                    return {
-                        label: service.name || 'Dịch vụ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((s: any) => s.rating > 0)
-                .sort((a: any, b: any) => b.rating - a.rating)
-                .slice(0, 10)
-                .map((s: any) => ({
-                    label: s.label,
-                    value1: s.rating,
-                    value2: s.reviews,
-                }));
+            const doctorInsights = buildDoctorReviewInsights(doctors, doctorsStats);
+            const serviceInsights = buildServiceReviewInsights(services, servicesStats);
 
             setReviewStats({
-                doctorTotalReviews,
-                doctorAverageRating,
-                serviceTotalReviews,
-                serviceAverageRating,
-                topDoctors,
-                topServices,
-                doctorChartData,
-                serviceChartData,
+                doctorTotalReviews: doctorInsights.totalReviews,
+                doctorAverageRating: doctorInsights.averageRating,
+                serviceTotalReviews: serviceInsights.totalReviews,
+                serviceAverageRating: serviceInsights.averageRating,
+                topDoctors: doctorInsights.topEntities,
+                topServices: serviceInsights.topEntities,
+                doctorChartData: doctorInsights.chartData,
+                serviceChartData: serviceInsights.chartData,
             });
         } catch (err: any) {
             console.error('Failed to load review statistics:', err);
@@ -309,19 +190,11 @@ const HospitalDashboard: React.FC = () => {
         } finally {
             setIsLoadingReviewStats(false);
         }
-    }, [hospitalProfile?.id, hospitalProfile?.serviceMedicals]);
+    }, [hospitalProfile?.id]);
 
     useEffect(() => {
         loadReviewStatistics();
     }, [loadReviewStatistics]);
-
-    const handleDateChange = (key: 'start' | 'end', value: string) => {
-        if (!value) return;
-        setDateRange((prev) => ({
-            ...prev,
-            [key]: new Date(value),
-        }));
-    };
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];

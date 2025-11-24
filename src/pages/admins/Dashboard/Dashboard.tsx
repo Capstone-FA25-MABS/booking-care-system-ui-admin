@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import AppointmentService from '@/services/appointment.service';
 import ReviewService from '@/services/review.service';
@@ -23,14 +22,24 @@ import DashboardReviewStats from '@/components/DashboardReviewStats';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
+import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
     formatTrendLabel,
-    getPeriodKey,
 } from '@/utils/dashboard.utils';
+import {
+    AppointmentTrendPoint,
+    NewPatientTrendPoint,
+    calculateAppointmentTrends,
+} from '@/utils/appointmentTrends';
+import {
+    buildDoctorReviewInsights,
+    buildServiceReviewInsights,
+    buildRatingDistribution,
+} from '@/utils/reviewStats';
 
 type ChartPoint = { label: string; value: number };
 
@@ -42,22 +51,6 @@ interface AdminStatistics {
     cancelledAppointments: number;
     newPatients: number;
     noShowRate: number;
-}
-
-interface AppointmentTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    totalAppointments: number;
-    completedAppointments: number;
-    cancelledAppointments: number;
-}
-
-interface NewPatientTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    newPatients: number;
 }
 
 interface SystemOverview {
@@ -76,13 +69,7 @@ interface SystemOverview {
 
 const AdminDashboard: React.FC = () => {
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
-    const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-        const end = new Date();
-        return {
-            end,
-            start: subDays(end, 29),
-        };
-    });
+    const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
     const [stats, setStats] = useState<AdminStatistics | null>(null);
     const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
@@ -118,12 +105,6 @@ const AdminDashboard: React.FC = () => {
     >([]);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
     const [isLoadingSubscriptionChart, setIsLoadingSubscriptionChart] = useState(false);
-
-    const isoRange = useMemo(() => {
-        const start = dateRange.start ? startOfDay(dateRange.start).toISOString() : undefined;
-        const end = dateRange.end ? endOfDay(dateRange.end).toISOString() : undefined;
-        return { fromDate: start, toDate: end };
-    }, [dateRange]);
 
     // Load system overview (hospitals, doctors, etc.)
     const loadSystemOverview = useCallback(async () => {
@@ -264,113 +245,6 @@ const AdminDashboard: React.FC = () => {
     );
 
     // Calculate trend data based on period
-    const calculateTrends = useCallback((appointments: any[], period: StatisticsPeriod) => {
-        const appointmentTrendPoints: AppointmentTrendPoint[] = [];
-        const newPatientTrendPoints: NewPatientTrendPoint[] = [];
-
-        // Group appointments by period
-        const grouped: Record<string, any[]> = {};
-        const patientGroups: Record<string, Set<string>> = {};
-
-        appointments.forEach((apt) => {
-            if (!apt.appointmentDate) return;
-
-            const date = new Date(apt.appointmentDate);
-            if (Number.isNaN(date.getTime())) {
-                console.warn('Invalid appointmentDate:', apt.appointmentDate);
-                return;
-            }
-
-            const key = getPeriodKey(date, period);
-
-            if (!grouped[key]) {
-                grouped[key] = [];
-                patientGroups[key] = new Set();
-            }
-            grouped[key].push(apt);
-            if (apt.patientId) {
-                patientGroups[key].add(apt.patientId);
-            }
-        });
-
-        // Convert to trend points
-        Object.entries(grouped)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .forEach(([key, apts]) => {
-                let periodStart: Date;
-
-                if (key.includes('Q')) {
-                    const [year, quarter] = key.split('-Q');
-                    const quarterNum = Number.parseInt(quarter, 10);
-                    const month = (quarterNum - 1) * 3;
-                    periodStart = new Date(Number.parseInt(year, 10), month, 1);
-                } else if (key.match(/^\d{4}-\d{2}$/)) {
-                    periodStart = new Date(`${key}-01`);
-                } else if (key.match(/^\d{4}$/)) {
-                    periodStart = new Date(`${key}-01-01`);
-                } else if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    periodStart = new Date(key);
-                } else {
-                    periodStart = new Date(key);
-                }
-
-                if (Number.isNaN(periodStart.getTime())) {
-                    console.warn(`Invalid date key: ${key}`);
-                    return;
-                }
-
-                const periodEnd = new Date(periodStart);
-
-                switch (period) {
-                    case StatisticsPeriod.Daily:
-                        break;
-                    case StatisticsPeriod.Weekly:
-                        periodEnd.setDate(periodEnd.getDate() + 6);
-                        break;
-                    case StatisticsPeriod.Monthly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 1);
-                        periodEnd.setDate(0);
-                        break;
-                    case StatisticsPeriod.Quarterly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 3);
-                        periodEnd.setDate(0);
-                        break;
-                    case StatisticsPeriod.Yearly:
-                        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-                        periodEnd.setMonth(0);
-                        periodEnd.setDate(0);
-                        break;
-                }
-
-                const completed = apts.filter(
-                    (a) => a.status === AppointmentStatus.COMPLETED
-                ).length;
-                const cancelled = apts.filter(
-                    (a) => a.status === AppointmentStatus.CANCELLED
-                ).length;
-
-                if (!Number.isNaN(periodEnd.getTime())) {
-                    appointmentTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        totalAppointments: apts.length,
-                        completedAppointments: completed,
-                        cancelledAppointments: cancelled,
-                    });
-
-                    newPatientTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        newPatients: patientGroups[key]?.size || 0,
-                    });
-                }
-            });
-
-        return { appointmentTrendPoints, newPatientTrendPoints };
-    }, []);
-
     const loadStatistics = useCallback(async () => {
         if (!isoRange.fromDate || !isoRange.toDate) {
             return;
@@ -392,7 +266,7 @@ const AdminDashboard: React.FC = () => {
             if (response.data?.appointments) {
                 const appointments = response.data.appointments;
                 const statistics = await calculateStatistics(appointments);
-                const trends = calculateTrends(appointments, period);
+                const trends = calculateAppointmentTrends(appointments, period);
                 const additional = await calculateAdditionalStatistics(appointments);
 
                 setStats(statistics);
@@ -407,7 +281,7 @@ const AdminDashboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [isoRange.fromDate, isoRange.toDate, period, calculateStatistics, calculateTrends]);
+    }, [isoRange.fromDate, isoRange.toDate, period, calculateStatistics]);
 
     useEffect(() => {
         loadStatistics();
@@ -433,7 +307,6 @@ const AdminDashboard: React.FC = () => {
                 : [];
 
             if (doctors.length > 0 || services.length > 0) {
-                // Get batch statistics for doctors and services
                 const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
                     doctors.length > 0
                         ? ReviewService.getBatchDoctorsStatistics({
@@ -450,170 +323,23 @@ const AdminDashboard: React.FC = () => {
                 const doctorsStats = (doctorsStatsRes.data as any)?.doctorStatistics || {};
                 const servicesStats = (servicesStatsRes.data as any)?.serviceStatistics || {};
 
-                // Calculate totals for doctors
-                let doctorTotalReviews = 0;
-                let doctorRatingSum = 0;
-
-                Object.values(doctorsStats).forEach((stat: any) => {
-                    if (stat.totalReviews > 0) {
-                        doctorTotalReviews += stat.totalReviews;
-                        doctorRatingSum += stat.averageRating * stat.totalReviews;
-                    }
-                });
-
-                // Calculate totals for services
-                let serviceTotalReviews = 0;
-                let serviceRatingSum = 0;
-
-                Object.values(servicesStats).forEach((stat: any) => {
-                    if (stat.totalReviews > 0) {
-                        serviceTotalReviews += stat.totalReviews;
-                        serviceRatingSum += stat.averageRating * stat.totalReviews;
-                    }
-                });
-
-                // Combined totals (not used anymore, but kept for reference)
-
-                // Find top doctors (top 5)
-                const topDoctors = doctors
-                    .map((doctor: any) => {
-                        const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                        return {
-                            id: doctor.id,
-                            name:
-                                `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() ||
-                                'Bác sĩ',
-                            rating: stat?.averageRating || 0,
-                            reviews: stat?.totalReviews || 0,
-                        };
-                    })
-                    .filter((d: any) => d.reviews > 0)
-                    .sort((a: any, b: any) => {
-                        if (b.rating !== a.rating) return b.rating - a.rating;
-                        return b.reviews - a.reviews;
-                    })
-                    .slice(0, 5);
-
-                // Find top services (top 5)
-                const topServices = services
-                    .map((service: any) => {
-                        const stat = (servicesStats as Record<string, any>)[service.id];
-                        return {
-                            id: service.id,
-                            name: service.name || 'Dịch vụ',
-                            rating: stat?.averageRating || 0,
-                            reviews: stat?.totalReviews || 0,
-                        };
-                    })
-                    .filter((s: any) => s.reviews > 0)
-                    .sort((a: any, b: any) => {
-                        if (b.rating !== a.rating) return b.rating - a.rating;
-                        return b.reviews - a.reviews;
-                    })
-                    .slice(0, 5);
-
-                // Create chart data for doctors (top 10)
-                const doctorChartData = doctors
-                    .map((doctor: any) => {
-                        const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                        return {
-                            label:
-                                `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() ||
-                                'Bác sĩ',
-                            rating: stat?.averageRating || 0,
-                            reviews: stat?.totalReviews || 0,
-                        };
-                    })
-                    .filter((d: any) => d.rating > 0)
-                    .sort((a: any, b: any) => b.rating - a.rating)
-                    .slice(0, 10)
-                    .map((d: any) => ({
-                        label: d.label,
-                        value1: d.rating,
-                        value2: d.reviews,
-                    }));
-
-                // Create chart data for services (top 10)
-                const serviceChartData = services
-                    .map((service: any) => {
-                        const stat = (servicesStats as Record<string, any>)[service.id];
-                        return {
-                            label: service.name || 'Dịch vụ',
-                            rating: stat?.averageRating || 0,
-                            reviews: stat?.totalReviews || 0,
-                        };
-                    })
-                    .filter((s: any) => s.rating > 0)
-                    .sort((a: any, b: any) => b.rating - a.rating)
-                    .slice(0, 10)
-                    .map((s: any) => ({
-                        label: s.label,
-                        value1: s.rating,
-                        value2: s.reviews,
-                    }));
-
-                // Combine rating distribution from all doctors and services
-                const extractRatingDistributions = (
-                    statsObj: Record<string, any>
-                ): Array<{ rating: number; count: number }> => {
-                    const stats = Object.values(statsObj) as any[];
-                    return stats
-                        .filter(
-                            (stat: any) =>
-                                stat.ratingDistribution && Array.isArray(stat.ratingDistribution)
-                        )
-                        .flatMap((stat: any) => stat.ratingDistribution);
-                };
-
-                const updateRatingDistributionMap = (
-                    map: Record<number, { count: number }>,
-                    dist: { rating: number; count?: number }
-                ): void => {
-                    if (!map[dist.rating]) {
-                        map[dist.rating] = { count: 0 };
-                    }
-                    map[dist.rating].count += dist.count || 0;
-                };
-
-                const ratingDistributionMap: Record<number, { count: number }> = {};
-                const allDistributions = [
-                    ...extractRatingDistributions(doctorsStats),
-                    ...extractRatingDistributions(servicesStats),
-                ];
-
-                allDistributions.forEach((dist) => {
-                    updateRatingDistributionMap(ratingDistributionMap, dist);
-                });
-
-                const totalRatingCount = Object.values(ratingDistributionMap).reduce(
-                    (sum, dist) => sum + dist.count,
-                    0
-                );
-
-                const ratingDistribution = Object.entries(ratingDistributionMap)
-                    .map(([rating, dist]) => ({
-                        rating: Number.parseInt(rating, 10),
-                        count: dist.count,
-                        percentage:
-                            totalRatingCount > 0 ? (dist.count / totalRatingCount) * 100 : 0,
-                    }))
-                    .sort((a, b) => b.rating - a.rating);
-
-                const doctorAverageRating =
-                    doctorTotalReviews > 0 ? doctorRatingSum / doctorTotalReviews : 0;
-                const serviceAverageRating =
-                    serviceTotalReviews > 0 ? serviceRatingSum / serviceTotalReviews : 0;
+                const doctorInsights = buildDoctorReviewInsights(doctors, doctorsStats);
+                const serviceInsights = buildServiceReviewInsights(services, servicesStats);
+                const ratingDistribution = buildRatingDistribution([
+                    doctorInsights.ratingDistributions,
+                    serviceInsights.ratingDistributions,
+                ]);
 
                 setReviewStats({
-                    doctorTotalReviews,
-                    serviceTotalReviews,
-                    doctorAverageRating,
-                    serviceAverageRating,
+                    doctorTotalReviews: doctorInsights.totalReviews,
+                    serviceTotalReviews: serviceInsights.totalReviews,
+                    doctorAverageRating: doctorInsights.averageRating,
+                    serviceAverageRating: serviceInsights.averageRating,
                     ratingDistribution,
-                    topDoctors,
-                    topServices,
-                    doctorChartData,
-                    serviceChartData,
+                    topDoctors: doctorInsights.topEntities,
+                    topServices: serviceInsights.topEntities,
+                    doctorChartData: doctorInsights.chartData,
+                    serviceChartData: serviceInsights.chartData,
                 });
             }
         } catch (err: any) {
@@ -733,14 +459,6 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         loadSubscriptionChart();
     }, [loadSubscriptionChart]);
-
-    const handleDateChange = (key: 'start' | 'end', value: string) => {
-        if (!value) return;
-        setDateRange((prev) => ({
-            ...prev,
-            [key]: new Date(value),
-        }));
-    };
 
     const systemOverviewMetrics = useMemo(() => {
         if (!systemOverview) return [];

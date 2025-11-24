@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from '../../hospitals/Dashboard/Dashboard.module.scss';
 import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
@@ -15,14 +14,19 @@ import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
+import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
     formatTrendLabel,
-    getPeriodKey,
 } from '@/utils/dashboard.utils';
+import {
+    AppointmentTrendPoint,
+    NewPatientTrendPoint,
+    calculateAppointmentTrends,
+} from '@/utils/appointmentTrends';
 
 type ChartPoint = { label: string; value: number };
 
@@ -38,32 +42,10 @@ interface DoctorStatistics {
     rescheduleRate: number;
 }
 
-interface AppointmentTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    totalAppointments: number;
-    completedAppointments: number;
-    cancelledAppointments: number;
-}
-
-interface NewPatientTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    newPatients: number;
-}
-
 const DoctorDashboard: React.FC = () => {
     const { doctorProfile } = useSelector((state: RootState) => state.user);
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
-    const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-        const end = new Date();
-        return {
-            end,
-            start: subDays(end, 29),
-        };
-    });
+    const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
     const [stats, setStats] = useState<DoctorStatistics | null>(null);
     const [appointmentTrend, setAppointmentTrend] = useState<AppointmentTrendPoint[]>([]);
@@ -82,12 +64,6 @@ const DoctorDashboard: React.FC = () => {
         returningPatients: number;
         completionRate: number;
     } | null>(null);
-
-    const isoRange = useMemo(() => {
-        const start = dateRange.start ? startOfDay(dateRange.start).toISOString() : undefined;
-        const end = dateRange.end ? endOfDay(dateRange.end).toISOString() : undefined;
-        return { fromDate: start, toDate: end };
-    }, [dateRange]);
 
     // Calculate statistics from appointments
     const calculateStatistics = useCallback(
@@ -142,124 +118,6 @@ const DoctorDashboard: React.FC = () => {
     );
 
     // Calculate trend data based on period
-    const calculateTrends = useCallback((appointments: any[], period: StatisticsPeriod) => {
-        const appointmentTrendPoints: AppointmentTrendPoint[] = [];
-        const newPatientTrendPoints: NewPatientTrendPoint[] = [];
-
-        // Group appointments by period
-        const grouped: Record<string, any[]> = {};
-        const patientGroups: Record<string, Set<string>> = {};
-
-        appointments.forEach((apt) => {
-            if (!apt.appointmentDate) return; // Skip nếu không có appointmentDate
-
-            const date = new Date(apt.appointmentDate);
-            // Kiểm tra Date hợp lệ
-            if (Number.isNaN(date.getTime())) {
-                console.warn('Invalid appointmentDate:', apt.appointmentDate);
-                return; // Skip invalid dates
-            }
-
-            const key = getPeriodKey(date, period);
-
-            if (!grouped[key]) {
-                grouped[key] = [];
-                patientGroups[key] = new Set();
-            }
-            grouped[key].push(apt);
-            if (apt.patientId) {
-                patientGroups[key].add(apt.patientId);
-            }
-        });
-
-        // Convert to trend points
-        Object.entries(grouped)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .forEach(([key, apts]) => {
-                let periodStart: Date;
-
-                // Parse date từ key dựa trên format
-                if (key.includes('Q')) {
-                    // Quarterly format: "2024-Q1"
-                    const [year, quarter] = key.split('-Q');
-                    const quarterNum = Number.parseInt(quarter, 10);
-                    const month = (quarterNum - 1) * 3; // Q1 = tháng 0-2, Q2 = 3-5, etc.
-                    periodStart = new Date(Number.parseInt(year, 10), month, 1);
-                } else if (key.match(/^\d{4}-\d{2}$/)) {
-                    // Monthly format: "2024-01"
-                    periodStart = new Date(`${key}-01`);
-                } else if (key.match(/^\d{4}$/)) {
-                    // Yearly format: "2024"
-                    periodStart = new Date(`${key}-01-01`);
-                } else if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    // Daily format: "2024-01-01"
-                    periodStart = new Date(key);
-                } else {
-                    // Fallback: try to parse directly
-                    periodStart = new Date(key);
-                }
-
-                // Kiểm tra Date hợp lệ
-                if (Number.isNaN(periodStart.getTime())) {
-                    console.warn(`Invalid date key: ${key}`);
-                    return; // Skip invalid dates
-                }
-
-                const periodEnd = new Date(periodStart);
-
-                // Set period end based on period type
-                switch (period) {
-                    case StatisticsPeriod.Daily:
-                        // Same day
-                        break;
-                    case StatisticsPeriod.Weekly:
-                        periodEnd.setDate(periodEnd.getDate() + 6);
-                        break;
-                    case StatisticsPeriod.Monthly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 1);
-                        periodEnd.setDate(0); // Last day of month
-                        break;
-                    case StatisticsPeriod.Quarterly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 3);
-                        periodEnd.setDate(0);
-                        break;
-                    case StatisticsPeriod.Yearly:
-                        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-                        periodEnd.setMonth(0);
-                        periodEnd.setDate(0);
-                        break;
-                }
-
-                const completed = apts.filter(
-                    (a) => a.status === AppointmentStatus.COMPLETED
-                ).length;
-                const cancelled = apts.filter(
-                    (a) => a.status === AppointmentStatus.CANCELLED
-                ).length;
-
-                // Kiểm tra periodEnd hợp lệ trước khi thêm
-                if (!Number.isNaN(periodEnd.getTime())) {
-                    appointmentTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        totalAppointments: apts.length,
-                        completedAppointments: completed,
-                        cancelledAppointments: cancelled,
-                    });
-
-                    newPatientTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        newPatients: patientGroups[key]?.size || 0,
-                    });
-                }
-            });
-
-        return { appointmentTrendPoints, newPatientTrendPoints };
-    }, []);
-
     const loadStatistics = useCallback(async () => {
         if (!doctorProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
             return;
@@ -282,7 +140,7 @@ const DoctorDashboard: React.FC = () => {
             if (response.data?.appointments) {
                 const appointments = response.data.appointments;
                 const statistics = await calculateStatistics(appointments);
-                const trends = calculateTrends(appointments, period);
+                const trends = calculateAppointmentTrends(appointments, period);
                 const additional = await calculateAdditionalStatistics(appointments);
 
                 setStats(statistics);
@@ -297,14 +155,7 @@ const DoctorDashboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [
-        doctorProfile?.id,
-        isoRange.fromDate,
-        isoRange.toDate,
-        period,
-        calculateStatistics,
-        calculateTrends,
-    ]);
+    }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate, period, calculateStatistics]);
 
     useEffect(() => {
         loadStatistics();
@@ -340,14 +191,6 @@ const DoctorDashboard: React.FC = () => {
     useEffect(() => {
         loadReviewStatistics();
     }, [loadReviewStatistics]);
-
-    const handleDateChange = (key: 'start' | 'end', value: string) => {
-        if (!value) return;
-        setDateRange((prev) => ({
-            ...prev,
-            [key]: new Date(value),
-        }));
-    };
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
