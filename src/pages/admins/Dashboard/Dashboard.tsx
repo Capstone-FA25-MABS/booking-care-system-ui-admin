@@ -17,9 +17,9 @@ import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } fr
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
 import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
-import DashboardReviewSection from '@/components/DashboardReviewSection/DashboardReviewSection';
-import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart/DashboardRatingDistributionChart';
-import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts/DashboardAdditionalCharts';
+import DashboardReviewSection from '@/components/DashboardReviewSection';
+import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
+import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
@@ -286,6 +286,10 @@ const AdminDashboard: React.FC = () => {
         return response.data?.appointments ?? [];
     }, [isoRange.fromDate, isoRange.toDate]);
 
+    const handleStatisticsError = useCallback((message: string) => {
+        toast.error(message);
+    }, []);
+
     const {
         stats,
         appointmentTrendPoints,
@@ -298,7 +302,7 @@ const AdminDashboard: React.FC = () => {
         fetchAppointments: fetchAdminAppointments,
         calculateStatistics,
         calculateAdditionalStatistics,
-        onError: (message) => toast.error(message),
+        onError: handleStatisticsError,
     });
 
     const loadSubscriptionChart = useCallback(async () => {

@@ -13,7 +13,7 @@ import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
-import DashboardReviewSection from '@/components/DashboardReviewSection/DashboardReviewSection';
+import DashboardReviewSection from '@/components/DashboardReviewSection';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useReviewInsights } from '@/hooks/useReviewInsights';
 import { periodOptions, formatDateDisplay } from '@/utils/dashboard.utils';

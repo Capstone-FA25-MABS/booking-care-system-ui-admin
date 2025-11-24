@@ -13,8 +13,9 @@ import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
-import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart/DashboardRatingDistributionChart';
-import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts/DashboardAdditionalCharts';
+import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
+import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts';
+import DashboardReviewCharts from '@/components/DashboardReviewCharts';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useAppointmentStatistics } from '@/hooks/useAppointmentStatistics';
 import {
@@ -66,6 +67,8 @@ const DoctorDashboard: React.FC = () => {
         totalReviews: number;
         averageRating: number;
         ratingDistribution: Array<{ rating: number; count: number; percentage: number }>;
+        doctorChartData: Array<{ label: string; value1: number; value2: number }>;
+        serviceChartData: Array<{ label: string; value1: number; value2: number }>;
     } | null>(null);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
 
@@ -138,6 +141,10 @@ const DoctorDashboard: React.FC = () => {
         return response.data?.appointments ?? [];
     }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate]);
 
+    const handleStatisticsError = useCallback((message: string) => {
+        toast.error(message);
+    }, []);
+
     const {
         stats,
         appointmentTrendPoints,
@@ -150,7 +157,7 @@ const DoctorDashboard: React.FC = () => {
         fetchAppointments: fetchDoctorAppointments,
         calculateStatistics,
         calculateAdditionalStatistics,
-        onError: (message) => toast.error(message),
+        onError: handleStatisticsError,
         disabled: !doctorProfile?.id,
     });
 
@@ -171,6 +178,8 @@ const DoctorDashboard: React.FC = () => {
                     totalReviews: response.data.totalReviews || 0,
                     averageRating: response.data.averageRating || 0,
                     ratingDistribution,
+                    doctorChartData: [],
+                    serviceChartData: [],
                 });
             }
         } catch (err: any) {
@@ -311,14 +320,43 @@ const DoctorDashboard: React.FC = () => {
                             />
 
                             {reviewStats && (
-                                <DashboardReviewStats
-                                    metrics={reviewMetrics}
-                                    trendCardClassName={styles.trendCard}
-                                    cardHeaderClassName={styles.cardHeader}
-                                    cardBodyClassName={styles.cardBody}
-                                    metricsGridClassName={styles.metricsGrid}
-                                    hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
-                                />
+                                <>
+                                    <DashboardReviewStats
+                                        metrics={reviewMetrics}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                        metricsGridClassName={styles.metricsGrid}
+                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
+                                    />
+
+                                    <DashboardReviewCharts
+                                        charts={[
+                                            {
+                                                key: 'doctor-chart',
+                                                title: 'Đánh giá theo bác sĩ',
+                                                subtitle:
+                                                    'Điểm đánh giá và số đánh giá của từng bác sĩ',
+                                                data: reviewStats.doctorChartData,
+                                                label1: 'Điểm đánh giá',
+                                                label2: 'Số đánh giá',
+                                            },
+                                            {
+                                                key: 'service-chart',
+                                                title: 'Đánh giá theo dịch vụ',
+                                                subtitle:
+                                                    'Điểm đánh giá và số đánh giá của từng dịch vụ',
+                                                data: reviewStats.serviceChartData,
+                                                label1: 'Điểm đánh giá',
+                                                label2: 'Số đánh giá',
+                                                color1: '#f59e0b',
+                                            },
+                                        ]}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                    />
+                                </>
                             )}
 
                             {additionalStats && (

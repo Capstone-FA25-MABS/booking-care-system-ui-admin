@@ -52,10 +52,15 @@ const DashboardReviewSection: React.FC<DashboardReviewSectionProps> = ({
         return null;
     }
 
+    const normalizedMetrics = metrics.map((metric) => ({
+        ...metric,
+        sub: metric.sub ?? '',
+    }));
+
     return (
         <>
             <DashboardReviewStats
-                metrics={metrics}
+                metrics={normalizedMetrics}
                 trendCardClassName={trendCardClassName}
                 cardHeaderClassName={cardHeaderClassName}
                 cardBodyClassName={cardBodyClassName}
