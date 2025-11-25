@@ -5,12 +5,15 @@ import TableSkeleton, { type SkeletonColumn } from '@/components/TableSkeleton';
 import ActionDropdown from '@/components/ActionDropdown';
 import {
     HospitalRegistrationService,
+    generateContract,
     deleteRegistration,
 } from '@/services/hospital-registration.service';
-import ApprovalModal from '@/pages/admins/HospitalRegistrations/Modals/ApprovalModal';
+import ApprovalConfirmModal from '@/pages/admins/HospitalRegistrations/Modals/ApprovalConfirmModal';
 import RejectionModal from '@/pages/admins/HospitalRegistrations/Modals/RejectionModal';
 import UpdateContractModal from '@/pages/admins/HospitalRegistrations/Modals/UpdateContractModal';
+import ContractInfoModal from '@/pages/admins/HospitalRegistrations/Modals/ContractInfoModal';
 import ModalDelete from '@/components/ModalDelete';
+import type { GenerateContractResponse } from '@/types/contract.types';
 import {
     HospitalRegistrationResponse,
     RegistrationStatus,
@@ -45,6 +48,8 @@ const ListHospitalRegistrations: React.FC = () => {
     // Tab counts
     const [tabCounts, setTabCounts] = useState<RegistrationTabCounts>({
         pending: 0,
+        contractGenerated: 0,
+        contractSigned: 0,
         confirmed: 0,
         cancelled: 0,
     });
@@ -65,10 +70,12 @@ const ListHospitalRegistrations: React.FC = () => {
         isOpen: boolean;
         registrationId: string;
         hospitalName: string;
+        contractUrl?: string;
     }>({
         isOpen: false,
         registrationId: '',
         hospitalName: '',
+        contractUrl: undefined,
     });
 
     // Rejection modal state
@@ -92,6 +99,18 @@ const ListHospitalRegistrations: React.FC = () => {
         registrationId: '',
         hospitalName: '',
     });
+
+    // Contract info modal state
+    const [contractInfoModal, setContractInfoModal] = useState<{
+        isOpen: boolean;
+        contractData: GenerateContractResponse | null;
+    }>({
+        isOpen: false,
+        contractData: null,
+    });
+
+    // Generate contract loading
+    const [isGeneratingContract, setIsGeneratingContract] = useState<string | null>(null);
 
     // Delete modal state
     const [deleteModal, setDeleteModal] = useState<{
@@ -130,11 +149,16 @@ const ListHospitalRegistrations: React.FC = () => {
         });
     };
 
-    const handleOpenApproval = (registrationId: string, hospitalName: string) => {
+    const handleOpenApproval = (
+        registrationId: string,
+        hospitalName: string,
+        contractUrl?: string
+    ) => {
         setApprovalModal({
             isOpen: true,
             registrationId,
             hospitalName,
+            contractUrl,
         });
     };
 
@@ -143,6 +167,7 @@ const ListHospitalRegistrations: React.FC = () => {
             isOpen: false,
             registrationId: '',
             hospitalName: '',
+            contractUrl: undefined,
         });
     };
 
@@ -191,6 +216,39 @@ const ListHospitalRegistrations: React.FC = () => {
 
     const handleUpdateContractSuccess = () => {
         fetchRegistrations();
+    };
+
+    // Contract info modal handlers
+    const handleOpenContractInfo = (contractData: GenerateContractResponse) => {
+        setContractInfoModal({
+            isOpen: true,
+            contractData,
+        });
+    };
+
+    const handleCloseContractInfo = () => {
+        setContractInfoModal({
+            isOpen: false,
+            contractData: null,
+        });
+    };
+
+    // Generate contract handler
+    const handleGenerateContract = async (registrationId: string) => {
+        setIsGeneratingContract(registrationId);
+        try {
+            const response = await generateContract(registrationId);
+            if (response.success && response.data) {
+                toast.success('Tạo hợp đồng thành công');
+                handleOpenContractInfo(response.data);
+                fetchRegistrations();
+                fetchTabCounts();
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Có lỗi xảy ra khi tạo hợp đồng');
+        } finally {
+            setIsGeneratingContract(null);
+        }
     };
 
     // Delete modal handlers
@@ -259,9 +317,25 @@ const ListHospitalRegistrations: React.FC = () => {
     const fetchTabCounts = async () => {
         try {
             // Fetch all statuses to get counts
-            const [pendingResp, confirmedResp, cancelledResp] = await Promise.all([
+            const [
+                pendingResp,
+                contractGeneratedResp,
+                contractSignedResp,
+                confirmedResp,
+                cancelledResp,
+            ] = await Promise.all([
                 HospitalRegistrationService.getAllRegistrations({
                     status: RegistrationStatus.PENDING,
+                    page: 1,
+                    pageSize: 1,
+                }),
+                HospitalRegistrationService.getAllRegistrations({
+                    status: RegistrationStatus.CONTRACT_GENERATED,
+                    page: 1,
+                    pageSize: 1,
+                }),
+                HospitalRegistrationService.getAllRegistrations({
+                    status: RegistrationStatus.CONTRACT_SIGNED,
                     page: 1,
                     pageSize: 1,
                 }),
@@ -279,6 +353,8 @@ const ListHospitalRegistrations: React.FC = () => {
 
             setTabCounts({
                 pending: pendingResp.totalCount || 0,
+                contractGenerated: contractGeneratedResp.totalCount || 0,
+                contractSigned: contractSignedResp.totalCount || 0,
                 confirmed: confirmedResp.totalCount || 0,
                 cancelled: cancelledResp.totalCount || 0,
             });
@@ -343,9 +419,13 @@ const ListHospitalRegistrations: React.FC = () => {
 
             // Add actions column for all status tabs (different actions per status)
             if (activeStatusTab === 'pending') {
-                columns.push({ type: 'actions', width: 200, items: 2 }); // Approve/Reject
+                columns.push({ type: 'actions', width: 250, items: 2 }); // Generate Contract + Reject
+            } else if (activeStatusTab === 'contract-generated') {
+                columns.push({ type: 'actions', width: 100, items: 1 }); // Reject
+            } else if (activeStatusTab === 'contract-signed') {
+                columns.push({ type: 'actions', width: 200, items: 2 }); // Approve + Reject
             } else if (activeStatusTab === 'confirmed') {
-                columns.push({ type: 'actions', width: 200, items: 1 }); // Update Contract
+                columns.push({ type: 'actions', width: 180, items: 1 }); // Update Contract
             } else if (activeStatusTab === 'cancelled') {
                 columns.push({ type: 'actions', width: 100, items: 1 }); // Delete
             }
@@ -478,21 +558,43 @@ const ListHospitalRegistrations: React.FC = () => {
                     </div>
                 </td>
                 <td>
-                    {registration.contractFile &&
-                    registration.status === RegistrationStatus.CONFIRMED ? (
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() =>
-                                handlePreviewFile(registration.contractFile!, 'Hợp đồng hợp tác')
-                            }
-                            title="Xem hợp đồng hợp tác"
-                        >
-                            <i className="ti ti-file-text me-1"></i> Hợp đồng
-                        </button>
-                    ) : (
-                        <span className="badge badge-outline-info">Chưa cập nhập</span>
-                    )}
+                    {(() => {
+                        // Determine which file to show based on status
+                        // CONTRACT_GENERATED: Draft only (not signed yet)
+                        const isDraft =
+                            registration.status === RegistrationStatus.CONTRACT_GENERATED;
+                        // CONTRACT_SIGNED or CONFIRMED: Signed contract
+                        const isSigned =
+                            registration.status === RegistrationStatus.CONTRACT_SIGNED ||
+                            registration.status === RegistrationStatus.CONFIRMED;
+
+                        const fileUrl = isDraft
+                            ? registration.contractDraftFile
+                            : registration.contractFile;
+
+                        if (fileUrl && (isDraft || isSigned)) {
+                            return (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() =>
+                                        handlePreviewFile(
+                                            fileUrl,
+                                            isDraft ? 'Bản nháp hợp đồng' : 'Hợp đồng hợp tác'
+                                        )
+                                    }
+                                    title={
+                                        isDraft ? 'Xem bản nháp hợp đồng' : 'Xem hợp đồng hợp tác'
+                                    }
+                                >
+                                    <i className="ti ti-file-text me-1"></i>{' '}
+                                    {isDraft ? 'Bản nháp' : 'Hợp đồng'}
+                                </button>
+                            );
+                        }
+
+                        return <span className="badge badge-outline-info">Chưa cập nhập</span>;
+                    })()}
                 </td>
                 <td>{new Date(registration.createdAt).toLocaleString('vi-VN')}</td>
                 {activeStatusTab === 'cancelled' && <td>{registration.reason}</td>}
@@ -504,36 +606,83 @@ const ListHospitalRegistrations: React.FC = () => {
                 {/* Actions column - conditional based on status */}
                 {activeStatusTab === 'pending' && (
                     <td>
-                        {registration.status === 'PENDING' && (
-                            <div className="d-flex gap-2">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-success"
-                                    onClick={() =>
-                                        handleOpenApproval(
-                                            registration.id,
-                                            registration.hospitalName
-                                        )
-                                    }
-                                    title="Phê duyệt"
-                                >
-                                    <i className="ti ti-check me-1"></i> Phê duyệt
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-danger"
-                                    onClick={() =>
-                                        handleOpenRejection(
-                                            registration.id,
-                                            registration.hospitalName
-                                        )
-                                    }
-                                    title="Từ chối"
-                                >
-                                    <i className="ti ti-x me-1"></i> Từ chối
-                                </button>
-                            </div>
-                        )}
+                        <div className="d-flex gap-2">
+                            <button
+                                type="button"
+                                className="btn btn-outline-success"
+                                onClick={() => handleGenerateContract(registration.id)}
+                                disabled={isGeneratingContract === registration.id}
+                                title="Tạo hợp đồng"
+                            >
+                                {isGeneratingContract === registration.id ? (
+                                    <>
+                                        <span
+                                            className="spinner-border spinner-border-sm me-1"
+                                            role="status"
+                                        ></span>
+                                        Đang tạo...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="ti ti-file-plus me-1"></i> Tạo hợp đồng
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger"
+                                onClick={() =>
+                                    handleOpenRejection(registration.id, registration.hospitalName)
+                                }
+                                title="Từ chối"
+                            >
+                                <i className="ti ti-x me-1"></i> Từ chối
+                            </button>
+                        </div>
+                    </td>
+                )}
+                {activeStatusTab === 'contract-generated' && (
+                    <td>
+                        <button
+                            type="button"
+                            className="btn btn-outline-danger"
+                            onClick={() =>
+                                handleOpenRejection(registration.id, registration.hospitalName)
+                            }
+                            title="Từ chối"
+                        >
+                            <i className="ti ti-x me-1"></i> Từ chối
+                        </button>
+                    </td>
+                )}
+                {activeStatusTab === 'contract-signed' && (
+                    <td>
+                        <div className="d-flex gap-2">
+                            <button
+                                type="button"
+                                className="btn btn-outline-success"
+                                onClick={() =>
+                                    handleOpenApproval(
+                                        registration.id,
+                                        registration.hospitalName,
+                                        registration.contractFile
+                                    )
+                                }
+                                title="Xét duyệt"
+                            >
+                                <i className="ti ti-check me-1"></i> Xét duyệt
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger"
+                                onClick={() =>
+                                    handleOpenRejection(registration.id, registration.hospitalName)
+                                }
+                                title="Từ chối"
+                            >
+                                <i className="ti ti-x me-1"></i> Từ chối
+                            </button>
+                        </div>
                     </td>
                 )}
                 {activeStatusTab === 'confirmed' && (
@@ -580,7 +729,7 @@ const ListHospitalRegistrations: React.FC = () => {
 
                 {/* Status Tabs */}
                 <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
                         <button
                             className={getStatusTabClass('pending')}
                             onClick={() => {
@@ -591,6 +740,30 @@ const ListHospitalRegistrations: React.FC = () => {
                             Chờ xử lý{' '}
                             <span className={getStatusBadgeClassForTab('pending')}>
                                 {tabCounts.pending}
+                            </span>
+                        </button>
+                        <button
+                            className={getStatusTabClass('contract-generated')}
+                            onClick={() => {
+                                setActiveStatusTab('contract-generated');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Đã tạo hợp đồng{' '}
+                            <span className={getStatusBadgeClassForTab('contract-generated')}>
+                                {tabCounts.contractGenerated}
+                            </span>
+                        </button>
+                        <button
+                            className={getStatusTabClass('contract-signed')}
+                            onClick={() => {
+                                setActiveStatusTab('contract-signed');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Đã ký hợp đồng{' '}
+                            <span className={getStatusBadgeClassForTab('contract-signed')}>
+                                {tabCounts.contractSigned}
                             </span>
                         </button>
                         <button
@@ -673,6 +846,8 @@ const ListHospitalRegistrations: React.FC = () => {
                                 {activeStatusTab === 'cancelled' && <th>Nguyên nhân</th>}
                                 <th>Trạng thái</th>
                                 {(activeStatusTab === 'pending' ||
+                                    activeStatusTab === 'contract-generated' ||
+                                    activeStatusTab === 'contract-signed' ||
                                     activeStatusTab === 'confirmed' ||
                                     activeStatusTab === 'cancelled') && <th>Thao tác</th>}
                             </tr>
@@ -698,10 +873,11 @@ const ListHospitalRegistrations: React.FC = () => {
             />
 
             {/* Approval Modal */}
-            <ApprovalModal
+            <ApprovalConfirmModal
                 isOpen={approvalModal.isOpen}
                 hospitalName={approvalModal.hospitalName}
                 registrationId={approvalModal.registrationId}
+                contractUrl={approvalModal.contractUrl}
                 onClose={handleCloseApproval}
                 onSuccess={handleApprovalSuccess}
             />
@@ -734,6 +910,13 @@ const ListHospitalRegistrations: React.FC = () => {
                 itemName={deleteModal.hospitalName}
                 confirmText="Có, xóa"
                 cancelText="Hủy"
+            />
+
+            {/* Contract Info Modal */}
+            <ContractInfoModal
+                show={contractInfoModal.isOpen}
+                onHide={handleCloseContractInfo}
+                contractInfo={contractInfoModal.contractData}
             />
         </>
     );
