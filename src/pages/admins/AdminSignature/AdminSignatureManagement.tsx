@@ -78,6 +78,104 @@ const StatusBadge: React.FC<{ isActive?: boolean }> = ({ isActive }) => (
     </span>
 );
 
+// Helper component for loading skeleton - extracted to reduce cognitive complexity
+const LoadingSkeleton: React.FC = () => (
+    <div className="row">
+        {/* Left Column - Form Fields Skeleton */}
+        <div className="col-md-6">
+            <div className="mb-3">
+                <div
+                    className="bg-light rounded placeholder-glow mb-2"
+                    style={{
+                        height: '16px',
+                        width: '30%',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                    }}
+                />
+                <div
+                    className="bg-light rounded placeholder-glow"
+                    style={{
+                        height: '38px',
+                        width: '100%',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                    }}
+                />
+            </div>
+            <div className="mb-3">
+                <div
+                    className="bg-light rounded placeholder-glow mb-2"
+                    style={{
+                        height: '16px',
+                        width: '25%',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                    }}
+                />
+                <div
+                    className="bg-light rounded placeholder-glow"
+                    style={{
+                        height: '38px',
+                        width: '100%',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                    }}
+                />
+            </div>
+        </div>
+        {/* Right Column - Preview Skeleton */}
+        <div className="col-md-6">
+            <div
+                className="bg-light rounded placeholder-glow mb-2"
+                style={{
+                    height: '16px',
+                    width: '40%',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+            />
+            <div
+                className="bg-light rounded placeholder-glow"
+                style={{
+                    height: '300px',
+                    width: '100%',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+            />
+        </div>
+    </div>
+);
+
+// Helper component for signature method selector - extracted to reduce cognitive complexity
+const SignatureMethodSelector: React.FC<{
+    signatureMethod: 'upload' | 'draw';
+    onMethodChange: (method: 'upload' | 'draw') => void;
+    disabled: boolean;
+    signature: AdminSignature | null;
+}> = ({ signatureMethod, onMethodChange, disabled, signature }) => (
+    <div className="mb-3">
+        <label className="form-label d-block">
+            Phương thức tạo chữ ký {!signature && <span className="text-danger">*</span>}
+        </label>
+        <fieldset className="btn-group mb-3" style={{ display: 'inline-flex' }}>
+            <button
+                type="button"
+                className={`btn btn-sm ${signatureMethod === 'upload' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => onMethodChange('upload')}
+                disabled={disabled}
+                style={{ minWidth: '140px' }}
+            >
+                <i className="ti ti-upload me-2" aria-hidden="true" /> Tải lên ảnh
+            </button>
+            <button
+                type="button"
+                className={`btn btn-sm ${signatureMethod === 'draw' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => onMethodChange('draw')}
+                disabled={disabled}
+                style={{ minWidth: '140px' }}
+            >
+                <i className="ti ti-pencil me-2" aria-hidden="true" /> Vẽ chữ ký
+            </button>
+        </fieldset>
+    </div>
+);
+
 const AdminSignatureManagement: React.FC = () => {
     const [signature, setSignature] = useState<AdminSignature | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -314,128 +412,7 @@ const AdminSignatureManagement: React.FC = () => {
 
                     <div className="card-body">
                         {isLoading && !signature ? (
-                            <div className="row">
-                                {/* Left Column - Form Fields Skeleton */}
-                                <div className="col-md-6">
-                                    <div className="mb-3">
-                                        <div
-                                            className="bg-light rounded placeholder-glow mb-2"
-                                            style={{
-                                                height: '16px',
-                                                width: '30%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                        <div
-                                            className="bg-light rounded placeholder-glow"
-                                            style={{
-                                                height: '38px',
-                                                width: '100%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <div
-                                            className="bg-light rounded placeholder-glow mb-2"
-                                            style={{
-                                                height: '16px',
-                                                width: '25%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                        <div
-                                            className="bg-light rounded placeholder-glow"
-                                            style={{
-                                                height: '38px',
-                                                width: '100%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <div
-                                            className="bg-light rounded placeholder-glow mb-2"
-                                            style={{
-                                                height: '16px',
-                                                width: '50%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                        <div className="d-flex gap-2 mb-3">
-                                            <div
-                                                className="bg-light rounded placeholder-glow"
-                                                style={{
-                                                    height: '32px',
-                                                    width: '80px',
-                                                    animation: 'pulse 1.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                            <div
-                                                className="bg-light rounded placeholder-glow"
-                                                style={{
-                                                    height: '32px',
-                                                    width: '80px',
-                                                    animation: 'pulse 1.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                        </div>
-                                        <div
-                                            className="bg-light rounded placeholder-glow"
-                                            style={{
-                                                height: '200px',
-                                                width: '100%',
-                                                animation: 'pulse 1.5s ease-in-out infinite',
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Right Column - Preview Skeleton */}
-                                <div className="col-md-6">
-                                    <div
-                                        className="bg-light rounded placeholder-glow mb-2"
-                                        style={{
-                                            height: '16px',
-                                            width: '40%',
-                                            animation: 'pulse 1.5s ease-in-out infinite',
-                                        }}
-                                    />
-                                    <div
-                                        className="border rounded p-4 bg-light"
-                                        style={{ minHeight: '300px' }}
-                                    >
-                                        <div className="text-center">
-                                            <div
-                                                className="bg-light rounded mx-auto mb-3"
-                                                style={{
-                                                    height: '150px',
-                                                    width: '70%',
-                                                    animation: 'pulse 1.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                            <div
-                                                className="bg-light rounded mx-auto mb-2"
-                                                style={{
-                                                    height: '16px',
-                                                    width: '60%',
-                                                    animation: 'pulse 1.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                            <div
-                                                className="bg-light rounded mx-auto"
-                                                style={{
-                                                    height: '14px',
-                                                    width: '40%',
-                                                    animation: 'pulse 1.5s ease-in-out infinite',
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <LoadingSkeleton />
                         ) : (
                             <form onSubmit={handleSubmit}>
                                 <div className="row">
@@ -471,106 +448,72 @@ const AdminSignatureManagement: React.FC = () => {
                                             />
                                         </div>
 
-                                        <div className="mb-3">
-                                            <label className="form-label d-block">
-                                                Phương thức tạo chữ ký{' '}
-                                                {!signature && (
-                                                    <span className="text-danger">*</span>
-                                                )}
-                                            </label>
-                                            <fieldset
-                                                className="btn-group mb-3"
-                                                style={{ display: 'inline-flex' }}
-                                            >
-                                                <button
-                                                    type="button"
-                                                    className={`btn btn-sm ${signatureMethod === 'upload' ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                    onClick={() => setSignatureMethod('upload')}
-                                                    disabled={!!signature && !isEditing}
-                                                    style={{ minWidth: '140px' }}
-                                                >
-                                                    <i
-                                                        className="ti ti-upload me-2"
-                                                        aria-hidden="true"
-                                                    />{' '}
-                                                    Tải lên ảnh
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className={`btn btn-sm ${signatureMethod === 'draw' ? 'btn-primary' : 'btn-outline-primary'}`}
-                                                    onClick={() => setSignatureMethod('draw')}
-                                                    disabled={!!signature && !isEditing}
-                                                    style={{ minWidth: '140px' }}
-                                                >
-                                                    <i
-                                                        className="ti ti-pencil me-2"
-                                                        aria-hidden="true"
-                                                    />{' '}
-                                                    Vẽ chữ ký
-                                                </button>
-                                            </fieldset>
+                                        <SignatureMethodSelector
+                                            signatureMethod={signatureMethod}
+                                            onMethodChange={setSignatureMethod}
+                                            disabled={!!signature && !isEditing}
+                                            signature={signature}
+                                        />
 
-                                            {signatureMethod === 'upload' ? (
-                                                <>
-                                                    <input
-                                                        type="file"
-                                                        className="form-control"
-                                                        id="signatureFile"
-                                                        accept="image/*"
-                                                        onChange={handleFileChange}
-                                                        disabled={!!signature && !isEditing}
-                                                    />
-                                                    <div className="form-text">
-                                                        Định dạng: PNG, JPG, JPEG, GIF, SVG. Tối đa
-                                                        5MB.
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="border rounded p-3 bg-white">
-                                                    <SignatureCanvas
-                                                        ref={signaturePadRef}
-                                                        canvasProps={{
-                                                            className: 'signature-canvas w-100',
-                                                            style: {
-                                                                border: '2px dashed #dee2e6',
-                                                                borderRadius: '4px',
-                                                                height: '200px',
-                                                            },
-                                                        }}
-                                                    />
-                                                    <div className="d-flex gap-2 mt-2">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-secondary"
-                                                            onClick={handleClearSignature}
-                                                            disabled={!!signature && !isEditing}
-                                                        >
-                                                            <i
-                                                                className="ti ti-eraser me-1"
-                                                                aria-hidden="true"
-                                                            />{' '}
-                                                            Xóa
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-primary"
-                                                            onClick={handleSaveDrawnSignature}
-                                                            disabled={!!signature && !isEditing}
-                                                        >
-                                                            <i
-                                                                className="ti ti-check me-1"
-                                                                aria-hidden="true"
-                                                            />{' '}
-                                                            Lưu chữ ký vẽ
-                                                        </button>
-                                                    </div>
-                                                    <div className="form-text mt-2">
-                                                        Vẽ chữ ký của bạn trong khung trên và nhấn
-                                                        "Lưu chữ ký vẽ"
-                                                    </div>
+                                        {signatureMethod === 'upload' ? (
+                                            <>
+                                                <input
+                                                    type="file"
+                                                    className="form-control"
+                                                    id="signatureFile"
+                                                    accept="image/*"
+                                                    onChange={handleFileChange}
+                                                    disabled={!!signature && !isEditing}
+                                                />
+                                                <div className="form-text">
+                                                    Định dạng: PNG, JPG, JPEG, GIF, SVG. Tối đa 5MB.
                                                 </div>
-                                            )}
-                                        </div>
+                                            </>
+                                        ) : (
+                                            <div className="border rounded p-3 bg-white">
+                                                <SignatureCanvas
+                                                    ref={signaturePadRef}
+                                                    canvasProps={{
+                                                        className: 'signature-canvas w-100',
+                                                        style: {
+                                                            border: '2px dashed #dee2e6',
+                                                            borderRadius: '4px',
+                                                            height: '200px',
+                                                        },
+                                                    }}
+                                                />
+                                                <div className="d-flex gap-2 mt-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={handleClearSignature}
+                                                        disabled={!!signature && !isEditing}
+                                                    >
+                                                        <i
+                                                            className="ti ti-eraser me-1"
+                                                            aria-hidden="true"
+                                                        />{' '}
+                                                        Xóa
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={handleSaveDrawnSignature}
+                                                        disabled={!!signature && !isEditing}
+                                                    >
+                                                        <i
+                                                            className="ti ti-check me-1"
+                                                            aria-hidden="true"
+                                                        />{' '}
+                                                        Lưu chữ ký vẽ
+                                                    </button>
+                                                </div>
+                                                <div className="form-text mt-2">
+                                                    Vẽ chữ ký của bạn trong khung trên và nhấn "Lưu
+                                                    chữ ký vẽ"
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {(signature || isEditing) && (
                                             <div className="mb-3">
