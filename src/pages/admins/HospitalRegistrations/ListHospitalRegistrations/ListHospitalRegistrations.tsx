@@ -26,6 +26,37 @@ import {
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { hospitalRegistrationSortOptions } from '@/utils/hospital-registration.utils';
 
+// Helper component to render contract file button - extracted to reduce nesting
+const ContractFileCell: React.FC<{
+    registration: HospitalRegistrationResponse;
+    onPreview: (fileUrl: string, fileName: string) => void;
+}> = ({ registration, onPreview }) => {
+    const isDraft = registration.status === RegistrationStatus.CONTRACT_GENERATED;
+    const isSigned =
+        registration.status === RegistrationStatus.CONTRACT_SIGNED ||
+        registration.status === RegistrationStatus.CONFIRMED;
+
+    const fileUrl = isDraft ? registration.contractDraftFile : registration.contractFile;
+
+    if (fileUrl && (isDraft || isSigned)) {
+        return (
+            <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={() =>
+                    onPreview(fileUrl, isDraft ? 'Bản nháp hợp đồng' : 'Hợp đồng hợp tác')
+                }
+                title={isDraft ? 'Xem bản nháp hợp đồng' : 'Xem hợp đồng hợp tác'}
+            >
+                <i className="ti ti-file-text me-1" aria-hidden="true" />{' '}
+                {isDraft ? 'Bản nháp' : 'Hợp đồng'}
+            </button>
+        );
+    }
+
+    return <span className="badge badge-outline-info">Chưa cập nhập</span>;
+};
+
 const ListHospitalRegistrations: React.FC = () => {
     // States
     const [registrations, setRegistrations] = useState<HospitalRegistrationResponse[]>([]);
@@ -558,43 +589,7 @@ const ListHospitalRegistrations: React.FC = () => {
                     </div>
                 </td>
                 <td>
-                    {(() => {
-                        // Determine which file to show based on status
-                        // CONTRACT_GENERATED: Draft only (not signed yet)
-                        const isDraft =
-                            registration.status === RegistrationStatus.CONTRACT_GENERATED;
-                        // CONTRACT_SIGNED or CONFIRMED: Signed contract
-                        const isSigned =
-                            registration.status === RegistrationStatus.CONTRACT_SIGNED ||
-                            registration.status === RegistrationStatus.CONFIRMED;
-
-                        const fileUrl = isDraft
-                            ? registration.contractDraftFile
-                            : registration.contractFile;
-
-                        if (fileUrl && (isDraft || isSigned)) {
-                            return (
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() =>
-                                        handlePreviewFile(
-                                            fileUrl,
-                                            isDraft ? 'Bản nháp hợp đồng' : 'Hợp đồng hợp tác'
-                                        )
-                                    }
-                                    title={
-                                        isDraft ? 'Xem bản nháp hợp đồng' : 'Xem hợp đồng hợp tác'
-                                    }
-                                >
-                                    <i className="ti ti-file-text me-1"></i>{' '}
-                                    {isDraft ? 'Bản nháp' : 'Hợp đồng'}
-                                </button>
-                            );
-                        }
-
-                        return <span className="badge badge-outline-info">Chưa cập nhập</span>;
-                    })()}
+                    <ContractFileCell registration={registration} onPreview={handlePreviewFile} />
                 </td>
                 <td>{new Date(registration.createdAt).toLocaleString('vi-VN')}</td>
                 {activeStatusTab === 'cancelled' && <td>{registration.reason}</td>}

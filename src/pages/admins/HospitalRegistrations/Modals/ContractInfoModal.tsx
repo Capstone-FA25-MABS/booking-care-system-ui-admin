@@ -149,8 +149,7 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                                 rel="noopener noreferrer"
                                 className="btn btn-sm btn-outline-primary"
                             >
-                                <i className="ti ti-eye me-1"></i>
-                                Xem
+                                <i className="ti ti-eye me-1" aria-hidden="true" /> Xem
                             </a>
                         </div>
                     </div>

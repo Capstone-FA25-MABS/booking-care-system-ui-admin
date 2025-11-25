@@ -5,6 +5,79 @@ import { AdminSignatureService } from '@/services/admin-signature.service';
 import type { AdminSignature } from '@/types/admin-signature.types';
 import ModalDelete from '@/components/ModalDelete';
 
+// Validation helper functions - extracted to reduce cognitive complexity
+const validateFullName = (name: string): boolean => {
+    if (!name.trim()) {
+        toast.error('Vui lòng nhập tên đầy đủ');
+        return false;
+    }
+    return true;
+};
+
+const validatePosition = (pos: string): boolean => {
+    if (!pos.trim()) {
+        toast.error('Vui lòng nhập chức vụ');
+        return false;
+    }
+    return true;
+};
+
+const validateSignature = (
+    signature: AdminSignature | null,
+    signatureFile: File | null,
+    signatureMethod: 'upload' | 'draw'
+): boolean => {
+    if (!signature && !signatureFile) {
+        const errorMsg =
+            signatureMethod === 'draw'
+                ? 'Vui lòng vẽ chữ ký và nhấn "Lưu chữ ký vẽ"'
+                : 'Vui lòng chọn file chữ ký';
+        toast.error(errorMsg);
+        return false;
+    }
+    return true;
+};
+
+// Helper component for signature preview - extracted to reduce cognitive complexity
+const SignaturePreview: React.FC<{
+    previewUrl: string;
+    fullName: string;
+    position: string;
+}> = ({ previewUrl, fullName, position }) => {
+    if (previewUrl) {
+        return (
+            <div className="text-center">
+                <img
+                    src={previewUrl}
+                    alt="Signature Preview"
+                    className="img-fluid"
+                    style={{ maxHeight: '250px' }}
+                />
+                <div className="mt-3">
+                    <p className="mb-1 fw-semibold">{fullName}</p>
+                    <p className="text-muted mb-0">{position}</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="d-flex align-items-center justify-content-center h-100">
+            <div className="text-center text-muted">
+                <i className="ti ti-photo fs-1" aria-hidden="true" />
+                <p className="mt-2">Chưa có chữ ký</p>
+            </div>
+        </div>
+    );
+};
+
+// Helper component for status badge - extracted to reduce cognitive complexity
+const StatusBadge: React.FC<{ isActive?: boolean }> = ({ isActive }) => (
+    <span className={`badge ${isActive ? 'bg-success' : 'bg-secondary'}`}>
+        {isActive ? 'Đang hoạt động' : 'Không hoạt động'}
+    </span>
+);
+
 const AdminSignatureManagement: React.FC = () => {
     const [signature, setSignature] = useState<AdminSignature | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -102,61 +175,32 @@ const AdminSignatureManagement: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!fullName.trim()) {
-            toast.error('Vui lòng nhập tên đầy đủ');
-            return;
-        }
-
-        if (!position.trim()) {
-            toast.error('Vui lòng nhập chức vụ');
-            return;
-        }
-
-        // Validate signature based on method
-        if (!signature && !signatureFile) {
-            if (signatureMethod === 'draw') {
-                toast.error('Vui lòng vẽ chữ ký và nhấn "Lưu chữ ký vẽ"');
-            } else {
-                toast.error('Vui lòng chọn file chữ ký');
-            }
-            return;
-        }
+        // Use extracted validation helpers
+        if (!validateFullName(fullName)) return;
+        if (!validatePosition(position)) return;
+        if (!validateSignature(signature, signatureFile, signatureMethod)) return;
 
         setIsLoading(true);
 
         try {
-            let response;
-
-            if (signature) {
-                // Update existing signature
-                response = await AdminSignatureService.updateAdminSignature(signature.id, {
-                    fullName: fullName.trim(),
-                    position: position.trim(),
-                    signatureFile: signatureFile || undefined,
-                });
-            } else {
-                // Create new signature
-                if (!signatureFile) {
-                    toast.error('Vui lòng tạo chữ ký trước khi lưu');
-                    setIsLoading(false);
-                    return;
-                }
-
-                response = await AdminSignatureService.createAdminSignature({
-                    fullName: fullName.trim(),
-                    position: position.trim(),
-                    signatureFile,
-                });
-            }
+            const response = signature
+                ? await AdminSignatureService.updateAdminSignature(signature.id, {
+                      fullName: fullName.trim(),
+                      position: position.trim(),
+                      signatureFile: signatureFile || undefined,
+                  })
+                : await AdminSignatureService.createAdminSignature({
+                      fullName: fullName.trim(),
+                      position: position.trim(),
+                      signatureFile: signatureFile!,
+                  });
 
             if (response.success) {
                 toast.success(response.message || 'Lưu chữ ký thành công');
                 setIsEditing(false);
                 setSignatureFile(null);
                 setSignatureMethod('upload');
-                if (signaturePadRef.current) {
-                    signaturePadRef.current.clear();
-                }
+                signaturePadRef.current?.clear();
                 await fetchActiveSignature();
             } else {
                 toast.error(response.message || 'Có lỗi xảy ra');
@@ -534,13 +578,7 @@ const AdminSignatureManagement: React.FC = () => {
                                                     Trạng thái
                                                 </span>
                                                 <div>
-                                                    <span
-                                                        className={`badge ${signature?.isActive ? 'bg-success' : 'bg-secondary'}`}
-                                                    >
-                                                        {signature?.isActive
-                                                            ? 'Đang hoạt động'
-                                                            : 'Không hoạt động'}
-                                                    </span>
+                                                    <StatusBadge isActive={signature?.isActive} />
                                                 </div>
                                             </div>
                                         )}
@@ -553,31 +591,11 @@ const AdminSignatureManagement: React.FC = () => {
                                             className="border rounded p-4 bg-light"
                                             style={{ minHeight: '300px' }}
                                         >
-                                            {previewUrl ? (
-                                                <div className="text-center">
-                                                    <img
-                                                        src={previewUrl}
-                                                        alt="Signature Preview"
-                                                        className="img-fluid"
-                                                        style={{ maxHeight: '250px' }}
-                                                    />
-                                                    <div className="mt-3">
-                                                        <p className="mb-1 fw-semibold">
-                                                            {fullName}
-                                                        </p>
-                                                        <p className="text-muted mb-0">
-                                                            {position}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="d-flex align-items-center justify-content-center h-100">
-                                                    <div className="text-center text-muted">
-                                                        <i className="ti ti-photo fs-1"></i>
-                                                        <p className="mt-2">Chưa có chữ ký</p>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <SignaturePreview
+                                                previewUrl={previewUrl}
+                                                fullName={fullName}
+                                                position={position}
+                                            />
                                         </div>
                                     </div>
                                 </div>
