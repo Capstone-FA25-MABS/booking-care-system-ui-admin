@@ -59,8 +59,7 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
         <Modal show={show} onHide={onHide} size="lg" centered>
             <Modal.Header closeButton className="bg-primary text-white">
                 <Modal.Title>
-                    <i className="ti ti-file-check me-2"></i>
-                    Thông Tin Hợp Đồng
+                    <i className="ti ti-file-check me-2" aria-hidden="true" /> Thông Tin Hợp Đồng
                 </Modal.Title>
             </Modal.Header>
 
@@ -80,18 +79,18 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                 <div className="card mb-3">
                     <div className="card-header bg-light">
                         <h6 className="mb-0">
-                            <i className="ti ti-file-text me-2"></i>
-                            Chi Tiết Hợp Đồng
+                            <i className="ti ti-file-text me-2" aria-hidden="true" /> Chi Tiết Hợp
+                            Đồng
                         </h6>
                     </div>
                     <div className="card-body">
                         <div className="row g-3">
                             <div className="col-md-6">
-                                <label className="text-muted small">Số hợp đồng</label>
+                                <span className="text-muted small d-block">Số hợp đồng</span>
                                 <div className="fw-semibold">{contractInfo.contractNumber}</div>
                             </div>
                             <div className="col-md-6">
-                                <label className="text-muted small">Trạng thái</label>
+                                <span className="text-muted small d-block">Trạng thái</span>
                                 <div>
                                     <span className="badge bg-info">
                                         {contractInfo.status === 'CONTRACT_GENERATED'
@@ -101,13 +100,13 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                                 </div>
                             </div>
                             <div className="col-md-6">
-                                <label className="text-muted small">Ngày tạo</label>
+                                <span className="text-muted small d-block">Ngày tạo</span>
                                 <div className="fw-semibold">
                                     {formatDate(contractInfo.generatedAt)}
                                 </div>
                             </div>
                             <div className="col-md-6">
-                                <label className="text-muted small">Link hết hạn</label>
+                                <span className="text-muted small d-block">Link hết hạn</span>
                                 <div>
                                     <span
                                         className={`badge ${isExpired ? 'bg-danger' : 'bg-warning'}`}
@@ -127,8 +126,8 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                 <div className="card mb-3">
                     <div className="card-header bg-light">
                         <h6 className="mb-0">
-                            <i className="ti ti-file-download me-2"></i>
-                            File Hợp Đồng
+                            <i className="ti ti-file-download me-2" aria-hidden="true" /> File Hợp
+                            Đồng
                         </h6>
                     </div>
                     <div className="card-body">
@@ -161,8 +160,7 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                 <div className="card">
                     <div className="card-header bg-light">
                         <h6 className="mb-0">
-                            <i className="ti ti-link me-2"></i>
-                            Link Ký Hợp Đồng
+                            <i className="ti ti-link me-2" aria-hidden="true" /> Link Ký Hợp Đồng
                         </h6>
                     </div>
                     <div className="card-body">
@@ -189,16 +187,12 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                                     >
                                         {isCopying ? (
                                             <>
-                                                <span
-                                                    className="spinner-border spinner-border-sm me-1"
-                                                    role="status"
-                                                    aria-hidden="true"
-                                                ></span>
+                                                <output className="spinner-border spinner-border-sm me-1" />{' '}
                                                 Đang copy...
                                             </>
                                         ) : (
                                             <>
-                                                <i className="ti ti-copy me-1"></i>
+                                                <i className="ti ti-copy me-1" aria-hidden="true" />{' '}
                                                 Copy Link
                                             </>
                                         )}
@@ -233,8 +227,7 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
 
             <Modal.Footer>
                 <Button variant="secondary" onClick={onHide}>
-                    <i className="ti ti-x me-1"></i>
-                    Đóng
+                    <i className="ti ti-x me-1" aria-hidden="true" /> Đóng
                 </Button>
                 {!isExpired && (
                     <a
@@ -243,8 +236,7 @@ const ContractInfoModal: React.FC<ContractInfoModalProps> = ({ show, onHide, con
                         rel="noopener noreferrer"
                         className="btn btn-primary"
                     >
-                        <i className="ti ti-file-download me-1"></i>
-                        Tải Hợp Đồng
+                        <i className="ti ti-file-download me-1" aria-hidden="true" /> Tải Hợp Đồng
                     </a>
                 )}
             </Modal.Footer>

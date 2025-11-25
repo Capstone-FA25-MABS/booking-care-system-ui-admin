@@ -65,8 +65,8 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
         <Modal show={isOpen} onHide={handleClose} size="lg" centered>
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <i className="ti ti-check-circle me-2 text-success"></i>
-                    Phê duyệt đơn đăng ký
+                    <i className="ti ti-check-circle me-2 text-success" aria-hidden="true" /> Phê
+                    duyệt đơn đăng ký
                 </Modal.Title>
             </Modal.Header>
 
@@ -74,7 +74,10 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
                 <Modal.Body>
                     <div className="mb-4">
                         <h6 className="fw-semibold mb-3">
-                            <i className="ti ti-building-hospital me-2 text-primary"></i>
+                            <i
+                                className="ti ti-building-hospital me-2 text-primary"
+                                aria-hidden="true"
+                            />{' '}
                             Thông tin bệnh viện
                         </h6>
                         <div className="bg-light p-3 rounded">
@@ -85,7 +88,7 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
                     {contractUrl && (
                         <div className="mb-4">
                             <h6 className="fw-semibold mb-3">
-                                <i className="ti ti-file-text me-2 text-info"></i>
+                                <i className="ti ti-file-text me-2 text-info" aria-hidden="true" />{' '}
                                 Hợp đồng đã ký
                             </h6>
                             <div className="d-flex align-items-center gap-3">
@@ -94,8 +97,7 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
                                     size="sm"
                                     onClick={handleViewContract}
                                 >
-                                    <i className="ti ti-eye me-1"></i>
-                                    Xem hợp đồng
+                                    <i className="ti ti-eye me-1" aria-hidden="true" /> Xem hợp đồng
                                 </Button>
                                 <small className="text-muted">
                                     Vui lòng xem xét hợp đồng trước khi phê duyệt
@@ -107,8 +109,8 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
                     <div className="mb-4">
                         <Form.Group>
                             <Form.Label className="fw-semibold">
-                                <i className="ti ti-note me-2"></i>
-                                Ghi chú phê duyệt (tùy chọn)
+                                <i className="ti ti-note me-2" aria-hidden="true" /> Ghi chú phê
+                                duyệt (tùy chọn)
                             </Form.Label>
                             <Form.Control
                                 as="textarea"
@@ -138,16 +140,12 @@ const ApprovalConfirmModal: React.FC<ApprovalConfirmModalProps> = ({
                     <Button variant="success" type="submit" disabled={isSubmitting}>
                         {isSubmitting ? (
                             <>
-                                <span
-                                    className="spinner-border spinner-border-sm me-2"
-                                    role="status"
-                                ></span>
-                                Đang xử lý...
+                                <output className="spinner-border spinner-border-sm me-2" /> Đang xử
+                                lý...
                             </>
                         ) : (
                             <>
-                                <i className="ti ti-check me-2"></i>
-                                Phê duyệt
+                                <i className="ti ti-check me-2" aria-hidden="true" /> Phê duyệt
                             </>
                         )}
                     </Button>

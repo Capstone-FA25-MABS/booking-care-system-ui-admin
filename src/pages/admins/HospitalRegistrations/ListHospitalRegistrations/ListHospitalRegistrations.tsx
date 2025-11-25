@@ -616,10 +616,7 @@ const ListHospitalRegistrations: React.FC = () => {
                             >
                                 {isGeneratingContract === registration.id ? (
                                     <>
-                                        <span
-                                            className="spinner-border spinner-border-sm me-1"
-                                            role="status"
-                                        ></span>
+                                        <output className="spinner-border spinner-border-sm me-1" />{' '}
                                         Đang tạo...
                                     </>
                                 ) : (

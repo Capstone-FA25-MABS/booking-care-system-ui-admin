@@ -434,9 +434,8 @@ const AdminSignatureManagement: React.FC = () => {
                                                     <span className="text-danger">*</span>
                                                 )}
                                             </label>
-                                            <div
+                                            <fieldset
                                                 className="btn-group mb-3"
-                                                role="group"
                                                 style={{ display: 'inline-flex' }}
                                             >
                                                 <button
@@ -446,7 +445,10 @@ const AdminSignatureManagement: React.FC = () => {
                                                     disabled={!!signature && !isEditing}
                                                     style={{ minWidth: '140px' }}
                                                 >
-                                                    <i className="ti ti-upload me-2"></i>
+                                                    <i
+                                                        className="ti ti-upload me-2"
+                                                        aria-hidden="true"
+                                                    />{' '}
                                                     Tải lên ảnh
                                                 </button>
                                                 <button
@@ -456,10 +458,13 @@ const AdminSignatureManagement: React.FC = () => {
                                                     disabled={!!signature && !isEditing}
                                                     style={{ minWidth: '140px' }}
                                                 >
-                                                    <i className="ti ti-pencil me-2"></i>
+                                                    <i
+                                                        className="ti ti-pencil me-2"
+                                                        aria-hidden="true"
+                                                    />{' '}
                                                     Vẽ chữ ký
                                                 </button>
-                                            </div>
+                                            </fieldset>
 
                                             {signatureMethod === 'upload' ? (
                                                 <>
@@ -496,7 +501,10 @@ const AdminSignatureManagement: React.FC = () => {
                                                             onClick={handleClearSignature}
                                                             disabled={!!signature && !isEditing}
                                                         >
-                                                            <i className="ti ti-eraser me-1"></i>
+                                                            <i
+                                                                className="ti ti-eraser me-1"
+                                                                aria-hidden="true"
+                                                            />{' '}
                                                             Xóa
                                                         </button>
                                                         <button
@@ -505,7 +513,10 @@ const AdminSignatureManagement: React.FC = () => {
                                                             onClick={handleSaveDrawnSignature}
                                                             disabled={!!signature && !isEditing}
                                                         >
-                                                            <i className="ti ti-check me-1"></i>
+                                                            <i
+                                                                className="ti ti-check me-1"
+                                                                aria-hidden="true"
+                                                            />{' '}
                                                             Lưu chữ ký vẽ
                                                         </button>
                                                     </div>
@@ -519,7 +530,9 @@ const AdminSignatureManagement: React.FC = () => {
 
                                         {(signature || isEditing) && (
                                             <div className="mb-3">
-                                                <label className="form-label">Trạng thái</label>
+                                                <span className="form-label d-block">
+                                                    Trạng thái
+                                                </span>
                                                 <div>
                                                     <span
                                                         className={`badge ${signature?.isActive ? 'bg-success' : 'bg-secondary'}`}
@@ -535,7 +548,7 @@ const AdminSignatureManagement: React.FC = () => {
 
                                     {/* Right Column - Preview */}
                                     <div className="col-md-6">
-                                        <label className="form-label">Xem trước chữ ký</label>
+                                        <span className="form-label d-block">Xem trước chữ ký</span>
                                         <div
                                             className="border rounded p-4 bg-light"
                                             style={{ minHeight: '300px' }}
@@ -579,11 +592,7 @@ const AdminSignatureManagement: React.FC = () => {
                                         >
                                             {isLoading ? (
                                                 <>
-                                                    <span
-                                                        className="spinner-border spinner-border-sm me-2"
-                                                        role="status"
-                                                        aria-hidden="true"
-                                                    ></span>
+                                                    <output className="spinner-border spinner-border-sm me-2" />{' '}
                                                     Đang lưu...
                                                 </>
                                             ) : (
@@ -615,27 +624,39 @@ const AdminSignatureManagement: React.FC = () => {
                     <div className="card mt-4">
                         <div className="card-header bg-light">
                             <h5 className="mb-0">
-                                <i className="ti ti-info-circle me-2"></i>
-                                Thông tin sử dụng
+                                <i className="ti ti-info-circle me-2" aria-hidden="true" /> Thông
+                                tin sử dụng
                             </h5>
                         </div>
                         <div className="card-body">
                             <ul className="list-unstyled mb-0">
                                 <li className="mb-2">
-                                    <i className="ti ti-check text-success me-2"></i>
+                                    <i
+                                        className="ti ti-check text-success me-2"
+                                        aria-hidden="true"
+                                    />{' '}
                                     Chữ ký này sẽ tự động được thêm vào hợp đồng khi bạn tạo hợp
                                     đồng mới
                                 </li>
                                 <li className="mb-2">
-                                    <i className="ti ti-check text-success me-2"></i>
+                                    <i
+                                        className="ti ti-check text-success me-2"
+                                        aria-hidden="true"
+                                    />{' '}
                                     Chữ ký sẽ xuất hiện ở phần "Đại diện Bên A" trong hợp đồng
                                 </li>
                                 <li className="mb-2">
-                                    <i className="ti ti-check text-success me-2"></i>
+                                    <i
+                                        className="ti ti-check text-success me-2"
+                                        aria-hidden="true"
+                                    />{' '}
                                     Bạn có thể cập nhật chữ ký bất kỳ lúc nào
                                 </li>
                                 <li className="mb-0">
-                                    <i className="ti ti-alert-triangle text-warning me-2"></i>
+                                    <i
+                                        className="ti ti-alert-triangle text-warning me-2"
+                                        aria-hidden="true"
+                                    />{' '}
                                     Chữ ký cũ sẽ vẫn được giữ trong các hợp đồng đã tạo trước đó
                                 </li>
                             </ul>

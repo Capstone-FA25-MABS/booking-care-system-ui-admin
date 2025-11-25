@@ -144,7 +144,7 @@ const notificationSlice = createSlice({
         addNotification: (state, action: PayloadAction<Notification>) => {
             try {
                 // ✅ Validate payload
-                if (!action.payload || !action.payload.id) {
+                if (!action.payload?.id) {
                     console.warn(
                         '[NotificationSlice] Invalid notification payload:',
                         action.payload
