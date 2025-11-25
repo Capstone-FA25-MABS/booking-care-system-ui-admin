@@ -607,6 +607,80 @@
     color: #991b1b;
 }
 
+// Skeleton styles
+.skeletonTitle,
+.skeletonText,
+.skeletonLabel,
+.skeletonBadge,
+.skeletonButton,
+.skeletonIcon,
+.skeletonProgressBar,
+.skeletonProgress,
+.skeletonHistoryItem {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonTitle {
+    height: 24px;
+}
+
+.skeletonText {
+    height: 16px;
+}
+
+.skeletonLabel {
+    height: 14px;
+}
+
+.skeletonBadge {
+    height: 24px;
+    border-radius: 6px;
+}
+
+.skeletonButton {
+    height: 38px;
+    border-radius: 6px;
+}
+
+.skeletonIcon {
+    border-radius: 50%;
+}
+
+.skeletonProgressBar {
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    background: #f0fdf4;
+    border-left: 3px solid #10b981;
+}
+
+.skeletonProgress {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    margin-top: 0.5rem;
+}
+
+.skeletonHistoryItem {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border-left: 3px solid #2e37a4;
+    margin-bottom: 0.5rem;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
 // Responsive design
 @media (max-width: 768px) {
     .subscriptionInfoPage {

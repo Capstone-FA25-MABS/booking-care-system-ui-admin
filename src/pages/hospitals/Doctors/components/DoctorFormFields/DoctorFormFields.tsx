@@ -16,6 +16,7 @@ import LanguagesSection from '../shared/LanguagesSection';
 import ServicePricesSection from '../shared/ServicePricesSection';
 import { prepareBioForSave } from '@/utils/bioHtmlProcessor';
 import AvatarUpload from '@/components/AvatarUpload';
+import DoctorFormSkeleton from '../DoctorFormSkeleton';
 
 const BasicInfoFields: React.FC<{
     formData: DoctorFormData;
@@ -206,20 +207,7 @@ const DoctorFormFields: React.FC<DoctorFormFieldsProps> = ({
     };
 
     if (isLoading) {
-        return (
-            <div
-                className="d-flex justify-content-center align-items-center"
-                style={{
-                    minHeight: 'calc(100vh - 300px)',
-                    width: '100%',
-                }}
-            >
-                <div className="text-center">
-                    <Spinner size="medium" variant="primary" />
-                    <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
-                </div>
-            </div>
-        );
+        return <DoctorFormSkeleton />;
     }
 
     return (
