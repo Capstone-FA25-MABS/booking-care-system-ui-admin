@@ -10,8 +10,6 @@ import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal'
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
-import PatientDropdown from '@/components/PatientDropdown';
-import StatusDropdown from '@/components/StatusDropdown';
 import TableSkeleton from '@/components/TableSkeleton';
 import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { AppointmentService } from '@/services/appointment.service';
@@ -23,20 +21,19 @@ import {
     isNewAppointment,
     mapUITabToStatus,
     getAppointmentTypeText,
-    formatFullName,
     AppointmentUITab,
+    isRelativeAppointment,
+    getActualPatientName,
+    getRepresentativeName,
+    getProviderName,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
 import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
-import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
 import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { PATHS } from '@/routes/paths';
-import {
-    mockPatients as importedMockPatients,
-    appointmentStatuses as importedAppointmentStatuses,
-} from '@/data/mockAppointments';
+import { mockPatients as importedMockPatients } from '@/data/mockAppointments';
 
 // Types definition
 interface Patient {
@@ -45,16 +42,6 @@ interface Patient {
     avatar: string;
     email?: string;
     phone?: string;
-}
-
-interface AppointmentFormData {
-    appointmentId: string;
-    patient: string;
-    type: string;
-    date: string;
-    time: string;
-    reason: string;
-    status: string;
 }
 
 // Import images
@@ -78,9 +65,6 @@ const mockDoctors = [
     { id: '6', name: 'BS. Vũ Thị F', specialty: 'Da liễu', avatar: user06 },
 ];
 
-// Use imported appointment statuses
-const appointmentStatuses = importedAppointmentStatuses;
-
 const ListAppointments: React.FC = () => {
     // Get auth and user profile from Redux
     const { roles } = useSelector((state: RootState) => state.auth);
@@ -92,9 +76,6 @@ const ListAppointments: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
-    const [showNewAppointment, setShowNewAppointment] = useState(false);
-    const [showEditAppointment, setShowEditAppointment] = useState(false);
-    const [showViewDetails, setShowViewDetails] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showAssignDoctorModal, setShowAssignDoctorModal] = useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
@@ -126,28 +107,6 @@ const ListAppointments: React.FC = () => {
         upcoming: 0,
         cancelled: 0,
         completed: 0,
-    });
-
-    // Form states for new appointment
-    const [newAppointment, setNewAppointment] = useState<AppointmentFormData>({
-        appointmentId: 'AP234354',
-        patient: '',
-        type: '',
-        date: '',
-        time: '',
-        reason: '',
-        status: 'PENDING',
-    });
-
-    // Form states for edit appointment
-    const [editAppointment, setEditAppointment] = useState<AppointmentFormData>({
-        appointmentId: 'AP234354',
-        patient: 'Emily Clark',
-        type: 'In Person',
-        date: '20/08/2025',
-        time: '01 : 20 : PM',
-        reason: 'An account of the present illness, which includes the circumstances surrounding the onset of recent health changes and the Purpose.',
-        status: 'COMPLETED',
     });
 
     // Helper: Validate user profile
@@ -242,18 +201,6 @@ const ListAppointments: React.FC = () => {
         hospitalProfile?.id,
     ]);
 
-    const handleNewAppointmentSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('New appointment:', newAppointment);
-        setShowNewAppointment(false);
-    };
-
-    const handleEditAppointmentSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Edit appointment:', editAppointment);
-        setShowEditAppointment(false);
-    };
-
     const handleCancelConfirm = async (cancellationReason: string, rescheduleOptions?: any) => {
         if (!selectedAppointment) return;
 
@@ -285,28 +232,6 @@ const ListAppointments: React.FC = () => {
         } finally {
             setIsCancelling(false);
         }
-    };
-
-    const handleEditClick = (appointment: AppointmentCardData) => {
-        setSelectedAppointment(appointment);
-        setEditAppointment({
-            appointmentId: appointment.appointmentId,
-            patient: formatFullName(
-                appointment.patientInfo?.firstName,
-                appointment.patientInfo?.lastName
-            ),
-            type: getAppointmentTypeText(appointment.appointmentType),
-            date: new Date(appointment.appointmentDate).toLocaleDateString('vi-VN'),
-            time: appointment.appointmentTime,
-            reason: appointment.reason || '',
-            status: appointment.status,
-        });
-        setShowEditAppointment(true);
-    };
-
-    const handleViewClick = (appointment: AppointmentCardData) => {
-        setSelectedAppointment(appointment);
-        setShowViewDetails(true);
     };
 
     const handleCancelClick = (appointment: AppointmentCardData) => {
@@ -391,7 +316,7 @@ const ListAppointments: React.FC = () => {
         if (apiError) {
             return (
                 <tr>
-                    <td colSpan={6} className="text-center py-5">
+                    <td colSpan={7} className="text-center py-5">
                         <div className="text-danger">
                             <i className="ti ti-alert-circle fs-1"></i>
                             <p className="mt-2">{apiError}</p>
@@ -411,7 +336,7 @@ const ListAppointments: React.FC = () => {
         if (appointments.length === 0) {
             return (
                 <tr>
-                    <td colSpan={6} className="text-center py-5">
+                    <td colSpan={7} className="text-center py-5">
                         <i className="ti ti-calendar-off fs-1 text-muted"></i>
                         <p className="mt-2 text-muted">Không có lịch hẹn nào</p>
                     </td>
@@ -419,106 +344,153 @@ const ListAppointments: React.FC = () => {
             );
         }
 
-        return appointments.map((appointment) => (
-            <tr key={appointment.appointmentId}>
-                <td>
-                    {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')}
-                    {' | '}
-                    {appointment.appointmentTime}
-                </td>
-                <td>
-                    <div className="d-flex align-items-center">
-                        <Link to="/doctors-patient-details" className="avatar avatar-md me-2">
-                            <img
-                                src={appointment.patientInfo?.avatarUrl}
-                                alt="patient"
-                                className="rounded-circle"
-                            />
-                        </Link>
-                        <Link to="/doctors-patient-details" className="fw-semibold">
-                            {formatFullName(
-                                appointment.patientInfo?.firstName,
-                                appointment.patientInfo?.lastName
-                            )}
-                            <span className="text-body fs-13 fw-normal d-block">
-                                {appointment.patientInfo?.phone || appointment.patientInfo?.email}
-                            </span>
-                        </Link>
-                    </div>
-                </td>
-                <td>
-                    <div className="d-flex align-items-center">
-                        <Link to="/doctors-profile" className="avatar avatar-md me-2">
-                            <img
-                                src={appointment.doctorInfo?.avatarUrl || user01}
-                                alt="doctor"
-                                className="rounded-circle"
-                            />
-                        </Link>
-                        <Link to="/doctors-profile" className="fw-semibold">
-                            {appointment.doctorInfo?.fullName || 'Chưa phân công'}
-                            <span className="text-body fs-13 fw-normal d-block">
-                                {appointment.doctorInfo?.specialtyName || ''}
-                            </span>
-                        </Link>
-                    </div>
-                </td>
-                <td>
-                    <div className="d-flex align-items-center gap-2">
-                        <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
+        return appointments.map((appointment) => {
+            const hasRelative = isRelativeAppointment(appointment);
+            const patientName = getActualPatientName(appointment);
+            const representativeName = getRepresentativeName(appointment);
+            const providerName = getProviderName(appointment);
 
-                        <button
-                            type="button"
-                            className="btn btn-icon btn-sm btn-primary-light"
-                            onClick={() => handleChatWithPatient(appointment)}
-                            title="Chat với bệnh nhân"
-                        >
-                            <i className="ti ti-message-circle"></i>
-                        </button>
-                    </div>
-                </td>
-                <td>
-                    <StatusBadge status={appointment.status} />
-                </td>
-                <td className="action-item">
-                    <button type="button" className="btn btn-link p-0" data-bs-toggle="dropdown">
-                        <i className="ti ti-dots-vertical"></i>
-                    </button>
-                    <ul className="dropdown-menu p-2">
-                        <li>
-                            <button
-                                type="button"
-                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                onClick={() => handleEditClick(appointment)}
-                            >
-                                Sửa
-                            </button>
-                        </li>
-                        <li>
-                            <button
-                                type="button"
-                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                onClick={() => handleViewClick(appointment)}
-                            >
-                                Xem
-                            </button>
-                        </li>
-                        {(appointment.status === 'PENDING' ||
-                            appointment.status === 'CONFIRMED') && (
-                            <li>
-                                <button
-                                    type="button"
-                                    className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                    onClick={() => handleCancelClick(appointment)}
+            return (
+                <tr key={appointment.appointmentId}>
+                    <td>
+                        {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')}
+                        {' | '}
+                        {appointment.appointmentTime}
+                    </td>
+                    {/* Bệnh nhân - người thực sự khám */}
+                    <td>
+                        <div className="d-flex align-items-center">
+                            <Link to="/doctors-patient-details" className="avatar avatar-md me-2">
+                                <img
+                                    src={appointment.patientInfo?.avatarUrl}
+                                    alt="patient"
+                                    className="rounded-circle"
+                                />
+                            </Link>
+                            <div>
+                                <Link to="/doctors-patient-details" className="fw-semibold">
+                                    {patientName}
+                                </Link>
+                                {hasRelative && appointment.relativeInfo?.relationshipDisplay && (
+                                    <span className="badge bg-info-light text-info ms-1 fs-11">
+                                        {appointment.relativeInfo.relationshipDisplay}
+                                    </span>
+                                )}
+                                <span className="text-body fs-13 fw-normal d-block">
+                                    {hasRelative
+                                        ? appointment.relativeInfo?.phone || ''
+                                        : appointment.patientInfo?.phone ||
+                                          appointment.patientInfo?.email}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    {/* Người đại diện - người đặt lịch */}
+                    <td>
+                        {hasRelative ? (
+                            <div className="d-flex align-items-center">
+                                <Link
+                                    to="/doctors-patient-details"
+                                    className="avatar avatar-md me-2"
                                 >
-                                    Hủy lịch hẹn
-                                </button>
-                            </li>
+                                    <img
+                                        src={appointment.patientInfo?.avatarUrl}
+                                        alt="representative"
+                                        className="rounded-circle"
+                                    />
+                                </Link>
+                                <div>
+                                    <Link to="/doctors-patient-details" className="fw-semibold">
+                                        {representativeName}
+                                    </Link>
+                                    <span className="text-body fs-13 fw-normal d-block">
+                                        {appointment.patientInfo?.phone ||
+                                            appointment.patientInfo?.email}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <span className="text-muted">—</span>
                         )}
-                    </ul>
-                </td>
-            </tr>
-        ));
+                    </td>
+                    {/* Bác sĩ / Dịch vụ */}
+                    <td>
+                        <div className="d-flex align-items-center">
+                            {appointment.doctorInfo?.id ? (
+                                <>
+                                    <Link to="/doctors-profile" className="avatar avatar-md me-2">
+                                        <img
+                                            src={appointment.doctorInfo?.avatarUrl || user01}
+                                            alt="doctor"
+                                            className="rounded-circle"
+                                        />
+                                    </Link>
+                                    <div>
+                                        <Link to="/doctors-profile" className="fw-semibold">
+                                            {providerName}
+                                        </Link>
+                                        <span className="text-body fs-13 fw-normal d-block">
+                                            {appointment.doctorInfo?.specialtyName || ''}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : appointment.serviceInfo?.id ? (
+                                <div>
+                                    <span className="fw-semibold">
+                                        <i className="ti ti-medical-cross me-1 text-primary"></i>
+                                        {providerName}
+                                    </span>
+                                    <span className="text-body fs-13 fw-normal d-block">
+                                        Dịch vụ y tế
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="text-muted">Chưa phân công</span>
+                            )}
+                        </div>
+                    </td>
+                    <td>
+                        <div className="d-flex align-items-center gap-2">
+                            <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
+
+                            <button
+                                type="button"
+                                className="btn btn-icon btn-sm btn-primary-light"
+                                onClick={() => handleChatWithPatient(appointment)}
+                                title="Chat với bệnh nhân"
+                            >
+                                <i className="ti ti-message-circle"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <StatusBadge status={appointment.status} />
+                    </td>
+                    {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
+                        <td className="action-item">
+                            <button
+                                type="button"
+                                className="btn btn-link p-0"
+                                data-bs-toggle="dropdown"
+                            >
+                                <i className="ti ti-dots-vertical"></i>
+                            </button>
+                            <ul className="dropdown-menu p-2">
+                                <li>
+                                    <button
+                                        type="button"
+                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                        onClick={() => handleCancelClick(appointment)}
+                                    >
+                                        Hủy lịch hẹn
+                                    </button>
+                                </li>
+                            </ul>
+                        </td>
+                    )}
+                </tr>
+            );
+        });
     };
 
     return (
@@ -545,16 +517,6 @@ const ListAppointments: React.FC = () => {
                                 // Handle export logic here
                             }}
                         />
-
-                        <Button
-                            variant="primary"
-                            size="md"
-                            className="ms-2 fs-13"
-                            icon="ti ti-plus"
-                            onClick={() => setShowNewAppointment(true)}
-                        >
-                            Lịch hẹn mới
-                        </Button>
                     </div>
                 </div>
                 {/* End Page Header */}
@@ -647,7 +609,8 @@ const ListAppointments: React.FC = () => {
                             <tr>
                                 <th className="no-sort">Ngày & giờ</th>
                                 <th>Bệnh nhân</th>
-                                <th>Bác sĩ</th>
+                                <th>Người đại diện</th>
+                                <th>Bác sĩ / Dịch vụ</th>
                                 <th>Hình thức</th>
                                 <th>Trạng thái</th>
                                 <th></th>
@@ -712,726 +675,6 @@ const ListAppointments: React.FC = () => {
                     },
                 ]}
             />
-
-            {/* Start Add New Appointment */}
-            <div
-                className={`offcanvas offcanvas-offset offcanvas-end ${showNewAppointment ? 'show' : ''}`}
-                tabIndex={-1}
-                id="new_appointment"
-                style={{ display: showNewAppointment ? 'block' : 'none' }}
-            >
-                <div className="offcanvas-header d-block pb-0 px-0">
-                    <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold">Lịch hẹn mới</h5>
-                        <button
-                            type="button"
-                            className="btn-close opacity-100"
-                            onClick={() => setShowNewAppointment(false)}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                </div>
-                <div className="offcanvas-body pt-3">
-                    <form onSubmit={handleNewAppointmentSubmit}>
-                        {/* start row*/}
-                        <div className="row">
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-id"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Mã lịch hẹn <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-group">
-                                        <input
-                                            id="appointment-id"
-                                            type="text"
-                                            className="form-control rounded bg-light"
-                                            value={newAppointment.appointmentId}
-                                            onChange={(e) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    appointmentId: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="patient-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Bệnh nhân<span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="patient-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {newAppointment.patient || 'Select'}
-                                        </button>
-                                        <PatientDropdown
-                                            patients={mockPatients}
-                                            selectedPatient={newAppointment.patient}
-                                            onSelect={(patientName) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    patient: patientName,
-                                                })
-                                            }
-                                            idPrefix="patient"
-                                            name="patient"
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-type-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Loại khám <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="appointment-type-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {newAppointment.type || 'Select'}
-                                        </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Select"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-3 list-style-none">
-                                                <li>
-                                                    <label
-                                                        htmlFor="type-telehealth"
-                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                    >
-                                                        <input
-                                                            id="type-telehealth"
-                                                            className="form-check-input m-0 me-2"
-                                                            type="radio"
-                                                            name="type"
-                                                            value="Trực tuyến"
-                                                            onChange={(e) =>
-                                                                setNewAppointment({
-                                                                    ...newAppointment,
-                                                                    type: e.target.value,
-                                                                })
-                                                            }
-                                                        />{' '}
-                                                        Trực tuyến
-                                                    </label>
-                                                </li>
-                                                <li>
-                                                    <label
-                                                        htmlFor="type-inperson"
-                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                    >
-                                                        <input
-                                                            id="type-inperson"
-                                                            className="form-check-input m-0 me-2"
-                                                            type="radio"
-                                                            name="type"
-                                                            value="Trực tiếp"
-                                                            onChange={(e) =>
-                                                                setNewAppointment({
-                                                                    ...newAppointment,
-                                                                    type: e.target.value,
-                                                                })
-                                                            }
-                                                        />{' '}
-                                                        Trực tiếp
-                                                    </label>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-6">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-date"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        {' '}
-                                        Ngày khám <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-icon-end position-relative">
-                                        <input
-                                            id="appointment-date"
-                                            type="text"
-                                            className="form-control datetimepicker"
-                                            placeholder="dd/mm/yyyy"
-                                            value={newAppointment.date}
-                                            onChange={(e) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    date: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        <span className="input-icon-addon">
-                                            <i className="ti ti-calendar"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-6">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-time"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        {' '}
-                                        Giờ <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-icon-end position-relative">
-                                        <input
-                                            id="appointment-time"
-                                            type="text"
-                                            className="form-control timepicker"
-                                            placeholder="-- : --"
-                                            value={newAppointment.time}
-                                            onChange={(e) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    time: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        <span className="input-icon-addon">
-                                            <i className="ti ti-clock"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <div>
-                                        <label
-                                            htmlFor="appointment-reason"
-                                            className="form-label mb-1 text-dark fs-14 fw-medium"
-                                        >
-                                            Lý do khám
-                                        </label>
-                                        <textarea
-                                            id="appointment-reason"
-                                            rows={4}
-                                            className="form-control rounded"
-                                            value={newAppointment.reason}
-                                            onChange={(e) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    reason: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-status-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Trạng thái<span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="appointment-status-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {newAppointment.status || 'Select'}
-                                        </button>
-                                        <StatusDropdown
-                                            statuses={appointmentStatuses}
-                                            selectedStatus={newAppointment.status}
-                                            onSelect={(status) =>
-                                                setNewAppointment({
-                                                    ...newAppointment,
-                                                    status: status,
-                                                })
-                                            }
-                                            idPrefix="status"
-                                            name="status"
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                        </div>
-                        {/* end row*/}
-                    </form>
-                </div>
-                <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
-                    <div className=" d-flex justify-content-end gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-light btm-md"
-                            onClick={() => setShowNewAppointment(false)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            className="btn btn-primary btm-md"
-                            id="filter-submit"
-                            onClick={() => setShowNewAppointment(false)}
-                        >
-                            Tạo lịch hẹn
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {/* End Add New Appointment*/}
-
-            {/* Start Edit New Appointment */}
-            <div
-                className={`offcanvas offcanvas-offset offcanvas-end ${showEditAppointment ? 'show' : ''}`}
-                tabIndex={-1}
-                id="edit_appointment"
-                style={{ display: showEditAppointment ? 'block' : 'none' }}
-            >
-                <div className="offcanvas-header d-block pb-0 px-0">
-                    <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-                        <h5 className="offcanvas-title fs-18 fw-bold"> Sửa lịch hẹn</h5>
-                        <button
-                            type="button"
-                            className="btn-close opacity-100"
-                            onClick={() => setShowEditAppointment(false)}
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                </div>
-                <div className="offcanvas-body pt-3">
-                    <form onSubmit={handleEditAppointmentSubmit}>
-                        {/* start row*/}
-                        <div className="row">
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-code"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Mã lịch hẹn <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-group">
-                                        <input
-                                            id="appointment-code"
-                                            type="text"
-                                            className="form-control rounded bg-light"
-                                            value={editAppointment.appointmentId}
-                                            onChange={(e) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    appointmentId: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="patient-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Bệnh nhân<span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="patient-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {editAppointment.patient}
-                                        </button>
-                                        <PatientDropdown
-                                            patients={mockPatients}
-                                            selectedPatient={editAppointment.patient}
-                                            onSelect={(patientName) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    patient: patientName,
-                                                })
-                                            }
-                                            idPrefix="edit-patient"
-                                            name="editPatient"
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-type-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Loại khám <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="appointment-type-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {editAppointment.type}
-                                        </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Select"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-0 list-style-none">
-                                                <li>
-                                                    <label
-                                                        htmlFor="edit-type-telehealth"
-                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                    >
-                                                        <input
-                                                            id="edit-type-telehealth"
-                                                            className="form-check-input m-0 me-2"
-                                                            type="radio"
-                                                            name="editType"
-                                                            value="Trực tuyến"
-                                                            checked={
-                                                                editAppointment.type ===
-                                                                'Trực tuyến'
-                                                            }
-                                                            onChange={(e) =>
-                                                                setEditAppointment({
-                                                                    ...editAppointment,
-                                                                    type: e.target.value,
-                                                                })
-                                                            }
-                                                        />{' '}
-                                                        Trực tuyến
-                                                    </label>
-                                                </li>
-                                                <li>
-                                                    <label
-                                                        htmlFor="edit-type-inperson"
-                                                        className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                    >
-                                                        <input
-                                                            id="edit-type-inperson"
-                                                            className="form-check-input m-0 me-2"
-                                                            type="radio"
-                                                            name="editType"
-                                                            value="Trực tiếp"
-                                                            checked={
-                                                                editAppointment.type === 'Trực tiếp'
-                                                            }
-                                                            onChange={(e) =>
-                                                                setEditAppointment({
-                                                                    ...editAppointment,
-                                                                    type: e.target.value,
-                                                                })
-                                                            }
-                                                        />{' '}
-                                                        Trực tiếp
-                                                    </label>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-6">
-                                <div className="mb-3">
-                                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                                        {' '}
-                                        Ngày khám <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-icon-end position-relative">
-                                        <input
-                                            type="text"
-                                            className="form-control datetimepicker"
-                                            placeholder="20/08/2025"
-                                            value={editAppointment.date}
-                                            onChange={(e) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    date: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        <span className="input-icon-addon">
-                                            <i className="ti ti-calendar"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-6">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-time"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Giờ <span className="text-danger">*</span>
-                                    </label>
-                                    <div className="input-icon-end position-relative">
-                                        <input
-                                            id="appointment-time"
-                                            type="text"
-                                            className="form-control timepicker"
-                                            placeholder="01 : 20 : PM"
-                                            value={editAppointment.time}
-                                            onChange={(e) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    time: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        <span className="input-icon-addon">
-                                            <i className="ti ti-clock"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <div>
-                                        <label
-                                            htmlFor="appointment-reason"
-                                            className="form-label mb-1 text-dark fs-14 fw-medium"
-                                        >
-                                            Lý do khám
-                                        </label>
-                                        <textarea
-                                            id="appointment-reason"
-                                            rows={4}
-                                            className="form-control rounded"
-                                            value={editAppointment.reason}
-                                            onChange={(e) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    reason: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                            <div className="col-lg-12">
-                                <div className="mb-3">
-                                    <label
-                                        htmlFor="appointment-status-dropdown"
-                                        className="form-label mb-1 text-dark fs-14 fw-medium"
-                                    >
-                                        Trạng thái<span className="text-danger">*</span>
-                                    </label>
-                                    <div className="dropdown">
-                                        <button
-                                            id="appointment-status-dropdown"
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {editAppointment.status}
-                                        </button>
-                                        <StatusDropdown
-                                            statuses={appointmentStatuses}
-                                            selectedStatus={editAppointment.status}
-                                            onSelect={(status) =>
-                                                setEditAppointment({
-                                                    ...editAppointment,
-                                                    status: status,
-                                                })
-                                            }
-                                            idPrefix="edit-status"
-                                            name="editStatus"
-                                        />
-                                    </div>
-                                </div>
-                            </div>{' '}
-                            {/* end col*/}
-                        </div>
-                        {/* end row*/}
-                    </form>
-                </div>
-                <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
-                    <div className=" d-flex justify-content-end gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-light btm-md"
-                            onClick={() => setShowEditAppointment(false)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            className="btn btn-primary btm-md"
-                            id="filter-submit2"
-                            onClick={() => setShowEditAppointment(false)}
-                        >
-                            Cập nhật lịch hẹn
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {/* End Edit New Appointment*/}
-
-            {/* Start View Details */}
-            <AppointmentDetailsOffcanvas
-                show={showViewDetails}
-                onClose={() => setShowViewDetails(false)}
-                appointment={selectedAppointment}
-            />
-            <div
-                className={`offcanvas offcanvas-offset offcanvas-end ${showViewDetails ? 'show' : ''}`}
-                tabIndex={-1}
-                id="view_details_extended"
-                style={{ display: showViewDetails ? 'block' : 'none' }}
-            >
-                <div className="offcanvas-body pt-0 px-0">
-                    <h6 className="bg-light py-2 px-3 text-dark fw-bold"> Chi tiết lịch hẹn </h6>
-                    <div className="px-3 my-4">
-                        <div className="d-flex align-items-center justify-content-between mb-3">
-                            <div className="d-flex align-items-center">
-                                Khám từ xa{' '}
-                                <label
-                                    htmlFor="remote-consultation"
-                                    className="d-flex align-items-center form-switch ps-1"
-                                >
-                                    <input
-                                        id="remote-consultation"
-                                        className="form-check-input m-0 me-2"
-                                        type="checkbox"
-                                        defaultChecked
-                                    />{' '}
-                                    <span className="visually-hidden">Khám từ xa</span>
-                                </label>
-                            </div>
-                            <div>
-                                <Link
-                                    to="/online-consultation"
-                                    className="btn-primary btn btn-sm rounded d-flex align-items-center"
-                                >
-                                    <i className="ti ti-video me-1"></i> Start
-                                </Link>
-                            </div>
-                        </div>
-                        <div className="row align-items-center">
-                            <div className="col-lg-6 col-md-6">
-                                <p className="text-dark"> Trạng thái </p>
-                            </div>
-
-                            <div className="col-lg-6 col-md-6">
-                                <div className="mb-3">
-                                    <div className="dropdown">
-                                        <button
-                                            type="button"
-                                            className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                                            data-bs-toggle="dropdown"
-                                            data-bs-auto-close="outside"
-                                            aria-expanded="true"
-                                        >
-                                            {selectedAppointment?.status || 'Pending'}
-                                        </button>
-                                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                                            <div className="mb-3">
-                                                <div className="input-icon-start position-relative">
-                                                    <span className="input-icon-addon fs-12">
-                                                        <i className="ti ti-search"></i>
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="Select"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul className="mb-0 list-style-none">
-                                                {appointmentStatuses.map((status, index) => (
-                                                    <li key={`view-status-${status}-${index}`}>
-                                                        <label
-                                                            htmlFor={`view-status-${index}`}
-                                                            className="dropdown-item px-2 d-flex align-items-center text-dark"
-                                                        >
-                                                            <input
-                                                                id={`view-status-${index}`}
-                                                                className="form-check-input m-0 me-2"
-                                                                type="radio"
-                                                                name="viewStatus"
-                                                                value={status}
-                                                                defaultChecked={
-                                                                    status === 'COMPLETED'
-                                                                }
-                                                            />
-                                                            {status}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* End Add New Appointment*/}
 
             {/* Cancel Modal */}
             <ModalCancel
