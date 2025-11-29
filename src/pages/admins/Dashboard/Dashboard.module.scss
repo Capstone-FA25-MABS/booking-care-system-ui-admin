@@ -260,6 +260,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+
+            > div:first-child {
+                flex: 1;
+                min-width: 200px;
+            }
 
             h5 {
                 margin: 0;
