@@ -65,7 +65,17 @@ class SignalRService {
         // Handle new notification
         this.connection.on('ReceiveNotification', (notification: Notification) => {
             console.log('[SignalR] Received notification:', notification);
-            dispatch(addNotification(notification));
+            // Defer dispatch to avoid DOM manipulation conflicts during render
+            // Use requestAnimationFrame for better timing with React render cycle
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    try {
+                        dispatch(addNotification(notification));
+                    } catch (error) {
+                        console.error('[SignalR] Error dispatching notification:', error);
+                    }
+                }, 0);
+            });
         });
 
         // Handle notification update (e.g., marked as read)
@@ -73,19 +83,37 @@ class SignalRService {
             'NotificationUpdated',
             (data: { notificationId: string; isRead: boolean }) => {
                 console.log('[SignalR] Notification updated:', data);
-                dispatch(
-                    updateNotification({
-                        id: data.notificationId,
-                        isRead: data.isRead,
-                    })
-                );
+                // Defer dispatch to avoid DOM manipulation conflicts during render
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        try {
+                            dispatch(
+                                updateNotification({
+                                    id: data.notificationId,
+                                    isRead: data.isRead,
+                                })
+                            );
+                        } catch (error) {
+                            console.error('[SignalR] Error updating notification:', error);
+                        }
+                    }, 0);
+                });
             }
         );
 
         // Handle unread count update
         this.connection.on('UnreadCountUpdated', (data: { unreadCount: number }) => {
             console.log('[SignalR] Unread count updated:', data.unreadCount);
-            dispatch(setUnreadCount(data.unreadCount));
+            // Defer dispatch to avoid DOM manipulation conflicts during render
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    try {
+                        dispatch(setUnreadCount(data.unreadCount));
+                    } catch (error) {
+                        console.error('[SignalR] Error updating unread count:', error);
+                    }
+                }, 0);
+            });
         });
 
         // Connection lifecycle events

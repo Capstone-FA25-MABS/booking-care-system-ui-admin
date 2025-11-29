@@ -58,6 +58,9 @@ export const PATHS = {
         HOSPITAL_REGISTRATIONS: {
             ROOT: 'hospital-registrations',
         },
+        ADMIN_SIGNATURE: {
+            ROOT: 'admin-signature',
+        },
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },

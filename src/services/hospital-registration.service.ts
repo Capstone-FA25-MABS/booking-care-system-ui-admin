@@ -4,9 +4,11 @@ import type {
     HospitalRegistrationListResponse,
     HospitalRegistrationResponse,
 } from '@/types/hospital-registration.types';
+import type { GenerateContractResponse } from '@/types/contract.types';
 
 const HOSPITAL_REGISTRATION_ENDPOINTS = {
     GET_ALL: '/hospital-registrations',
+    GENERATE_CONTRACT: (id: string) => `/hospital-registrations/${id}/generate-contract`,
     APPROVE: (id: string) => `/hospital-registrations/${id}/approve`,
     REJECT: (id: string) => `/hospital-registrations/${id}/reject`,
     UPDATE: (id: string) => `/hospital-registrations/${id}/update`,
@@ -28,22 +30,42 @@ export class HospitalRegistrationService {
     }
 
     /**
-     * Approve registration
+     * Generate contract for pending registration
+     */
+    static async generateContract(id: string): Promise<ApiResponse<GenerateContractResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                HOSPITAL_REGISTRATION_ENDPOINTS.GENERATE_CONTRACT(id)
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Hợp đồng đã được tạo thành công',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Tạo hợp đồng thất bại');
+        }
+    }
+
+    /**
+     * Approve registration (no file upload required - contract already signed by hospital)
      */
     static async approveRegistration(
         id: string,
-        contractFile: File
+        approvalNotes?: string
     ): Promise<ApiResponse<HospitalRegistrationResponse>> {
         try {
-            const formData = new FormData();
-            formData.append('ContractFile', contractFile);
+            const requestData = {
+                approvalNotes: approvalNotes || null,
+            };
 
             const response: any = await axiosInstance.post(
                 HOSPITAL_REGISTRATION_ENDPOINTS.APPROVE(id),
-                formData,
+                requestData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                        'Content-Type': 'application/json',
                     },
                 }
             );
@@ -139,6 +161,7 @@ export class HospitalRegistrationService {
 
 export const {
     getAllRegistrations,
+    generateContract,
     approveRegistration,
     rejectRegistration,
     updateContractFile,
