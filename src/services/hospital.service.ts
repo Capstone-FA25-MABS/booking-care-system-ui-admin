@@ -5,6 +5,7 @@ const HOSPITAL_ENDPOINTS = {
     PROFILE: '/hospitals/profile',
     BY_ACCOUNT: `/hospitals/account`, // Legacy endpoint (returns array)
     HEALTH: '/hospitals/health',
+    GET_ALL: '/hospitals',
     GET_SPECIALTIES: (id: string) => `/hospitals/${id}/specialties`,
     PUT_SPECIALTIES: (id: string) => `/hospitals/${id}/specialties`,
     GET_SERVICE_TYPES: (id: string) => `/hospitals/${id}/service-types`,
@@ -46,6 +47,38 @@ export class HospitalService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Failed to get hospital profiles');
+        }
+    }
+
+    /**
+     * Get all hospitals with filtering and pagination
+     */
+    static async getHospitals(params?: {
+        pageNumber?: number;
+        pageSize?: number;
+        search?: string;
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
+    }): Promise<
+        ApiResponse<{
+            hospitals: any[];
+            totalCount: number;
+            page: number;
+            pageSize: number;
+            totalPages: number;
+        }>
+    > {
+        try {
+            const response: any = await axiosInstance.get(HOSPITAL_ENDPOINTS.GET_ALL, {
+                params,
+            });
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Hospitals retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get hospitals');
         }
     }
 

@@ -4,6 +4,7 @@ import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { Role } from '@/enums/common.enums';
 import DoctorProfileSettings from './components/DoctorProfileSettings';
 import HospitalProfileSettings from './components/HospitalProfileSettings';
+import AdminProfileSettings from './components/AdminProfileSettings';
 import Spinner from '@/components/Spinner';
 import { AppDispatch } from '@/store';
 import { fetchProfileByRole } from '@/store/slices/userSlice';
@@ -45,11 +46,7 @@ const ProfileSettings = () => {
                     <div className="card w-100 mb-0 border-0 bg-light-500 shadow-none">
                         {role === Role.DOCTOR && <DoctorProfileSettings />}
                         {role === Role.STAFF && <HospitalProfileSettings />}
-                        {role === Role.ADMIN && (
-                            <div className="card-header border-bottom px-0 mx-3">
-                                <h5 className="fw-bold">Basic Information</h5>
-                            </div>
-                        )}
+                        {role === Role.ADMIN && <AdminProfileSettings />}
                     </div>
                 </div>
             </div>

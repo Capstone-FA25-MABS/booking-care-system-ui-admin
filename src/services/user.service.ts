@@ -48,14 +48,131 @@ export class UserService {
         updateData: UpdateAdminRequest
     ): Promise<ApiResponse<AdminProfile>> {
         try {
-            const response: any = await axiosInstance.put(USER_ENDPOINTS.ADMIN_PROFILE, updateData);
+            const response: any = await axiosInstance.put(
+                USER_ENDPOINTS.ADMIN_PROFILE,
+                updateData,
+                {
+                    withCredentials: true, // Ensure cookies are sent
+                }
+            );
             return {
                 success: response.success ?? true,
                 data: response.data || response,
                 message: response.message || 'Admin profile updated successfully',
             };
         } catch (error: any) {
+            // Preserve original error for better debugging
+            if (error.response) {
+                throw new Error(
+                    error.response.data?.message ||
+                        error.response.data?.error ||
+                        error.message ||
+                        'Failed to update admin profile'
+                );
+            }
             throw new Error(error.message || 'Failed to update admin profile');
+        }
+    }
+
+    /**
+     * Upload admin avatar
+     * Uses /avatar/upload endpoint (AvatarController)
+     */
+    static async uploadAdminAvatar(avatarFile: File): Promise<ApiResponse<{ avatarUrl: string }>> {
+        try {
+            const formData = new FormData();
+            formData.append('file', avatarFile);
+
+            const response: any = await axiosInstance.post('/avatar/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                withCredentials: true,
+            });
+
+            console.log('Avatar upload raw response:', response);
+            console.log('Avatar upload response data:', response.data);
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Avatar uploaded successfully',
+            };
+        } catch (error: any) {
+            console.error('Avatar upload error:', error);
+            if (error.response) {
+                throw new Error(
+                    error.response.data?.message ||
+                        error.response.data?.error ||
+                        error.message ||
+                        'Failed to upload avatar'
+                );
+            }
+            throw new Error(error.message || 'Failed to upload avatar');
+        }
+    }
+
+    /**
+     * Update admin profile with avatar upload
+     * First uploads avatar, then updates profile with the new avatarUrl
+     */
+    static async updateAdminProfileWithAvatar(
+        updateData: UpdateAdminRequest,
+        avatarFile: File
+    ): Promise<ApiResponse<AdminProfile>> {
+        try {
+            // First, upload the avatar
+            const avatarResponse = await UserService.uploadAdminAvatar(avatarFile);
+            console.log('Full avatar upload response:', JSON.stringify(avatarResponse, null, 2));
+
+            const avatarData = avatarResponse.data as any;
+            console.log('Avatar data extracted:', avatarData);
+
+            // Extract avatarUrl from UploadResult structure
+            // Backend returns: { success, data: { CloudFrontUrl, FileUrl, FileName, ... }, message }
+            // Or direct: { CloudFrontUrl, FileUrl, FileName, ... }
+            let avatarUrl = null;
+
+            // Try different possible structures
+            if (avatarData?.data) {
+                // Nested data structure
+                avatarUrl =
+                    avatarData.data.CloudFrontUrl ||
+                    avatarData.data.cloudFrontUrl ||
+                    avatarData.data.FileUrl ||
+                    avatarData.data.fileUrl;
+            } else {
+                // Direct structure
+                avatarUrl =
+                    avatarData?.CloudFrontUrl ||
+                    avatarData?.cloudFrontUrl ||
+                    avatarData?.FileUrl ||
+                    avatarData?.fileUrl ||
+                    avatarData?.avatarUrl ||
+                    avatarData?.imageUrl;
+            }
+
+            console.log('Extracted avatarUrl:', avatarUrl);
+
+            if (!avatarUrl) {
+                console.error('Cannot extract avatarUrl. Full response:', avatarResponse);
+                console.error('Avatar data keys:', Object.keys(avatarData || {}));
+                throw new Error(
+                    'Không thể lấy URL ảnh sau khi upload. Vui lòng kiểm tra console để xem chi tiết.'
+                );
+            }
+
+            // Then, update profile with the new avatarUrl
+            const updatePayload: UpdateAdminRequest = {
+                ...updateData,
+                avatarUrl: avatarUrl,
+            };
+
+            console.log('Updating profile with avatarUrl:', avatarUrl);
+            return await UserService.updateAdminProfile(updatePayload);
+        } catch (error: any) {
+            console.error('Error in updateAdminProfileWithAvatar:', error);
+            throw new Error(error.message || 'Failed to update admin profile with avatar');
         }
     }
 
