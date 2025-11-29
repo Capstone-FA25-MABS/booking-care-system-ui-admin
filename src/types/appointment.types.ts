@@ -207,7 +207,7 @@ export const getAppointmentStatusText = (status: AppointmentStatus): string => {
 export const getAppointmentTypeText = (type: AppointmentType): string => {
     switch (type) {
         case AppointmentType.TELEHEALTH:
-            return 'Tư vấn online';
+            return 'Tư vấn trực tiếp';
         case AppointmentType.IN_PERSON:
             return 'Trực tiếp';
         default:

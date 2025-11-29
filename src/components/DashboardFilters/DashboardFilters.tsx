@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Select from 'react-select';
 import { format } from 'date-fns';
 import FilterDatePicker from '@/components/FilterDatePicker';
@@ -21,7 +21,7 @@ interface DashboardFiltersProps {
     onExport?: (format: string) => void;
 }
 
-export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
+const DashboardFiltersComponent: React.FC<DashboardFiltersProps> = ({
     dateRange,
     period,
     isLoading,
@@ -30,6 +30,22 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
     onPeriodChange,
     onExport,
 }) => {
+    console.log('[DashboardFilters] render', { dateRange, period });
+
+    const selectOptions = useMemo(
+        () =>
+            periodOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+            })),
+        []
+    );
+
+    const selectedPeriod = useMemo(
+        () => selectOptions.find((opt) => opt.value === period),
+        [selectOptions, period]
+    );
+
     return (
         <div className={`card shadow-sm mb-4 ${styles.filtersCard}`}>
             <div className="card-body">
@@ -68,13 +84,8 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
                             <label htmlFor="periodSelect">Chu kỳ thống kê</label>
                             <Select
                                 inputId="periodSelect"
-                                options={periodOptions.map((opt) => ({
-                                    value: opt.value,
-                                    label: opt.label,
-                                }))}
-                                value={periodOptions
-                                    .map((opt) => ({ value: opt.value, label: opt.label }))
-                                    .find((opt) => opt.value === period)}
+                                options={selectOptions}
+                                value={selectedPeriod}
                                 onChange={(selectedOption) => {
                                     if (selectedOption) {
                                         onPeriodChange(selectedOption.value as StatisticsPeriod);
@@ -146,3 +157,5 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
         </div>
     );
 };
+
+export const DashboardFilters = React.memo(DashboardFiltersComponent);
