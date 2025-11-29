@@ -1,30 +1,48 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from '../../hospitals/Dashboard/Dashboard.module.scss';
 import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
 import ReviewService from '@/services/review.service';
 import { StatisticsPeriod } from '@/types/statistics.types';
-import { AppointmentStatus, AppointmentType, AppointmentTime } from '@/enums/appointment.enums';
-import { getAppointmentTimeText } from '@/types/appointment.types';
+import { AppointmentStatus } from '@/enums/appointment.enums';
+import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
+import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
+import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts';
+import DashboardReviewCharts from '@/components/DashboardReviewCharts';
+import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
+import { useAppointmentStatistics } from '@/hooks/useAppointmentStatistics';
 import {
     periodOptions,
     numberFormatter,
     formatPercent,
     formatDateDisplay,
-    formatTrendLabel,
-    getPeriodKey,
 } from '@/utils/dashboard.utils';
+import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
+import {
+    buildRatingChartData,
+    buildPeakHoursChartData,
+    buildAppointmentTypeChartData,
+    ChartPoint,
+} from '@/utils/dashboardChartData';
+import { buildReviewMetrics, buildCompletionVsCancellationData } from '@/utils/reviewCharts';
 
-type ChartPoint = { label: string; value: number };
+const appointmentMetricPresentation: Record<
+    AppointmentMetricKey,
+    { className: string; icon: string }
+> = {
+    total: { className: styles.total, icon: 'ti ti-calendar-event' },
+    completed: { className: styles.completed, icon: 'ti ti-circle-check' },
+    pending: { className: styles.pending, icon: 'ti ti-clock-hour-4' },
+    cancelled: { className: styles.cancelled, icon: 'ti ti-circle-x' },
+    newPatients: { className: styles.newPatients, icon: 'ti ti-user-plus' },
+};
 
 interface DoctorStatistics {
     totalAppointments: number;
@@ -38,56 +56,21 @@ interface DoctorStatistics {
     rescheduleRate: number;
 }
 
-interface AppointmentTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    totalAppointments: number;
-    completedAppointments: number;
-    cancelledAppointments: number;
-}
-
-interface NewPatientTrendPoint {
-    label: string;
-    periodStart: string;
-    periodEnd: string;
-    newPatients: number;
-}
+type DoctorAdditionalStats = ReturnType<typeof calculateAdditionalStatisticsUtil>;
 
 const DoctorDashboard: React.FC = () => {
     const { doctorProfile } = useSelector((state: RootState) => state.user);
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
-    const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-        const end = new Date();
-        return {
-            end,
-            start: subDays(end, 29),
-        };
-    });
+    const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
-    const [stats, setStats] = useState<DoctorStatistics | null>(null);
-    const [appointmentTrend, setAppointmentTrend] = useState<AppointmentTrendPoint[]>([]);
-    const [newPatientTrend, setNewPatientTrend] = useState<NewPatientTrendPoint[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [reviewStats, setReviewStats] = useState<{
         totalReviews: number;
         averageRating: number;
         ratingDistribution: Array<{ rating: number; count: number; percentage: number }>;
+        doctorChartData: Array<{ label: string; value1: number; value2: number }>;
+        serviceChartData: Array<{ label: string; value1: number; value2: number }>;
     } | null>(null);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
-    const [additionalStats, setAdditionalStats] = useState<{
-        peakHours: Array<{ hour: string; count: number }>;
-        appointmentTypeStats: { telehealth: number; inPerson: number };
-        returningPatients: number;
-        completionRate: number;
-    } | null>(null);
-
-    const isoRange = useMemo(() => {
-        const start = dateRange.start ? startOfDay(dateRange.start).toISOString() : undefined;
-        const end = dateRange.end ? endOfDay(dateRange.end).toISOString() : undefined;
-        return { fromDate: start, toDate: end };
-    }, [dateRange]);
 
     // Calculate statistics from appointments
     const calculateStatistics = useCallback(
@@ -135,249 +118,48 @@ const DoctorDashboard: React.FC = () => {
         []
     );
 
-    // Calculate additional statistics
-    const calculateAdditionalStatistics = useCallback(async (appointments: any[]) => {
-        // Peak hours analysis - sử dụng AppointmentTimeId
-        const hourCounts: Record<string, number> = {};
-        appointments.forEach((apt) => {
-            if (apt.appointmentTimeId) {
-                try {
-                    // Lấy text từ AppointmentTimeId (ví dụ: "08:00 - 08:30")
-                    const timeText = getAppointmentTimeText(
-                        apt.appointmentTimeId as AppointmentTime
-                    );
-                    if (timeText && timeText !== 'Chưa xác định') {
-                        // Extract giờ từ text (lấy phần đầu, ví dụ "08:00" từ "08:00 - 08:30")
-                        const hourMatch = timeText.match(/^(\d{2}):\d{2}/);
-                        if (hourMatch) {
-                            const hourLabel = `${hourMatch[1]}:00`;
-                            hourCounts[hourLabel] = (hourCounts[hourLabel] || 0) + 1;
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Error parsing appointmentTimeId:', apt.appointmentTimeId, error);
-                }
-            }
-        });
+    // Calculate additional statistics using shared utility
+    const calculateAdditionalStatistics = useCallback(
+        (appointments: any[]) => calculateAdditionalStatisticsUtil(appointments),
+        []
+    );
 
-        const peakHours = Object.entries(hourCounts)
-            .map(([hour, count]) => ({ hour, count }))
-            .sort((a, b) => a.hour.localeCompare(b.hour));
-
-        // Appointment type statistics
-        let telehealth = 0;
-        let inPerson = 0;
-        appointments.forEach((apt) => {
-            if (
-                apt.appointmentType === AppointmentType.TELEHEALTH ||
-                apt.appointmentType === 'TELEHEALTH'
-            ) {
-                telehealth++;
-            } else if (
-                apt.appointmentType === AppointmentType.IN_PERSON ||
-                apt.appointmentType === 'IN_PERSON'
-            ) {
-                inPerson++;
-            }
-        });
-
-        // Returning patients (patients with more than 1 appointment)
-        const patientAppointmentCounts: Record<string, number> = {};
-        appointments.forEach((apt) => {
-            if (apt.patientId) {
-                patientAppointmentCounts[apt.patientId] =
-                    (patientAppointmentCounts[apt.patientId] || 0) + 1;
-            }
-        });
-
-        const returningPatients = Object.values(patientAppointmentCounts).filter(
-            (count) => count > 1
-        ).length;
-
-        // Completion rate
-        const totalCompletedOrConfirmed = appointments.filter(
-            (a) =>
-                a.status === AppointmentStatus.COMPLETED || a.status === AppointmentStatus.CONFIRMED
-        ).length;
-        const completionRate =
-            appointments.length > 0 ? (totalCompletedOrConfirmed / appointments.length) * 100 : 0;
-
-        return {
-            peakHours,
-            appointmentTypeStats: { telehealth, inPerson },
-            returningPatients,
-            completionRate,
-        };
-    }, []);
-
-    // Calculate trend data based on period
-    const calculateTrends = useCallback((appointments: any[], period: StatisticsPeriod) => {
-        const appointmentTrendPoints: AppointmentTrendPoint[] = [];
-        const newPatientTrendPoints: NewPatientTrendPoint[] = [];
-
-        // Group appointments by period
-        const grouped: Record<string, any[]> = {};
-        const patientGroups: Record<string, Set<string>> = {};
-
-        appointments.forEach((apt) => {
-            if (!apt.appointmentDate) return; // Skip nếu không có appointmentDate
-
-            const date = new Date(apt.appointmentDate);
-            // Kiểm tra Date hợp lệ
-            if (Number.isNaN(date.getTime())) {
-                console.warn('Invalid appointmentDate:', apt.appointmentDate);
-                return; // Skip invalid dates
-            }
-
-            const key = getPeriodKey(date, period);
-
-            if (!grouped[key]) {
-                grouped[key] = [];
-                patientGroups[key] = new Set();
-            }
-            grouped[key].push(apt);
-            if (apt.patientId) {
-                patientGroups[key].add(apt.patientId);
-            }
-        });
-
-        // Convert to trend points
-        Object.entries(grouped)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .forEach(([key, apts]) => {
-                let periodStart: Date;
-
-                // Parse date từ key dựa trên format
-                if (key.includes('Q')) {
-                    // Quarterly format: "2024-Q1"
-                    const [year, quarter] = key.split('-Q');
-                    const quarterNum = Number.parseInt(quarter, 10);
-                    const month = (quarterNum - 1) * 3; // Q1 = tháng 0-2, Q2 = 3-5, etc.
-                    periodStart = new Date(Number.parseInt(year, 10), month, 1);
-                } else if (key.match(/^\d{4}-\d{2}$/)) {
-                    // Monthly format: "2024-01"
-                    periodStart = new Date(`${key}-01`);
-                } else if (key.match(/^\d{4}$/)) {
-                    // Yearly format: "2024"
-                    periodStart = new Date(`${key}-01-01`);
-                } else if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    // Daily format: "2024-01-01"
-                    periodStart = new Date(key);
-                } else {
-                    // Fallback: try to parse directly
-                    periodStart = new Date(key);
-                }
-
-                // Kiểm tra Date hợp lệ
-                if (Number.isNaN(periodStart.getTime())) {
-                    console.warn(`Invalid date key: ${key}`);
-                    return; // Skip invalid dates
-                }
-
-                const periodEnd = new Date(periodStart);
-
-                // Set period end based on period type
-                switch (period) {
-                    case StatisticsPeriod.Daily:
-                        // Same day
-                        break;
-                    case StatisticsPeriod.Weekly:
-                        periodEnd.setDate(periodEnd.getDate() + 6);
-                        break;
-                    case StatisticsPeriod.Monthly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 1);
-                        periodEnd.setDate(0); // Last day of month
-                        break;
-                    case StatisticsPeriod.Quarterly:
-                        periodEnd.setMonth(periodEnd.getMonth() + 3);
-                        periodEnd.setDate(0);
-                        break;
-                    case StatisticsPeriod.Yearly:
-                        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-                        periodEnd.setMonth(0);
-                        periodEnd.setDate(0);
-                        break;
-                }
-
-                const completed = apts.filter(
-                    (a) => a.status === AppointmentStatus.COMPLETED
-                ).length;
-                const cancelled = apts.filter(
-                    (a) => a.status === AppointmentStatus.CANCELLED
-                ).length;
-
-                // Kiểm tra periodEnd hợp lệ trước khi thêm
-                if (!Number.isNaN(periodEnd.getTime())) {
-                    appointmentTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        totalAppointments: apts.length,
-                        completedAppointments: completed,
-                        cancelledAppointments: cancelled,
-                    });
-
-                    newPatientTrendPoints.push({
-                        label: key,
-                        periodStart: periodStart.toISOString(),
-                        periodEnd: periodEnd.toISOString(),
-                        newPatients: patientGroups[key]?.size || 0,
-                    });
-                }
-            });
-
-        return { appointmentTrendPoints, newPatientTrendPoints };
-    }, []);
-
-    const loadStatistics = useCallback(async () => {
+    const fetchDoctorAppointments = useCallback(async () => {
         if (!doctorProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
-            return;
+            return null;
         }
 
-        setIsLoading(true);
-        setError(null);
+        const response = await AppointmentService.getAppointmentsForManagement({
+            doctorId: doctorProfile.id,
+            fromDate: isoRange.fromDate.split('T')[0],
+            toDate: isoRange.toDate.split('T')[0],
+            pageNumber: 1,
+            pageSize: 10000, // Get all appointments
+            includeStatusCounts: false,
+        });
 
-        try {
-            // Fetch all appointments in the date range
-            const response = await AppointmentService.getAppointmentsForManagement({
-                doctorId: doctorProfile.id,
-                fromDate: isoRange.fromDate.split('T')[0],
-                toDate: isoRange.toDate.split('T')[0],
-                pageNumber: 1,
-                pageSize: 10000, // Get all appointments
-                includeStatusCounts: false,
-            });
+        return response.data?.appointments ?? [];
+    }, [doctorProfile?.id, isoRange.fromDate, isoRange.toDate]);
 
-            if (response.data?.appointments) {
-                const appointments = response.data.appointments;
-                const statistics = await calculateStatistics(appointments);
-                const trends = calculateTrends(appointments, period);
-                const additional = await calculateAdditionalStatistics(appointments);
+    const handleStatisticsError = useCallback((message: string) => {
+        toast.error(message);
+    }, []);
 
-                setStats(statistics);
-                setAppointmentTrend(trends.appointmentTrendPoints);
-                setNewPatientTrend(trends.newPatientTrendPoints);
-                setAdditionalStats(additional);
-            }
-        } catch (err: any) {
-            const message = err?.message || 'Không thể tải dữ liệu thống kê';
-            setError(message);
-            toast.error(message);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [
-        doctorProfile?.id,
-        isoRange.fromDate,
-        isoRange.toDate,
+    const {
+        stats,
+        appointmentTrendPoints,
+        newPatientTrendPoints,
+        additionalStats,
+        isLoading,
+        error,
+    } = useAppointmentStatistics<DoctorStatistics, DoctorAdditionalStats>({
         period,
+        fetchAppointments: fetchDoctorAppointments,
         calculateStatistics,
-        calculateTrends,
-    ]);
-
-    useEffect(() => {
-        loadStatistics();
-    }, [loadStatistics]);
+        calculateAdditionalStatistics,
+        onError: handleStatisticsError,
+        disabled: !doctorProfile?.id,
+    });
 
     const loadReviewStatistics = useCallback(async () => {
         if (!doctorProfile?.id) return;
@@ -396,6 +178,8 @@ const DoctorDashboard: React.FC = () => {
                     totalReviews: response.data.totalReviews || 0,
                     averageRating: response.data.averageRating || 0,
                     ratingDistribution,
+                    doctorChartData: [],
+                    serviceChartData: [],
                 });
             }
         } catch (err: any) {
@@ -410,147 +194,63 @@ const DoctorDashboard: React.FC = () => {
         loadReviewStatistics();
     }, [loadReviewStatistics]);
 
-    const handleDateChange = (key: 'start' | 'end', value: string) => {
-        if (!value) return;
-        setDateRange((prev) => ({
-            ...prev,
-            [key]: new Date(value),
-        }));
-    };
-
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
-        return [
-            {
-                label: 'Tổng lịch hẹn',
-                value: stats.totalAppointments,
-                sub: `${formatPercent(stats.noShowRate)} vắng/huỷ`,
-                className: `${styles.metricCard} ${styles.total}`,
-                icon: 'ti ti-calendar-event',
-            },
-            {
-                label: 'Hoàn thành',
-                value: stats.completedAppointments,
-                sub: `${numberFormatter.format(stats.confirmedAppointments)} đã xác nhận`,
-                className: `${styles.metricCard} ${styles.completed}`,
-                icon: 'ti ti-circle-check',
-            },
-            {
-                label: 'Đang chờ',
-                value: stats.pendingAppointments,
-                sub: `${numberFormatter.format(stats.rescheduledAppointments)} đã đổi lịch`,
-                className: `${styles.metricCard} ${styles.pending}`,
-                icon: 'ti ti-clock-hour-4',
-            },
-            {
-                label: 'Huỷ / Vắng',
-                value: stats.cancelledAppointments,
-                sub: `Tỷ lệ vắng: ${formatPercent(stats.noShowRate)}`,
-                className: `${styles.metricCard} ${styles.cancelled}`,
-                icon: 'ti ti-circle-x',
-            },
-            {
-                label: 'Bệnh nhân mới',
-                value: stats.newPatients,
-                sub: `Tỷ lệ đổi lịch: ${formatPercent(stats.rescheduleRate)}`,
-                className: `${styles.metricCard} ${styles.newPatients}`,
-                icon: 'ti ti-user-plus',
-            },
-        ];
+        return buildAppointmentOverviewMetrics(stats).map((metric) => {
+            const presentation = appointmentMetricPresentation[metric.key];
+            return {
+                label: metric.label,
+                value: metric.value,
+                sub: metric.sub,
+                className: `${styles.metricCard} ${presentation.className}`,
+                icon: presentation.icon,
+            };
+        });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(() => {
-        return appointmentTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.totalAppointments,
-        }));
-    }, [appointmentTrend]);
+    type DoctorReviewStats = NonNullable<typeof reviewStats>;
 
-    const newPatientPoints = useMemo<ChartPoint[]>(() => {
-        return newPatientTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.newPatients,
-        }));
-    }, [newPatientTrend]);
+    const reviewMetrics = useMemo(
+        () =>
+            buildReviewMetrics<DoctorReviewStats>(reviewStats, [
+                {
+                    label: 'Tổng đánh giá',
+                    getValue: (stats) => stats.totalReviews,
+                    getSub: (stats) => `${stats.averageRating.toFixed(1)}⭐ điểm trung bình`,
+                    className: `${styles.metricCard} ${styles.cardSpecialty}`,
+                    icon: 'ti ti-star-filled',
+                },
+                {
+                    label: 'Điểm trung bình',
+                    getValue: (stats) => stats.averageRating,
+                    getSub: (stats) => `${stats.totalReviews} đánh giá`,
+                    className: `${styles.metricCard} ${styles.cardDoctorServices}`,
+                    icon: 'ti ti-star',
+                    formatDecimal: true,
+                },
+            ]),
+        [reviewStats]
+    );
 
-    const reviewMetrics = useMemo(() => {
-        if (!reviewStats) return [];
-        return [
-            {
-                label: 'Tổng đánh giá',
-                value: reviewStats.totalReviews,
-                sub: `${reviewStats.averageRating.toFixed(1)}⭐ điểm trung bình`,
-                className: `${styles.metricCard} ${styles.cardSpecialty}`,
-                icon: 'ti ti-star-filled',
-            },
-            {
-                label: 'Điểm trung bình',
-                value: reviewStats.averageRating,
-                sub: `${reviewStats.totalReviews} đánh giá`,
-                className: `${styles.metricCard} ${styles.cardDoctorServices}`,
-                icon: 'ti ti-star',
-                formatDecimal: true,
-            },
-        ];
-    }, [reviewStats]);
+    const ratingChartData = useMemo(
+        () => buildRatingChartData(reviewStats?.ratingDistribution),
+        [reviewStats]
+    );
 
-    const ratingChartData = useMemo(() => {
-        if (!reviewStats?.ratingDistribution) return [];
+    const peakHoursChartData = useMemo<ChartPoint[]>(
+        () => buildPeakHoursChartData(additionalStats?.peakHours),
+        [additionalStats]
+    );
 
-        // Đảm bảo ratingDistribution là một mảng
-        const ratingDistribution = Array.isArray(reviewStats.ratingDistribution)
-            ? reviewStats.ratingDistribution
-            : [];
+    const completedVsCancelledData = useMemo(
+        () => buildCompletionVsCancellationData(stats),
+        [stats]
+    );
 
-        if (ratingDistribution.length === 0) return [];
-
-        return ratingDistribution
-            .slice() // Tạo bản sao để tránh mutate mảng gốc
-            .sort((a, b) => b.rating - a.rating)
-            .map((dist) => ({
-                label: `${dist.rating}⭐`,
-                value1: dist.count || 0,
-                value2: dist.percentage || 0,
-            }));
-    }, [reviewStats]);
-
-    const peakHoursChartData = useMemo<ChartPoint[]>(() => {
-        if (!additionalStats?.peakHours) return [];
-        return additionalStats.peakHours.map((item) => ({
-            label: item.hour,
-            value: item.count,
-        }));
-    }, [additionalStats]);
-
-    const completedVsCancelledData = useMemo(() => {
-        if (!stats) return [];
-        return [
-            {
-                label: 'Hoàn thành',
-                value1: stats.completedAppointments,
-                value2: stats.confirmedAppointments,
-            },
-            {
-                label: 'Hủy/Vắng',
-                value1: stats.cancelledAppointments,
-                value2: stats.pendingAppointments,
-            },
-        ];
-    }, [stats]);
-
-    const appointmentTypeChartData = useMemo(() => {
-        if (!additionalStats?.appointmentTypeStats) return [];
-        return [
-            {
-                label: 'Tư vấn online',
-                value: additionalStats.appointmentTypeStats.telehealth,
-            },
-            {
-                label: 'Khám trực tiếp',
-                value: additionalStats.appointmentTypeStats.inPerson,
-            },
-        ];
-    }, [additionalStats]);
+    const appointmentTypeChartData = useMemo(
+        () => buildAppointmentTypeChartData(additionalStats?.appointmentTypeStats),
+        [additionalStats]
+    );
 
     const doctorName = `${doctorProfile?.firstName || ''} ${doctorProfile?.lastName || ''}`.trim();
 
@@ -620,14 +320,43 @@ const DoctorDashboard: React.FC = () => {
                             />
 
                             {reviewStats && (
-                                <DashboardReviewStats
-                                    metrics={reviewMetrics}
-                                    trendCardClassName={styles.trendCard}
-                                    cardHeaderClassName={styles.cardHeader}
-                                    cardBodyClassName={styles.cardBody}
-                                    metricsGridClassName={styles.metricsGrid}
-                                    hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
-                                />
+                                <>
+                                    <DashboardReviewStats
+                                        metrics={reviewMetrics}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                        metricsGridClassName={styles.metricsGrid}
+                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
+                                    />
+
+                                    <DashboardReviewCharts
+                                        charts={[
+                                            {
+                                                key: 'doctor-chart',
+                                                title: 'Đánh giá theo bác sĩ',
+                                                subtitle:
+                                                    'Điểm đánh giá và số đánh giá của từng bác sĩ',
+                                                data: reviewStats.doctorChartData,
+                                                label1: 'Điểm đánh giá',
+                                                label2: 'Số đánh giá',
+                                            },
+                                            {
+                                                key: 'service-chart',
+                                                title: 'Đánh giá theo dịch vụ',
+                                                subtitle:
+                                                    'Điểm đánh giá và số đánh giá của từng dịch vụ',
+                                                data: reviewStats.serviceChartData,
+                                                label1: 'Điểm đánh giá',
+                                                label2: 'Số đánh giá',
+                                                color1: '#f59e0b',
+                                            },
+                                        ]}
+                                        trendCardClassName={styles.trendCard}
+                                        cardHeaderClassName={styles.cardHeader}
+                                        cardBodyClassName={styles.cardBody}
+                                    />
+                                </>
                             )}
 
                             {additionalStats && (
@@ -656,7 +385,7 @@ const DoctorDashboard: React.FC = () => {
                                                 icon="ti ti-repeat"
                                             />
                                             <MetricCard
-                                                label="Tư vấn online"
+                                                label="Tư vấn trực tiếp"
                                                 value={
                                                     additionalStats.appointmentTypeStats.telehealth
                                                 }
@@ -669,85 +398,29 @@ const DoctorDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            {ratingChartData.length > 0 && (
-                                <div className={styles.trendCard}>
-                                    <div className={styles.cardHeader}>
-                                        <h5>Phân bổ đánh giá</h5>
-                                        <span>
-                                            Phân bổ số lượng và phần trăm đánh giá theo điểm
-                                        </span>
-                                    </div>
-                                    <div className={styles.cardBody}>
-                                        <ChartJsMultiLine
-                                            data={ratingChartData}
-                                            color1="#8b5cf6"
-                                            color2="#10b981"
-                                            label1="Số đánh giá"
-                                            label2="Phần trăm (%)"
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                            <DashboardRatingDistributionChart
+                                data={ratingChartData}
+                                trendCardClassName={styles.trendCard}
+                                cardHeaderClassName={styles.cardHeader}
+                                cardBodyClassName={styles.cardBody}
+                            />
 
                             <DashboardTrendCharts
                                 period={period}
                                 appointmentTrendPoints={appointmentTrendPoints}
-                                newPatientPoints={newPatientPoints}
+                                newPatientPoints={newPatientTrendPoints}
                                 isLoading={false}
                             />
 
                             {additionalStats && (
-                                <>
-                                    {completedVsCancelledData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê cuộc hẹn hoàn thành và hủy</h5>
-                                                <span>Thống kê trạng thái lịch hẹn</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
-                                                    data={completedVsCancelledData}
-                                                    color1="#10b981"
-                                                    color2="#ef4444"
-                                                    label1="Hoàn thành/Xác nhận"
-                                                    label2="Hủy/Chờ"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {peakHoursChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo giờ trong ngày</h5>
-                                                <span>Giờ cao điểm và giờ ít khách</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={peakHoursChartData}
-                                                    color="#f59e0b"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {appointmentTypeChartData.length > 0 && (
-                                        <div className={styles.trendCard}>
-                                            <div className={styles.cardHeader}>
-                                                <h5>Thống kê theo loại khám</h5>
-                                                <span>So sánh tư vấn online vs khám trực tiếp</span>
-                                            </div>
-                                            <div className={styles.cardBody}>
-                                                <ChartJsLine
-                                                    data={appointmentTypeChartData}
-                                                    color="#06b6d4"
-                                                    label="Số lịch hẹn"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
+                                <DashboardAdditionalCharts
+                                    completedVsCancelledData={completedVsCancelledData}
+                                    peakHoursChartData={peakHoursChartData}
+                                    appointmentTypeChartData={appointmentTypeChartData}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                />
                             )}
                         </>
                     )}

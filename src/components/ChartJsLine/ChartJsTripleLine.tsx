@@ -8,22 +8,26 @@ import {
     createXScale,
 } from '@/utils/chartConfig';
 
-type ChartDataPoint = { label: string; value1: number; value2: number };
+type ChartDataPoint = { label: string; value1: number; value2: number; value3: number };
 
-interface ChartJsMultiLineProps {
+interface ChartJsTripleLineProps {
     data: ChartDataPoint[];
     color1: string;
     color2: string;
+    color3: string;
     label1: string;
     label2: string;
+    label3: string;
 }
 
-export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
+export const ChartJsTripleLine: React.FC<ChartJsTripleLineProps> = ({
     data,
     color1,
     color2,
+    color3,
     label1,
     label2,
+    label3,
 }) => {
     const { canvasRef, chartRef, isMountedRef } = useChartLoader();
 
@@ -43,13 +47,18 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
                 label2,
                 trimmed.map((point) => point.value2),
                 color2,
-                'y1'
+                'y'
+            ),
+            createLineDataset(
+                label3,
+                trimmed.map((point) => point.value3),
+                color3,
+                'y'
             ),
         ];
 
         const scales = {
-            y: createYScale('left', label1, color1, true),
-            y1: createYScale('right', label2, color2, false),
+            y: createYScale('left'),
             x: createXScale(),
         };
 
@@ -63,7 +72,7 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
         };
 
         initializeChart(canvasRef, chartRef, isMountedRef, config);
-    }, [data, color1, color2, label1, label2]);
+    }, [data, color1, color2, color3, label1, label2, label3]);
 
     return (
         <div className={styles.chartJsWrapper}>

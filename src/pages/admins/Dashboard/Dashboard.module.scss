@@ -1,0 +1,367 @@
+.dashboardPage {
+    .pageHeader {
+        margin-bottom: 1.75rem;
+        padding: 1.75rem;
+        border-radius: 28px;
+        background:
+            linear-gradient(120deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.12)), #fff;
+        box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .pageTitle {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .pageSubtitle {
+        font-size: 1rem;
+        color: #475569;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .adminBadge {
+        font-weight: 700;
+        color: #0f172a;
+        background: rgba(99, 102, 241, 0.1);
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+    }
+
+    .dateRangeBadge {
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 0.35rem 0.9rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4338ca;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .metricsGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.85rem;
+        }
+
+        @media (max-width: 992px) {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.7rem;
+        }
+
+        @media (max-width: 576px) {
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+    }
+
+    .metricCard {
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid #f1f5f9;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        align-items: flex-start;
+
+        &.total {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        &.completed {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        &.pending {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border-color: #7dd3fc;
+            color: #0f172a;
+        }
+
+        &.cancelled {
+            background: linear-gradient(135deg, #ffe4e6, #fecdd3);
+            border-color: #fda4af;
+            color: #9f1239;
+        }
+
+        &.newPatients {
+            background: linear-gradient(135deg, #eef2ff, #c7d2fe);
+            border-color: #a5b4fc;
+            color: #312e81;
+        }
+
+        &.cardHospitals {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            border-color: #a5b4fc;
+
+            .metricIcon {
+                background: #6366f1;
+            }
+        }
+
+        &.cardDoctors {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border-color: #fed7aa;
+
+            .metricIcon {
+                background: #f97316;
+            }
+        }
+
+        &.cardAppointments {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #fcd34d;
+
+            .metricIcon {
+                background: #f59e0b;
+            }
+        }
+
+        &.cardDiscounts {
+            background: linear-gradient(135deg, #ecfeff, #cffafe);
+            border-color: #a5f3fc;
+
+            .metricIcon {
+                background: #06b6d4;
+            }
+        }
+
+        &.cardSubscriptions {
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            border-color: #d8b4fe;
+
+            .metricIcon {
+                background: #a855f7;
+            }
+        }
+
+        &.cardReview {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #fcd34d;
+
+            .metricIcon {
+                background: #f59e0b;
+            }
+        }
+
+        &.cardRating {
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            border-color: #c7d2fe;
+
+            .metricIcon {
+                background: #6366f1;
+            }
+        }
+
+        &.cardSpecialty {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border-color: #7dd3fc;
+
+            .metricIcon {
+                background: #0ea5e9;
+            }
+        }
+
+        &.cardServiceType {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #86efac;
+
+            .metricIcon {
+                background: #22c55e;
+            }
+        }
+
+        &.cardPosition {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #fcd34d;
+
+            .metricIcon {
+                background: #f59e0b;
+            }
+        }
+
+        &.cardLanguage {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border-color: #f9a8d4;
+
+            .metricIcon {
+                background: #ec4899;
+            }
+        }
+    }
+
+    .overviewGrid {
+        margin-top: 0.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+
+        .metricCard {
+            min-width: 0;
+        }
+
+        @media (max-width: 1400px) {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 992px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        @media (max-width: 576px) {
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+    }
+
+    .trendCard {
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1.5rem;
+        background: #fff;
+        overflow: hidden;
+
+        .cardHeader {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h5 {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 700;
+                color: #111827;
+            }
+
+            span {
+                font-size: 0.85rem;
+                color: #9ca3af;
+            }
+        }
+
+        .cardBody {
+            padding: 1rem 1.25rem;
+        }
+    }
+
+    .emptyState {
+        border: 1px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        color: #6b7280;
+        background: #f8fafc;
+    }
+
+    .topRankingsContainer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .topList {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .topItem {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+    }
+
+    .topRank {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .topInfo {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .topName {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #0f172a;
+    }
+
+    .topStats {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .topRating {
+        color: #f59e0b;
+        font-weight: 600;
+    }
+
+    .topReviews {
+        color: #64748b;
+    }
+}

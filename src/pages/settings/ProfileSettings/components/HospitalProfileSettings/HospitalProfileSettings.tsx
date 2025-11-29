@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import CKEditor from '@/components/CKEditor';
 import Spinner from '@/components/Spinner';
+import SubmitButton from '../SubmitButton';
 import CustomFileInput from '@/components/CustomFileInput';
 import { AppDispatch, RootState } from '@/store';
 import { updateHospitalProfile, setHospitalProfile } from '@/store/slices/userSlice';
@@ -573,18 +574,6 @@ const HospitalProfileSettings: React.FC = () => {
         }
     };
 
-    const renderSubmitButtonText = (): React.ReactNode => {
-        if (isSubmitting) {
-            return (
-                <>
-                    <Spinner size="small" variant="primary" className="me-2" />
-                    Đang cập nhật...
-                </>
-            );
-        }
-        return 'Cập nhật bệnh viện';
-    };
-
     if (isLoading) {
         return (
             <div
@@ -684,7 +673,10 @@ const HospitalProfileSettings: React.FC = () => {
                                         Hủy
                                     </Button>
                                     <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                        {renderSubmitButtonText()}
+                                        <SubmitButton
+                                            isSubmitting={isSubmitting}
+                                            submitText="Cập nhật bệnh viện"
+                                        />
                                     </Button>
                                 </div>
                             </div>
