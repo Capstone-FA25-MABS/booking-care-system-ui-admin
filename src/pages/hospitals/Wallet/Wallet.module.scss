@@ -1,0 +1,158 @@
+.walletContainer {
+    .linkButton {
+        background: none;
+        border: none;
+        color: var(--primary-color, #007bff);
+        cursor: pointer;
+        text-decoration: none;
+        padding: 0;
+        margin-right: 15px;
+        font-size: 14px;
+        transition: color 0.2s ease;
+
+        &:hover {
+            text-decoration: underline;
+            color: var(--primary-color-dark, #0056b3);
+        }
+
+        &:focus {
+            outline: 2px solid var(--primary-color, #007bff);
+            outline-offset: 2px;
+        }
+
+        &:last-child {
+            margin-right: 0;
+        }
+
+        @media (max-width: 576px) {
+            display: block;
+            margin-right: 0;
+            margin-bottom: 8px;
+        }
+    }
+
+    // Responsive table
+    .table-responsive {
+        @media (max-width: 768px) {
+            font-size: 0.875rem;
+        }
+    }
+
+    // Mobile optimizations
+    @media (max-width: 576px) {
+        .payment-amount {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .edit-detail-link {
+            flex-direction: column;
+            gap: 1rem;
+
+            > div {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    }
+}
+
+// Modal overlay styles
+.modalOverlay {
+    .modalBackdrop {
+        cursor: default;
+    }
+}
+
+.modalDialog {
+    background: white;
+
+    @media (max-width: 768px) {
+        width: 95% !important;
+        max-height: 95vh !important;
+        margin: 1rem;
+        min-width: auto !important;
+        border-radius: 8px !important;
+    }
+
+    @media (max-width: 576px) {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    @media (max-height: 568px) {
+        overflow: auto !important;
+        height: fit-content !important;
+        margin: 1rem;
+
+        .modalHeader {
+            padding: 0 1.5rem !important;
+        }
+
+        .modalBody {
+            padding: 0 1.5rem !important;
+        }
+    }
+}
+
+.accountDetailsBox {
+    position: relative;
+}
+
+.bankDetailsInfo {
+    margin-bottom: 16px;
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        align-items: start !important;
+        justify-content: start;
+    }
+
+    li {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 8px;
+        padding: 4px 0;
+    }
+
+    h6,
+    h5 {
+        margin: 0;
+    }
+}
+
+.cardButton {
+    position: absolute;
+    left: 10;
+    display: flex;
+    bottom: 10px;
+    align-items: flex-end;
+    justify-content: flex-end;
+
+    .buttonGroup {
+        margin-right: 1rem;
+
+        :first-child {
+            border-right: 1px solid #e6e8ee;
+        }
+    }
+
+    button {
+        color: #0e82fd;
+        font-size: 14px;
+        background-color: transparent;
+        border: none;
+        margin-right: 8px;
+        padding-right: 8px;
+        display: inline-block;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
