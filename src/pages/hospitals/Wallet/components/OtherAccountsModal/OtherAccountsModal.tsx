@@ -5,6 +5,7 @@ import BaseModal from '@/components/Modal/BaseModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
 import Button from '@/components/Button';
 import { BankAccount } from '@/types/wallet.types';
+import { getBankLogoUrl } from '@/utils/wallet.utils';
 import styles from './OtherAccountsModal.module.scss';
 
 interface OtherAccountsModalProps {
@@ -26,6 +27,11 @@ const OtherAccountsModal: React.FC<OtherAccountsModalProps> = ({
 }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+    const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
+
+    const handleLogoError = (accountId: string) => {
+        setFailedLogos((prev) => new Set(prev).add(accountId));
+    };
 
     const handleSetDefault = (accountId: string) => {
         onSetDefault(accountId);
@@ -67,73 +73,117 @@ const OtherAccountsModal: React.FC<OtherAccountsModalProps> = ({
                 size="lg"
             >
                 <div className="modal-body">
-                    <div className={styles.accountsList}>
-                        {accounts.map((account) => (
-                            <div key={account.id} className={clsx(styles.accountItem, 'card mb-3')}>
-                                <div className="card-body">
-                                    <div className="row">
-                                        <div className="col-md-8">
-                                            <div className="mb-2">
-                                                <strong>Tên ngân hàng:</strong>{' '}
-                                                <span>{account.bankName}</span>
+                    {accounts.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <i className="fas fa-wallet fa-3x mb-3"></i>
+                            <p>Không tìm thấy tài khoản ngân hàng</p>
+                        </div>
+                    ) : (
+                        <div className={styles.accountsList}>
+                            {accounts.map((account) => (
+                                <div
+                                    key={account.id}
+                                    className={clsx(styles.accountCard, {
+                                        [styles.defaultAccount]: account.isDefault,
+                                    })}
+                                >
+                                    {/* Header with badge */}
+                                    <div className={styles.accountHeader}>
+                                        <div className={styles.bankInfo}>
+                                            <div className={styles.bankIconWrapper}>
+                                                {failedLogos.has(account.id) ? (
+                                                    <i className="fas fa-university"></i>
+                                                ) : (
+                                                    <img
+                                                        src={getBankLogoUrl(account.bankCode)}
+                                                        alt={account.bankName}
+                                                        className={styles.bankLogo}
+                                                        onError={() => handleLogoError(account.id)}
+                                                    />
+                                                )}
                                             </div>
-                                            <div className="mb-2">
-                                                <strong>Mã ngân hàng:</strong>{' '}
-                                                <span>{account.bankCode}</span>
-                                            </div>
-                                            <div className="mb-2">
-                                                <strong>Số tài khoản:</strong>{' '}
-                                                <span>{account.accountNumber}</span>
-                                            </div>
-                                            <div className="mb-2">
-                                                <strong>Tên tài khoản:</strong>{' '}
-                                                <span>{account.accountName}</span>
+                                            <div className={styles.bankDetails}>
+                                                <h5 className={styles.bankName}>
+                                                    {account.bankName}
+                                                </h5>
+                                                <div className={styles.bankMeta}>
+                                                    <span className={styles.bankCodeBadge}>
+                                                        {account.bankCode}
+                                                    </span>
+                                                    <span className={styles.separator}>•</span>
+                                                    <span className={styles.bankId}>
+                                                        ID: {account.id.slice(0, 8)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="col-md-4 d-flex flex-column justify-content-center align-items-end">
-                                            {account.isDefault ? (
-                                                <span className="badge bg-primary mb-2">
-                                                    Mặc định
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-primary mb-2"
-                                                    onClick={() => handleSetDefault(account.id)}
-                                                    disabled={loading}
-                                                >
-                                                    {loading ? 'Đang xử lý...' : 'Đặt làm mặc định'}
-                                                </button>
-                                            )}
+                                        {account.isDefault && (
+                                            <span className={styles.defaultBadge}>
+                                                <i className="fas fa-star me-1"></i>
+                                                Mặc định
+                                            </span>
+                                        )}
+                                    </div>
 
-                                            <button
-                                                type="button"
-                                                className={clsx('btn btn-sm btn-outline-danger', {
-                                                    disabled: account.isDefault || loading,
-                                                })}
-                                                onClick={() => handleDelete(account.id)}
-                                                disabled={account.isDefault || loading}
-                                                title={
-                                                    account.isDefault
-                                                        ? 'Không thể xóa tài khoản mặc định'
-                                                        : 'Xóa tài khoản'
-                                                }
-                                            >
-                                                <i className="fa-solid fa-trash me-1"></i>
-                                                Xóa
-                                            </button>
+                                    {/* Divider */}
+                                    <div className={styles.divider}></div>
+
+                                    {/* Account Details */}
+                                    <div className={styles.accountDetails}>
+                                        <div className={styles.detailRow}>
+                                            <div className={styles.detailLabel}>
+                                                <i className="fas fa-hashtag"></i>
+                                                <span>Số tài khoản</span>
+                                            </div>
+                                            <div className={styles.detailValue}>
+                                                {account.accountNumber}
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.detailRow}>
+                                            <div className={styles.detailLabel}>
+                                                <i className="fas fa-user"></i>
+                                                <span>Tên tài khoản</span>
+                                            </div>
+                                            <div className={styles.detailValue}>
+                                                {account.accountName}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
 
-                        {accounts.length === 0 && (
-                            <div className="text-center p-4">
-                                <p className="text-muted">Không tìm thấy tài khoản ngân hàng</p>
-                            </div>
-                        )}
-                    </div>
+                                    {/* Action Buttons */}
+                                    <div className={styles.accountActions}>
+                                        {!account.isDefault && (
+                                            <button
+                                                type="button"
+                                                className={styles.setDefaultBtn}
+                                                onClick={() => handleSetDefault(account.id)}
+                                                disabled={loading}
+                                            >
+                                                <i className="fas fa-star me-2"></i>
+                                                {loading ? 'Đang xử lý...' : 'Đặt làm mặc định'}
+                                            </button>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            className={styles.deleteBtn}
+                                            onClick={() => handleDelete(account.id)}
+                                            disabled={account.isDefault || loading}
+                                            title={
+                                                account.isDefault
+                                                    ? 'Không thể xóa tài khoản mặc định'
+                                                    : 'Xóa tài khoản'
+                                            }
+                                        >
+                                            <i className="fas fa-trash-alt me-2"></i>
+                                            Xóa tài khoản
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="modal-footer">

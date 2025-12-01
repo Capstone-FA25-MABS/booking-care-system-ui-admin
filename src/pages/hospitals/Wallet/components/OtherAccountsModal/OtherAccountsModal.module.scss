@@ -1,13 +1,390 @@
 .accountsList {
     max-height: 500px;
     overflow-y: auto;
-    padding: 0.5rem;
+    padding: 0.5rem 0;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+
+        &:hover {
+            background: #555;
+        }
+    }
 }
 
-.accountItem {
-    transition: box-shadow 0.2s ease;
+.accountCard {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
 
     &:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border-color: #d1d5db;
+        transform: translateY(-2px);
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.defaultAccount {
+    border: 2px solid #0d6efd;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+
+    &:hover {
+        border-color: #0d6efd;
+    }
+}
+
+.accountHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.bankInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.bankIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    flex-shrink: 0;
+    overflow: hidden;
+
+    i {
+        color: #ffffff;
+        font-size: 1.5rem;
+    }
+}
+
+.bankLogo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+    background: #ffffff;
+    border-radius: 12px;
+}
+
+.bankDetails {
+    flex: 1;
+    min-width: 0; // For text truncation
+}
+
+.bankName {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.bankMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bankCodeBadge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #667eea;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 1.5px solid rgba(102, 126, 234, 0.3);
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.separator {
+    color: #d1d5db;
+    font-weight: bold;
+    user-select: none;
+}
+
+.bankId {
+    font-size: 0.8125rem;
+    color: #9ca3af;
+    font-weight: 500;
+    font-family: 'Courier New', monospace;
+}
+
+.defaultBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #0d6efd 0%, #0056d2 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+    white-space: nowrap;
+
+    i {
+        font-size: 0.75rem;
+    }
+}
+
+.divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+    margin-bottom: 16px;
+}
+
+.accountDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #f3f4f6;
+    }
+}
+
+.detailLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 140px;
+
+    i {
+        color: #9ca3af;
+        width: 16px;
+        text-align: center;
+    }
+}
+
+.detailValue {
+    color: #1f2937;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+    flex: 1;
+}
+
+.accountActions {
+    display: flex;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+
+    button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        i {
+            font-size: 0.875rem;
+        }
+    }
+}
+
+.setDefaultBtn {
+    background: linear-gradient(135deg, #0d6efd 0%, #0056d2 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0056d2 0%, #004bb5 100%);
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.3);
+        transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+}
+
+.deleteBtn {
+    background: #ffffff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+
+    &:hover:not(:disabled) {
+        background: #dc3545;
+        color: #ffffff;
+        box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+        transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:disabled {
+        background: #f8f9fa;
+        color: #adb5bd;
+        border-color: #dee2e6;
+    }
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #6c757d;
+
+    i {
+        color: #adb5bd;
+        margin-bottom: 16px;
+    }
+
+    p {
+        margin: 0;
+        font-size: 1rem;
+        color: #9ca3af;
+    }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+    .accountCard {
+        padding: 16px;
+    }
+
+    .accountHeader {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .defaultBadge {
+        align-self: flex-start;
+    }
+
+    .bankName {
+        font-size: 1rem;
+    }
+
+    .detailRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .detailLabel {
+        min-width: auto;
+    }
+
+    .detailValue {
+        text-align: left;
+        font-size: 0.875rem;
+    }
+
+    .accountActions {
+        flex-direction: column;
+
+        button {
+            width: 100%;
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .accountsList {
+        max-height: 400px;
+    }
+
+    .accountCard {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .bankInfo {
+        gap: 12px;
+    }
+
+    .bankIconWrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+
+        i {
+            font-size: 1.25rem;
+        }
+    }
+
+    .bankName {
+        font-size: 1rem;
+    }
+
+    .bankMeta {
+        gap: 6px;
+    }
+
+    .bankCodeBadge {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+    }
+
+    .bankId {
+        font-size: 0.75rem;
+    }
+
+    .defaultBadge {
+        padding: 4px 10px;
+        font-size: 0.75rem;
     }
 }

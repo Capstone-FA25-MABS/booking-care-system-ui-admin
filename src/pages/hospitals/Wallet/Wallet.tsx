@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import AddCardModal from './components/AddCardModal';
 import WalletSummary from './components/WalletSummary';
 import OtherAccountsModal from './components/OtherAccountsModal';
+import PayoutHistory from './components/PayoutHistory';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { CreateBankAccountRequest } from '@/types/wallet.types';
 import { RootState } from '@/store';
@@ -155,6 +156,8 @@ const Wallet: React.FC = () => {
                     accountsCount={accounts.length}
                     loading={loading}
                 />
+
+                <PayoutHistory />
 
                 <AddCardModal
                     isOpen={isAddCardModalOpen}

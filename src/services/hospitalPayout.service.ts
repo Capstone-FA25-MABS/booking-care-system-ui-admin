@@ -150,6 +150,33 @@ export class HospitalPayoutService {
             throw new Error(error.message || 'Failed to fetch pending hospitals');
         }
     }
+
+    /**
+     * Get hospital's own payout history (for hospital role)
+     */
+    static async getMyPayouts(
+        hospitalId: string,
+        pageNumber: number = 1,
+        pageSize: number = 10
+    ): Promise<PayoutsListResponse> {
+        try {
+            const result: ApiResponse<PayoutsListResponse> = await axiosInstance.get(
+                '/hospitalpayouts/my-payouts',
+                {
+                    params: { hospitalId, pageNumber, pageSize },
+                }
+            );
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to fetch payout history');
+            }
+
+            return result.data;
+        } catch (error: any) {
+            console.error('Error fetching payout history:', error);
+            throw new Error(error.message || 'Failed to fetch payout history');
+        }
+    }
 }
 
 export default HospitalPayoutService;

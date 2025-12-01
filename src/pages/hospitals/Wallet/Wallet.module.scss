@@ -1,4 +1,13 @@
 .walletContainer {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+
+    .content {
+        width: 100%;
+    }
+
     .linkButton {
         background: none;
         border: none;
