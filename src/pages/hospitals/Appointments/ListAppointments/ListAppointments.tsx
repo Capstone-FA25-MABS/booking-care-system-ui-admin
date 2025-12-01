@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { useDebounce } from '@/hooks/useDebounce';
 import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
+import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
@@ -33,37 +35,17 @@ import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { PATHS } from '@/routes/paths';
-import { mockPatients as importedMockPatients } from '@/data/mockAppointments';
-
-// Types definition
-interface Patient {
-    id: string;
-    name: string;
-    avatar: string;
-    email?: string;
-    phone?: string;
-}
+// Sort options for appointments
+const appointmentSortOptions = [
+    { value: 'CreatedAt_desc', label: 'Mới nhất' },
+    { value: 'CreatedAt_asc', label: 'Cũ nhất' },
+    { value: 'AppointmentDate_desc', label: 'Ngày hẹn (mới nhất)' },
+    { value: 'AppointmentDate_asc', label: 'Ngày hẹn (cũ nhất)' },
+    { value: 'UpdatedAt_desc', label: 'Cập nhật gần đây' },
+];
 
 // Import images
 import user01 from '@/assets/img/users/user-01.jpg';
-import user02 from '@/assets/img/users/user-02.jpg';
-import user03 from '@/assets/img/users/user-03.jpg';
-import user04 from '@/assets/img/users/user-04.jpg';
-import user05 from '@/assets/img/users/user-05.jpg';
-import user06 from '@/assets/img/users/user-06.jpg';
-
-// Use imported mock patients
-const mockPatients = importedMockPatients as unknown as Patient[];
-
-// Mock doctors data
-const mockDoctors = [
-    { id: '1', name: 'BS. Nguyễn Văn A', specialty: 'Tim mạch', avatar: user01 },
-    { id: '2', name: 'BS. Trần Thị B', specialty: 'Nhi khoa', avatar: user02 },
-    { id: '3', name: 'BS. Lê Văn C', specialty: 'Nội khoa', avatar: user03 },
-    { id: '4', name: 'BS. Phạm Thị D', specialty: 'Ngoại khoa', avatar: user04 },
-    { id: '5', name: 'BS. Hoàng Văn E', specialty: 'Sản phụ khoa', avatar: user05 },
-    { id: '6', name: 'BS. Vũ Thị F', specialty: 'Da liễu', avatar: user06 },
-];
 
 const ListAppointments: React.FC = () => {
     // Get auth and user profile from Redux
@@ -72,23 +54,84 @@ const ListAppointments: React.FC = () => {
     const navigate = useNavigate();
 
     // API data states
-    const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
+    const [allAppointments, setAllAppointments] = useState<AppointmentCardData[]>([]); // All appointments from API
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showAssignDoctorModal, setShowAssignDoctorModal] = useState(false);
+    const [showAssignDoctorToAppointmentModal, setShowAssignDoctorToAppointmentModal] =
+        useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
         null
     );
-    const [sortBy, setSortBy] = useState<string>('Gần đây');
     const [isCancelling, setIsCancelling] = useState(false);
 
-    // Filter states
-    const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
+    // Search and Sort states
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const [selectedSort, setSelectedSort] = useState<string>('CreatedAt_desc');
+
+    // Client-side search filter on enriched data (patient name, doctor name, service name, phone, email)
+    const filterAppointmentsBySearch = useCallback(
+        (appointmentList: AppointmentCardData[], search: string): AppointmentCardData[] => {
+            if (!search.trim()) return appointmentList;
+
+            const searchLower = search.toLowerCase().trim();
+            return appointmentList.filter((apt) => {
+                // Search in patient info (firstName + lastName)
+                const patientFirstName = apt.patientInfo?.firstName?.toLowerCase() || '';
+                const patientLastName = apt.patientInfo?.lastName?.toLowerCase() || '';
+                const patientFullName = `${patientFirstName} ${patientLastName}`.trim();
+                const patientPhone = apt.patientInfo?.phone?.toLowerCase() || '';
+                const patientEmail = apt.patientInfo?.email?.toLowerCase() || '';
+
+                // Search in relative info (if booking for family member)
+                const relativeFirstName = apt.relativeInfo?.firstName?.toLowerCase() || '';
+                const relativeLastName = apt.relativeInfo?.lastName?.toLowerCase() || '';
+                const relativeFullName =
+                    apt.relativeInfo?.fullName?.toLowerCase() ||
+                    `${relativeFirstName} ${relativeLastName}`.trim();
+                const relativePhone = apt.relativeInfo?.phone?.toLowerCase() || '';
+
+                // Search in doctor info
+                const doctorFirstName = apt.doctorInfo?.firstName?.toLowerCase() || '';
+                const doctorLastName = apt.doctorInfo?.lastName?.toLowerCase() || '';
+                const doctorFullName =
+                    apt.doctorInfo?.fullName?.toLowerCase() ||
+                    `${doctorFirstName} ${doctorLastName}`.trim();
+                const specialtyName = apt.doctorInfo?.specialtyName?.toLowerCase() || '';
+
+                // Search in service info
+                const serviceName = apt.serviceInfo?.name?.toLowerCase() || '';
+
+                // Search in appointment ID (first 8 chars)
+                const appointmentId = apt.appointmentId?.toLowerCase() || '';
+
+                return (
+                    patientFullName.includes(searchLower) ||
+                    patientPhone.includes(searchLower) ||
+                    patientEmail.includes(searchLower) ||
+                    relativeFullName.includes(searchLower) ||
+                    relativePhone.includes(searchLower) ||
+                    doctorFullName.includes(searchLower) ||
+                    specialtyName.includes(searchLower) ||
+                    serviceName.includes(searchLower) ||
+                    appointmentId.includes(searchLower)
+                );
+            });
+        },
+        []
+    );
+
+    // Filtered appointments based on search term
+    const appointments = useMemo(() => {
+        return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm);
+    }, [allAppointments, debouncedSearchTerm, filterAppointmentsBySearch]);
+
+    // Filter states (simplified: only appointment type and date range)
     const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
-    const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
     const [selectedDateRange, setSelectedDateRange] = useState<{
         start: Date | null;
         end: Date | null;
@@ -122,16 +165,36 @@ const ListAppointments: React.FC = () => {
         return true;
     };
 
+    // Helper: Parse sort parameter (format: "Field_order")
+    const parseSortParam = (sortValue: string) => {
+        const [field, order] = sortValue.split('_');
+        return {
+            sortBy: field,
+            sortDescending: order === 'desc',
+        };
+    };
+
+    // Helper: Format date to local YYYY-MM-DD (avoid timezone issues)
+    const formatLocalDate = (date: Date | null): string | undefined => {
+        if (!date) return undefined;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     // Helper: Build appointment query with role-based filters
-    const buildAppointmentQuery = (): AppointmentQueryRequest => {
+    const buildAppointmentQuery = useCallback((): AppointmentQueryRequest => {
+        const { sortBy, sortDescending } = parseSortParam(selectedSort);
+
         const query: AppointmentQueryRequest = {
             status: mapUITabToStatus(activeStatusTab),
-            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
-            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            fromDate: formatLocalDate(selectedDateRange.start),
+            toDate: formatLocalDate(selectedDateRange.end),
             pageNumber: currentPage,
             pageSize: itemsPerPage,
-            sortBy: 'CreatedAt',
-            sortDescending: true,
+            sortBy,
+            sortDescending,
             includeStatusCounts: true,
         };
 
@@ -144,13 +207,21 @@ const ListAppointments: React.FC = () => {
             query.hospitalId = hospitalProfile.id;
         }
 
-        // Add user-selected filters
-        if (selectedPatients.length > 0) query.patientId = selectedPatients[0];
+        // Add user-selected filters (simplified: only appointment type)
         if (selectedTypes.length > 0) query.appointmentType = selectedTypes[0];
-        if (selectedDoctors.length > 0) query.doctorId = selectedDoctors[0];
 
         return query;
-    };
+    }, [
+        activeStatusTab,
+        selectedDateRange,
+        currentPage,
+        itemsPerPage,
+        selectedSort,
+        roles,
+        doctorProfile?.id,
+        hospitalProfile?.id,
+        selectedTypes,
+    ]);
 
     // Validate user profile before fetching appointments
     useEffect(() => {
@@ -166,7 +237,7 @@ const ListAppointments: React.FC = () => {
     }, [roles, doctorProfile, hospitalProfile]);
 
     // Fetch appointments from API
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         const primaryRole = roles[0]?.toUpperCase();
         if (!validateUserProfile(primaryRole)) return;
 
@@ -177,29 +248,33 @@ const ListAppointments: React.FC = () => {
 
         // Call API for management
         await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
-            setAppointments,
+            setAppointments: setAllAppointments,
             setTotalCount,
             setTabCounts,
             setApiError,
             setIsLoading,
         });
-    };
+    }, [buildAppointmentQuery, roles, doctorProfile, hospitalProfile]);
 
+    // Fetch appointments when dependencies change
     useEffect(() => {
         fetchAppointments();
-    }, [
-        activeStatusTab,
-        selectedDateRange.start,
-        selectedDateRange.end,
-        selectedPatients,
-        selectedTypes,
-        selectedDoctors,
-        currentPage,
-        itemsPerPage,
-        roles,
-        doctorProfile?.id,
-        hospitalProfile?.id,
-    ]);
+    }, [fetchAppointments]);
+
+    // Reset to page 1 when search term or sort changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm, selectedSort]);
+
+    // Handle search input change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    // Handle sort change
+    const handleSortChange = (value: string) => {
+        setSelectedSort(value);
+    };
 
     const handleCancelConfirm = async (cancellationReason: string, rescheduleOptions?: any) => {
         if (!selectedAppointment) return;
@@ -263,6 +338,33 @@ const ListAppointments: React.FC = () => {
         await fetchAppointments();
     };
 
+    // Handler for clicking "Gán bác sĩ" on PENDING specialty appointments (NEW flow)
+    const handleAssignDoctorToAppointmentClick = (appointment: AppointmentCardData) => {
+        // Validate: Must be PENDING specialty booking (no doctor assigned)
+        if (appointment.status !== 'PENDING') {
+            toast.error('Chỉ có thể gán bác sĩ cho lịch hẹn đang chờ xử lý');
+            return;
+        }
+
+        if (appointment.doctorInfo || appointment.serviceInfo) {
+            toast.error('Lịch hẹn này đã có bác sĩ/dịch vụ được gán');
+            return;
+        }
+
+        if (!appointment.specialtyId) {
+            toast.error('Lịch hẹn này không phải là đặt theo chuyên khoa');
+            return;
+        }
+
+        setSelectedAppointment(appointment);
+        setShowAssignDoctorToAppointmentModal(true);
+    };
+
+    // Handler for successful assign doctor to appointment
+    const handleAssignDoctorToAppointmentSuccess = async () => {
+        await fetchAppointments();
+    };
+
     const handleFilterSubmit = () => {
         // Filters are now applied via API, so just close modal and reset to page 1
         setCurrentPage(1);
@@ -270,11 +372,11 @@ const ListAppointments: React.FC = () => {
     };
 
     const handleClearFilters = () => {
-        setSelectedPatients([]);
         setSelectedTypes([]);
-        setSelectedDoctors([]);
         setSelectedDateRange({ start: null, end: null });
+        setSearchTerm('');
         setCurrentPage(1);
+        setShowFilterModal(false); // Close modal after reset
     };
 
     const handleChatWithPatient = async (appointment: AppointmentCardData) => {
@@ -410,7 +512,7 @@ const ListAppointments: React.FC = () => {
                                 </div>
                             </div>
                         ) : (
-                            <span className="text-muted">—</span>
+                            <span className="text-muted">Trống</span>
                         )}
                     </td>
                     {/* Bác sĩ / Dịch vụ */}
@@ -476,12 +578,33 @@ const ListAppointments: React.FC = () => {
                                 <i className="ti ti-dots-vertical"></i>
                             </button>
                             <ul className="dropdown-menu p-2">
+                                {/* Show "Gán bác sĩ" for PENDING specialty appointments without doctor */}
+                                {appointment.status === 'PENDING' &&
+                                    !appointment.doctorInfo &&
+                                    !appointment.serviceInfo &&
+                                    appointment.specialtyId && (
+                                        <li>
+                                            <button
+                                                type="button"
+                                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-primary"
+                                                onClick={() =>
+                                                    handleAssignDoctorToAppointmentClick(
+                                                        appointment
+                                                    )
+                                                }
+                                            >
+                                                <i className="ti ti-user-plus me-2"></i>
+                                                Gán bác sĩ
+                                            </button>
+                                        </li>
+                                    )}
                                 <li>
                                     <button
                                         type="button"
                                         className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                         onClick={() => handleCancelClick(appointment)}
                                     >
+                                        <i className="ti ti-x me-2"></i>
                                         Hủy lịch hẹn
                                     </button>
                                 </li>
@@ -521,10 +644,9 @@ const ListAppointments: React.FC = () => {
                 </div>
                 {/* End Page Header */}
 
-                {/* Start Filter */}
+                {/* Status Tabs */}
                 <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    {/* Status Tabs */}
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
                         <button
                             className={getStatusTabClass('waiting')}
                             onClick={() => {
@@ -574,12 +696,40 @@ const ListAppointments: React.FC = () => {
                             </span>
                         </button>
                     </div>
+                </div>
 
-                    <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3">
+                {/* Search and Filter Controls */}
+                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+                    {/* Search Input */}
+                    <div className="search-set">
+                        <div className="d-flex align-items-center flex-wrap gap-2">
+                            <div className="table-search d-flex align-items-center mb-0">
+                                <div className="search-input">
+                                    <label
+                                        htmlFor="appointmentSearch"
+                                        aria-label="Search appointments"
+                                    >
+                                        <input
+                                            id="appointmentSearch"
+                                            type="search"
+                                            className="form-control form-control-sm"
+                                            placeholder="Tìm kiếm thông tin..."
+                                            value={searchTerm}
+                                            onChange={handleSearchChange}
+                                            aria-controls="DataTables_Table_0"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Filter and Sort */}
+                    <div className="d-flex align-items-center gap-2">
                         <Button
                             variant="white"
                             size="md"
-                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                            className="fs-14 py-1 border d-inline-flex text-dark align-items-center"
                             icon="ti ti-filter text-gray-5"
                             onClick={() => setShowFilterModal(true)}
                         >
@@ -587,20 +737,15 @@ const ListAppointments: React.FC = () => {
                         </Button>
                         <ActionDropdown
                             type="sort"
-                            options={[
-                                { value: 'recent', label: 'Gần đây' },
-                                { value: 'asc', label: 'Tăng dần' },
-                                { value: 'desc', label: 'Giảm dần' },
-                                { value: 'last-month', label: 'Tháng trước' },
-                                { value: 'last-7-days', label: '7 ngày qua' },
-                            ]}
-                            selectedValue={sortBy}
-                            onSelect={setSortBy}
-                            placeholder="Sắp xếp theo:"
+                            options={appointmentSortOptions}
+                            selectedValue={selectedSort}
+                            onSelect={handleSortChange}
+                            placeholder="Sắp xếp:"
+                            size="sm"
                         />
                     </div>
                 </div>
-                {/* End Filter */}
+                {/* End Search and Filter Controls */}
 
                 {/* Start Table */}
                 <div className="table-responsive">
@@ -630,7 +775,7 @@ const ListAppointments: React.FC = () => {
                 onPageChange={handlePageChange}
             />
 
-            {/* Filter Modal */}
+            {/* Filter Modal - Simplified: only appointment type and date range */}
             <ModalFilter
                 show={showFilterModal}
                 onHide={() => setShowFilterModal(false)}
@@ -638,40 +783,14 @@ const ListAppointments: React.FC = () => {
                 onReset={handleClearFilters}
                 title="Lọc lịch hẹn"
                 fields={[
-                    {
-                        name: 'patients',
-                        label: 'Bệnh nhân',
-                        type: 'multiselect',
-                        value: selectedPatients,
-                        onChange: (value) => setSelectedPatients(value as string[]),
-                        options: mockPatients.map((patient) => ({
-                            value: patient.id,
-                            label: patient.name,
-                        })),
-                        placeholder: 'Chọn bệnh nhân...',
-                        resetValue: [],
-                    },
                     createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
-                    {
-                        name: 'doctors',
-                        label: 'Bác sĩ',
-                        type: 'multiselect',
-                        value: selectedDoctors,
-                        onChange: (value) => setSelectedDoctors(value as string[]),
-                        options: mockDoctors.map((doctor) => ({
-                            value: doctor.id,
-                            label: doctor.name,
-                        })),
-                        placeholder: 'Chọn bác sĩ...',
-                        resetValue: [],
-                    },
                     {
                         name: 'dateRange',
                         label: 'Khoảng thời gian',
                         type: 'daterange',
                         value: selectedDateRange,
                         onChange: (value) => setSelectedDateRange(value),
-                        resetValue: { start: null, end: null },
+                        resetValue: () => setSelectedDateRange({ start: null, end: null }),
                     },
                 ]}
             />
@@ -701,7 +820,7 @@ const ListAppointments: React.FC = () => {
                 consultationFees={selectedAppointment?.consultationFees}
             />
 
-            {/* Assign Doctor Modal */}
+            {/* Assign Doctor Modal (for cancel/reschedule flow) */}
             <AssignDoctorModal
                 show={showAssignDoctorModal}
                 onHide={() => {
@@ -711,6 +830,18 @@ const ListAppointments: React.FC = () => {
                 appointment={selectedAppointment}
                 staffId={hospitalProfile?.id || ''}
                 onSuccess={handleAssignSuccess}
+            />
+
+            {/* Assign Doctor To Appointment Modal (NEW flow for "Hospital assigns doctor") */}
+            <AssignDoctorToAppointmentModal
+                show={showAssignDoctorToAppointmentModal}
+                onHide={() => {
+                    setShowAssignDoctorToAppointmentModal(false);
+                    setSelectedAppointment(null);
+                }}
+                appointment={selectedAppointment}
+                staffId={hospitalProfile?.id || ''}
+                onSuccess={handleAssignDoctorToAppointmentSuccess}
             />
         </>
     );
