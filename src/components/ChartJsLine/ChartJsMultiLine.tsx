@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react';
 import styles from './ChartJsLine.module.scss';
 import { useChartLoader, initializeChart } from '@/hooks/useChartLoader';
+import {
+    createChartOptions,
+    createLineDataset,
+    createYScale,
+    createXScale,
+} from '@/utils/chartConfig';
 
 type ChartDataPoint = { label: string; value1: number; value2: number };
 
@@ -26,106 +32,34 @@ export const ChartJsMultiLine: React.FC<ChartJsMultiLineProps> = ({
 
         const trimmed = data.length > 12 ? data.slice(-12) : data;
 
+        const datasets = [
+            createLineDataset(
+                label1,
+                trimmed.map((point) => point.value1),
+                color1,
+                'y'
+            ),
+            createLineDataset(
+                label2,
+                trimmed.map((point) => point.value2),
+                color2,
+                'y1'
+            ),
+        ];
+
+        const scales = {
+            y: createYScale('left', label1, color1, true),
+            y1: createYScale('right', label2, color2, false),
+            x: createXScale(),
+        };
+
         const config = {
-            type: 'line',
+            type: 'line' as const,
             data: {
                 labels: trimmed.map((point) => point.label),
-                datasets: [
-                    {
-                        label: label1,
-                        data: trimmed.map((point) => point.value1),
-                        borderColor: color1,
-                        backgroundColor: color1,
-                        fill: false,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        tension: 0.45,
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: label2,
-                        data: trimmed.map((point) => point.value2),
-                        borderColor: color2,
-                        backgroundColor: color2,
-                        fill: false,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        tension: 0.45,
-                        yAxisID: 'y1',
-                    },
-                ],
+                datasets,
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index' as const,
-                    intersect: false,
-                },
-                animations: {
-                    tension: {
-                        duration: 1000,
-                        easing: 'linear',
-                        from: 0.8,
-                        to: 0,
-                        loop: true,
-                    },
-                },
-                scales: {
-                    y: {
-                        type: 'linear' as const,
-                        display: true,
-                        position: 'left' as const,
-                        min: 0,
-                        max: 5,
-                        grid: { color: '#f1f5f9' },
-                        ticks: { color: '#94a3b8' },
-                        title: {
-                            display: true,
-                            text: label1,
-                            color: color1,
-                        },
-                    },
-                    y1: {
-                        type: 'linear' as const,
-                        display: true,
-                        position: 'right' as const,
-                        min: 0,
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                        ticks: { color: '#94a3b8' },
-                        title: {
-                            display: true,
-                            text: label2,
-                            color: color2,
-                        },
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#94a3b8' },
-                    },
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top' as const,
-                        labels: {
-                            usePointStyle: true,
-                            padding: 15,
-                            color: '#64748b',
-                        },
-                    },
-                    tooltip: {
-                        backgroundColor: '#0f172a',
-                        padding: 10,
-                        titleColor: '#fff',
-                        bodyColor: '#e2e8f0',
-                    },
-                },
-            },
+            options: createChartOptions(scales),
         };
 
         initializeChart(canvasRef, chartRef, isMountedRef, config);

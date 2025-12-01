@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { ChatProvider, useChat } from '@/providers/ChatProvider';
 import { useGlobalChat } from '@/providers/GlobalChatProvider';
+import { toast } from 'react-toastify';
+import MedicalSummaryModal from '@/components/MedicalSummaryModal';
 import ChatHeader from './components/ChatHeader';
 import ChatUserNav from './components/ChatUserNav';
 import MessageList from './components/MessageList';
@@ -20,12 +22,18 @@ const MessagesContent: React.FC = () => {
     const location = useLocation();
     const [isVideoCallVisible, setIsVideoCallVisible] = useState(false);
     const [currentCall, setCurrentCall] = useState<IncomingCallData | null>(null);
+    const [appointmentId, setAppointmentId] = useState<string | undefined>(undefined);
+
+    // Medical Summary Modal state (lifted from VideoCall)
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [summaryTranscript, setSummaryTranscript] = useState('');
+    const [summaryAppointmentId, setSummaryAppointmentId] = useState<string | undefined>();
 
     // ✅ Track if a call is currently being handled to prevent duplicates
     const handlingCallRef = React.useRef<string | null>(null);
 
     // Get active conversation from ChatProvider
-    const { activeConversation, selectConversation } = useChat();
+    const { activeConversation, selectConversation, messages } = useChat();
 
     // Get current user info
     const { adminProfile, doctorProfile, hospitalProfile } = useSelector(
@@ -45,17 +53,42 @@ const MessagesContent: React.FC = () => {
     // ✅ Track if we've already processed the initial navigation state
     const processedNavStateRef = React.useRef(false);
 
+    // ✅ Extract appointmentId from conversation metadata when conversation changes
+    useEffect(() => {
+        if (activeConversation && !appointmentId) {
+            // Try to get appointmentId from conversation metadata
+            const metadataAppointmentId = activeConversation.metadata?.appointmentId as
+                | string
+                | undefined;
+
+            if (metadataAppointmentId) {
+                console.log(
+                    '[Messages] 📋 Found appointmentId in conversation metadata:',
+                    metadataAppointmentId
+                );
+                setAppointmentId(metadataAppointmentId);
+            }
+        }
+    }, [activeConversation, appointmentId]);
+
     // ✅ Auto-select conversation from URL query params OR navigation state (for appointments)
     useEffect(() => {
         // Check navigation state first (priority)
-        const navState = location.state as { conversationId?: string };
+        const navState = location.state as { conversationId?: string; appointmentId?: string };
 
         if (navState?.conversationId && !processedNavStateRef.current) {
             console.log(
                 '[Messages] 📞 Auto-selecting conversation from state:',
-                navState.conversationId
+                navState.conversationId,
+                'appointmentId:',
+                navState.appointmentId
             );
             processedNavStateRef.current = true;
+
+            // Save appointmentId for video call AI summary
+            if (navState.appointmentId) {
+                setAppointmentId(navState.appointmentId);
+            }
 
             selectConversation(navState.conversationId).catch((error) => {
                 console.error('[Messages] Error selecting conversation:', error);
@@ -136,6 +169,29 @@ const MessagesContent: React.FC = () => {
         handlingCallRef.current = null;
     };
 
+    // Handle request to show medical summary modal from VideoCall
+    const handleShowMedicalSummary = (transcript: string, apptId?: string) => {
+        console.log('[Messages] 📋 Opening medical summary modal', {
+            appointmentId: apptId,
+            transcriptLength: transcript.length,
+        });
+        setSummaryTranscript(transcript);
+        setSummaryAppointmentId(apptId);
+        setShowSummaryModal(true);
+    };
+
+    const handleCloseMedicalSummary = () => {
+        console.log('[Messages] Closing medical summary modal');
+        setShowSummaryModal(false);
+        setSummaryTranscript('');
+        setSummaryAppointmentId(undefined);
+    };
+
+    const handleSaveMedicalSummary = () => {
+        console.log('[Messages] Medical summary saved successfully');
+        toast.success('Đã lưu tóm tắt kết quả khám bệnh');
+    };
+
     return (
         <div className={clsx(styles.pageWrapper, 'page-wrapper')}>
             {/* Start Content */}
@@ -204,6 +260,9 @@ const MessagesContent: React.FC = () => {
                     participantAvatar={otherParticipant.avatarUrl}
                     callType="video"
                     isIncoming={false}
+                    appointmentId={appointmentId}
+                    messages={messages}
+                    onShowMedicalSummary={handleShowMedicalSummary}
                 />
             )}
 
@@ -218,6 +277,26 @@ const MessagesContent: React.FC = () => {
                     participantAvatar={currentCall.callerAvatar}
                     callType="video"
                     isIncoming={true}
+                    appointmentId={appointmentId}
+                    messages={messages}
+                    onShowMedicalSummary={handleShowMedicalSummary}
+                />
+            )}
+
+            {/* Medical Summary Modal - Persists after VideoCall closes */}
+            {showSummaryModal && summaryAppointmentId && (
+                <MedicalSummaryModal
+                    show={showSummaryModal}
+                    onHide={handleCloseMedicalSummary}
+                    appointmentId={summaryAppointmentId}
+                    transcript={summaryTranscript}
+                    patientName={otherParticipant?.fullName}
+                    doctorName={
+                        userProfile && 'firstName' in userProfile && 'lastName' in userProfile
+                            ? `${userProfile.firstName} ${userProfile.lastName}`
+                            : undefined
+                    }
+                    onSaveSuccess={handleSaveMedicalSummary}
                 />
             )}
         </div>

@@ -2,6 +2,7 @@ import type { MenuConfig } from '@/types/menu.types';
 import { buildPath, PATHS } from './paths';
 import {
     createAccountSettingsMenuItem,
+    createAdminSignatureMenuItem,
     createAppointmentsMenuItem,
     createDashboardMenuItem,
     createDoctorsMenuItem,
@@ -189,6 +190,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
             createSubscriptionPlansMenuItem(),
+            createAdminSignatureMenuItem(),
             createNotificationsMenuItem('admin'),
         ],
     },

@@ -46,10 +46,14 @@ export const createConversationAndNavigate = async (
         if (response.success && response.data) {
             console.log(`[${logContext}] 🚀 Navigating to:`, messagesPath, {
                 conversationId: response.data.id,
+                appointmentId: appointment.appointmentId,
             });
 
             navigate(messagesPath, {
-                state: { conversationId: response.data.id },
+                state: {
+                    conversationId: response.data.id,
+                    appointmentId: appointment.appointmentId, // Pass appointmentId for AI summary
+                },
             });
         } else {
             console.error(`[${logContext}] ❌ Invalid response:`, response);

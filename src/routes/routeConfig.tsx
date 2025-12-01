@@ -44,6 +44,7 @@ import AddSubscriptionPlan from '@/pages/admins/SubscriptionPlans/AddSubscriptio
 import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscriptionPlan';
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
+import AdminSignatureManagement from '@/pages/admins/AdminSignature/AdminSignatureManagement';
 import ListServicesStaff from '@/pages/hospitals/Services/ListServices';
 import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
 import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
@@ -146,6 +147,10 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT,
                 children: [{ index: true, element: <ListHospitalRegistrations /> }],
+            },
+            {
+                path: PATHS.ADMIN.ADMIN_SIGNATURE.ROOT,
+                children: [{ index: true, element: <AdminSignatureManagement /> }],
             },
             {
                 path: PATHS.ADMIN.NOTIFICATIONS.ROOT,

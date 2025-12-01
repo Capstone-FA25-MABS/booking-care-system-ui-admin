@@ -251,6 +251,15 @@ export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
 });
 
 /**
+ * Create Admin Signature menu item (Admin only)
+ */
+export const createAdminSignatureMenuItem = (): MenuItem => ({
+    label: 'Quản lý chữ ký',
+    icon: 'ti ti-writing-sign',
+    link: buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.ADMIN_SIGNATURE.ROOT),
+});
+
+/**
  * Create Notifications menu item for different roles
  */
 export const createNotificationsMenuItem = (role: 'admin' | 'staff' | 'doctor'): MenuItem => {

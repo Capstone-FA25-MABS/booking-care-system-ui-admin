@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
 import AppointmentService from '@/services/appointment.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
-import ReviewService from '@/services/review.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
@@ -15,27 +13,32 @@ import { ChartJsMultiLine } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
-import DashboardReviewStats from '@/components/DashboardReviewStats';
+import DashboardReviewSection from '@/components/DashboardReviewSection';
+import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
+import { useReviewInsights } from '@/hooks/useReviewInsights';
+import { periodOptions, formatDateDisplay } from '@/utils/dashboard.utils';
+import { AppointmentMetricKey, buildAppointmentOverviewMetrics } from '@/utils/appointmentMetrics';
 import {
-    periodOptions,
-    numberFormatter,
-    formatPercent,
-    formatDateDisplay,
-    formatTrendLabel,
-} from '@/utils/dashboard.utils';
+    buildAppointmentTrendPoints,
+    buildNewPatientTrendPoints,
+    ChartPoint,
+} from '@/utils/dashboardChartData';
 
-type ChartPoint = { label: string; value: number };
+const appointmentMetricPresentation: Record<
+    AppointmentMetricKey,
+    { className: string; icon: string }
+> = {
+    total: { className: styles.total, icon: 'ti ti-calendar-event' },
+    completed: { className: styles.completed, icon: 'ti ti-circle-check' },
+    pending: { className: styles.pending, icon: 'ti ti-clock-hour-4' },
+    cancelled: { className: styles.cancelled, icon: 'ti ti-circle-x' },
+    newPatients: { className: styles.newPatients, icon: 'ti ti-user-plus' },
+};
 
 const HospitalDashboard: React.FC = () => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
     const [period, setPeriod] = useState<StatisticsPeriod>(StatisticsPeriod.Weekly);
-    const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
-        const end = new Date();
-        return {
-            end,
-            start: subDays(end, 29),
-        };
-    });
+    const { dateRange, isoRange, handleDateChange } = useDashboardDateRange();
 
     const [stats, setStats] = useState<StaffHospitalStatisticsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -47,23 +50,30 @@ const HospitalDashboard: React.FC = () => {
         serviceMedicalsCount: number;
     } | null>(null);
     const [isLoadingHospitalOverview, setIsLoadingHospitalOverview] = useState(false);
-    const [reviewStats, setReviewStats] = useState<{
-        doctorTotalReviews: number;
-        doctorAverageRating: number;
-        serviceTotalReviews: number;
-        serviceAverageRating: number;
-        topDoctors: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        topServices: Array<{ id: string; name: string; rating: number; reviews: number }>;
-        doctorChartData: Array<{ label: string; value1: number; value2: number }>;
-        serviceChartData: Array<{ label: string; value1: number; value2: number }>;
-    } | null>(null);
-    const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
+    const fetchHospitalReviewEntities = useCallback(async () => {
+        if (!hospitalProfile?.id) {
+            return { doctors: [], services: [] };
+        }
 
-    const isoRange = useMemo(() => {
-        const start = dateRange.start ? startOfDay(dateRange.start).toISOString() : undefined;
-        const end = dateRange.end ? endOfDay(dateRange.end).toISOString() : undefined;
-        return { fromDate: start, toDate: end };
-    }, [dateRange]);
+        const [doctorsRes, servicesRes] = await Promise.all([
+            DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1000).catch(() => ({
+                data: { doctors: [], totalCount: 0 },
+            })),
+            serviceService.getServicesByHospital(hospitalProfile.id).catch(() => ({
+                data: [],
+            })),
+        ]);
+
+        const doctors = doctorsRes.data?.doctors || [];
+        const services = Array.isArray(servicesRes.data) ? servicesRes.data : [];
+
+        return { doctors, services };
+    }, [hospitalProfile?.id]);
+
+    const { reviewStats, isLoadingReviewStats } = useReviewInsights({
+        fetchEntities: fetchHospitalReviewEntities,
+        enabled: !!hospitalProfile?.id,
+    });
 
     const loadStatistics = useCallback(async () => {
         if (!hospitalProfile?.id || !isoRange.fromDate || !isoRange.toDate) {
@@ -146,240 +156,29 @@ const HospitalDashboard: React.FC = () => {
         loadHospitalOverview();
     }, [loadHospitalOverview]);
 
-    const loadReviewStatistics = useCallback(async () => {
-        if (!hospitalProfile?.id) return;
-
-        setIsLoadingReviewStats(true);
-        try {
-            // Lấy danh sách doctors và services của hospital
-            const [doctorsRes, servicesRes] = await Promise.all([
-                DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1000).catch(() => ({
-                    data: { doctors: [], totalCount: 0 },
-                })),
-                serviceService.getServicesByHospital(hospitalProfile.id).catch(() => ({
-                    data: [],
-                })),
-            ]);
-
-            const doctors = doctorsRes.data?.doctors || [];
-            // servicesRes is ApiResponse<Service[]>, so servicesRes.data is Service[]
-            const services = Array.isArray(servicesRes.data) ? servicesRes.data : [];
-
-            // Lấy statistics cho doctors và services
-            const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
-                doctors.length > 0
-                    ? ReviewService.getBatchDoctorsStatistics({
-                          doctorIds: doctors.map((d: any) => d.id),
-                      }).catch(() => ({ data: { doctorStatistics: {} } }))
-                    : Promise.resolve({ data: { doctorStatistics: {} } }),
-                services.length > 0
-                    ? ReviewService.getBatchServicesStatistics({
-                          serviceIds: services.map((s: any) => s.id),
-                      }).catch(() => ({ data: { serviceStatistics: {} } }))
-                    : Promise.resolve({ data: { serviceStatistics: {} } }),
-            ]);
-
-            const doctorsStats = doctorsStatsRes.data?.doctorStatistics || {};
-            const servicesStats = servicesStatsRes.data?.serviceStatistics || {};
-
-            // Tính tổng số reviews và điểm trung bình cho doctors
-            let doctorTotalReviews = 0;
-            let doctorRatingSum = 0;
-            let doctorReviewCount = 0;
-
-            Object.values(doctorsStats).forEach((stat: any) => {
-                if (stat.totalReviews > 0) {
-                    doctorTotalReviews += stat.totalReviews;
-                    doctorRatingSum += stat.averageRating * stat.totalReviews;
-                    doctorReviewCount += stat.totalReviews;
-                }
-            });
-
-            const doctorAverageRating =
-                doctorReviewCount > 0 ? doctorRatingSum / doctorReviewCount : 0;
-
-            // Tính tổng số reviews và điểm trung bình cho services
-            let serviceTotalReviews = 0;
-            let serviceRatingSum = 0;
-            let serviceReviewCount = 0;
-
-            Object.values(servicesStats).forEach((stat: any) => {
-                if (stat.totalReviews > 0) {
-                    serviceTotalReviews += stat.totalReviews;
-                    serviceRatingSum += stat.averageRating * stat.totalReviews;
-                    serviceReviewCount += stat.totalReviews;
-                }
-            });
-
-            const serviceAverageRating =
-                serviceReviewCount > 0 ? serviceRatingSum / serviceReviewCount : 0;
-
-            // Tìm top doctors (top 5)
-            const topDoctors = doctors
-                .map((doctor: any) => {
-                    const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                    return {
-                        id: doctor.id,
-                        name:
-                            `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Bác sĩ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((d: any) => d.reviews > 0)
-                .sort((a: any, b: any) => {
-                    // Sắp xếp theo rating, sau đó theo số reviews
-                    if (b.rating !== a.rating) return b.rating - a.rating;
-                    return b.reviews - a.reviews;
-                })
-                .slice(0, 5);
-
-            // Tìm top services (top 5)
-            const topServices = services
-                .map((service: any) => {
-                    const stat = (servicesStats as Record<string, any>)[service.id];
-                    return {
-                        id: service.id,
-                        name: service.name || 'Dịch vụ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((s: any) => s.reviews > 0)
-                .sort((a: any, b: any) => {
-                    // Sắp xếp theo rating, sau đó theo số reviews
-                    if (b.rating !== a.rating) return b.rating - a.rating;
-                    return b.reviews - a.reviews;
-                })
-                .slice(0, 5);
-
-            // Tạo dữ liệu biểu đồ cho doctors (top 10) với rating và số cuộc hẹn
-            // Số cuộc hẹn = số reviews (tạm thời, có thể cải thiện bằng cách query appointment statistics)
-            const doctorChartData = doctors
-                .map((doctor: any) => {
-                    const stat = (doctorsStats as Record<string, any>)[doctor.id];
-                    return {
-                        label:
-                            `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Bác sĩ',
-                        rating: stat?.averageRating || 0,
-                        appointments: stat?.totalReviews || 0, // Sử dụng số reviews làm proxy cho số cuộc hẹn
-                    };
-                })
-                .filter((d: any) => d.rating > 0)
-                .sort((a: any, b: any) => b.rating - a.rating)
-                .slice(0, 10)
-                .map((d: any) => ({
-                    label: d.label,
-                    value1: d.rating,
-                    value2: d.appointments,
-                }));
-
-            // Tạo dữ liệu biểu đồ cho services (top 10) với rating và số reviews
-            const serviceChartData = services
-                .map((service: any) => {
-                    const stat = (servicesStats as Record<string, any>)[service.id];
-                    return {
-                        label: service.name || 'Dịch vụ',
-                        rating: stat?.averageRating || 0,
-                        reviews: stat?.totalReviews || 0,
-                    };
-                })
-                .filter((s: any) => s.rating > 0)
-                .sort((a: any, b: any) => b.rating - a.rating)
-                .slice(0, 10)
-                .map((s: any) => ({
-                    label: s.label,
-                    value1: s.rating,
-                    value2: s.reviews,
-                }));
-
-            setReviewStats({
-                doctorTotalReviews,
-                doctorAverageRating,
-                serviceTotalReviews,
-                serviceAverageRating,
-                topDoctors,
-                topServices,
-                doctorChartData,
-                serviceChartData,
-            });
-        } catch (err: any) {
-            console.error('Failed to load review statistics:', err);
-            setReviewStats(null);
-        } finally {
-            setIsLoadingReviewStats(false);
-        }
-    }, [hospitalProfile?.id, hospitalProfile?.serviceMedicals]);
-
-    useEffect(() => {
-        loadReviewStatistics();
-    }, [loadReviewStatistics]);
-
-    const handleDateChange = (key: 'start' | 'end', value: string) => {
-        if (!value) return;
-        setDateRange((prev) => ({
-            ...prev,
-            [key]: new Date(value),
-        }));
-    };
-
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
-        const { overview } = stats;
-        return [
-            {
-                label: 'Tổng lịch hẹn',
-                value: overview.totalAppointments,
-                sub: `${formatPercent(overview.noShowRate)} vắng/huỷ`,
-                className: `${styles.metricCard} ${styles.total}`,
-                icon: 'ti ti-calendar-event',
-            },
-            {
-                label: 'Hoàn thành',
-                value: overview.completedAppointments,
-                sub: `${numberFormatter.format(overview.confirmedAppointments)} đã xác nhận`,
-                className: `${styles.metricCard} ${styles.completed}`,
-                icon: 'ti ti-circle-check',
-            },
-            {
-                label: 'Đang chờ',
-                value: overview.pendingAppointments,
-                sub: `${numberFormatter.format(overview.rescheduledAppointments)} đã đổi lịch`,
-                className: `${styles.metricCard} ${styles.pending}`,
-                icon: 'ti ti-clock-hour-4',
-            },
-            {
-                label: 'Huỷ / Vắng',
-                value: overview.cancelledAppointments,
-                sub: `Tỷ lệ vắng: ${formatPercent(overview.noShowRate)}`,
-                className: `${styles.metricCard} ${styles.cancelled}`,
-                icon: 'ti ti-circle-x',
-            },
-            {
-                label: 'Bệnh nhân mới',
-                value: overview.newPatients,
-                sub: `Tỷ lệ đổi lịch: ${formatPercent(overview.rescheduleRate)}`,
-                className: `${styles.metricCard} ${styles.newPatients}`,
-                icon: 'ti ti-user-plus',
-            },
-        ];
+        return buildAppointmentOverviewMetrics(stats.overview).map((metric) => {
+            const presentation = appointmentMetricPresentation[metric.key];
+            return {
+                label: metric.label,
+                value: metric.value,
+                sub: metric.sub,
+                className: `${styles.metricCard} ${presentation.className}`,
+                icon: presentation.icon,
+            };
+        });
     }, [stats]);
 
-    const appointmentTrendPoints = useMemo<ChartPoint[]>(() => {
-        if (!stats) return [];
-        return stats.appointmentTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.totalAppointments,
-        }));
-    }, [stats]);
+    const appointmentTrendPoints = useMemo<ChartPoint[]>(
+        () => buildAppointmentTrendPoints(stats?.appointmentTrend ?? []),
+        [stats?.appointmentTrend]
+    );
 
-    const newPatientPoints = useMemo<ChartPoint[]>(() => {
-        if (!stats) return [];
-        return stats.newPatientTrend.map((point) => ({
-            label: formatTrendLabel(point.periodStart, point.periodEnd),
-            value: point.newPatients,
-        }));
-    }, [stats]);
+    const newPatientPoints = useMemo<ChartPoint[]>(
+        () => buildNewPatientTrendPoints(stats?.newPatientTrend ?? []),
+        [stats?.newPatientTrend]
+    );
 
     const hospitalOverviewMetrics = useMemo(() => {
         if (!hospitalOverview) return [];
@@ -560,161 +359,29 @@ const HospitalDashboard: React.FC = () => {
                             />
 
                             {reviewStats && (
-                                <>
-                                    <DashboardReviewStats
-                                        metrics={reviewMetrics}
-                                        trendCardClassName={styles.trendCard}
-                                        cardHeaderClassName={styles.cardHeader}
-                                        cardBodyClassName={styles.cardBody}
-                                        metricsGridClassName={styles.metricsGrid}
-                                        hospitalOverviewGridClassName={styles.hospitalOverviewGrid}
-                                    />
-
-                                    {(reviewStats.topDoctors.length > 0 ||
-                                        reviewStats.topServices.length > 0) && (
-                                        <div className={styles.topRankingsContainer}>
-                                            {reviewStats.topDoctors.length > 0 && (
-                                                <div className={styles.trendCard}>
-                                                    <div className={styles.cardHeader}>
-                                                        <h5>Top bác sĩ được đánh giá cao</h5>
-                                                        <span>
-                                                            Top 5 bác sĩ có điểm đánh giá tốt nhất
-                                                        </span>
-                                                    </div>
-                                                    <div className={styles.cardBody}>
-                                                        <div className={styles.topList}>
-                                                            {reviewStats.topDoctors.map(
-                                                                (doctor, index) => (
-                                                                    <div
-                                                                        key={doctor.id}
-                                                                        className={styles.topItem}
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                styles.topRank
-                                                                            }
-                                                                        >
-                                                                            #{index + 1}
-                                                                        </div>
-                                                                        <div
-                                                                            className={
-                                                                                styles.topInfo
-                                                                            }
-                                                                        >
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topName
-                                                                                }
-                                                                            >
-                                                                                {doctor.name}
-                                                                            </div>
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topStats
-                                                                                }
-                                                                            >
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topRating
-                                                                                    }
-                                                                                >
-                                                                                    ⭐{' '}
-                                                                                    {doctor.rating.toFixed(
-                                                                                        1
-                                                                                    )}
-                                                                                </span>
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topReviews
-                                                                                    }
-                                                                                >
-                                                                                    (
-                                                                                    {doctor.reviews}{' '}
-                                                                                    đánh giá)
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {reviewStats.topServices.length > 0 && (
-                                                <div className={styles.trendCard}>
-                                                    <div className={styles.cardHeader}>
-                                                        <h5>Top dịch vụ được đánh giá cao</h5>
-                                                        <span>
-                                                            Top 5 dịch vụ có điểm đánh giá tốt nhất
-                                                        </span>
-                                                    </div>
-                                                    <div className={styles.cardBody}>
-                                                        <div className={styles.topList}>
-                                                            {reviewStats.topServices.map(
-                                                                (service, index) => (
-                                                                    <div
-                                                                        key={service.id}
-                                                                        className={styles.topItem}
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                styles.topRank
-                                                                            }
-                                                                        >
-                                                                            #{index + 1}
-                                                                        </div>
-                                                                        <div
-                                                                            className={
-                                                                                styles.topInfo
-                                                                            }
-                                                                        >
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topName
-                                                                                }
-                                                                            >
-                                                                                {service.name}
-                                                                            </div>
-                                                                            <div
-                                                                                className={
-                                                                                    styles.topStats
-                                                                                }
-                                                                            >
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topRating
-                                                                                    }
-                                                                                >
-                                                                                    ⭐{' '}
-                                                                                    {service.rating.toFixed(
-                                                                                        1
-                                                                                    )}
-                                                                                </span>
-                                                                                <span
-                                                                                    className={
-                                                                                        styles.topReviews
-                                                                                    }
-                                                                                >
-                                                                                    (
-                                                                                    {
-                                                                                        service.reviews
-                                                                                    }{' '}
-                                                                                    đánh giá)
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
+                                <DashboardReviewSection
+                                    metrics={reviewMetrics}
+                                    reviewStats={reviewStats}
+                                    trendCardClassName={styles.trendCard}
+                                    cardHeaderClassName={styles.cardHeader}
+                                    cardBodyClassName={styles.cardBody}
+                                    metricsGridClassName={styles.metricsGrid}
+                                    overviewGridClassName={styles.hospitalOverviewGrid}
+                                    rankingsClassNames={{
+                                        containerClassName: styles.topRankingsContainer,
+                                        cardClassName: styles.trendCard,
+                                        cardHeaderClassName: styles.cardHeader,
+                                        cardBodyClassName: styles.cardBody,
+                                        listClassName: styles.topList,
+                                        itemClassName: styles.topItem,
+                                        rankClassName: styles.topRank,
+                                        infoClassName: styles.topInfo,
+                                        nameClassName: styles.topName,
+                                        statsClassName: styles.topStats,
+                                        ratingClassName: styles.topRating,
+                                        reviewsClassName: styles.topReviews,
+                                    }}
+                                />
                             )}
 
                             <DashboardTrendCharts
