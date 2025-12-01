@@ -198,6 +198,40 @@ export interface AppointmentFilterOptions {
     };
 }
 
+// Types for new assign doctor flow
+export interface DoctorForAssignment {
+    id: string;
+    accountId: string;
+    fullName: string;
+    avatarUrl?: string;
+    positionName?: string;
+    specialtyName?: string;
+    yearsOfExperience: number;
+    rating: number;
+    reviewCount: number;
+    bookingCount: number;
+    consultationFee: number;
+    isActive: boolean;
+    isAvailableAtOriginalTime: boolean;
+}
+
+export interface DoctorsForAssignmentResponse {
+    recommendedDoctors: DoctorForAssignment[];
+    previousDoctors: DoctorForAssignment[];
+    totalRecommended: number;
+    totalPrevious: number;
+}
+
+export interface AssignDoctorToAppointmentResponse {
+    success: boolean;
+    appointmentId: string;
+    doctorId: string;
+    doctorName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    message: string;
+}
+
 // ============================================
 // Helper Functions
 // ============================================
@@ -226,7 +260,7 @@ export const getAppointmentStatusText = (status: AppointmentStatus): string => {
 export const getAppointmentTypeText = (type: AppointmentType): string => {
     switch (type) {
         case AppointmentType.TELEHEALTH:
-            return 'Tư vấn online';
+            return 'Tư vấn trực tuyến';
         case AppointmentType.IN_PERSON:
             return 'Trực tiếp';
         default:

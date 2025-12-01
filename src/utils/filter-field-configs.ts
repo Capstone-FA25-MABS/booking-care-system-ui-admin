@@ -13,7 +13,7 @@ interface FilterFieldConfig {
     onChange: (value: unknown) => void;
     options: FilterFieldOption[];
     placeholder: string;
-    resetValue: string[];
+    resetValue: () => void; // Function to reset field value
 }
 
 export const createAppointmentTypeFilterField = (
@@ -36,6 +36,6 @@ export const createAppointmentTypeFilterField = (
             { value: AppointmentType.IN_PERSON.toString(), label: 'Trực tiếp' },
         ],
         placeholder: 'Chọn loại khám...',
-        resetValue: [],
+        resetValue: () => setSelectedTypes([]), // Reset function
     };
 };
