@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Table, Badge } from 'react-bootstrap';
-import { FiCalendar, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useHospitalPayouts, usePendingHospitals } from '@/hooks/useHospitalPayouts';
 import type { GeneratePayoutsRequest } from '@/types/hospitalPayout.types';
+import Calendar from '@/components/Calendar/Calendar';
 
 interface GeneratePayoutsModalProps {
     show: boolean;
@@ -14,11 +15,10 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
     const { generatePayouts, loading } = useHospitalPayouts();
     const { pendingHospitals, fetchPendingHospitals } = usePendingHospitals();
 
-    const [formData, setFormData] = useState<GeneratePayoutsRequest>({
-        periodStartDate: '',
-        periodEndDate: '',
-        hospitalIds: undefined,
-    });
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [startDateAnchor, setStartDateAnchor] = useState<HTMLElement | null>(null);
+    const [endDateAnchor, setEndDateAnchor] = useState<HTMLElement | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [selectedHospitals, setSelectedHospitals] = useState<Set<string>>(new Set());
@@ -27,11 +27,10 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
     useEffect(() => {
         if (show) {
             // Reset form when modal opens
-            setFormData({
-                periodStartDate: '',
-                periodEndDate: '',
-                hospitalIds: undefined,
-            });
+            setStartDate(null);
+            setEndDate(null);
+            setStartDateAnchor(null);
+            setEndDateAnchor(null);
             setSelectedHospitals(new Set());
             setError(null);
             setSuccess(null);
@@ -40,14 +39,16 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
     }, [show]);
 
     const handlePreview = async () => {
-        if (!formData.periodStartDate || !formData.periodEndDate) {
+        if (!startDate || !endDate) {
             setError('Please select both start and end dates');
             return;
         }
 
         setError(null);
         try {
-            await fetchPendingHospitals(formData.periodStartDate, formData.periodEndDate);
+            const startDateStr = startDate.toISOString().split('T')[0];
+            const endDateStr = endDate.toISOString().split('T')[0];
+            await fetchPendingHospitals(startDateStr, endDateStr);
             setShowPreview(true);
         } catch {
             setError('Failed to fetch pending hospitals');
@@ -81,14 +82,15 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
         setError(null);
         setSuccess(null);
 
-        if (!formData.periodStartDate || !formData.periodEndDate) {
+        if (!startDate || !endDate) {
             setError('Please select both start and end dates');
             return;
         }
 
         try {
             const requestData: GeneratePayoutsRequest = {
-                ...formData,
+                periodStartDate: startDate.toISOString().split('T')[0],
+                periodEndDate: endDate.toISOString().split('T')[0],
                 hospitalIds: selectedHospitals.size > 0 ? Array.from(selectedHospitals) : undefined,
             };
 
@@ -119,10 +121,7 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
     return (
         <Modal show={show} onHide={onHide} size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>
-                    <FiCalendar className="me-2" />
-                    Generate Hospital Payouts
-                </Modal.Title>
+                <Modal.Title>Generate Hospital Payouts</Modal.Title>
             </Modal.Header>
             <Form onSubmit={handleSubmit}>
                 <Modal.Body>
@@ -132,26 +131,44 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
                     <Form.Group className="mb-3">
                         <Form.Label>Period Start Date</Form.Label>
                         <Form.Control
-                            type="date"
-                            value={formData.periodStartDate}
-                            onChange={(e) =>
-                                setFormData({ ...formData, periodStartDate: e.target.value })
-                            }
+                            type="text"
+                            value={startDate ? startDate.toLocaleDateString('vi-VN') : ''}
+                            onClick={(e) => setStartDateAnchor(e.currentTarget)}
+                            placeholder="Select start date"
+                            readOnly
                             required
                             disabled={loading}
+                            style={{ cursor: 'pointer' }}
+                        />
+                        <Calendar
+                            value={startDate}
+                            onChange={setStartDate}
+                            anchorEl={startDateAnchor}
+                            open={Boolean(startDateAnchor)}
+                            onClose={() => setStartDateAnchor(null)}
+                            maxDate={endDate || undefined}
                         />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Period End Date</Form.Label>
                         <Form.Control
-                            type="date"
-                            value={formData.periodEndDate}
-                            onChange={(e) =>
-                                setFormData({ ...formData, periodEndDate: e.target.value })
-                            }
+                            type="text"
+                            value={endDate ? endDate.toLocaleDateString('vi-VN') : ''}
+                            onClick={(e) => setEndDateAnchor(e.currentTarget)}
+                            placeholder="Select end date"
+                            readOnly
                             required
                             disabled={loading}
+                            style={{ cursor: 'pointer' }}
+                        />
+                        <Calendar
+                            value={endDate}
+                            onChange={setEndDate}
+                            anchorEl={endDateAnchor}
+                            open={Boolean(endDateAnchor)}
+                            onClose={() => setEndDateAnchor(null)}
+                            minDate={startDate || undefined}
                         />
                     </Form.Group>
 

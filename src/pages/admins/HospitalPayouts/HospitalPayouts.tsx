@@ -7,6 +7,7 @@ import type { PayoutQueryRequest } from '@/types/hospitalPayout.types';
 import GeneratePayoutsModal from './components/GeneratePayoutsModal';
 import PayoutDetailsModal from './components/PayoutDetailsModal';
 import StatisticsCards from './components/StatisticsCards';
+import Calendar from '@/components/Calendar/Calendar';
 
 const HospitalPayouts: React.FC = () => {
     const { payouts, totalCount, loading, fetchPayouts, markPayoutCompleted } =
@@ -19,6 +20,12 @@ const HospitalPayouts: React.FC = () => {
         pageNumber: 1,
         pageSize: 10,
     });
+
+    // Calendar state
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [startDateAnchor, setStartDateAnchor] = useState<HTMLElement | null>(null);
+    const [endDateAnchor, setEndDateAnchor] = useState<HTMLElement | null>(null);
 
     useEffect(() => {
         fetchPayouts(filters);
@@ -51,6 +58,18 @@ const HospitalPayouts: React.FC = () => {
             [key]: value || undefined,
             pageNumber: 1, // Reset to first page on filter change
         }));
+    };
+
+    const handleStartDateChange = (date: Date | null) => {
+        setStartDate(date);
+        const dateStr = date ? date.toISOString().split('T')[0] : undefined;
+        handleFilterChange('periodStartDate', dateStr);
+    };
+
+    const handleEndDateChange = (date: Date | null) => {
+        setEndDate(date);
+        const dateStr = date ? date.toISOString().split('T')[0] : undefined;
+        handleFilterChange('periodEndDate', dateStr);
     };
 
     const handlePageChange = (pageNumber: number) => {
@@ -101,11 +120,20 @@ const HospitalPayouts: React.FC = () => {
                             <Form.Group className="mb-3">
                                 <Form.Label>Period Start Date</Form.Label>
                                 <Form.Control
-                                    type="date"
-                                    value={filters.periodStartDate || ''}
-                                    onChange={(e) =>
-                                        handleFilterChange('periodStartDate', e.target.value)
-                                    }
+                                    type="text"
+                                    value={startDate ? startDate.toLocaleDateString('vi-VN') : ''}
+                                    onClick={(e) => setStartDateAnchor(e.currentTarget)}
+                                    placeholder="Select start date"
+                                    readOnly
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <Calendar
+                                    value={startDate}
+                                    onChange={handleStartDateChange}
+                                    anchorEl={startDateAnchor}
+                                    open={Boolean(startDateAnchor)}
+                                    onClose={() => setStartDateAnchor(null)}
+                                    maxDate={endDate || undefined}
                                 />
                             </Form.Group>
                         </Col>
@@ -113,11 +141,20 @@ const HospitalPayouts: React.FC = () => {
                             <Form.Group className="mb-3">
                                 <Form.Label>Period End Date</Form.Label>
                                 <Form.Control
-                                    type="date"
-                                    value={filters.periodEndDate || ''}
-                                    onChange={(e) =>
-                                        handleFilterChange('periodEndDate', e.target.value)
-                                    }
+                                    type="text"
+                                    value={endDate ? endDate.toLocaleDateString('vi-VN') : ''}
+                                    onClick={(e) => setEndDateAnchor(e.currentTarget)}
+                                    placeholder="Select end date"
+                                    readOnly
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <Calendar
+                                    value={endDate}
+                                    onChange={handleEndDateChange}
+                                    anchorEl={endDateAnchor}
+                                    open={Boolean(endDateAnchor)}
+                                    onClose={() => setEndDateAnchor(null)}
+                                    minDate={startDate || undefined}
                                 />
                             </Form.Group>
                         </Col>

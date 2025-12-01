@@ -94,7 +94,7 @@ const Calendar: React.FC<CalendarProps> = ({
             <Popper
                 open={open}
                 anchorEl={anchorEl}
-                placement="bottom-end"
+                placement="bottom-start"
                 sx={{
                     zIndex: 10000,
                 }}
