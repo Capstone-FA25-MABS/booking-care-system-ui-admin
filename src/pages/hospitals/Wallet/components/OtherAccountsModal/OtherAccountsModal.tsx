@@ -119,8 +119,7 @@ const OtherAccountsModal: React.FC<OtherAccountsModalProps> = ({
                                         </div>
                                         {account.isDefault && (
                                             <span className={styles.defaultBadge}>
-                                                <i className="fas fa-star me-1"></i>
-                                                Mặc định
+                                                <i className="fas fa-star me-1"></i> Mặc định
                                             </span>
                                         )}
                                     </div>
@@ -176,8 +175,7 @@ const OtherAccountsModal: React.FC<OtherAccountsModalProps> = ({
                                                     : 'Xóa tài khoản'
                                             }
                                         >
-                                            <i className="fas fa-trash-alt me-2"></i>
-                                            Xóa tài khoản
+                                            <i className="fas fa-trash-alt me-2"></i> Xóa tài khoản
                                         </button>
                                     </div>
                                 </div>

@@ -39,9 +39,9 @@ const PayoutHistory: React.FC = () => {
     if (loading && payouts.length === 0) {
         return (
             <div className={styles.loadingContainer}>
-                <div className="spinner-border text-primary" role="status">
+                <output className="spinner-border text-primary">
                     <span className="visually-hidden">Đang tải...</span>
-                </div>
+                </output>
             </div>
         );
     }
@@ -61,8 +61,7 @@ const PayoutHistory: React.FC = () => {
         <div className={styles.payoutHistory}>
             <div className={styles.header}>
                 <h4 className={styles.title}>
-                    <i className="fas fa-money-bill-wave me-2"></i>
-                    Lịch sử thanh toán
+                    <i className="fas fa-money-bill-wave me-2"></i> Lịch sử thanh toán
                 </h4>
                 <p className={styles.subtitle}>
                     Tổng số: <strong>{totalCount}</strong> lần thanh toán

@@ -172,11 +172,7 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
                         />
                     </Form.Group>
 
-                    {!showPreview ? (
-                        <Button variant="info" onClick={handlePreview} className="w-100">
-                            Preview Eligible Hospitals
-                        </Button>
-                    ) : (
+                    {showPreview ? (
                         <>
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <h6>Eligible Hospitals ({pendingHospitals.length})</h6>
@@ -262,6 +258,10 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({ show, onHid
                                 </Alert>
                             )}
                         </>
+                    ) : (
+                        <Button variant="info" onClick={handlePreview} className="w-100">
+                            Preview Eligible Hospitals
+                        </Button>
                     )}
                 </Modal.Body>
                 <Modal.Footer>

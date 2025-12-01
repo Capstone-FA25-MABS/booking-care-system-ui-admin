@@ -91,7 +91,7 @@ const BankSelect: React.FC<BankSelectProps> = ({
                     [styles.required]: required && !selectedBank && !value,
                 })}
                 onClick={handleToggle}
-                aria-required={required}
+                aria-label={selectedBank ? selectedBank.shortName : placeholder}
             >
                 <div className={styles.selectedContent}>
                     {selectedBank ? (
@@ -136,9 +136,9 @@ const BankSelect: React.FC<BankSelectProps> = ({
                     <div className={styles.bankList}>
                         {loading && (
                             <div className={styles.loading}>
-                                <div className="spinner-border spinner-border-sm" role="status">
+                                <output className="spinner-border spinner-border-sm">
                                     <span className="visually-hidden">Loading...</span>
-                                </div>
+                                </output>
                                 <span className="ms-2">Đang tải danh sách ngân hàng...</span>
                             </div>
                         )}

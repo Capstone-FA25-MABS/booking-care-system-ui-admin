@@ -189,7 +189,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({
         onClose();
     };
 
-    const isEditing = mode === 'edit' || (existingData !== null && existingData !== undefined);
+    const isEditing = mode === 'edit' || Boolean(existingData);
     const modalTitle = isEditing ? 'Cập nhật số tài khoản' : 'Thêm số tài khoản';
     const submitButtonText = isEditing ? 'Cập nhật số tài khoản' : 'Thêm số tài khoản';
 

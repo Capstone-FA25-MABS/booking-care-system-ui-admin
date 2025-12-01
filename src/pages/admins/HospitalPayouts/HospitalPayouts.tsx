@@ -40,7 +40,7 @@ const HospitalPayouts: React.FC = () => {
 
     const handleMarkCompleted = useCallback(
         async (payoutId: string) => {
-            if (window.confirm('Are you sure you want to mark this payout as completed?')) {
+            if (globalThis.confirm('Are you sure you want to mark this payout as completed?')) {
                 try {
                     await markPayoutCompleted(payoutId);
                     fetchStatistics();
@@ -196,9 +196,9 @@ const HospitalPayouts: React.FC = () => {
                 <Card.Body>
                     {loading ? (
                         <div className="text-center p-5">
-                            <div className="spinner-border text-primary" role="status">
+                            <output className="spinner-border text-primary">
                                 <span className="visually-hidden">Loading...</span>
-                            </div>
+                            </output>
                         </div>
                     ) : (
                         <>

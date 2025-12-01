@@ -517,8 +517,7 @@ const AdminDashboard: React.FC = () => {
             });
 
             const response = await PaymentMethodService.getPaymentStatistics(request);
-            const statistics: PaymentStatisticsResponse =
-                response.data as PaymentStatisticsResponse;
+            const statistics: PaymentStatisticsResponse = response.data;
 
             console.log('Revenue chart response:', statistics);
 

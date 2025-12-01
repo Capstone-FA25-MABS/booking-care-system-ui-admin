@@ -17,22 +17,25 @@ const StatisticsCards: React.FC<StatisticsCardsProps> = ({ statistics }) => {
 
     const statsData = [
         {
+            id: 'pending',
             title: 'Total Pending',
-            value: formatCurrency((statistics.totalPendingAmount ?? 0) as number),
+            value: formatCurrency(statistics.totalPendingAmount ?? 0),
             count: `${statistics.pendingPayoutsCount ?? 0} payouts`,
             icon: FiClock,
             bgColor: 'bg-warning',
             textColor: 'text-warning',
         },
         {
+            id: 'completed',
             title: 'Total Completed',
-            value: formatCurrency((statistics.totalCompletedAmount ?? 0) as number),
+            value: formatCurrency(statistics.totalCompletedAmount ?? 0),
             count: `${statistics.completedPayoutsCount ?? 0} payouts`,
             icon: FiCheckCircle,
             bgColor: 'bg-success',
             textColor: 'text-success',
         },
         {
+            id: 'hospitals',
             title: 'Hospitals with Pending',
             value: `${statistics.hospitalsWithPendingPayouts ?? 0}`,
             count: 'hospitals',
@@ -41,10 +44,10 @@ const StatisticsCards: React.FC<StatisticsCardsProps> = ({ statistics }) => {
             textColor: 'text-info',
         },
         {
+            id: 'total',
             title: 'Total Outstanding',
             value: formatCurrency(
-                ((statistics.totalPendingAmount ?? 0) as number) +
-                    ((statistics.totalCompletedAmount ?? 0) as number)
+                (statistics.totalPendingAmount ?? 0) + (statistics.totalCompletedAmount ?? 0)
             ),
             count: `${(statistics.pendingPayoutsCount ?? 0) + (statistics.completedPayoutsCount ?? 0)} total`,
             icon: FiDollarSign,
@@ -55,8 +58,8 @@ const StatisticsCards: React.FC<StatisticsCardsProps> = ({ statistics }) => {
 
     return (
         <Row className="mb-4">
-            {statsData.map((stat, index) => (
-                <Col key={index} md={6} lg={3} className="mb-3">
+            {statsData.map((stat) => (
+                <Col key={stat.id} md={6} lg={3} className="mb-3">
                     <Card className="h-100 shadow-sm">
                         <Card.Body>
                             <div className="d-flex align-items-center mb-2">

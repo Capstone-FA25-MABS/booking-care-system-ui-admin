@@ -29,47 +29,27 @@ export function formatTimeLabel(
     try {
         // Daily format: "2025-11-15" -> "15/11"
         if (period === 'Daily') {
-            const match = timeLabel.match(/(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                const [, , month, day] = match;
-                return `${parseInt(day)}/${parseInt(month)}`;
-            }
+            return formatDailyLabel(timeLabel);
         }
 
         // Weekly format: Use periodStart and periodEnd if available
         if (period === 'Weekly') {
-            if (periodStart && periodEnd) {
-                return formatDateRange(periodStart, periodEnd);
-            }
-            // Fallback
-            return timeLabel;
+            return formatWeeklyLabel(timeLabel, periodStart, periodEnd);
         }
 
         // Monthly format: "2025-11" -> "Th11/2025"
         if (period === 'Monthly') {
-            const match = timeLabel.match(/(\d{4})-(\d{2})/);
-            if (match) {
-                const [, year, month] = match;
-                return `Th${parseInt(month)}/${year}`;
-            }
+            return formatMonthlyLabel(timeLabel);
         }
 
         // Quarterly format: "Q4-2025" or "2025-Q4" -> "Quý 4/2025"
         if (period === 'Quarterly') {
-            const qMatch = timeLabel.match(/Q(\d)-?(\d{4})|(\d{4})-?Q(\d)/);
-            if (qMatch) {
-                const quarter = qMatch[1] || qMatch[4];
-                const year = qMatch[2] || qMatch[3];
-                return `Quý ${quarter}/${year}`;
-            }
+            return formatQuarterlyLabel(timeLabel);
         }
 
         // Yearly format: "2025" -> "Năm 2025"
         if (period === 'Yearly') {
-            const match = timeLabel.match(/(\d{4})/);
-            if (match) {
-                return `Năm ${match[1]}`;
-            }
+            return formatYearlyLabel(timeLabel);
         }
 
         // Fallback: return original
@@ -78,6 +58,68 @@ export function formatTimeLabel(
         console.error('Error formatting time label:', error);
         return timeLabel;
     }
+}
+
+/**
+ * Format daily label: "2025-11-15" -> "15/11"
+ */
+function formatDailyLabel(timeLabel: string): string {
+    const regex = /(\d{4})-(\d{2})-(\d{2})/;
+    const match = regex.exec(timeLabel);
+    if (match) {
+        const [, , month, day] = match;
+        return `${Number.parseInt(day, 10)}/${Number.parseInt(month, 10)}`;
+    }
+    return timeLabel;
+}
+
+/**
+ * Format weekly label using date range
+ */
+function formatWeeklyLabel(timeLabel: string, periodStart?: string, periodEnd?: string): string {
+    if (periodStart && periodEnd) {
+        return formatDateRange(periodStart, periodEnd);
+    }
+    return timeLabel;
+}
+
+/**
+ * Format monthly label: "2025-11" -> "Th11/2025"
+ */
+function formatMonthlyLabel(timeLabel: string): string {
+    const regex = /(\d{4})-(\d{2})/;
+    const match = regex.exec(timeLabel);
+    if (match) {
+        const [, year, month] = match;
+        return `Th${Number.parseInt(month, 10)}/${year}`;
+    }
+    return timeLabel;
+}
+
+/**
+ * Format quarterly label: "Q4-2025" or "2025-Q4" -> "Quý 4/2025"
+ */
+function formatQuarterlyLabel(timeLabel: string): string {
+    const regex = /Q(\d)-?(\d{4})|(\d{4})-?Q(\d)/;
+    const qMatch = regex.exec(timeLabel);
+    if (qMatch) {
+        const quarter = qMatch[1] || qMatch[4];
+        const year = qMatch[2] || qMatch[3];
+        return `Quý ${quarter}/${year}`;
+    }
+    return timeLabel;
+}
+
+/**
+ * Format yearly label: "2025" -> "Năm 2025"
+ */
+function formatYearlyLabel(timeLabel: string): string {
+    const regex = /(\d{4})/;
+    const match = regex.exec(timeLabel);
+    if (match) {
+        return `Năm ${match[1]}`;
+    }
+    return timeLabel;
 }
 
 /**
