@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import {
     AppointmentCardData,
     AppointmentUITab,
-    formatFullName,
     getAppointmentTypeText,
+    isRelativeAppointment,
+    getActualPatientName,
+    getRepresentativeName,
 } from '@/types/appointment.types';
 import StatusBadge from '@/components/StatusBadge';
 import user01 from '@/assets/img/users/user-01.jpg';
@@ -97,10 +99,10 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
     }
 
     const getColSpan = () => {
-        if (activeStatusTab === 'upcoming') return 7; // Date, Patient, Type, Symptoms, Attachments, Status, Actions
-        if (activeStatusTab === 'cancelled') return 6; // Date, Patient, Type, Reason, Status, Actions
-        if (activeStatusTab === 'completed') return 6; // Date, Patient, Type, Result, Status, Actions
-        return 5;
+        if (activeStatusTab === 'upcoming') return 8; // Date, Patient, Representative, Type, Symptoms, Attachments, Status, Actions
+        if (activeStatusTab === 'cancelled') return 7; // Date, Patient, Representative, Type, Reason, Status, Actions
+        if (activeStatusTab === 'completed') return 7; // Date, Patient, Representative, Type, Result, Status, Actions
+        return 6;
     };
 
     if (apiError) {
@@ -136,110 +138,140 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
 
     return (
         <>
-            {appointments.map((appointment) => (
-                <tr key={appointment.appointmentId}>
-                    <td>
-                        {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')} |{' '}
-                        {appointment.appointmentTime}
-                    </td>
-                    <td>
-                        <div className="d-flex align-items-center">
-                            <Link to={patientDetailsPath} className="avatar avatar-md me-2">
-                                <img
-                                    src={appointment.patientInfo?.avatarUrl || user01}
-                                    alt="patient"
-                                    className="rounded-circle"
-                                />
-                            </Link>
-                            <Link to={patientDetailsPath} className="fw-semibold">
-                                {formatFullName(
-                                    appointment.patientInfo?.firstName,
-                                    appointment.patientInfo?.lastName
-                                )}
-                                <span className="text-body fs-13 fw-normal d-block">
-                                    {appointment.patientInfo?.phone ||
-                                        appointment.patientInfo?.email}
-                                </span>
-                            </Link>
-                        </div>
-                    </td>
-                    <td>
-                        <div className="d-flex align-items-center gap-2">
-                            <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
-                            {appointment.appointmentType === 'TELEHEALTH' && (
-                                <button
-                                    type="button"
-                                    className="btn btn-soft-info btn-sm p-1"
-                                    onClick={() => onChatWithPatient(appointment)}
-                                    title="Chat với bệnh nhân"
-                                    style={{ width: '28px', height: '28px' }}
-                                >
-                                    <i
-                                        className="ti ti-message-circle"
-                                        style={{ fontSize: '16px' }}
-                                    ></i>
-                                </button>
-                            )}
-                        </div>
-                    </td>
+            {appointments.map((appointment) => {
+                const hasRelative = isRelativeAppointment(appointment);
+                const patientName = getActualPatientName(appointment);
+                const representativeName = getRepresentativeName(appointment);
 
-                    {/* Conditional columns based on status */}
-                    {activeStatusTab === 'upcoming' && (
-                        <>
+                return (
+                    <tr key={appointment.appointmentId}>
+                        <td>
+                            {new Date(appointment.appointmentDate).toLocaleDateString('vi-VN')} |{' '}
+                            {appointment.appointmentTime}
+                        </td>
+                        {/* Bệnh nhân - người thực sự khám */}
+                        <td>
+                            <div className="d-flex align-items-center">
+                                <Link to={patientDetailsPath} className="avatar avatar-md me-2">
+                                    <img
+                                        src={appointment.patientInfo?.avatarUrl || user01}
+                                        alt="patient"
+                                        className="rounded-circle"
+                                    />
+                                </Link>
+                                <div>
+                                    <Link to={patientDetailsPath} className="fw-semibold">
+                                        {patientName}
+                                    </Link>
+                                    {hasRelative &&
+                                        appointment.relativeInfo?.relationshipDisplay && (
+                                            <span className="badge bg-info-light text-info ms-1 fs-11">
+                                                {appointment.relativeInfo.relationshipDisplay}
+                                            </span>
+                                        )}
+                                    <span className="text-body fs-13 fw-normal d-block">
+                                        {hasRelative
+                                            ? appointment.relativeInfo?.phone || ''
+                                            : appointment.patientInfo?.phone ||
+                                              appointment.patientInfo?.email}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        {/* Người đại diện - người đặt lịch */}
+                        <td>
+                            {hasRelative ? (
+                                <div>
+                                    <span className="fw-medium">{representativeName}</span>
+                                    <span className="text-body fs-13 fw-normal d-block">
+                                        {appointment.patientInfo?.phone ||
+                                            appointment.patientInfo?.email}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="text-muted">Trống</span>
+                            )}
+                        </td>
+                        <td>
+                            <div className="d-flex align-items-center gap-2">
+                                <span>{getAppointmentTypeText(appointment.appointmentType)}</span>
+                                {appointment.appointmentType === 'TELEHEALTH' && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-soft-info btn-sm p-1"
+                                        onClick={() => onChatWithPatient(appointment)}
+                                        title="Chat với bệnh nhân"
+                                        style={{ width: '28px', height: '28px' }}
+                                    >
+                                        <i
+                                            className="ti ti-message-circle"
+                                            style={{ fontSize: '16px' }}
+                                        ></i>
+                                    </button>
+                                )}
+                            </div>
+                        </td>
+
+                        {/* Conditional columns based on status */}
+                        {activeStatusTab === 'upcoming' && (
+                            <>
+                                <td>
+                                    <div className="text-truncate" style={{ maxWidth: '200px' }}>
+                                        {appointment.symptoms || (
+                                            <span className="text-muted">Chưa cập nhật</span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td>
+                                    <AttachmentButtons
+                                        attachments={parseAttachmentUrls(
+                                            appointment.attachmentUrls
+                                        )}
+                                        onPreviewFile={onPreviewFile}
+                                    />
+                                </td>
+                            </>
+                        )}
+
+                        {activeStatusTab === 'cancelled' && (
                             <td>
-                                <div className="text-truncate" style={{ maxWidth: '200px' }}>
-                                    {appointment.symptoms || (
+                                <div className="text-truncate" style={{ maxWidth: '250px' }}>
+                                    {appointment.reason || (
+                                        <span className="text-muted">Không có lý do</span>
+                                    )}
+                                </div>
+                            </td>
+                        )}
+
+                        {activeStatusTab === 'completed' && (
+                            <td>
+                                <div className="text-truncate" style={{ maxWidth: '250px' }}>
+                                    {appointment.result || (
                                         <span className="text-muted">Chưa cập nhật</span>
                                     )}
                                 </div>
                             </td>
-                            <td>
-                                <AttachmentButtons
-                                    attachments={parseAttachmentUrls(appointment.attachmentUrls)}
-                                    onPreviewFile={onPreviewFile}
-                                />
+                        )}
+
+                        <td>
+                            <StatusBadge status={appointment.status} />
+                        </td>
+                        {activeStatusTab === 'upcoming' && (
+                            <td className="action-item">
+                                <button
+                                    type="button"
+                                    className="btn btn-soft-success"
+                                    onClick={() => onCompleteAppointment(appointment)}
+                                    title="Đánh dấu đã khám"
+                                >
+                                    <i className="ti ti-check me-1"></i> Đã khám
+                                </button>
                             </td>
-                        </>
-                    )}
-
-                    {activeStatusTab === 'cancelled' && (
-                        <td>
-                            <div className="text-truncate" style={{ maxWidth: '250px' }}>
-                                {appointment.reason || (
-                                    <span className="text-muted">Không có lý do</span>
-                                )}
-                            </div>
-                        </td>
-                    )}
-
-                    {activeStatusTab === 'completed' && (
-                        <td>
-                            <div className="text-truncate" style={{ maxWidth: '250px' }}>
-                                {appointment.result || (
-                                    <span className="text-muted">Chưa cập nhật</span>
-                                )}
-                            </div>
-                        </td>
-                    )}
-
-                    <td>
-                        <StatusBadge status={appointment.status} />
-                    </td>
-                    {activeStatusTab === 'upcoming' && (
-                        <td className="action-item">
-                            <button
-                                type="button"
-                                className="btn btn-soft-success"
-                                onClick={() => onCompleteAppointment(appointment)}
-                                title="Đánh dấu đã khám"
-                            >
-                                <i className="ti ti-check me-1"></i> Đã khám
-                            </button>
-                        </td>
-                    )}
-                    {activeStatusTab !== 'upcoming' && <td></td>}
-                </tr>
-            ))}
+                        )}
+                        {activeStatusTab !== 'upcoming' && <td></td>}
+                    </tr>
+                );
+            })}
         </>
     );
 };
