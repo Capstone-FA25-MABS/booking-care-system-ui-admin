@@ -183,25 +183,16 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
             handleDoctorSelect(doctor.id);
         };
 
-        const handleCardKeyDown = (e: React.KeyboardEvent) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleCardClick();
-            }
-        };
-
         return (
-            <div
+            <button
+                type="button"
                 key={doctor.id}
-                role="button"
-                tabIndex={0}
                 aria-pressed={isSelected}
-                aria-disabled={!isAvailable}
+                disabled={!isAvailable}
                 className={`${styles.doctorCard} ${isSelected ? styles.selected : ''} ${
                     isAvailable ? '' : styles.unavailable
                 }`}
                 onClick={handleCardClick}
-                onKeyDown={handleCardKeyDown}
             >
                 <div className={styles.doctorAvatar}>
                     {doctor.avatarUrl ? (
@@ -257,15 +248,15 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
                         <CheckCircle size={20} />
                     </div>
                 )}
-            </div>
+            </button>
         );
     };
 
     if (!show) return null;
 
-    const handleOverlayClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-        // Only close if clicking on the overlay itself, not the content
-        if (e.target === e.currentTarget) {
+    // Handle keyboard events for closing modal
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
             onHide();
         }
     };
@@ -274,9 +265,16 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
         <dialog
             open
             className={styles.modalOverlay}
-            onClick={handleOverlayClick}
             aria-labelledby="assign-doctor-modal-title"
+            onKeyDown={handleKeyDown}
         >
+            {/* Backdrop overlay for click-outside-to-close */}
+            <button
+                type="button"
+                className={styles.backdropButton}
+                onClick={onHide}
+                aria-label="Đóng modal"
+            />
             <div className={styles.modalContent}>
                 {/* Header */}
                 <div className={styles.modalHeader}>
