@@ -32,6 +32,17 @@ const formatDate = (dateString: string): string => {
     });
 };
 
+// Helper function to format appointment time ID to readable format
+// Converts "AT_08_00" to "08:00"
+const formatAppointmentTime = (timeId: string | undefined): string => {
+    if (!timeId) return '';
+    // Split by underscore and filter out 'AT' prefix, then join with colon
+    const parts = String(timeId).split('_');
+    // Remove 'AT' prefix if present
+    const timeParts = parts.filter((part) => part !== 'AT');
+    return timeParts.join(':');
+};
+
 interface AssignDoctorToAppointmentModalProps {
     show: boolean;
     onHide: () => void;
@@ -164,19 +175,33 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
         const isSelected = selectedDoctorId === doctor.id;
         const isAvailable = doctor.isAvailableAtOriginalTime;
 
+        const handleCardClick = () => {
+            if (!isAvailable) {
+                toast.warning('Bác sĩ này không khả dụng ở khung giờ hiện tại');
+                return;
+            }
+            handleDoctorSelect(doctor.id);
+        };
+
+        const handleCardKeyDown = (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleCardClick();
+            }
+        };
+
         return (
             <div
                 key={doctor.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                aria-disabled={!isAvailable}
                 className={`${styles.doctorCard} ${isSelected ? styles.selected : ''} ${
                     isAvailable ? '' : styles.unavailable
                 }`}
-                onClick={() => {
-                    if (!isAvailable) {
-                        toast.warning('Bác sĩ này không khả dụng ở khung giờ hiện tại');
-                        return;
-                    }
-                    handleDoctorSelect(doctor.id);
-                }}
+                onClick={handleCardClick}
+                onKeyDown={handleCardKeyDown}
             >
                 <div className={styles.doctorAvatar}>
                     {doctor.avatarUrl ? (
@@ -238,23 +263,24 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
 
     if (!show) return null;
 
+    const handleOverlayClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+        // Only close if clicking on the overlay itself, not the content
+        if (e.target === e.currentTarget) {
+            onHide();
+        }
+    };
+
     return (
-        <div
+        <dialog
+            open
             className={styles.modalOverlay}
-            onClick={onHide}
-            onKeyDown={(e) => e.key === 'Escape' && onHide()}
-            role="dialog"
-            aria-modal="true"
-            tabIndex={-1}
+            onClick={handleOverlayClick}
+            aria-labelledby="assign-doctor-modal-title"
         >
-            <div
-                className={styles.modalContent}
-                onClick={(e) => e.stopPropagation()}
-                role="document"
-            >
+            <div className={styles.modalContent}>
                 {/* Header */}
                 <div className={styles.modalHeader}>
-                    <h2>Gán bác sĩ cho lịch hẹn</h2>
+                    <h2 id="assign-doctor-modal-title">Gán bác sĩ cho lịch hẹn</h2>
                     <button className={styles.closeButton} onClick={onHide}>
                         ×
                     </button>
@@ -267,9 +293,7 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
                             <Calendar size={16} />
                             <span>
                                 {formatDate(appointment.appointmentDate)} -{' '}
-                                {String(appointment.appointmentTimeId)
-                                    .replace(/AT_/g, '')
-                                    .replace(/_/g, ':')}
+                                {formatAppointmentTime(appointment.appointmentTimeId)}
                             </span>
                         </div>
                         <div className={styles.infoRow}>
@@ -412,7 +436,7 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
                     </form>
                 )}
             </div>
-        </div>
+        </dialog>
     );
 };
 
