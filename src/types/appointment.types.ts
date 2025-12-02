@@ -14,6 +14,20 @@ export interface PatientInfo {
     phone?: string;
 }
 
+// Relative (Family Member) Information from API
+export interface RelativeInfo {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    fullName?: string;
+    gender?: string;
+    dateOfBirth?: string;
+    age?: number;
+    phone?: string;
+    relationship?: string;
+    relationshipDisplay?: string;
+}
+
 // Doctor Information from API
 export interface DoctorInfo {
     id: string;
@@ -31,9 +45,8 @@ export interface DoctorInfo {
 export interface ServiceInfo {
     id: string;
     name?: string;
-    description?: string;
     price?: number;
-    category?: string;
+    imageUrl?: string;
 }
 
 // Hospital Information from API
@@ -51,6 +64,7 @@ export interface AppointmentResponse {
     id: string;
     patientId?: string;
     patientAccountId?: string;
+    relativeId?: string; // When booking for a family member
     specialtyId: string;
     appointmentDate: string;
     appointmentTimeId: AppointmentTime;
@@ -63,7 +77,8 @@ export interface AppointmentResponse {
     createdAt: string;
     updatedAt: string;
     consultationFees?: number; // From backend for refund option check
-    patientInfo?: PatientInfo;
+    patientInfo?: PatientInfo; // Account owner (người đại diện)
+    relativeInfo?: RelativeInfo; // Family member (bệnh nhân thực sự)
     doctorInfo?: DoctorInfo;
     serviceInfo?: ServiceInfo;
     hospitalInfo?: HospitalInfo;
@@ -128,6 +143,7 @@ export interface AppointmentCardData {
     appointmentId: string;
     patientId?: string;
     patientAccountId?: string;
+    relativeId?: string; // When booking for a family member
     appointmentDate: string;
     appointmentTime: string;
     appointmentTimeId: AppointmentTime;
@@ -141,8 +157,11 @@ export interface AppointmentCardData {
     hasReview?: boolean;
     specialtyId?: string; // For fetching available doctors
     consultationFees?: number; // For checking if refund option should be shown
-    // Separate info sections - use priority: Doctor > Service > Hospital in components
+    // Separate info sections
+    // When relativeInfo exists: patientInfo = người đại diện, relativeInfo = bệnh nhân thực sự
+    // When relativeInfo is null: patientInfo = bệnh nhân (đặt cho chính mình)
     patientInfo?: PatientInfo;
+    relativeInfo?: RelativeInfo;
     doctorInfo?: DoctorInfo;
     serviceInfo?: ServiceInfo;
     hospitalInfo?: HospitalInfo;
@@ -179,6 +198,40 @@ export interface AppointmentFilterOptions {
     };
 }
 
+// Types for new assign doctor flow
+export interface DoctorForAssignment {
+    id: string;
+    accountId: string;
+    fullName: string;
+    avatarUrl?: string;
+    positionName?: string;
+    specialtyName?: string;
+    yearsOfExperience: number;
+    rating: number;
+    reviewCount: number;
+    bookingCount: number;
+    consultationFee: number;
+    isActive: boolean;
+    isAvailableAtOriginalTime: boolean;
+}
+
+export interface DoctorsForAssignmentResponse {
+    recommendedDoctors: DoctorForAssignment[];
+    previousDoctors: DoctorForAssignment[];
+    totalRecommended: number;
+    totalPrevious: number;
+}
+
+export interface AssignDoctorToAppointmentResponse {
+    success: boolean;
+    appointmentId: string;
+    doctorId: string;
+    doctorName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    message: string;
+}
+
 // ============================================
 // Helper Functions
 // ============================================
@@ -207,7 +260,7 @@ export const getAppointmentStatusText = (status: AppointmentStatus): string => {
 export const getAppointmentTypeText = (type: AppointmentType): string => {
     switch (type) {
         case AppointmentType.TELEHEALTH:
-            return 'Tư vấn trực tiếp';
+            return 'Tư vấn trực tuyến';
         case AppointmentType.IN_PERSON:
             return 'Trực tiếp';
         default:
@@ -321,12 +374,17 @@ export const mapUITabToStatus = (tab: AppointmentUITab): AppointmentStatus => {
 /**
  * Transform API AppointmentResponse to UI AppointmentCardData
  * Maps data as-is, components will handle display priority
+ *
+ * Display logic for patient info:
+ * - If relativeInfo exists: patientInfo = người đại diện, relativeInfo = bệnh nhân thực sự
+ * - If relativeInfo is null: patientInfo = bệnh nhân (đặt cho chính mình)
  */
 export const transformToCardData = (apiResponse: AppointmentResponse): AppointmentCardData => {
     return {
         appointmentId: apiResponse.id,
         patientId: apiResponse.patientId,
         patientAccountId: apiResponse.patientAccountId,
+        relativeId: apiResponse.relativeId,
         appointmentDate: apiResponse.appointmentDate,
         appointmentTime: getAppointmentTimeText(apiResponse.appointmentTimeId),
         appointmentTimeId: apiResponse.appointmentTimeId,
@@ -342,6 +400,7 @@ export const transformToCardData = (apiResponse: AppointmentResponse): Appointme
         hasReview: false, // Needs review data from another endpoint
         // Map info sections directly from API response
         patientInfo: apiResponse.patientInfo,
+        relativeInfo: apiResponse.relativeInfo,
         doctorInfo: apiResponse.doctorInfo,
         serviceInfo: apiResponse.serviceInfo,
         hospitalInfo: apiResponse.hospitalInfo,
@@ -420,14 +479,90 @@ export const getDisplayPhone = (appointment: AppointmentCardData): string => {
 };
 
 /**
- * Get display specialty/category
+ * Get display specialty or service name
  */
 export const getDisplaySpecialty = (appointment: AppointmentCardData): string => {
     if (appointment.doctorInfo?.specialtyName) {
         return appointment.doctorInfo.specialtyName;
     }
-    if (appointment.serviceInfo?.category) {
-        return appointment.serviceInfo.category;
+    if (appointment.serviceInfo?.name) {
+        return appointment.serviceInfo.name;
     }
     return '';
+};
+
+/**
+ * Check if appointment is for a family member (relative)
+ */
+export const isRelativeAppointment = (appointment: AppointmentCardData): boolean => {
+    return !!appointment.relativeId && !!appointment.relativeInfo;
+};
+
+/**
+ * Get actual patient name (the person receiving medical care)
+ * - If relativeInfo exists: return relative's name (bệnh nhân thực sự)
+ * - If relativeInfo is null: return patientInfo's name (đặt cho chính mình)
+ */
+export const getActualPatientName = (appointment: AppointmentCardData): string => {
+    if (appointment.relativeInfo?.fullName) {
+        return appointment.relativeInfo.fullName;
+    }
+    if (appointment.relativeInfo?.firstName || appointment.relativeInfo?.lastName) {
+        return formatFullName(
+            appointment.relativeInfo.firstName,
+            appointment.relativeInfo.lastName
+        );
+    }
+    // Fallback to patientInfo (booking for self)
+    return formatFullName(appointment.patientInfo?.firstName, appointment.patientInfo?.lastName);
+};
+
+/**
+ * Get representative name (the person who booked the appointment)
+ * This is always the patientInfo (account owner)
+ */
+export const getRepresentativeName = (appointment: AppointmentCardData): string => {
+    return formatFullName(appointment.patientInfo?.firstName, appointment.patientInfo?.lastName);
+};
+
+/**
+ * Get actual patient phone
+ * - If relativeInfo exists: return relative's phone
+ * - If relativeInfo is null: return patientInfo's phone
+ */
+export const getActualPatientPhone = (appointment: AppointmentCardData): string => {
+    if (appointment.relativeInfo?.phone) {
+        return appointment.relativeInfo.phone;
+    }
+    return appointment.patientInfo?.phone || '';
+};
+
+/**
+ * Get relationship display text (e.g., "Con", "Bố", "Mẹ")
+ */
+export const getRelationshipDisplay = (appointment: AppointmentCardData): string => {
+    return appointment.relativeInfo?.relationshipDisplay || '';
+};
+
+/**
+ * Get display name for provider (Doctor or Service)
+ */
+export const getProviderName = (appointment: AppointmentCardData): string => {
+    if (appointment.doctorInfo?.fullName) {
+        return appointment.doctorInfo.fullName;
+    }
+    if (appointment.doctorInfo?.firstName || appointment.doctorInfo?.lastName) {
+        return formatFullName(appointment.doctorInfo.firstName, appointment.doctorInfo.lastName);
+    }
+    if (appointment.serviceInfo?.name) {
+        return appointment.serviceInfo.name;
+    }
+    return 'N/A';
+};
+
+/**
+ * Get display fee (from doctor or service)
+ */
+export const getDisplayFee = (appointment: AppointmentCardData): number => {
+    return appointment.consultationFees || appointment.serviceInfo?.price || 0;
 };

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Skeleton, Stack } from '@mui/material';
 import Pagination from '@/components/Pagination';
-import ModalFilter from '@/components/ModalFilter';
 import {
     AppointmentCardData,
     AppointmentQueryRequest,
@@ -14,11 +13,25 @@ import {
     AppointmentUITab,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
-import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
-import { AppFooter } from '@/components/AppFooter';
+import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
+import { useDebounce } from '@/hooks/useDebounce';
+import {
+    useAppointmentFilterState,
+    useAppointmentPaginationState,
+    useDoctorTabCounts,
+} from '@/hooks/useAppointmentListState';
 import { StatusTabButton } from './components/StatusTabButton';
 import { AppointmentTableBody } from './components/AppointmentTableBody';
-import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
+import { AppointmentStatus } from '@/enums/appointment.enums';
+import {
+    AppointmentSearchControls,
+    APPOINTMENT_SORT_OPTIONS,
+} from '@/components/AppointmentSearchControls';
+import {
+    parseSortParam,
+    formatLocalDate,
+    filterAppointmentsBySearch,
+} from '@/utils/appointment-search-utils';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { AppointmentService } from '@/services/appointment.service';
@@ -56,6 +69,14 @@ const AppointmentTableSkeleton: React.FC<{
                                 <Skeleton variant="text" width={120} height={16} />
                                 <Skeleton variant="text" width={100} height={14} />
                             </Stack>
+                        </Stack>
+                    </td>
+
+                    {/* Representative Column */}
+                    <td>
+                        <Stack spacing={0.5}>
+                            <Skeleton variant="text" width={100} height={16} />
+                            <Skeleton variant="text" width={80} height={14} />
                         </Stack>
                     </td>
 
@@ -147,7 +168,7 @@ const MyAppointments: React.FC = () => {
     const navigate = useNavigate();
 
     // API data states
-    const [appointments, setAppointments] = useState<AppointmentCardData[]>([]);
+    const [allAppointments, setAllAppointments] = useState<AppointmentCardData[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -159,26 +180,28 @@ const MyAppointments: React.FC = () => {
     const [isCompletingAppointment, setIsCompletingAppointment] = useState(false);
     const [completionResult, setCompletionResult] = useState('');
 
-    // Filter states
-    const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
-    const [selectedDateRange, setSelectedDateRange] = useState<{
-        start: Date | null;
-        end: Date | null;
-    }>({ start: null, end: null });
+    // Search and Sort states
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+    const [selectedSort, setSelectedSort] = useState<string>('CreatedAt_desc');
+
+    // Filtered appointments based on search term (using shared utility)
+    const appointments = useMemo(() => {
+        return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm);
+    }, [allAppointments, debouncedSearchTerm]);
+
+    // Filter states (using shared hook)
+    const { selectedTypes, setSelectedTypes, selectedDateRange, setSelectedDateRange } =
+        useAppointmentFilterState();
 
     // Status tab state
     const [activeStatusTab, setActiveStatusTab] = useState<AppointmentUITab>('upcoming');
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    // Pagination states (using shared hook)
+    const { currentPage, setCurrentPage, itemsPerPage } = useAppointmentPaginationState();
 
-    // Tab counts
-    const [tabCounts, setTabCounts] = useState({
-        upcoming: 0,
-        cancelled: 0,
-        completed: 0,
-    });
+    // Tab counts (using shared hook)
+    const { tabCounts, setTabCounts } = useDoctorTabCounts();
 
     // File preview modal state
     const [previewModal, setPreviewModal] = useState<{
@@ -217,16 +240,18 @@ const MyAppointments: React.FC = () => {
     };
 
     // Helper function to build query request
-    const buildQueryRequest = (): AppointmentQueryRequest => {
+    const buildQueryRequest = useCallback((): AppointmentQueryRequest => {
+        const { sortBy, sortDescending } = parseSortParam(selectedSort);
+
         const query: AppointmentQueryRequest = {
             doctorId: doctorProfile!.id,
             status: mapUITabToStatus(activeStatusTab),
-            fromDate: selectedDateRange.start?.toISOString().split('T')[0] || undefined,
-            toDate: selectedDateRange.end?.toISOString().split('T')[0] || undefined,
+            fromDate: formatLocalDate(selectedDateRange.start),
+            toDate: formatLocalDate(selectedDateRange.end),
             pageNumber: currentPage,
             pageSize: itemsPerPage,
-            sortBy: 'CreatedAt',
-            sortDescending: true,
+            sortBy,
+            sortDescending,
             includeStatusCounts: true,
         };
 
@@ -235,39 +260,54 @@ const MyAppointments: React.FC = () => {
         }
 
         return query;
-    };
-
-    // Fetch appointments from API
-    useEffect(() => {
-        const fetchAppointments = async () => {
-            if (!validateDoctorProfile()) return;
-
-            setIsLoading(true);
-            setApiError(null);
-
-            const query = buildQueryRequest();
-
-            // Call API for management
-            await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
-                setAppointments,
-                setTotalCount,
-                setTabCounts,
-                setApiError,
-                setIsLoading,
-            });
-        };
-
-        fetchAppointments();
     }, [
         activeStatusTab,
-        selectedDateRange.start,
-        selectedDateRange.end,
-        selectedTypes,
+        selectedDateRange,
         currentPage,
         itemsPerPage,
-        roles,
+        selectedSort,
         doctorProfile?.id,
+        selectedTypes,
     ]);
+
+    // Fetch appointments from API
+    const fetchAppointments = useCallback(async () => {
+        if (!validateDoctorProfile()) return;
+
+        setIsLoading(true);
+        setApiError(null);
+
+        const query = buildQueryRequest();
+
+        // Call API for management
+        await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
+            setAppointments: setAllAppointments,
+            setTotalCount,
+            setTabCounts,
+            setApiError,
+            setIsLoading,
+        });
+    }, [buildQueryRequest, roles, doctorProfile]);
+
+    // Fetch appointments when dependencies change
+    useEffect(() => {
+        fetchAppointments();
+    }, [fetchAppointments]);
+
+    // Reset to page 1 when search term or sort changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchTerm, selectedSort]);
+
+    // Handle search input change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    // Handle sort change
+    const handleSortChange = (value: string) => {
+        setSelectedSort(value);
+    };
 
     const handleCompleteAppointment = (appointment: AppointmentCardData) => {
         setSelectedAppointment(appointment);
@@ -295,14 +335,7 @@ const MyAppointments: React.FC = () => {
             toast.success('Đã khám và lưu kết quả khám');
 
             // Refresh danh sách
-            const query = buildQueryRequest();
-            await fetchAndTransformAppointments(query, transformToCardData, isNewAppointment, {
-                setAppointments,
-                setTotalCount,
-                setTabCounts,
-                setApiError,
-                setIsLoading,
-            });
+            await fetchAppointments();
         } catch (error: any) {
             console.error('Error completing appointment:', error);
             toast.error(error.message || 'Không thể hoàn thành lịch hẹn');
@@ -350,7 +383,9 @@ const MyAppointments: React.FC = () => {
     const handleClearFilters = () => {
         setSelectedTypes([]);
         setSelectedDateRange({ start: null, end: null });
+        setSearchTerm('');
         setCurrentPage(1);
+        setShowFilterModal(false);
     };
 
     const handlePageChange = (page: number) => {
@@ -376,24 +411,14 @@ const MyAppointments: React.FC = () => {
                             </p>
                         )}
                     </div>
-                    <div className="text-end d-flex">
-                        <button
-                            type="button"
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={() => setShowFilterModal(true)}
-                        >
-                            <i className="ti ti-filter me-1" aria-hidden="true"></i> Lọc
-                        </button>
-                    </div>
                 </div>
                 {/* End Page Header */}
 
-                {/* Start Filter */}
+                {/* Status Tabs */}
                 <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    {/* Status Tabs */}
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
                         <StatusTabButton
-                            label="Sắp tới"
+                            label="Sắp khám"
                             count={appointmentCounts.upcoming}
                             isActive={activeStatusTab === 'upcoming'}
                             onClick={() => {
@@ -421,7 +446,17 @@ const MyAppointments: React.FC = () => {
                         />
                     </div>
                 </div>
-                {/* End Filter */}
+
+                {/* Search and Filter Controls */}
+                <AppointmentSearchControls
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    selectedSort={selectedSort}
+                    onSortChange={handleSortChange}
+                    sortOptions={APPOINTMENT_SORT_OPTIONS}
+                    onFilterClick={() => setShowFilterModal(true)}
+                />
+                {/* End Search and Filter Controls */}
 
                 {/* Start Table */}
                 <div className="table-responsive">
@@ -430,6 +465,7 @@ const MyAppointments: React.FC = () => {
                             <tr>
                                 <th className="no-sort">Ngày & giờ</th>
                                 <th>Bệnh nhân</th>
+                                <th>Người đại diện</th>
                                 <th>Hình thức</th>
                                 {activeStatusTab === 'upcoming' && <th>Triệu chứng</th>}
                                 {activeStatusTab === 'upcoming' && <th>File đính kèm</th>}
@@ -472,28 +508,16 @@ const MyAppointments: React.FC = () => {
                 onPageChange={handlePageChange}
             />
 
-            {/* Footer Start */}
-            <AppFooter />
-            {/* Footer End */}
-
             {/* Filter Modal */}
-            <ModalFilter
+            <AppointmentFilterModal
                 show={showFilterModal}
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc lịch hẹn"
-                fields={[
-                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
-                    {
-                        name: 'dateRange',
-                        label: 'Khoảng thời gian',
-                        type: 'daterange',
-                        value: selectedDateRange,
-                        onChange: (value) => setSelectedDateRange(value),
-                        resetValue: { start: null, end: null },
-                    },
-                ]}
+                selectedTypes={selectedTypes}
+                setSelectedTypes={setSelectedTypes}
+                selectedDateRange={selectedDateRange}
+                setSelectedDateRange={setSelectedDateRange}
             />
 
             {/* Complete Confirmation Modal */}

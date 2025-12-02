@@ -4,6 +4,8 @@ import {
     AppointmentListResponse,
     AppointmentQueryRequest,
     UpdateAppointmentStatusRequest,
+    AssignDoctorToAppointmentResponse,
+    DoctorsForAssignmentResponse,
 } from '@/types/appointment.types';
 import {
     StaffHospitalStatisticsRequest,
@@ -22,6 +24,9 @@ const APPOINTMENT_ENDPOINTS = {
     ASSIGN_NEW_DOCTOR: (id: string) => `/appointments/${id}/assign-new-doctor`,
     AVAILABLE_DOCTORS: '/appointments/available-doctors', // Now uses query params
     STAFF_STATISTICS: '/appointments/staff/statistics',
+    // NEW: Assign doctor to appointment flow (for "Hospital assigns doctor" appointments)
+    DOCTORS_FOR_ASSIGNMENT: (id: string) => `/appointments/${id}/doctors-for-assignment`,
+    ASSIGN_DOCTOR: (id: string) => `/appointments/${id}/assign-doctor`,
 } as const;
 
 // Schedule Service endpoints
@@ -320,6 +325,65 @@ export class AppointmentService {
             throw new Error(error.message || 'Failed to fetch hospital statistics');
         }
     }
+
+    // ==================== NEW: Assign Doctor To Appointment Flow ====================
+
+    /**
+     * Get doctors for assignment to a pending specialty appointment
+     * Returns recommended doctors (sorted by experience, rating, booking count) and previous doctors
+     */
+    static async getDoctorsForAssignment(
+        appointmentId: string,
+        checkAvailabilityAtOriginalTime: boolean = true
+    ): Promise<ApiResponse<DoctorsForAssignmentResponse>> {
+        try {
+            const response: any = await axiosInstance.get(
+                APPOINTMENT_ENDPOINTS.DOCTORS_FOR_ASSIGNMENT(appointmentId),
+                { params: { checkAvailabilityAtOriginalTime } }
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Doctors retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch doctors for assignment');
+        }
+    }
+
+    /**
+     * Assign doctor to a pending specialty appointment (NEW flow for "Hospital assigns doctor")
+     * This directly assigns the doctor and confirms the appointment
+     */
+    static async assignDoctorToAppointment(
+        appointmentId: string,
+        doctorId: string,
+        staffId: string,
+        newAppointmentDate?: string,
+        newAppointmentTimeId?: string,
+        staffNote?: string
+    ): Promise<ApiResponse<AssignDoctorToAppointmentResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                APPOINTMENT_ENDPOINTS.ASSIGN_DOCTOR(appointmentId),
+                {
+                    appointmentId,
+                    doctorId,
+                    assignedByStaffId: staffId,
+                    newAppointmentDate: newAppointmentDate || undefined,
+                    newAppointmentTimeId: newAppointmentTimeId || undefined,
+                    staffNote: staffNote || undefined,
+                }
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Doctor assigned successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to assign doctor');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -334,6 +398,9 @@ export const {
     getAvailableDoctors,
     getAvailableSlots,
     getHospitalStaffStatistics,
+    // NEW: Assign doctor to appointment flow
+    getDoctorsForAssignment,
+    assignDoctorToAppointment,
 } = AppointmentService;
 
 // Default export

@@ -20,15 +20,7 @@ export const createAppointmentsMenuItem = (role: 'staff' | 'doctor'): MenuItem =
                     link: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.APPOINTMENTS.ROOT),
                 },
                 {
-                    label: 'Thêm lịch hẹn',
-                    link: buildPath(
-                        PATHS.HOSPITAL.ROOT,
-                        PATHS.HOSPITAL.APPOINTMENTS.ROOT,
-                        PATHS.HOSPITAL.APPOINTMENTS.NEW
-                    ),
-                },
-                {
-                    label: 'Calendar',
+                    label: 'Lịch',
                     link: buildPath(
                         PATHS.HOSPITAL.ROOT,
                         PATHS.HOSPITAL.APPOINTMENTS.ROOT,
