@@ -119,7 +119,13 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
     return (
         <span
             className={`fs-13 badge rounded fw-medium ${badgeConfig.className} ${className}`}
-            style={{ padding: '0.25rem 0.5rem' }}
+            style={{
+                padding: '0.25rem 0.5rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+            }}
         >
             {badgeConfig.text}
         </span>

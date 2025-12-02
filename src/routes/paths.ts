@@ -67,6 +67,11 @@ export const PATHS = {
         HOSPITAL_PAYOUTS: {
             ROOT: 'hospital-payouts',
         },
+        BLOGS: {
+            ROOT: 'blogs',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
     },
 
     // Hospital paths
@@ -119,6 +124,11 @@ export const PATHS = {
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },
+        BLOGS: {
+            ROOT: 'blogs',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
@@ -144,6 +154,11 @@ export const PATHS = {
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },
+        BLOGS: {
+            ROOT: 'blogs',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
@@ -158,7 +173,7 @@ export const PATHS = {
 
 /**
  * Utility function to get relative path
- * @param parts
+ * @param partsZZ
  * @returns
  */
 export function buildPath(...parts: string[]): string {

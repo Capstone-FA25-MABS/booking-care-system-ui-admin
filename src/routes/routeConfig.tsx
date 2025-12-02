@@ -57,6 +57,10 @@ import NotificationManagement from '@/pages/notifications/NotificationManagement
 import Wallet from '@/pages/hospitals/Wallet';
 import HospitalDiscountManagement from '@/pages/hospitals/Discounts';
 import HospitalReviewManagement from '@/pages/hospitals/Reviews';
+import ListBlogs from '@/pages/admins/Blogs/ListBlogs';
+import AddBlog from '@/pages/admins/Blogs/AddBlog';
+import EditBlog from '@/pages/admins/Blogs/EditBlog';
+import BlogApproval from '@/pages/admins/Blogs/ApproveBlogs';
 
 const routes: RouteObject[] = [
     {
@@ -164,6 +168,10 @@ const routes: RouteObject[] = [
                 path: PATHS.ADMIN.HOSPITAL_PAYOUTS.ROOT,
                 children: [{ index: true, element: <HospitalPayouts /> }],
             },
+            {
+                path: PATHS.ADMIN.BLOGS.ROOT,
+                children: [{ index: true, element: <BlogApproval /> }],
+            },
         ],
     },
     // Doctor routes - Only accessible by DOCTOR role
@@ -194,6 +202,14 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.DOCTOR.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],
+            },
+            {
+                path: PATHS.DOCTOR.BLOGS.ROOT,
+                children: [
+                    { index: true, element: <ListBlogs /> },
+                    { path: PATHS.DOCTOR.BLOGS.ADD, element: <AddBlog /> },
+                    { path: PATHS.DOCTOR.BLOGS.EDIT, element: <EditBlog /> },
+                ],
             },
             {
                 path: PATHS.DOCTOR.SETTINGS.ROOT,
@@ -265,6 +281,14 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.HOSPITAL.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],
+            },
+            {
+                path: PATHS.HOSPITAL.BLOGS.ROOT,
+                children: [
+                    { index: true, element: <ListBlogs /> },
+                    { path: PATHS.HOSPITAL.BLOGS.ADD, element: <AddBlog /> },
+                    { path: PATHS.HOSPITAL.BLOGS.EDIT, element: <EditBlog /> },
+                ],
             },
             {
                 path: PATHS.HOSPITAL.SETTINGS.ROOT,
