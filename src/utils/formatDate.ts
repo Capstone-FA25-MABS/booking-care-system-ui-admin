@@ -43,3 +43,19 @@ export const formatDate = (date: string | Date, format: DateFormat = 'YYYY-MM-DD
             throw new Error(`Unsupported date format: ${format}`);
     }
 };
+
+/**
+ * Formats a Date object to YYYY-MM-DD string in local timezone
+ * This avoids timezone conversion issues when using toISOString()
+ * @param date - Date object to format
+ * @returns Formatted date string in YYYY-MM-DD format (local timezone)
+ * @example
+ * const date = new Date('2025-11-17'); // Local date
+ * formatDateToLocalString(date); // Returns "2025-11-17" (not affected by UTC conversion)
+ */
+export const formatDateToLocalString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};

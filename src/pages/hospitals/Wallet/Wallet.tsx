@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import clsx from 'clsx';
+import { Button } from 'react-bootstrap';
+import { FiCalendar } from 'react-icons/fi';
 
 import AddCardModal from './components/AddCardModal';
 import WalletSummary from './components/WalletSummary';
 import OtherAccountsModal from './components/OtherAccountsModal';
-import PayoutHistory from './components/PayoutHistory';
+import PayoutHistory, { PayoutHistoryRef } from './components/PayoutHistory';
+import GeneratePayoutsModal from './components/GeneratePayoutsModal';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { CreateBankAccountRequest } from '@/types/wallet.types';
 import { RootState } from '@/store';
@@ -17,6 +20,9 @@ const Wallet: React.FC = () => {
     // Get hospital ID from Redux profile
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
     const hospitalId = hospitalProfile?.id;
+
+    // Ref for PayoutHistory component
+    const payoutHistoryRef = useRef<PayoutHistoryRef>(null);
 
     const {
         accounts,
@@ -31,6 +37,7 @@ const Wallet: React.FC = () => {
 
     const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
     const [isOtherAccountsModalOpen, setIsOtherAccountsModalOpen] = useState(false);
+    const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
 
     // Handle API errors
@@ -137,7 +144,19 @@ const Wallet: React.FC = () => {
                 <div className="page-header">
                     <div className="row">
                         <div className="col-sm-12">
-                            <h3 className="page-title">Quản lý tài khoản ngân hàng</h3>
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h3 className="page-title mb-0">Quản lý tài khoản ngân hàng</h3>
+                                </div>
+                                <Button
+                                    variant="primary"
+                                    onClick={() => setShowGenerateModal(true)}
+                                    disabled={!defaultAccount}
+                                >
+                                    <FiCalendar className="me-2" />
+                                    Yêu cầu thanh toán
+                                </Button>
+                            </div>
                             <ul className="breadcrumb">
                                 <li className="breadcrumb-item">
                                     <a href="/hospital/dashboard">Dashboard</a>
@@ -157,7 +176,7 @@ const Wallet: React.FC = () => {
                     loading={loading}
                 />
 
-                <PayoutHistory />
+                <PayoutHistory ref={payoutHistoryRef} />
 
                 <AddCardModal
                     isOpen={isAddCardModalOpen}
@@ -176,6 +195,18 @@ const Wallet: React.FC = () => {
                     onSetDefault={handleSetDefaultAccount}
                     onDelete={handleDeleteAccount}
                     loading={loading}
+                />
+
+                <GeneratePayoutsModal
+                    show={showGenerateModal}
+                    onHide={() => setShowGenerateModal(false)}
+                    onSuccess={() => {
+                        setShowGenerateModal(false);
+                        toast.success('Yêu cầu thanh toán đã được tạo thành công!');
+                        // Refresh payout history to show the new payout
+                        payoutHistoryRef.current?.refresh();
+                    }}
+                    hospitalId={hospitalId}
                 />
             </div>
         </div>

@@ -33,7 +33,7 @@ export interface HospitalPayoutResponse {
 export interface GeneratePayoutsRequest {
     periodStartDate: string;
     periodEndDate: string;
-    hospitalIds?: string[];
+    hospitalId: string;
 }
 
 export interface MarkPayoutCompletedRequest {

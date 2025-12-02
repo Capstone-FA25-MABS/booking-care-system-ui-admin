@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -11,13 +11,32 @@ import { formatCurrency, getPayoutStatusBadge, getBankLogoUrl } from '@/utils/wa
 
 import styles from './PayoutHistory.module.scss';
 
-const PayoutHistory: React.FC = () => {
+export interface PayoutHistoryRef {
+    refresh: () => void;
+}
+
+const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
     const hospitalId = hospitalProfile?.id;
     const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
 
-    const { payouts, loading, error, currentPage, totalPages, totalCount, handlePageChange } =
-        useHospitalPayoutHistory(hospitalId);
+    const {
+        payouts,
+        loading,
+        error,
+        currentPage,
+        totalPages,
+        totalCount,
+        handlePageChange,
+        fetchPayouts,
+    } = useHospitalPayoutHistory(hospitalId);
+
+    // Expose refresh function to parent component
+    useImperativeHandle(ref, () => ({
+        refresh: () => {
+            fetchPayouts(currentPage);
+        },
+    }));
 
     const handleLogoError = (payoutId: string) => {
         setFailedLogos((prev) => new Set(prev).add(payoutId));
@@ -211,6 +230,8 @@ const PayoutHistory: React.FC = () => {
             )}
         </div>
     );
-};
+});
+
+PayoutHistory.displayName = 'PayoutHistory';
 
 export default PayoutHistory;
