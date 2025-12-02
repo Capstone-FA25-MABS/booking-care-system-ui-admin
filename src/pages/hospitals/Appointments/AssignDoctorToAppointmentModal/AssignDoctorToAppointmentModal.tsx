@@ -252,22 +252,27 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
         );
     };
 
+    // Handle Escape key to close modal
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onHide();
+            }
+        };
+
+        if (show) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [show, onHide]);
+
     if (!show) return null;
 
-    // Handle keyboard events for closing modal
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onHide();
-        }
-    };
-
     return (
-        <dialog
-            open
-            className={styles.modalOverlay}
-            aria-labelledby="assign-doctor-modal-title"
-            onKeyDown={handleKeyDown}
-        >
+        <dialog open className={styles.modalOverlay} aria-labelledby="assign-doctor-modal-title">
             {/* Backdrop overlay for click-outside-to-close */}
             <button
                 type="button"
