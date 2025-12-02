@@ -65,6 +65,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-credit-card',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.WALLET.ROOT)
             ),
+            createSimpleMenuItem(
+                'Blog',
+                'ti ti-file-text',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.BLOGS.ROOT)
+            ),
             createNotificationsMenuItem('staff'),
         ],
     },
@@ -96,6 +101,11 @@ export const listGroupMenuItemDoctor: MenuConfig = [
                 'Patients',
                 'ti ti-user-heart',
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
+            ),
+            createSimpleMenuItem(
+                'Blog',
+                'ti ti-file-text',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.BLOGS.ROOT)
             ),
             createMessagesMenuItem('doctor'),
             createNotificationsMenuItem('doctor'),
@@ -194,6 +204,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'Phương thức thanh toán',
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Duyệt blog',
+                'ti ti-checkup-list',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOGS.ROOT)
             ),
             createSubscriptionPlansMenuItem(),
             createHospitalPayoutsMenuItem(),
