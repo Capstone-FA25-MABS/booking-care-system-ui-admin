@@ -553,7 +553,7 @@
         padding: 10px 24px;
         border: none;
         border-radius: 6px;
-        background: #3b82f6;
+        background: #2563eb; // Darker blue for better contrast with white text
         color: white;
         font-size: 0.875rem;
         font-weight: 500;
@@ -561,7 +561,7 @@
         transition: all 0.2s;
 
         &:hover:not(:disabled) {
-            background: #2563eb;
+            background: #1d4ed8;
         }
 
         &:disabled {

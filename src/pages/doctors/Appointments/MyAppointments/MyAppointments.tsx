@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Skeleton, Stack } from '@mui/material';
 import Pagination from '@/components/Pagination';
-import ModalFilter from '@/components/ModalFilter';
 import {
     AppointmentCardData,
     AppointmentQueryRequest,
@@ -14,11 +13,16 @@ import {
     AppointmentUITab,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
-import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
+import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
 import { useDebounce } from '@/hooks/useDebounce';
+import {
+    useAppointmentFilterState,
+    useAppointmentPaginationState,
+    useDoctorTabCounts,
+} from '@/hooks/useAppointmentListState';
 import { StatusTabButton } from './components/StatusTabButton';
 import { AppointmentTableBody } from './components/AppointmentTableBody';
-import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
+import { AppointmentStatus } from '@/enums/appointment.enums';
 import {
     AppointmentSearchControls,
     APPOINTMENT_SORT_OPTIONS,
@@ -186,26 +190,18 @@ const MyAppointments: React.FC = () => {
         return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm);
     }, [allAppointments, debouncedSearchTerm]);
 
-    // Filter states
-    const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
-    const [selectedDateRange, setSelectedDateRange] = useState<{
-        start: Date | null;
-        end: Date | null;
-    }>({ start: null, end: null });
+    // Filter states (using shared hook)
+    const { selectedTypes, setSelectedTypes, selectedDateRange, setSelectedDateRange } =
+        useAppointmentFilterState();
 
     // Status tab state
     const [activeStatusTab, setActiveStatusTab] = useState<AppointmentUITab>('upcoming');
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    // Pagination states (using shared hook)
+    const { currentPage, setCurrentPage, itemsPerPage } = useAppointmentPaginationState();
 
-    // Tab counts
-    const [tabCounts, setTabCounts] = useState({
-        upcoming: 0,
-        cancelled: 0,
-        completed: 0,
-    });
+    // Tab counts (using shared hook)
+    const { tabCounts, setTabCounts } = useDoctorTabCounts();
 
     // File preview modal state
     const [previewModal, setPreviewModal] = useState<{
@@ -513,23 +509,15 @@ const MyAppointments: React.FC = () => {
             />
 
             {/* Filter Modal */}
-            <ModalFilter
+            <AppointmentFilterModal
                 show={showFilterModal}
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc lịch hẹn"
-                fields={[
-                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
-                    {
-                        name: 'dateRange',
-                        label: 'Khoảng thời gian',
-                        type: 'daterange',
-                        value: selectedDateRange,
-                        onChange: (value) => setSelectedDateRange(value),
-                        resetValue: () => setSelectedDateRange({ start: null, end: null }),
-                    },
-                ]}
+                selectedTypes={selectedTypes}
+                setSelectedTypes={setSelectedTypes}
+                selectedDateRange={selectedDateRange}
+                setSelectedDateRange={setSelectedDateRange}
             />
 
             {/* Complete Confirmation Modal */}

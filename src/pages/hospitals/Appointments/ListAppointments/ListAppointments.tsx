@@ -7,7 +7,12 @@ import Pagination from '@/components/Pagination';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
-import ModalFilter from '@/components/ModalFilter';
+import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
+import {
+    useAppointmentFilterState,
+    useAppointmentPaginationState,
+    useHospitalTabCounts,
+} from '@/hooks/useAppointmentListState';
 import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
 import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
@@ -27,8 +32,6 @@ import {
     getProviderName,
 } from '@/types/appointment.types';
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
-import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
-import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { PATHS } from '@/routes/paths';
@@ -84,27 +87,18 @@ const ListAppointments: React.FC = () => {
         });
     }, [allAppointments, debouncedSearchTerm]);
 
-    // Filter states (simplified: only appointment type and date range)
-    const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
-    const [selectedDateRange, setSelectedDateRange] = useState<{
-        start: Date | null;
-        end: Date | null;
-    }>({ start: null, end: null });
+    // Filter states (using shared hook)
+    const { selectedTypes, setSelectedTypes, selectedDateRange, setSelectedDateRange } =
+        useAppointmentFilterState();
 
     // Status tab state - now use AppointmentUITab type
     const [activeStatusTab, setActiveStatusTab] = useState<AppointmentUITab>('waiting');
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    // Pagination states (using shared hook)
+    const { currentPage, setCurrentPage, itemsPerPage } = useAppointmentPaginationState();
 
-    // Tab counts
-    const [tabCounts, setTabCounts] = useState({
-        waiting: 0,
-        upcoming: 0,
-        cancelled: 0,
-        completed: 0,
-    });
+    // Tab counts (using shared hook)
+    const { tabCounts, setTabCounts } = useHospitalTabCounts();
 
     // Helper: Validate user profile
     const validateUserProfile = (primaryRole: string) => {
@@ -336,6 +330,45 @@ const ListAppointments: React.FC = () => {
     // Get appointment counts for tabs - using tabCounts state
     const appointmentCounts = tabCounts;
 
+    // Helper function to render provider info (doctor or service) - extracted to avoid nested ternary
+    const renderProviderInfo = (appointment: AppointmentCardData, providerName: string) => {
+        if (appointment.doctorInfo?.id) {
+            return (
+                <>
+                    <Link to="/doctors-profile" className="avatar avatar-md me-2">
+                        <img
+                            src={appointment.doctorInfo?.avatarUrl || user01}
+                            alt="doctor"
+                            className="rounded-circle"
+                        />
+                    </Link>
+                    <div>
+                        <Link to="/doctors-profile" className="fw-semibold">
+                            {providerName}
+                        </Link>
+                        <span className="text-body fs-13 fw-normal d-block">
+                            {appointment.doctorInfo?.specialtyName || ''}
+                        </span>
+                    </div>
+                </>
+            );
+        }
+
+        if (appointment.serviceInfo?.id) {
+            return (
+                <div>
+                    <span className="fw-semibold">
+                        <i className="ti ti-medical-cross me-1 text-primary" aria-hidden="true"></i>
+                        {providerName}
+                    </span>
+                    <span className="text-body fs-13 fw-normal d-block">Dịch vụ y tế</span>
+                </div>
+            );
+        }
+
+        return <span className="text-muted">Chưa phân công</span>;
+    };
+
     const renderTableBody = () => {
         if (isLoading) {
             return <TableSkeleton rows={itemsPerPage} columns={appointmentTableColumns} />;
@@ -444,37 +477,7 @@ const ListAppointments: React.FC = () => {
                     {/* Bác sĩ / Dịch vụ */}
                     <td>
                         <div className="d-flex align-items-center">
-                            {appointment.doctorInfo?.id ? (
-                                <>
-                                    <Link to="/doctors-profile" className="avatar avatar-md me-2">
-                                        <img
-                                            src={appointment.doctorInfo?.avatarUrl || user01}
-                                            alt="doctor"
-                                            className="rounded-circle"
-                                        />
-                                    </Link>
-                                    <div>
-                                        <Link to="/doctors-profile" className="fw-semibold">
-                                            {providerName}
-                                        </Link>
-                                        <span className="text-body fs-13 fw-normal d-block">
-                                            {appointment.doctorInfo?.specialtyName || ''}
-                                        </span>
-                                    </div>
-                                </>
-                            ) : appointment.serviceInfo?.id ? (
-                                <div>
-                                    <span className="fw-semibold">
-                                        <i className="ti ti-medical-cross me-1 text-primary"></i>
-                                        {providerName}
-                                    </span>
-                                    <span className="text-body fs-13 fw-normal d-block">
-                                        Dịch vụ y tế
-                                    </span>
-                                </div>
-                            ) : (
-                                <span className="text-muted">Chưa phân công</span>
-                            )}
+                            {renderProviderInfo(appointment, providerName)}
                         </div>
                     </td>
                     <td>
@@ -519,7 +522,10 @@ const ListAppointments: React.FC = () => {
                                                     )
                                                 }
                                             >
-                                                <i className="ti ti-user-plus me-2"></i>
+                                                <i
+                                                    className="ti ti-user-plus me-2"
+                                                    aria-hidden="true"
+                                                ></i>{' '}
                                                 Gán bác sĩ
                                             </button>
                                         </li>
@@ -530,8 +536,8 @@ const ListAppointments: React.FC = () => {
                                         className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
                                         onClick={() => handleCancelClick(appointment)}
                                     >
-                                        <i className="ti ti-x me-2"></i>
-                                        Hủy lịch hẹn
+                                        <i className="ti ti-x me-2" aria-hidden="true"></i> Hủy lịch
+                                        hẹn
                                     </button>
                                 </li>
                             </ul>
@@ -621,23 +627,15 @@ const ListAppointments: React.FC = () => {
             />
 
             {/* Filter Modal - Simplified: only appointment type and date range */}
-            <ModalFilter
+            <AppointmentFilterModal
                 show={showFilterModal}
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Lọc lịch hẹn"
-                fields={[
-                    createAppointmentTypeFilterField(selectedTypes, setSelectedTypes),
-                    {
-                        name: 'dateRange',
-                        label: 'Khoảng thời gian',
-                        type: 'daterange',
-                        value: selectedDateRange,
-                        onChange: (value) => setSelectedDateRange(value),
-                        resetValue: () => setSelectedDateRange({ start: null, end: null }),
-                    },
-                ]}
+                selectedTypes={selectedTypes}
+                setSelectedTypes={setSelectedTypes}
+                selectedDateRange={selectedDateRange}
+                setSelectedDateRange={setSelectedDateRange}
             />
 
             {/* Cancel Modal */}

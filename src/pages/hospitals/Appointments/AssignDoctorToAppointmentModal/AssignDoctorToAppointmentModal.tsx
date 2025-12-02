@@ -168,7 +168,7 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
             <div
                 key={doctor.id}
                 className={`${styles.doctorCard} ${isSelected ? styles.selected : ''} ${
-                    !isAvailable ? styles.unavailable : ''
+                    isAvailable ? '' : styles.unavailable
                 }`}
                 onClick={() => {
                     if (!isAvailable) {
@@ -239,8 +239,19 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
     if (!show) return null;
 
     return (
-        <div className={styles.modalOverlay} onClick={onHide}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div
+            className={styles.modalOverlay}
+            onClick={onHide}
+            onKeyDown={(e) => e.key === 'Escape' && onHide()}
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
+        >
+            <div
+                className={styles.modalContent}
+                onClick={(e) => e.stopPropagation()}
+                role="document"
+            >
                 {/* Header */}
                 <div className={styles.modalHeader}>
                     <h2>Gán bác sĩ cho lịch hẹn</h2>
@@ -256,8 +267,8 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
                             <Calendar size={16} />
                             <span>
                                 {formatDate(appointment.appointmentDate)} -{' '}
-                                {appointment.appointmentTimeId
-                                    ?.replace('AT_', '')
+                                {String(appointment.appointmentTimeId)
+                                    .replace(/AT_/g, '')
                                     .replace(/_/g, ':')}
                             </span>
                         </div>
@@ -328,9 +339,8 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
                                     )}
 
                                     {/* No Doctors */}
-                                    {doctorsData &&
-                                        doctorsData.recommendedDoctors.length === 0 &&
-                                        doctorsData.previousDoctors.length === 0 && (
+                                    {doctorsData?.recommendedDoctors.length === 0 &&
+                                        doctorsData?.previousDoctors.length === 0 && (
                                             <div className={styles.noDoctors}>
                                                 <User size={48} />
                                                 <p>Không tìm thấy bác sĩ phù hợp</p>
@@ -342,8 +352,9 @@ export const AssignDoctorToAppointmentModal: React.FC<AssignDoctorToAppointmentM
 
                         {/* Staff Note */}
                         <div className={styles.noteSection}>
-                            <label>Ghi chú (tùy chọn)</label>
+                            <label htmlFor="staffNoteInput">Ghi chú (tùy chọn)</label>
                             <textarea
+                                id="staffNoteInput"
                                 value={staffNote}
                                 onChange={(e) => setStaffNote(e.target.value)}
                                 placeholder="Nhập ghi chú cho bệnh nhân..."
