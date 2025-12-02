@@ -45,6 +45,7 @@ import EditSubscriptionPlan from '@/pages/admins/SubscriptionPlans/EditSubscript
 import AccountManagement from '@/pages/admins/AccountManagement';
 import ListHospitalRegistrations from '@/pages/admins/HospitalRegistrations/ListHospitalRegistrations/ListHospitalRegistrations';
 import AdminSignatureManagement from '@/pages/admins/AdminSignature/AdminSignatureManagement';
+import { HospitalPayouts } from '@/pages/admins/HospitalPayouts';
 import ListServicesStaff from '@/pages/hospitals/Services/ListServices';
 import DoctorManagement from '@/pages/hospitals/DoctorManagement/DoctorManagement';
 import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
@@ -53,6 +54,7 @@ import HospitalSpecialtiesManagement from '@/pages/hospitals/Specialties';
 import HospitalServiceTypesManagement from '@/pages/hospitals/ServiceTypes';
 import HospitalServiceMedicalsManagement from '@/pages/hospitals/ServiceMedicals';
 import NotificationManagement from '@/pages/notifications/NotificationManagement/NotificationManagement';
+import Wallet from '@/pages/hospitals/Wallet';
 
 const routes: RouteObject[] = [
     {
@@ -156,6 +158,10 @@ const routes: RouteObject[] = [
                 path: PATHS.ADMIN.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],
             },
+            {
+                path: PATHS.ADMIN.HOSPITAL_PAYOUTS.ROOT,
+                children: [{ index: true, element: <HospitalPayouts /> }],
+            },
         ],
     },
     // Doctor routes - Only accessible by DOCTOR role
@@ -247,6 +253,7 @@ const routes: RouteObject[] = [
                 element: <HospitalServiceMedicalsManagement />,
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
+            { path: PATHS.HOSPITAL.WALLET.ROOT, element: <Wallet /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlanList /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_INFO, element: <SubscriptionInfo /> },

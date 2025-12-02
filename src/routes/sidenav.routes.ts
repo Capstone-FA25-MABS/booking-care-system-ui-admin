@@ -3,6 +3,7 @@ import { buildPath, PATHS } from './paths';
 import {
     createAccountSettingsMenuItem,
     createAdminSignatureMenuItem,
+    createHospitalPayoutsMenuItem,
     createAppointmentsMenuItem,
     createDashboardMenuItem,
     createDoctorsMenuItem,
@@ -58,6 +59,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'Hoàn tiền',
                 'ti ti-receipt-refund',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Tài khoản ngân hàng',
+                'ti ti-credit-card',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.WALLET.ROOT)
             ),
             createNotificationsMenuItem('staff'),
         ],
@@ -190,6 +196,7 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
             createSubscriptionPlansMenuItem(),
+            createHospitalPayoutsMenuItem(),
             createAdminSignatureMenuItem(),
             createNotificationsMenuItem('admin'),
         ],

@@ -6,6 +6,7 @@ import type {
     CreateSubscriptionPaymentRequest,
     CreateSubscriptionPaymentResponse,
 } from '@/types/paymentMethod.types';
+import type { GetPaymentStatisticsRequest, PaymentStatisticsResponse } from '@/types/payment.types';
 
 /**
  * Payment Method Service
@@ -78,6 +79,36 @@ export class PaymentMethodService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Failed to create subscription payment');
+        }
+    }
+
+    /**
+     * Get payment statistics (subscription revenue only)
+     * Returns time series data and summary statistics for subscription payments
+     */
+    static async getPaymentStatistics(
+        request: GetPaymentStatisticsRequest
+    ): Promise<ApiResponse<PaymentStatisticsResponse>> {
+        try {
+            const params = new URLSearchParams();
+            if (request.fromDate) params.append('fromDate', request.fromDate);
+            if (request.toDate) params.append('toDate', request.toDate);
+            if (request.period) params.append('period', request.period);
+            if (request.hospitalId) params.append('hospitalId', request.hospitalId);
+            if (request.patientId) params.append('patientId', request.patientId);
+            if (request.transactionType) params.append('transactionType', request.transactionType);
+            if (request.status) params.append('status', request.status);
+
+            const response: any = await axiosInstance.get(
+                `/Payments/statistics?${params.toString()}`
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Payment statistics retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get payment statistics');
         }
     }
 }

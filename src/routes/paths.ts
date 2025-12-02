@@ -64,6 +64,9 @@ export const PATHS = {
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },
+        HOSPITAL_PAYOUTS: {
+            ROOT: 'hospital-payouts',
+        },
     },
 
     // Hospital paths
@@ -99,6 +102,9 @@ export const PATHS = {
         },
         REFUNDS: {
             ROOT: 'refunds',
+        },
+        WALLET: {
+            ROOT: 'wallet',
         },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',

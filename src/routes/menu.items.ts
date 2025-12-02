@@ -260,6 +260,15 @@ export const createAdminSignatureMenuItem = (): MenuItem => ({
 });
 
 /**
+ * Create Hospital Payouts menu item for admin
+ */
+export const createHospitalPayoutsMenuItem = (): MenuItem => ({
+    label: 'Thanh toán bệnh viện',
+    icon: 'ti ti-cash',
+    link: buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.HOSPITAL_PAYOUTS.ROOT),
+});
+
+/**
  * Create Notifications menu item for different roles
  */
 export const createNotificationsMenuItem = (role: 'admin' | 'staff' | 'doctor'): MenuItem => {

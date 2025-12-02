@@ -15,7 +15,7 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine } from '@/components/ChartJsLine';
+import { ChartJsMultiLine, ChartJsBar } from '@/components/ChartJsLine';
 import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
 import DashboardReviewSection from '@/components/DashboardReviewSection';
 import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
@@ -25,6 +25,11 @@ import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useReviewInsights, ReviewStatsSummary } from '@/hooks/useReviewInsights';
+import PaymentMethodService from '@/services/paymentMethod.service';
+import { RevenueFilterButtons, RevenueViewPeriod } from '@/components/RevenueFilterButtons';
+import { StatisticsPeriod as PaymentStatisticsPeriod } from '@/types/payment.types';
+import type { GetPaymentStatisticsRequest, PaymentStatisticsResponse } from '@/types/payment.types';
+import { formatTimeLabel } from '@/utils/paymentChartFormatter';
 import {
     periodOptions,
     numberFormatter,
@@ -131,6 +136,17 @@ const AdminDashboard: React.FC = () => {
         }>
     >([]);
     const [isLoadingSubscriptionChart, setIsLoadingSubscriptionChart] = useState(false);
+
+    // Revenue statistics state (subscription payments only)
+    const [revenueChartData, setRevenueChartData] = useState<
+        Array<{
+            label: string;
+            value1: number; // Total revenue
+            value2: number; // Completed revenue
+        }>
+    >([]);
+    const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
+    const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
 
     // Load system overview (hospitals, doctors, etc.)
     const loadSystemOverview = useCallback(async () => {
@@ -407,9 +423,140 @@ const AdminDashboard: React.FC = () => {
         }
     }, []);
 
+    // Load revenue statistics (subscription payments only)
+    const loadRevenueChart = useCallback(async () => {
+        setIsLoadingRevenueChart(true);
+        try {
+            // Calculate date range based on selected revenue period
+            const now = new Date();
+            let fromDateStr: string;
+            let toDateStr: string;
+            let apiPeriod: PaymentStatisticsPeriod;
+
+            // Helper function to format date as YYYY-MM-DD in local timezone
+            const formatLocalDate = (date: Date): string => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            switch (revenuePeriod) {
+                case '7days': {
+                    // Last 7 days: today and 6 days back
+                    const sevenDaysAgo = new Date(now);
+                    sevenDaysAgo.setDate(now.getDate() - 6);
+                    fromDateStr = formatLocalDate(sevenDaysAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Daily;
+                    break;
+                }
+                case '4weeks': {
+                    // Last 4 weeks: 27 days back to today (28 days total)
+                    const fourWeeksAgo = new Date(now);
+                    fourWeeksAgo.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(fourWeeksAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Weekly;
+                    break;
+                }
+                case '6months': {
+                    // Last 6 months: from start of 5 months ago to today
+                    // Example: Nov 30 → Jun 1 to Nov 30 (covers Jun, Jul, Aug, Sep, Oct, Nov)
+                    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+                    fromDateStr = formatLocalDate(sixMonthsAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Monthly;
+                    break;
+                }
+                case '4quarters': {
+                    // Last 4 quarters including current quarter
+                    // Example: Nov 30 2025 (Q4) → Q1 2025 to Q4 2025
+                    const currentMonth = now.getMonth(); // 0-11
+                    const currentQuarter = Math.floor(currentMonth / 3); // 0-3
+
+                    // Start from 3 quarters ago
+                    let startQuarter = currentQuarter - 3;
+                    let startYear = now.getFullYear();
+
+                    // Handle negative quarters (go to previous year)
+                    while (startQuarter < 0) {
+                        startQuarter += 4;
+                        startYear--;
+                    }
+
+                    // First day of the start quarter
+                    const startMonth = startQuarter * 3;
+                    const fourQuartersAgo = new Date(startYear, startMonth, 1);
+
+                    fromDateStr = formatLocalDate(fourQuartersAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Quarterly;
+                    break;
+                }
+                default: {
+                    const defaultFrom = new Date(now);
+                    defaultFrom.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(defaultFrom);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Weekly;
+                }
+            }
+
+            const request: GetPaymentStatisticsRequest = {
+                fromDate: fromDateStr,
+                toDate: toDateStr,
+                period: apiPeriod,
+            };
+
+            console.log('Revenue chart request:', {
+                revenuePeriod,
+                fromDate: request.fromDate,
+                toDate: request.toDate,
+                period: apiPeriod,
+            });
+
+            const response = await PaymentMethodService.getPaymentStatistics(request);
+            const statistics: PaymentStatisticsResponse = response.data;
+
+            console.log('Revenue chart response:', statistics);
+
+            // Transform time series data to chart format with Vietnamese labels
+            const chartData = statistics.timeSeries.map((point) => ({
+                label: formatTimeLabel(
+                    point.timeLabel,
+                    apiPeriod,
+                    point.periodStart,
+                    point.periodEnd
+                ),
+                value1: point.totalAmount,
+                value2: point.completedAmount,
+            }));
+
+            setRevenueChartData(chartData);
+        } catch (err: any) {
+            console.error('Failed to load revenue chart:', err);
+            console.error('Error details:', {
+                message: err?.message,
+                response: err?.response?.data,
+                status: err?.response?.status,
+            });
+            toast.error(
+                `Không thể tải dữ liệu doanh thu: ${err?.response?.data?.message || err?.message || 'Lỗi không xác định'}`
+            );
+            setRevenueChartData([]);
+        } finally {
+            setIsLoadingRevenueChart(false);
+        }
+    }, [revenuePeriod]);
+
     useEffect(() => {
         loadSubscriptionChart();
     }, [loadSubscriptionChart]);
+
+    useEffect(() => {
+        loadRevenueChart();
+    }, [loadRevenueChart]);
 
     const systemOverviewMetrics = useMemo(() => {
         if (!systemOverview) return [];
@@ -826,6 +973,52 @@ const AdminDashboard: React.FC = () => {
                                                 label1="Hủy"
                                                 label2="Nâng cấp"
                                                 label3="Tổng"
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            )}
+
+                            {isLoadingRevenueChart ? (
+                                <div className={styles.trendCard}>
+                                    <div className={styles.cardHeader}>
+                                        <h5>Doanh thu từ đăng ký gói</h5>
+                                        <span>
+                                            Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao
+                                            gồm lịch hẹn)
+                                        </span>
+                                    </div>
+                                    <div className={styles.cardBody}>
+                                        <div className={styles.chartJsWrapper}>
+                                            <div className={styles.chartSkeleton} />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                revenueChartData.length > 0 && (
+                                    <div className={styles.trendCard}>
+                                        <div className={styles.cardHeader}>
+                                            <div>
+                                                <h5>Doanh thu từ đăng ký gói</h5>
+                                                <span>
+                                                    Biểu đồ thống kê doanh thu từ các gói đăng ký
+                                                    (không bao gồm thanh toán lịch hẹn)
+                                                </span>
+                                            </div>
+                                            <RevenueFilterButtons
+                                                selectedPeriod={revenuePeriod}
+                                                onPeriodChange={setRevenuePeriod}
+                                                isLoading={isLoadingRevenueChart}
+                                            />
+                                        </div>
+                                        <div className={styles.cardBody}>
+                                            <ChartJsBar
+                                                data={revenueChartData}
+                                                color1="#a78bfa"
+                                                color2="#10b981"
+                                                label1="Tổng doanh thu"
+                                                label2="Đã hoàn thành"
+                                                stacked={true}
                                             />
                                         </div>
                                     </div>
