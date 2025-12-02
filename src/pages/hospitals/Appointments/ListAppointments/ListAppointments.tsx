@@ -3,14 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useDebounce } from '@/hooks/useDebounce';
-import styles from './ListAppointments.module.scss';
 import Pagination from '@/components/Pagination';
-import Button from '@/components/Button';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
 import ModalFilter from '@/components/ModalFilter';
-import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
 import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
@@ -35,14 +32,20 @@ import { AppointmentType } from '@/enums/appointment.enums';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { PATHS } from '@/routes/paths';
-// Sort options for appointments
-const appointmentSortOptions = [
-    { value: 'CreatedAt_desc', label: 'Mới nhất' },
-    { value: 'CreatedAt_asc', label: 'Cũ nhất' },
-    { value: 'AppointmentDate_desc', label: 'Ngày hẹn (mới nhất)' },
-    { value: 'AppointmentDate_asc', label: 'Ngày hẹn (cũ nhất)' },
-    { value: 'UpdatedAt_desc', label: 'Cập nhật gần đây' },
-];
+import {
+    AppointmentSearchControls,
+    APPOINTMENT_SORT_OPTIONS,
+} from '@/components/AppointmentSearchControls';
+import {
+    AppointmentStatusTabs,
+    HOSPITAL_APPOINTMENT_TABS,
+} from '@/components/AppointmentStatusTabs';
+import {
+    parseSortParam,
+    formatLocalDate,
+    filterAppointmentsBySearch,
+} from '@/utils/appointment-search-utils';
+import ActionDropdown from '@/components/ActionDropdown';
 
 // Import images
 import user01 from '@/assets/img/users/user-01.jpg';
@@ -73,62 +76,13 @@ const ListAppointments: React.FC = () => {
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [selectedSort, setSelectedSort] = useState<string>('CreatedAt_desc');
 
-    // Client-side search filter on enriched data (patient name, doctor name, service name, phone, email)
-    const filterAppointmentsBySearch = useCallback(
-        (appointmentList: AppointmentCardData[], search: string): AppointmentCardData[] => {
-            if (!search.trim()) return appointmentList;
-
-            const searchLower = search.toLowerCase().trim();
-            return appointmentList.filter((apt) => {
-                // Search in patient info (firstName + lastName)
-                const patientFirstName = apt.patientInfo?.firstName?.toLowerCase() || '';
-                const patientLastName = apt.patientInfo?.lastName?.toLowerCase() || '';
-                const patientFullName = `${patientFirstName} ${patientLastName}`.trim();
-                const patientPhone = apt.patientInfo?.phone?.toLowerCase() || '';
-                const patientEmail = apt.patientInfo?.email?.toLowerCase() || '';
-
-                // Search in relative info (if booking for family member)
-                const relativeFirstName = apt.relativeInfo?.firstName?.toLowerCase() || '';
-                const relativeLastName = apt.relativeInfo?.lastName?.toLowerCase() || '';
-                const relativeFullName =
-                    apt.relativeInfo?.fullName?.toLowerCase() ||
-                    `${relativeFirstName} ${relativeLastName}`.trim();
-                const relativePhone = apt.relativeInfo?.phone?.toLowerCase() || '';
-
-                // Search in doctor info
-                const doctorFirstName = apt.doctorInfo?.firstName?.toLowerCase() || '';
-                const doctorLastName = apt.doctorInfo?.lastName?.toLowerCase() || '';
-                const doctorFullName =
-                    apt.doctorInfo?.fullName?.toLowerCase() ||
-                    `${doctorFirstName} ${doctorLastName}`.trim();
-                const specialtyName = apt.doctorInfo?.specialtyName?.toLowerCase() || '';
-
-                // Search in service info
-                const serviceName = apt.serviceInfo?.name?.toLowerCase() || '';
-
-                // Search in appointment ID (first 8 chars)
-                const appointmentId = apt.appointmentId?.toLowerCase() || '';
-
-                return (
-                    patientFullName.includes(searchLower) ||
-                    patientPhone.includes(searchLower) ||
-                    patientEmail.includes(searchLower) ||
-                    relativeFullName.includes(searchLower) ||
-                    relativePhone.includes(searchLower) ||
-                    doctorFullName.includes(searchLower) ||
-                    specialtyName.includes(searchLower) ||
-                    serviceName.includes(searchLower) ||
-                    appointmentId.includes(searchLower)
-                );
-            });
-        },
-        []
-    );
-
-    // Filtered appointments based on search term
+    // Filtered appointments based on search term (using shared utility with doctor/service search)
     const appointments = useMemo(() => {
-        return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm);
-    }, [allAppointments, debouncedSearchTerm, filterAppointmentsBySearch]);
+        return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm, {
+            includeDoctorSearch: true,
+            includeServiceSearch: true,
+        });
+    }, [allAppointments, debouncedSearchTerm]);
 
     // Filter states (simplified: only appointment type and date range)
     const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
@@ -163,24 +117,6 @@ const ListAppointments: React.FC = () => {
             return false;
         }
         return true;
-    };
-
-    // Helper: Parse sort parameter (format: "Field_order")
-    const parseSortParam = (sortValue: string) => {
-        const [field, order] = sortValue.split('_');
-        return {
-            sortBy: field,
-            sortDescending: order === 'desc',
-        };
-    };
-
-    // Helper: Format date to local YYYY-MM-DD (avoid timezone issues)
-    const formatLocalDate = (date: Date | null): string | undefined => {
-        if (!date) return undefined;
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
     };
 
     // Helper: Build appointment query with role-based filters
@@ -399,16 +335,6 @@ const ListAppointments: React.FC = () => {
 
     // Get appointment counts for tabs - using tabCounts state
     const appointmentCounts = tabCounts;
-
-    // Helper: Get button class names for status tabs
-    const getStatusTabClass = (tab: AppointmentUITab) => {
-        return `btn ${activeStatusTab === tab ? 'btn-primary' : 'btn-light'} ${styles.statusTab}`;
-    };
-
-    // Helper: Get badge class names for status tabs
-    const getStatusBadgeClass = (tab: AppointmentUITab) => {
-        return `badge ${activeStatusTab === tab ? 'bg-white text-primary' : 'bg-secondary text-white'} ms-2`;
-    };
 
     const renderTableBody = () => {
         if (isLoading) {
@@ -645,106 +571,25 @@ const ListAppointments: React.FC = () => {
                 {/* End Page Header */}
 
                 {/* Status Tabs */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    <div className="d-flex gap-2 flex-wrap">
-                        <button
-                            className={getStatusTabClass('waiting')}
-                            onClick={() => {
-                                setActiveStatusTab('waiting');
-                                setCurrentPage(1);
-                            }}
-                        >
-                            Đang chờ xác nhận{' '}
-                            <span className={getStatusBadgeClass('waiting')}>
-                                {appointmentCounts.waiting}
-                            </span>
-                        </button>
-                        <button
-                            className={getStatusTabClass('upcoming')}
-                            onClick={() => {
-                                setActiveStatusTab('upcoming');
-                                setCurrentPage(1);
-                            }}
-                        >
-                            Sắp khám{' '}
-                            <span className={getStatusBadgeClass('upcoming')}>
-                                {appointmentCounts.upcoming}
-                            </span>
-                        </button>
-                        <button
-                            className={getStatusTabClass('cancelled')}
-                            onClick={() => {
-                                setActiveStatusTab('cancelled');
-                                setCurrentPage(1);
-                            }}
-                        >
-                            Đã hủy{' '}
-                            <span className={getStatusBadgeClass('cancelled')}>
-                                {appointmentCounts.cancelled}
-                            </span>
-                        </button>
-                        <button
-                            className={getStatusTabClass('completed')}
-                            onClick={() => {
-                                setActiveStatusTab('completed');
-                                setCurrentPage(1);
-                            }}
-                        >
-                            Đã khám{' '}
-                            <span className={getStatusBadgeClass('completed')}>
-                                {appointmentCounts.completed}
-                            </span>
-                        </button>
-                    </div>
-                </div>
+                <AppointmentStatusTabs
+                    tabs={HOSPITAL_APPOINTMENT_TABS}
+                    activeTab={activeStatusTab}
+                    tabCounts={appointmentCounts}
+                    onTabChange={(tab) => {
+                        setActiveStatusTab(tab);
+                        setCurrentPage(1);
+                    }}
+                />
 
                 {/* Search and Filter Controls */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    {/* Search Input */}
-                    <div className="search-set">
-                        <div className="d-flex align-items-center flex-wrap gap-2">
-                            <div className="table-search d-flex align-items-center mb-0">
-                                <div className="search-input">
-                                    <label
-                                        htmlFor="appointmentSearch"
-                                        aria-label="Search appointments"
-                                    >
-                                        <input
-                                            id="appointmentSearch"
-                                            type="search"
-                                            className="form-control form-control-sm"
-                                            placeholder="Tìm kiếm thông tin..."
-                                            value={searchTerm}
-                                            onChange={handleSearchChange}
-                                            aria-controls="DataTables_Table_0"
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Filter and Sort */}
-                    <div className="d-flex align-items-center gap-2">
-                        <Button
-                            variant="white"
-                            size="md"
-                            className="fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                            icon="ti ti-filter text-gray-5"
-                            onClick={() => setShowFilterModal(true)}
-                        >
-                            Lọc
-                        </Button>
-                        <ActionDropdown
-                            type="sort"
-                            options={appointmentSortOptions}
-                            selectedValue={selectedSort}
-                            onSelect={handleSortChange}
-                            placeholder="Sắp xếp:"
-                            size="sm"
-                        />
-                    </div>
-                </div>
+                <AppointmentSearchControls
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    selectedSort={selectedSort}
+                    onSortChange={handleSortChange}
+                    sortOptions={APPOINTMENT_SORT_OPTIONS}
+                    onFilterClick={() => setShowFilterModal(true)}
+                />
                 {/* End Search and Filter Controls */}
 
                 {/* Start Table */}

@@ -16,20 +16,18 @@ import {
 import { fetchAndTransformAppointments } from '@/utils/appointment-management-utils';
 import { createAppointmentTypeFilterField } from '@/utils/filter-field-configs';
 import { useDebounce } from '@/hooks/useDebounce';
-import ActionDropdown from '@/components/ActionDropdown';
-import Button from '@/components/Button';
 import { StatusTabButton } from './components/StatusTabButton';
 import { AppointmentTableBody } from './components/AppointmentTableBody';
 import { AppointmentType, AppointmentStatus } from '@/enums/appointment.enums';
-
-// Sort options for appointments
-const appointmentSortOptions = [
-    { value: 'CreatedAt_desc', label: 'Mới nhất' },
-    { value: 'CreatedAt_asc', label: 'Cũ nhất' },
-    { value: 'AppointmentDate_desc', label: 'Ngày hẹn (mới nhất)' },
-    { value: 'AppointmentDate_asc', label: 'Ngày hẹn (cũ nhất)' },
-    { value: 'UpdatedAt_desc', label: 'Cập nhật gần đây' },
-];
+import {
+    AppointmentSearchControls,
+    APPOINTMENT_SORT_OPTIONS,
+} from '@/components/AppointmentSearchControls';
+import {
+    parseSortParam,
+    formatLocalDate,
+    filterAppointmentsBySearch,
+} from '@/utils/appointment-search-utils';
 import { Role } from '@/enums/common.enums';
 import { RootState } from '@/store';
 import { AppointmentService } from '@/services/appointment.service';
@@ -183,52 +181,10 @@ const MyAppointments: React.FC = () => {
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [selectedSort, setSelectedSort] = useState<string>('CreatedAt_desc');
 
-    // Client-side search filter on enriched data (patient name, phone, email)
-    const filterAppointmentsBySearch = useCallback(
-        (appointmentList: AppointmentCardData[], search: string): AppointmentCardData[] => {
-            if (!search.trim()) return appointmentList;
-
-            const searchLower = search.toLowerCase().trim();
-            return appointmentList.filter((apt) => {
-                // Search in patient info (firstName + lastName)
-                const patientFirstName = apt.patientInfo?.firstName?.toLowerCase() || '';
-                const patientLastName = apt.patientInfo?.lastName?.toLowerCase() || '';
-                const patientFullName = `${patientFirstName} ${patientLastName}`.trim();
-                const patientPhone = apt.patientInfo?.phone?.toLowerCase() || '';
-                const patientEmail = apt.patientInfo?.email?.toLowerCase() || '';
-
-                // Search in relative info (if booking for family member)
-                const relativeFirstName = apt.relativeInfo?.firstName?.toLowerCase() || '';
-                const relativeLastName = apt.relativeInfo?.lastName?.toLowerCase() || '';
-                const relativeFullName =
-                    apt.relativeInfo?.fullName?.toLowerCase() ||
-                    `${relativeFirstName} ${relativeLastName}`.trim();
-                const relativePhone = apt.relativeInfo?.phone?.toLowerCase() || '';
-
-                // Search in appointment ID
-                const appointmentId = apt.appointmentId?.toLowerCase() || '';
-
-                // Search in symptoms
-                const symptoms = apt.symptoms?.toLowerCase() || '';
-
-                return (
-                    patientFullName.includes(searchLower) ||
-                    patientPhone.includes(searchLower) ||
-                    patientEmail.includes(searchLower) ||
-                    relativeFullName.includes(searchLower) ||
-                    relativePhone.includes(searchLower) ||
-                    appointmentId.includes(searchLower) ||
-                    symptoms.includes(searchLower)
-                );
-            });
-        },
-        []
-    );
-
-    // Filtered appointments based on search term
+    // Filtered appointments based on search term (using shared utility)
     const appointments = useMemo(() => {
         return filterAppointmentsBySearch(allAppointments, debouncedSearchTerm);
-    }, [allAppointments, debouncedSearchTerm, filterAppointmentsBySearch]);
+    }, [allAppointments, debouncedSearchTerm]);
 
     // Filter states
     const [selectedTypes, setSelectedTypes] = useState<AppointmentType[]>([]);
@@ -285,24 +241,6 @@ const MyAppointments: React.FC = () => {
             return false;
         }
         return true;
-    };
-
-    // Helper: Parse sort parameter (format: "Field_order")
-    const parseSortParam = (sortValue: string) => {
-        const [field, order] = sortValue.split('_');
-        return {
-            sortBy: field,
-            sortDescending: order === 'desc',
-        };
-    };
-
-    // Helper: Format date to local YYYY-MM-DD (avoid timezone issues)
-    const formatLocalDate = (date: Date | null): string | undefined => {
-        if (!date) return undefined;
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
     };
 
     // Helper function to build query request
@@ -514,52 +452,14 @@ const MyAppointments: React.FC = () => {
                 </div>
 
                 {/* Search and Filter Controls */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                    {/* Search Input */}
-                    <div className="search-set">
-                        <div className="d-flex align-items-center flex-wrap gap-2">
-                            <div className="table-search d-flex align-items-center mb-0">
-                                <div className="search-input">
-                                    <label
-                                        htmlFor="appointmentSearch"
-                                        aria-label="Search appointments"
-                                    >
-                                        <input
-                                            id="appointmentSearch"
-                                            type="search"
-                                            className="form-control form-control-sm"
-                                            placeholder="Tìm kiếm thông tin..."
-                                            value={searchTerm}
-                                            onChange={handleSearchChange}
-                                            aria-controls="DataTables_Table_0"
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Filter and Sort */}
-                    <div className="d-flex align-items-center gap-2">
-                        <Button
-                            variant="white"
-                            size="md"
-                            className="fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                            icon="ti ti-filter text-gray-5"
-                            onClick={() => setShowFilterModal(true)}
-                        >
-                            Lọc
-                        </Button>
-                        <ActionDropdown
-                            type="sort"
-                            options={appointmentSortOptions}
-                            selectedValue={selectedSort}
-                            onSelect={handleSortChange}
-                            placeholder="Sắp xếp:"
-                            size="sm"
-                        />
-                    </div>
-                </div>
+                <AppointmentSearchControls
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    selectedSort={selectedSort}
+                    onSortChange={handleSortChange}
+                    sortOptions={APPOINTMENT_SORT_OPTIONS}
+                    onFilterClick={() => setShowFilterModal(true)}
+                />
                 {/* End Search and Filter Controls */}
 
                 {/* Start Table */}
