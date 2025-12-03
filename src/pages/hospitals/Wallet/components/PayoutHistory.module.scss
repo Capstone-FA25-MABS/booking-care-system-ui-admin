@@ -37,6 +37,8 @@
 
         table {
             margin-bottom: 0;
+            table-layout: fixed;
+            width: 100%;
 
             thead {
                 background-color: #f8f9fa;
@@ -64,6 +66,32 @@
                     }
                 }
             }
+        }
+
+        // Column widths
+        .colPeriod {
+            width: 18%;
+        }
+
+        .colCount {
+            width: 10%;
+            text-align: center;
+        }
+
+        .colAmount {
+            width: 14%;
+        }
+
+        .colStatus {
+            width: 13%;
+        }
+
+        .colDate {
+            width: 13%;
+        }
+
+        .colBank {
+            width: 32%;
         }
 
         .periodInfo {

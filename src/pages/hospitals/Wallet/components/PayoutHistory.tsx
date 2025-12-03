@@ -98,18 +98,20 @@ const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
                         <table className="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Kỳ thanh toán</th>
-                                    <th>Số cuộc hẹn</th>
-                                    <th className="text-end">Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày hoàn thành</th>
-                                    <th>Tài khoản nhận</th>
+                                    <th className={styles.colPeriod}>Kỳ thanh toán</th>
+                                    <th className={styles.colCount}>Số cuộc hẹn</th>
+                                    <th className={clsx(styles.colAmount, 'text-end')}>
+                                        Tổng tiền
+                                    </th>
+                                    <th className={styles.colStatus}>Trạng thái</th>
+                                    <th className={styles.colDate}>Ngày hoàn thành</th>
+                                    <th className={styles.colBank}>Tài khoản nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {payouts.map((payout) => (
                                     <tr key={payout.id}>
-                                        <td>
+                                        <td className={styles.colPeriod}>
                                             <div className={styles.periodInfo}>
                                                 <div className={styles.periodDates}>
                                                     {formatDate(payout.periodStart)} -{' '}
@@ -120,23 +122,25 @@ const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
                                                 </small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td className={styles.colCount}>
                                             <span className="badge bg-info">
                                                 {payout.appointmentCount}
                                             </span>
                                         </td>
-                                        <td className="text-end">
+                                        <td className={clsx(styles.colAmount, 'text-end')}>
                                             <strong className={styles.amount}>
                                                 {formatCurrency(payout.totalAmount)}
                                             </strong>
                                         </td>
-                                        <td>{getStatusBadge(payout.status)}</td>
-                                        <td>
+                                        <td className={styles.colStatus}>
+                                            {getStatusBadge(payout.status)}
+                                        </td>
+                                        <td className={styles.colDate}>
                                             {payout.processedAt
                                                 ? formatDate(payout.processedAt)
                                                 : '-'}
                                         </td>
-                                        <td>
+                                        <td className={styles.colBank}>
                                             {payout.bankAccount ? (
                                                 <div className={styles.bankAccountInfo}>
                                                     <div className={styles.bankLogoSmall}>

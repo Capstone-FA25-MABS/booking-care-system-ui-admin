@@ -207,6 +207,7 @@ const Wallet: React.FC = () => {
                         payoutHistoryRef.current?.refresh();
                     }}
                     hospitalId={hospitalId}
+                    hospitalName={hospitalProfile?.name || ''}
                 />
             </div>
         </div>

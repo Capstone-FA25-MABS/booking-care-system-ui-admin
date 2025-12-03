@@ -10,6 +10,7 @@ interface GeneratePayoutsModalProps {
     onHide: () => void;
     onSuccess: () => void;
     hospitalId?: string;
+    hospitalName?: string;
 }
 
 const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({
@@ -17,6 +18,7 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({
     onHide,
     onSuccess,
     hospitalId,
+    hospitalName,
 }) => {
     const { generatePayouts, loading } = useHospitalPayouts();
 
@@ -54,11 +56,17 @@ const GeneratePayoutsModal: React.FC<GeneratePayoutsModalProps> = ({
             return;
         }
 
+        if (!hospitalName) {
+            setError('Không tìm thấy tên bệnh viện');
+            return;
+        }
+
         try {
             const requestData: GeneratePayoutsRequest = {
                 periodStartDate: formatDateToLocalString(startDate),
                 periodEndDate: formatDateToLocalString(endDate),
                 hospitalId: hospitalId,
+                hospitalName: hospitalName,
             };
 
             await generatePayouts(requestData);

@@ -34,6 +34,7 @@ export interface GeneratePayoutsRequest {
     periodStartDate: string;
     periodEndDate: string;
     hospitalId: string;
+    hospitalName: string;
 }
 
 export interface MarkPayoutCompletedRequest {
