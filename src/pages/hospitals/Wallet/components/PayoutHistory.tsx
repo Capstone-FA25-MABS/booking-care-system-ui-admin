@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -11,13 +11,32 @@ import { formatCurrency, getPayoutStatusBadge, getBankLogoUrl } from '@/utils/wa
 
 import styles from './PayoutHistory.module.scss';
 
-const PayoutHistory: React.FC = () => {
+export interface PayoutHistoryRef {
+    refresh: () => void;
+}
+
+const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
     const hospitalId = hospitalProfile?.id;
     const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
 
-    const { payouts, loading, error, currentPage, totalPages, totalCount, handlePageChange } =
-        useHospitalPayoutHistory(hospitalId);
+    const {
+        payouts,
+        loading,
+        error,
+        currentPage,
+        totalPages,
+        totalCount,
+        handlePageChange,
+        fetchPayouts,
+    } = useHospitalPayoutHistory(hospitalId);
+
+    // Expose refresh function to parent component
+    useImperativeHandle(ref, () => ({
+        refresh: () => {
+            fetchPayouts(currentPage);
+        },
+    }));
 
     const handleLogoError = (payoutId: string) => {
         setFailedLogos((prev) => new Set(prev).add(payoutId));
@@ -79,18 +98,20 @@ const PayoutHistory: React.FC = () => {
                         <table className="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Kỳ thanh toán</th>
-                                    <th>Số cuộc hẹn</th>
-                                    <th className="text-end">Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày hoàn thành</th>
-                                    <th>Tài khoản nhận</th>
+                                    <th className={styles.colPeriod}>Kỳ thanh toán</th>
+                                    <th className={styles.colCount}>Số cuộc hẹn</th>
+                                    <th className={clsx(styles.colAmount, 'text-end')}>
+                                        Tổng tiền
+                                    </th>
+                                    <th className={styles.colStatus}>Trạng thái</th>
+                                    <th className={styles.colDate}>Ngày hoàn thành</th>
+                                    <th className={styles.colBank}>Tài khoản nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {payouts.map((payout) => (
                                     <tr key={payout.id}>
-                                        <td>
+                                        <td className={styles.colPeriod}>
                                             <div className={styles.periodInfo}>
                                                 <div className={styles.periodDates}>
                                                     {formatDate(payout.periodStart)} -{' '}
@@ -101,23 +122,25 @@ const PayoutHistory: React.FC = () => {
                                                 </small>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td className={styles.colCount}>
                                             <span className="badge bg-info">
                                                 {payout.appointmentCount}
                                             </span>
                                         </td>
-                                        <td className="text-end">
+                                        <td className={clsx(styles.colAmount, 'text-end')}>
                                             <strong className={styles.amount}>
                                                 {formatCurrency(payout.totalAmount)}
                                             </strong>
                                         </td>
-                                        <td>{getStatusBadge(payout.status)}</td>
-                                        <td>
+                                        <td className={styles.colStatus}>
+                                            {getStatusBadge(payout.status)}
+                                        </td>
+                                        <td className={styles.colDate}>
                                             {payout.processedAt
                                                 ? formatDate(payout.processedAt)
                                                 : '-'}
                                         </td>
-                                        <td>
+                                        <td className={styles.colBank}>
                                             {payout.bankAccount ? (
                                                 <div className={styles.bankAccountInfo}>
                                                     <div className={styles.bankLogoSmall}>
@@ -211,6 +234,8 @@ const PayoutHistory: React.FC = () => {
             )}
         </div>
     );
-};
+});
+
+PayoutHistory.displayName = 'PayoutHistory';
 
 export default PayoutHistory;

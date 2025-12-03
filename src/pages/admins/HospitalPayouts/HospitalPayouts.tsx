@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Card, Form, Table, Badge, Row, Col } from 'react-bootstrap';
-import { FiRefreshCw, FiCalendar, FiFilter } from 'react-icons/fi';
+import { FiRefreshCw, FiFilter } from 'react-icons/fi';
 import { useHospitalPayouts, usePayoutStatistics } from '@/hooks/useHospitalPayouts';
 import { PayoutStatus } from '@/types/hospitalPayout.types';
 import type { PayoutQueryRequest } from '@/types/hospitalPayout.types';
-import GeneratePayoutsModal from './components/GeneratePayoutsModal';
 import PayoutDetailsModal from './components/PayoutDetailsModal';
 import StatisticsCards from './components/StatisticsCards';
 import Calendar from '@/components/Calendar/Calendar';
+import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
+import { formatDateToLocalString } from '@/utils/formatDate';
 
 const HospitalPayouts: React.FC = () => {
     const { payouts, totalCount, loading, fetchPayouts, markPayoutCompleted } =
         useHospitalPayouts();
     const { statistics, fetchStatistics } = usePayoutStatistics();
 
-    const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [payoutToMarkCompleted, setPayoutToMarkCompleted] = useState<string | null>(null);
     const [filters, setFilters] = useState<PayoutQueryRequest>({
         pageNumber: 1,
         pageSize: 10,
@@ -32,25 +34,23 @@ const HospitalPayouts: React.FC = () => {
         fetchStatistics();
     }, [filters, fetchPayouts, fetchStatistics]);
 
-    const handleGenerateSuccess = useCallback(() => {
-        setShowGenerateModal(false);
-        fetchPayouts(filters);
-        fetchStatistics();
-    }, [filters, fetchPayouts, fetchStatistics]);
+    const handleMarkCompleted = useCallback((payoutId: string) => {
+        setPayoutToMarkCompleted(payoutId);
+        setConfirmDialogOpen(true);
+    }, []);
 
-    const handleMarkCompleted = useCallback(
-        async (payoutId: string) => {
-            if (globalThis.confirm('Are you sure you want to mark this payout as completed?')) {
-                try {
-                    await markPayoutCompleted(payoutId);
-                    fetchStatistics();
-                } catch (error) {
-                    console.error('Failed to mark payout as completed:', error);
-                }
-            }
-        },
-        [markPayoutCompleted, fetchStatistics]
-    );
+    const handleConfirmMarkCompleted = useCallback(async () => {
+        if (!payoutToMarkCompleted) return;
+
+        try {
+            await markPayoutCompleted(payoutToMarkCompleted);
+            fetchStatistics();
+        } catch (error) {
+            console.error('Failed to mark payout as completed:', error);
+        } finally {
+            setPayoutToMarkCompleted(null);
+        }
+    }, [payoutToMarkCompleted, markPayoutCompleted, fetchStatistics]);
 
     const handleFilterChange = (key: keyof PayoutQueryRequest, value: string | undefined) => {
         setFilters((prev) => ({
@@ -62,13 +62,13 @@ const HospitalPayouts: React.FC = () => {
 
     const handleStartDateChange = (date: Date | null) => {
         setStartDate(date);
-        const dateStr = date ? date.toISOString().split('T')[0] : undefined;
+        const dateStr = date ? formatDateToLocalString(date) : undefined;
         handleFilterChange('periodStartDate', dateStr);
     };
 
     const handleEndDateChange = (date: Date | null) => {
         setEndDate(date);
-        const dateStr = date ? date.toISOString().split('T')[0] : undefined;
+        const dateStr = date ? formatDateToLocalString(date) : undefined;
         handleFilterChange('periodEndDate', dateStr);
     };
 
@@ -99,10 +99,6 @@ const HospitalPayouts: React.FC = () => {
         <div className="container-fluid p-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>Hospital Payouts Management</h2>
-                <Button variant="primary" onClick={() => setShowGenerateModal(true)}>
-                    <FiCalendar className="me-2" />
-                    Generate Payouts
-                </Button>
             </div>
 
             {statistics && <StatisticsCards statistics={statistics} />}
@@ -311,12 +307,6 @@ const HospitalPayouts: React.FC = () => {
                 </Card.Body>
             </Card>
 
-            <GeneratePayoutsModal
-                show={showGenerateModal}
-                onHide={() => setShowGenerateModal(false)}
-                onSuccess={handleGenerateSuccess}
-            />
-
             {selectedPayoutId && (
                 <PayoutDetailsModal
                     payoutId={selectedPayoutId}
@@ -324,6 +314,21 @@ const HospitalPayouts: React.FC = () => {
                     onMarkCompleted={handleMarkCompleted}
                 />
             )}
+
+            <ConfirmDialog
+                isOpen={confirmDialogOpen}
+                onClose={() => {
+                    setConfirmDialogOpen(false);
+                    setPayoutToMarkCompleted(null);
+                }}
+                onConfirm={handleConfirmMarkCompleted}
+                title="Xác nhận hoàn tất thanh toán"
+                message="Bạn có chắc chắn muốn đánh dấu thanh toán này là đã hoàn tất? Hành động này xác nhận rằng bạn đã chuyển tiền cho bệnh viện."
+                confirmText="Xác nhận"
+                cancelText="Hủy"
+                type="warning"
+                icon="fa-solid fa-check-circle"
+            />
         </div>
     );
 };
