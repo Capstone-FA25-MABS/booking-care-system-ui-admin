@@ -65,7 +65,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ show, onHide, appointment }
         if (!printWindow) return;
 
         // Write the HTML content to the new window
-        printWindow.document.write(`
+        const htmlContent = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -145,8 +145,10 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ show, onHide, appointment }
                 ${invoiceContent.innerHTML}
             </body>
             </html>
-        `);
+        `;
 
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
         printWindow.document.close();
 
         // Wait for content to load, then print
@@ -168,16 +170,15 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ show, onHide, appointment }
         <Modal show={show} onHide={onHide} centered size="lg">
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <i className="ti ti-file-invoice me-2"></i>
-                    Hoá đơn thanh toán
+                    <i className="ti ti-file-invoice me-2"></i> Hoá đơn thanh toán
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {loading && (
                     <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
+                        <output className="spinner-border text-primary" aria-live="polite">
                             <span className="visually-hidden">Đang tải...</span>
-                        </div>
+                        </output>
                     </div>
                 )}
 
@@ -303,8 +304,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ show, onHide, appointment }
                                 {appointment.consultationFees &&
                                     appointment.consultationFees > 0 && (
                                         <div className="alert alert-info mt-3 mb-0">
-                                            <i className="ti ti-info-circle me-2"></i>
-                                            Bệnh nhân cần thanh toán số tiền còn lại khi đến khám.
+                                            <i className="ti ti-info-circle me-2"></i> Bệnh nhân cần
+                                            thanh toán số tiền còn lại khi đến khám.
                                         </div>
                                     )}
                             </div>
@@ -318,8 +319,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ show, onHide, appointment }
                 </button>
                 {!loading && !error && (
                     <button type="button" className="btn btn-primary" onClick={handlePrint}>
-                        <i className="ti ti-printer me-2"></i>
-                        In hoá đơn
+                        <i className="ti ti-printer me-2"></i> In hoá đơn
                     </button>
                 )}
             </Modal.Footer>

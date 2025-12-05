@@ -574,7 +574,7 @@ const ListAppointments: React.FC = () => {
                                             <i
                                                 className="ti ti-file-invoice me-2"
                                                 aria-hidden="true"
-                                            ></i>
+                                            ></i>{' '}
                                             Xem hoá đơn
                                         </button>
                                     </li>
