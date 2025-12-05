@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import styles from './ChartJsLine.module.scss';
 import { useChartLoader, initializeChart } from '@/hooks/useChartLoader';
+import { getYAxisConfig, numberFormatter } from './chartConfig';
 
 type ChartDataPoint = { label: string; value1: number; value2: number };
 
@@ -12,8 +13,6 @@ interface ChartJsBarProps {
     label2: string;
     stacked?: boolean;
 }
-
-const numberFormatter = new Intl.NumberFormat('vi-VN');
 
 export const ChartJsBar: React.FC<ChartJsBarProps> = ({
     data,
@@ -78,24 +77,8 @@ export const ChartJsBar: React.FC<ChartJsBarProps> = ({
                         },
                     },
                     y: {
+                        ...getYAxisConfig(),
                         stacked: stacked,
-                        min: 0,
-                        grid: {
-                            color: '#f1f5f9',
-                        },
-                        ticks: {
-                            color: '#94a3b8',
-                            callback: function (value: any) {
-                                // Format large numbers
-                                if (value >= 1000000) {
-                                    return (value / 1000000).toFixed(1) + 'M';
-                                }
-                                if (value >= 1000) {
-                                    return (value / 1000).toFixed(0) + 'K';
-                                }
-                                return numberFormatter.format(value);
-                            },
-                        },
                     },
                 },
                 plugins: {
