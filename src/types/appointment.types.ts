@@ -76,7 +76,8 @@ export interface AppointmentResponse {
     attachmentUrls?: string[];
     createdAt: string;
     updatedAt: string;
-    consultationFees?: number; // From backend for refund option check
+    amount?: number; // Total consultation/service fee (from backend)
+    consultationFees?: number; // Remaining payment amount (Amount - Deposit) - only for Staff role
     patientInfo?: PatientInfo; // Account owner (người đại diện)
     relativeInfo?: RelativeInfo; // Family member (bệnh nhân thực sự)
     doctorInfo?: DoctorInfo;
@@ -156,7 +157,8 @@ export interface AppointmentCardData {
     isNew?: boolean;
     hasReview?: boolean;
     specialtyId?: string; // For fetching available doctors
-    consultationFees?: number; // For checking if refund option should be shown
+    amount?: number; // Total consultation/service fee (before deposit)
+    consultationFees?: number; // Remaining payment amount (Amount - Deposit) - only for Staff role
     // Separate info sections
     // When relativeInfo exists: patientInfo = người đại diện, relativeInfo = bệnh nhân thực sự
     // When relativeInfo is null: patientInfo = bệnh nhân (đặt cho chính mình)
@@ -395,7 +397,8 @@ export const transformToCardData = (apiResponse: AppointmentResponse): Appointme
         result: apiResponse.result,
         symptoms: apiResponse.symptoms,
         attachmentUrls: apiResponse.attachmentUrls,
-        consultationFees: apiResponse.consultationFees, // For refund option check
+        amount: apiResponse.amount, // Total consultation/service fee
+        consultationFees: apiResponse.consultationFees, // Remaining payment (for Staff role)
         isNew: false, // Can be calculated based on createdAt
         hasReview: false, // Needs review data from another endpoint
         // Map info sections directly from API response

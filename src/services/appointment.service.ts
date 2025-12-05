@@ -24,6 +24,7 @@ const APPOINTMENT_ENDPOINTS = {
     ASSIGN_NEW_DOCTOR: (id: string) => `/appointments/${id}/assign-new-doctor`,
     AVAILABLE_DOCTORS: '/appointments/available-doctors', // Now uses query params
     STAFF_STATISTICS: '/appointments/staff/statistics',
+    APPOINTMENT_STATISTICS: '/appointments/statistics', // Revenue statistics for staff dashboard
     // NEW: Assign doctor to appointment flow (for "Hospital assigns doctor" appointments)
     DOCTORS_FOR_ASSIGNMENT: (id: string) => `/appointments/${id}/doctors-for-assignment`,
     ASSIGN_DOCTOR: (id: string) => `/appointments/${id}/assign-doctor`,
@@ -323,6 +324,34 @@ export class AppointmentService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Failed to fetch hospital statistics');
+        }
+    }
+
+    /**
+     * Get appointment revenue statistics for staff dashboard
+     * Shows revenue from COMPLETED appointments only
+     */
+    static async getAppointmentStatistics(params: {
+        hospitalId: string;
+        fromDate?: string;
+        toDate?: string;
+        period?: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
+        doctorId?: string;
+        specialtyId?: string;
+    }): Promise<ApiResponse<any>> {
+        try {
+            const response: any = await axiosInstance.get(
+                APPOINTMENT_ENDPOINTS.APPOINTMENT_STATISTICS,
+                { params }
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Appointment statistics retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to fetch appointment statistics');
         }
     }
 

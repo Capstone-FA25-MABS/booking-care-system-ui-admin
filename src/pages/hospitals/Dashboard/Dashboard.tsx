@@ -9,7 +9,7 @@ import { HospitalService } from '@/services/hospital.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine } from '@/components/ChartJsLine';
+import { ChartJsMultiLine, ChartJsSingleBar } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
@@ -23,6 +23,9 @@ import {
     buildNewPatientTrendPoints,
     ChartPoint,
 } from '@/utils/dashboardChartData';
+import { RevenueFilterButtons, RevenueViewPeriod } from '@/components/RevenueFilterButtons';
+import { formatTimeLabel } from '@/utils/paymentChartFormatter';
+import { StatisticsPeriod as PaymentStatisticsPeriod } from '@/types/payment.types';
 
 const appointmentMetricPresentation: Record<
     AppointmentMetricKey,
@@ -50,6 +53,12 @@ const HospitalDashboard: React.FC = () => {
         serviceMedicalsCount: number;
     } | null>(null);
     const [isLoadingHospitalOverview, setIsLoadingHospitalOverview] = useState(false);
+
+    // Revenue chart states
+    const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
+    const [revenueChartData, setRevenueChartData] = useState<ChartPoint[]>([]);
+    const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
+
     const fetchHospitalReviewEntities = useCallback(async () => {
         if (!hospitalProfile?.id) {
             return { doctors: [], services: [] };
@@ -155,6 +164,118 @@ const HospitalDashboard: React.FC = () => {
     useEffect(() => {
         loadHospitalOverview();
     }, [loadHospitalOverview]);
+
+    // Load revenue chart from appointment statistics API
+    const loadRevenueChart = useCallback(async () => {
+        if (!hospitalProfile?.id) return;
+
+        setIsLoadingRevenueChart(true);
+        try {
+            // Calculate date range and period based on selected revenue period
+            const now = new Date();
+            let fromDateStr: string;
+            let toDateStr: string;
+            let period: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
+            let displayPeriod: PaymentStatisticsPeriod;
+
+            // Helper function to format date as YYYY-MM-DD in local timezone
+            const formatLocalDate = (date: Date): string => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            switch (revenuePeriod) {
+                case '7days': {
+                    // Last 7 days: today and 6 days back
+                    const sevenDaysAgo = new Date(now);
+                    sevenDaysAgo.setDate(now.getDate() - 6);
+                    fromDateStr = formatLocalDate(sevenDaysAgo);
+                    toDateStr = formatLocalDate(now);
+                    period = 'Daily';
+                    displayPeriod = PaymentStatisticsPeriod.Daily;
+                    break;
+                }
+                case '4weeks': {
+                    // Last 4 weeks: 27 days back to today (28 days total)
+                    const fourWeeksAgo = new Date(now);
+                    fourWeeksAgo.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(fourWeeksAgo);
+                    toDateStr = formatLocalDate(now);
+                    period = 'Weekly';
+                    displayPeriod = PaymentStatisticsPeriod.Weekly;
+                    break;
+                }
+                case '6months': {
+                    // Last 6 months: from start of 5 months ago to today
+                    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+                    fromDateStr = formatLocalDate(sixMonthsAgo);
+                    toDateStr = formatLocalDate(now);
+                    period = 'Monthly';
+                    displayPeriod = PaymentStatisticsPeriod.Monthly;
+                    break;
+                }
+                case '4quarters': {
+                    // Last 4 quarters including current quarter
+                    const currentMonth = now.getMonth();
+                    const currentQuarter = Math.floor(currentMonth / 3);
+                    let startQuarter = currentQuarter - 3;
+                    let startYear = now.getFullYear();
+                    while (startQuarter < 0) {
+                        startQuarter += 4;
+                        startYear--;
+                    }
+                    const startMonth = startQuarter * 3;
+                    const fourQuartersAgo = new Date(startYear, startMonth, 1);
+                    fromDateStr = formatLocalDate(fourQuartersAgo);
+                    toDateStr = formatLocalDate(now);
+                    period = 'Quarterly';
+                    displayPeriod = PaymentStatisticsPeriod.Quarterly;
+                    break;
+                }
+                default: {
+                    const defaultFrom = new Date(now);
+                    defaultFrom.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(defaultFrom);
+                    toDateStr = formatLocalDate(now);
+                    period = 'Weekly';
+                    displayPeriod = PaymentStatisticsPeriod.Weekly;
+                }
+            }
+
+            // Call appointment statistics API
+            const response = await AppointmentService.getAppointmentStatistics({
+                hospitalId: hospitalProfile.id,
+                fromDate: fromDateStr,
+                toDate: toDateStr,
+                period,
+            });
+
+            // Convert API response to chart data format with Vietnamese time labels (only revenue)
+            const chartData: ChartPoint[] = (response.data?.timeSeries || []).map((item: any) => ({
+                label: formatTimeLabel(
+                    item.timeLabel,
+                    displayPeriod,
+                    item.periodStart,
+                    item.periodEnd
+                ),
+                value: item.totalRevenue,
+            }));
+
+            setRevenueChartData(chartData);
+        } catch (err: any) {
+            console.error('Failed to load revenue chart:', err);
+            toast.error(`Không thể tải dữ liệu doanh thu: ${err?.message || 'Lỗi không xác định'}`);
+            setRevenueChartData([]);
+        } finally {
+            setIsLoadingRevenueChart(false);
+        }
+    }, [hospitalProfile?.id, revenuePeriod]);
+
+    useEffect(() => {
+        loadRevenueChart();
+    }, [loadRevenueChart]);
 
     const overviewMetrics = useMemo(() => {
         if (!stats) return [];
@@ -431,6 +552,48 @@ const HospitalDashboard: React.FC = () => {
                                 </div>
                             )}
                         </>
+                    )}
+
+                    {/* Revenue Chart from Completed Appointments */}
+                    {isLoadingRevenueChart ? (
+                        <div className={styles.trendCard}>
+                            <div className={styles.cardHeader}>
+                                <h5>Doanh thu từ lịch hẹn</h5>
+                                <span>
+                                    Biểu đồ thống kê doanh thu từ các lịch hẹn đã hoàn thành
+                                </span>
+                            </div>
+                            <div className={styles.cardBody}>
+                                <div className={styles.chartJsWrapper}>
+                                    <div className={styles.chartSkeleton} />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        revenueChartData.length > 0 && (
+                            <div className={styles.trendCard}>
+                                <div className={styles.cardHeader}>
+                                    <div>
+                                        <h5>Doanh thu từ lịch hẹn</h5>
+                                        <span>
+                                            Biểu đồ thống kê doanh thu từ các lịch hẹn đã hoàn thành
+                                        </span>
+                                    </div>
+                                    <RevenueFilterButtons
+                                        selectedPeriod={revenuePeriod}
+                                        onPeriodChange={setRevenuePeriod}
+                                        isLoading={isLoadingRevenueChart}
+                                    />
+                                </div>
+                                <div className={styles.cardBody}>
+                                    <ChartJsSingleBar
+                                        data={revenueChartData}
+                                        color="#a78bfa"
+                                        label="Tổng doanh thu"
+                                    />
+                                </div>
+                            </div>
+                        )
                     )}
 
                     {!stats && !hospitalOverview && (
