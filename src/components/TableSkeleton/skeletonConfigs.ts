@@ -42,13 +42,14 @@ const COMMON_COLUMNS = {
 } as const;
 
 // Configuration for Appointment Table Skeleton
-// Columns: Ngày & giờ | Bệnh nhân | Người đại diện | Bác sĩ / Dịch vụ | Hình thức | Trạng thái | Actions
+// Columns: Ngày & giờ | Bệnh nhân | Người đại diện | Bác sĩ / Dịch vụ | Hình thức | Thanh toán | Trạng thái | Actions
 export const appointmentTableColumns: SkeletonColumn[] = [
     COMMON_COLUMNS.special.date, // Ngày & giờ
     COMMON_COLUMNS.avatar.medium, // Bệnh nhân
     COMMON_COLUMNS.avatar.medium, // Người đại diện
     COMMON_COLUMNS.avatar.large, // Bác sĩ / Dịch vụ
     COMMON_COLUMNS.text.small, // Hình thức
+    COMMON_COLUMNS.text.medium, // Thanh toán
     COMMON_COLUMNS.badge.medium, // Trạng thái
     COMMON_COLUMNS.actions.single, // Actions
 ];

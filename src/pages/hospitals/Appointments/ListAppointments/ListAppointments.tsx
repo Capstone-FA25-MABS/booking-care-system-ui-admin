@@ -7,6 +7,7 @@ import Pagination from '@/components/Pagination';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
+import InvoiceModal from '@/pages/hospitals/Appointments/InvoiceModal';
 import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
 import {
     useAppointmentFilterState,
@@ -69,6 +70,7 @@ const ListAppointments: React.FC = () => {
     const [showAssignDoctorToAppointmentModal, setShowAssignDoctorToAppointmentModal] =
         useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
         null
     );
@@ -377,7 +379,7 @@ const ListAppointments: React.FC = () => {
         if (apiError) {
             return (
                 <tr>
-                    <td colSpan={7} className="text-center py-5">
+                    <td colSpan={8} className="text-center py-5">
                         <div className="text-danger">
                             <i className="ti ti-alert-circle fs-1"></i>
                             <p className="mt-2">{apiError}</p>
@@ -397,7 +399,7 @@ const ListAppointments: React.FC = () => {
         if (appointments.length === 0) {
             return (
                 <tr>
-                    <td colSpan={7} className="text-center py-5">
+                    <td colSpan={8} className="text-center py-5">
                         <i className="ti ti-calendar-off fs-1 text-muted"></i>
                         <p className="mt-2 text-muted">Không có lịch hẹn nào</p>
                     </td>
@@ -494,6 +496,34 @@ const ListAppointments: React.FC = () => {
                             </button>
                         </div>
                     </td>
+                    {/* Payment Information - Only for Staff */}
+                    <td>
+                        {appointment.amount && appointment.consultationFees !== undefined ? (
+                            <div className="d-flex flex-column gap-1">
+                                <div className="text-muted small">
+                                    Tổng: {appointment.amount.toLocaleString('vi-VN')} ₫
+                                </div>
+                                {/* Show "Còn lại" only for waiting/upcoming tabs, not for completed */}
+                                {appointment.amount !== appointment.consultationFees &&
+                                    (activeStatusTab === 'waiting' ||
+                                        activeStatusTab === 'upcoming') && (
+                                        <div className="fw-semibold text-success">
+                                            Còn lại:{' '}
+                                            {appointment.consultationFees.toLocaleString('vi-VN')} ₫
+                                        </div>
+                                    )}
+                                {appointment.amount === appointment.consultationFees &&
+                                    (activeStatusTab === 'waiting' ||
+                                        activeStatusTab === 'upcoming') && (
+                                        <div className="badge bg-warning-transparent">
+                                            Chưa thanh toán
+                                        </div>
+                                    )}
+                            </div>
+                        ) : (
+                            <span className="text-muted">-</span>
+                        )}
+                    </td>
                     <td>
                         <StatusBadge status={appointment.status} />
                     </td>
@@ -530,6 +560,25 @@ const ListAppointments: React.FC = () => {
                                             </button>
                                         </li>
                                     )}
+                                {/* Show "Xem hoá đơn" for appointments with partial payment */}
+                                {appointment.amount !== appointment.consultationFees && (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                            onClick={() => {
+                                                setSelectedAppointment(appointment);
+                                                setShowInvoiceModal(true);
+                                            }}
+                                        >
+                                            <i
+                                                className="ti ti-file-invoice me-2"
+                                                aria-hidden="true"
+                                            ></i>{' '}
+                                            Xem hoá đơn
+                                        </button>
+                                    </li>
+                                )}
                                 <li>
                                     <button
                                         type="button"
@@ -608,6 +657,7 @@ const ListAppointments: React.FC = () => {
                                 <th>Người đại diện</th>
                                 <th>Bác sĩ / Dịch vụ</th>
                                 <th>Hình thức</th>
+                                <th>Thanh toán</th>
                                 <th>Trạng thái</th>
                                 <th></th>
                             </tr>
@@ -685,6 +735,16 @@ const ListAppointments: React.FC = () => {
                 appointment={selectedAppointment}
                 staffId={hospitalProfile?.id || ''}
                 onSuccess={handleAssignDoctorToAppointmentSuccess}
+            />
+
+            {/* Invoice Modal */}
+            <InvoiceModal
+                show={showInvoiceModal}
+                onHide={() => {
+                    setShowInvoiceModal(false);
+                    setSelectedAppointment(null);
+                }}
+                appointment={selectedAppointment}
             />
         </>
     );
