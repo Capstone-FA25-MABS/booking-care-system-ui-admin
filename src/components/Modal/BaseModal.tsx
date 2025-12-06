@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface BaseModalProps {
     isOpen: boolean;
@@ -17,6 +17,21 @@ const BaseModal: React.FC<BaseModalProps> = ({
     children,
     size = 'md',
 }) => {
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            // Save current overflow style
+            const originalStyle = globalThis.getComputedStyle(document.body).overflow;
+            // Prevent scrolling
+            document.body.style.overflow = 'hidden';
+
+            // Cleanup function to restore scroll
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
+        }
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const sizeClass = size === 'md' ? '' : `modal-${size}`;
@@ -25,13 +40,19 @@ const BaseModal: React.FC<BaseModalProps> = ({
         <div
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={onClose}
         >
             <div
                 className={`modal-dialog modal-dialog-centered ${sizeClass}`}
                 aria-modal="true"
                 aria-labelledby={titleId}
+                style={{ maxHeight: '90vh' }}
+                onClick={(e) => e.stopPropagation()}
             >
-                <div className="modal-content">
+                <div
+                    className="modal-content"
+                    style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+                >
                     <div className="modal-header">
                         <h5 className="modal-title" id={titleId}>
                             {title}

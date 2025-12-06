@@ -65,6 +65,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-credit-card',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.WALLET.ROOT)
             ),
+            createSimpleMenuItem(
+                'Quản lý mã giảm giá',
+                'ti ti-discount-2',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DISCOUNTS.ROOT)
+            ),
             createNotificationsMenuItem('staff'),
         ],
     },

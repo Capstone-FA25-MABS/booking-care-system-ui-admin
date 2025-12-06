@@ -7,16 +7,24 @@ import {
     DiscountResponse,
     DiscountListResponse,
     DiscountValidationResult,
-    ApplyDiscountRequest,
-    DiscountUsageStats,
 } from '../types/discount.types';
 import { DiscountStatus } from '../enums/discount.enums';
 
 // Base API endpoint for discounts
 const DISCOUNT_ENDPOINTS = {
     BASE: '/discounts',
+    BY_ID: (id: string) => `/discounts/${id}`,
+    BY_CODE: (code: string) => `/discounts/by-code/${code}`,
+    HOSPITAL_ACTIVE: (hospitalId: string) => `/discounts/hospital/${hospitalId}/active`,
+    APPLICABLE: '/discounts/applicable',
     VALIDATE: '/discounts/validate',
-    APPLY: '/discounts/apply',
+    USE: '/discounts/use',
+    REVERT: '/discounts/revert',
+    CALCULATE: '/discounts/calculate',
+    ACTIVATE: (id: string) => `/discounts/${id}/activate`,
+    DEACTIVATE: (id: string) => `/discounts/${id}/deactivate`,
+    UPDATE_EXPIRED: '/discounts/update-expired',
+    HEALTH: '/discounts/health',
     STATS: '/discounts/stats',
     BULK: '/discounts/bulk',
 } as const;
@@ -155,7 +163,7 @@ export class DiscountService {
      */
     static async deleteDiscount(id: string): Promise<{ success: boolean; message: string }> {
         try {
-            const response: any = await axiosInstance.delete(`${DISCOUNT_ENDPOINTS.BASE}/${id}`);
+            const response: any = await axiosInstance.delete(DISCOUNT_ENDPOINTS.BY_ID(id));
 
             return {
                 success: response.success ?? true,
@@ -170,21 +178,58 @@ export class DiscountService {
     }
 
     /**
+     * Activate a discount
+     */
+    static async activateDiscount(id: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.ACTIVATE(id));
+
+            return {
+                success: response.success ?? true,
+                message: response.message || 'Discount activated successfully',
+            };
+        } catch (error: any) {
+            throw {
+                success: false,
+                message: error.message || 'Failed to activate discount',
+            };
+        }
+    }
+
+    /**
+     * Deactivate a discount
+     */
+    static async deactivateDiscount(id: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.DEACTIVATE(id));
+
+            return {
+                success: response.success ?? true,
+                message: response.message || 'Discount deactivated successfully',
+            };
+        } catch (error: any) {
+            throw {
+                success: false,
+                message: error.message || 'Failed to deactivate discount',
+            };
+        }
+    }
+
+    /**
      * Validate a discount code
      */
     static async validateDiscount(
         code: string,
         context: {
-            clinicId: number;
-            specialtyId?: number;
-            doctorId?: number;
-            amount: number;
+            hospitalId: string;
+            totalAmount: number;
         }
     ): Promise<DiscountValidationResult> {
         try {
             const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.VALIDATE, {
                 code,
-                ...context,
+                hospitalId: context.hospitalId,
+                totalAmount: context.totalAmount,
             });
 
             return response.data || response;
@@ -192,7 +237,7 @@ export class DiscountService {
             throw {
                 isValid: false,
                 appliedAmount: 0,
-                finalAmount: context.amount,
+                finalAmount: context.totalAmount,
                 message: error.message || 'Failed to validate discount code',
                 errors: [error.message || 'Validation failed'],
             };
@@ -200,133 +245,92 @@ export class DiscountService {
     }
 
     /**
-     * Apply a discount code
+     * Use a discount code (apply and increment usage count)
      */
-    static async applyDiscount(request: ApplyDiscountRequest): Promise<DiscountValidationResult> {
+    static async useDiscount(request: {
+        code: string;
+        hospitalId: string;
+        totalAmount: number;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        discountAmount: number;
+        finalAmount: number;
+        discountId: string;
+        remainingUses?: number;
+    }> {
         try {
-            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.APPLY, request);
+            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.USE, request);
 
             return response.data || response;
         } catch (error: any) {
             throw {
-                isValid: false,
-                appliedAmount: 0,
-                finalAmount: request.originalAmount,
-                message: error.message || 'Failed to apply discount',
-                errors: [error.message || 'Application failed'],
+                success: false,
+                message: error.message || 'Failed to use discount',
+                discountAmount: 0,
+                finalAmount: request.totalAmount,
+                discountId: '',
             };
         }
     }
 
     /**
-     * Get discount usage statistics
+     * Calculate discount amount without applying it
      */
-    static async getDiscountStats(filters?: {
-        clinicId?: number;
-        startDate?: string;
-        endDate?: string;
-    }): Promise<DiscountUsageStats> {
+    static async calculateDiscountAmount(request: {
+        code: string;
+        originalAmount: number;
+        hospitalId: string;
+    }): Promise<{
+        discountAmount: number;
+        finalAmount: number;
+        originalAmount: number;
+    }> {
         try {
-            const queryString = new URLSearchParams();
+            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.CALCULATE, request);
 
-            if (filters) {
-                Object.entries(filters).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null) {
-                        queryString.append(key, String(value));
-                    }
-                });
-            }
+            return response.data || response;
+        } catch {
+            throw {
+                discountAmount: 0,
+                finalAmount: request.originalAmount,
+                originalAmount: request.originalAmount,
+            };
+        }
+    }
 
+    /**
+     * Revert discount usage (for cancelled orders)
+     */
+    static async revertDiscountUsage(request: {
+        code: string;
+        hospitalId: string;
+    }): Promise<{ success: boolean; message: string }> {
+        try {
+            const response: any = await axiosInstance.post(DISCOUNT_ENDPOINTS.REVERT, request);
+
+            return {
+                success: response.success ?? true,
+                message: response.message || 'Discount usage reverted successfully',
+            };
+        } catch (error: any) {
+            throw {
+                success: false,
+                message: error.message || 'Failed to revert discount usage',
+            };
+        }
+    }
+
+    /**
+     * Get active discounts for a hospital
+     */
+    static async getActiveDiscounts(hospitalId: string): Promise<Discount[]> {
+        try {
             const response: any = await axiosInstance.get(
-                `${DISCOUNT_ENDPOINTS.STATS}?${queryString.toString()}`
+                DISCOUNT_ENDPOINTS.HOSPITAL_ACTIVE(hospitalId)
             );
 
             return response.data || response;
-        } catch (error: any) {
-            console.log(error);
-            throw {
-                totalDiscounts: 0,
-                activeDiscounts: 0,
-                expiredDiscounts: 0,
-                totalUsage: 0,
-                totalSavings: 0,
-                averageDiscount: 0,
-            };
-        }
-    }
-
-    /**
-     * Bulk update discount status
-     */
-    static async bulkUpdateStatus(
-        discountIds: string[],
-        status: DiscountStatus
-    ): Promise<{ success: boolean; message: string; updatedCount: number }> {
-        try {
-            const response: any = await axiosInstance.patch(`${DISCOUNT_ENDPOINTS.BULK}/status`, {
-                discountIds,
-                status,
-            });
-
-            return {
-                success: response.success ?? true,
-                message: response.message || 'Bulk status update completed',
-                updatedCount: response.data?.updatedCount || response.updatedCount || 0,
-            };
-        } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Failed to update discount statuses',
-                updatedCount: 0,
-            };
-        }
-    }
-
-    /**
-     * Bulk delete discounts
-     */
-    static async bulkDeleteDiscounts(
-        discountIds: string[]
-    ): Promise<{ success: boolean; message: string; deletedCount: number }> {
-        try {
-            const response: any = await axiosInstance.delete(`${DISCOUNT_ENDPOINTS.BULK}/delete`, {
-                data: { discountIds },
-            });
-
-            return {
-                success: response.success ?? true,
-                message: response.message || 'Bulk delete completed',
-                deletedCount: response.data?.deletedCount || response.deletedCount || 0,
-            };
-        } catch (error: any) {
-            throw {
-                success: false,
-                message: error.message || 'Failed to delete discounts',
-                deletedCount: 0,
-            };
-        }
-    }
-
-    /**
-     * Get active discounts for a specific context
-     */
-    static async getActiveDiscounts(context: {
-        clinicId: string;
-        specialtyId?: string;
-        doctorId?: string;
-    }): Promise<Discount[]> {
-        try {
-            const queryParams: DiscountQueryParams = {
-                status: DiscountStatus.ACTIVE,
-                clinicId: context.clinicId,
-                ...(context.specialtyId && { specialtyId: context.specialtyId }),
-                ...(context.doctorId && { doctorId: context.doctorId }),
-                sortBy: 'amount',
-                sortOrder: 'desc',
-            };
-
-            const result = await this.getDiscounts(queryParams);
-            return result.data.discounts;
         } catch (error) {
             console.error('Failed to fetch active discounts:', error);
             return [];
@@ -410,11 +414,12 @@ export const {
     createDiscount,
     updateDiscount,
     deleteDiscount,
+    activateDiscount,
+    deactivateDiscount,
     validateDiscount,
-    applyDiscount,
-    getDiscountStats,
-    bulkUpdateStatus,
-    bulkDeleteDiscounts,
+    useDiscount,
+    calculateDiscountAmount,
+    revertDiscountUsage,
     getActiveDiscounts,
     checkDiscountAvailability,
 } = DiscountService;
