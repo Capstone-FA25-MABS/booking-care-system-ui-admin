@@ -27,6 +27,8 @@ const APPOINTMENT_ENDPOINTS = {
     // NEW: Assign doctor to appointment flow (for "Hospital assigns doctor" appointments)
     DOCTORS_FOR_ASSIGNMENT: (id: string) => `/appointments/${id}/doctors-for-assignment`,
     ASSIGN_DOCTOR: (id: string) => `/appointments/${id}/assign-doctor`,
+    // NEW: Reject pending appointment (before payment)
+    REJECT: (id: string) => `/appointments/${id}/reject`,
 } as const;
 
 // Schedule Service endpoints
@@ -384,6 +386,45 @@ export class AppointmentService {
             throw new Error(error.message || 'Failed to assign doctor');
         }
     }
+
+    /**
+     * Reject a pending appointment (before payment)
+     * Used by hospital staff to decline appointments that haven't been paid yet
+     * No refund process needed since payment hasn't been made
+     */
+    static async rejectPendingAppointment(
+        appointmentId: string,
+        rejectionReason: string,
+        rejectedByStaffId: string,
+        notifyPatient: boolean = true
+    ): Promise<
+        ApiResponse<{
+            success: boolean;
+            appointmentId: string;
+            message: string;
+            rejectedAt: string;
+            patientNotified: boolean;
+        }>
+    > {
+        try {
+            const response: any = await axiosInstance.post(
+                APPOINTMENT_ENDPOINTS.REJECT(appointmentId),
+                {
+                    appointmentId,
+                    rejectionReason,
+                    rejectedByStaffId,
+                    notifyPatient,
+                }
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data,
+                message: response.message || 'Đã từ chối lịch hẹn thành công',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Không thể từ chối lịch hẹn');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -401,6 +442,8 @@ export const {
     // NEW: Assign doctor to appointment flow
     getDoctorsForAssignment,
     assignDoctorToAppointment,
+    // NEW: Reject pending appointment
+    rejectPendingAppointment,
 } = AppointmentService;
 
 // Default export
