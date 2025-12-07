@@ -217,6 +217,14 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
         return true;
     };
 
+    // Helper function to get slot helper text - extracted to avoid nested ternary
+    const getSlotHelperText = (): string => {
+        if (!selectedDoctorId) return 'Vui lòng chọn bác sĩ trước';
+        if (!newAppointmentDate) return 'Vui lòng chọn ngày trước';
+        if (isFetchingSlots) return 'Đang tải giờ khả dụng...';
+        return `Có ${availableSlots.length} giờ khả dụng`;
+    };
+
     // Handle doctor selection
     const handleDoctorSelect = (doctorId: string) => {
         const doctor = getAllDoctors().find((d) => d.id === doctorId);
@@ -321,7 +329,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                 aria-pressed={isSelected}
                 disabled={!isAvailable}
                 className={`card mb-2 w-100 text-start ${isSelected ? 'border-primary bg-light' : ''} ${
-                    !isAvailable ? 'opacity-50' : ''
+                    isAvailable ? '' : 'opacity-50'
                 }`}
                 style={{ cursor: isAvailable ? 'pointer' : 'not-allowed' }}
                 onClick={() => handleDoctorSelect(doctor.id)}
@@ -532,7 +540,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                 <i
                                                     className="ti ti-clock me-2"
                                                     aria-hidden="true"
-                                                ></i>
+                                                ></i>{' '}
                                                 Lựa chọn khung giờ
                                             </h6>
                                             <div className="form-check mb-2">
@@ -592,14 +600,14 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
 
                                             {isFetchingDoctors ? (
                                                 <div className="text-center py-4">
-                                                    <div
+                                                    <output
                                                         className="spinner-border text-primary"
-                                                        role="status"
+                                                        aria-hidden="true"
                                                     >
                                                         <span className="visually-hidden">
                                                             Đang tải...
                                                         </span>
-                                                    </div>
+                                                    </output>
                                                     <p className="mt-2 text-muted">
                                                         Đang tải danh sách bác sĩ...
                                                     </p>
@@ -735,13 +743,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                         })}
                                                     </select>
                                                     <small className="text-muted">
-                                                        {!selectedDoctorId
-                                                            ? 'Vui lòng chọn bác sĩ trước'
-                                                            : !newAppointmentDate
-                                                              ? 'Vui lòng chọn ngày trước'
-                                                              : isFetchingSlots
-                                                                ? 'Đang tải giờ khả dụng...'
-                                                                : `Có ${availableSlots.length} giờ khả dụng`}
+                                                        {getSlotHelperText()}
                                                     </small>
                                                 </div>
                                             </div>
@@ -827,7 +829,7 @@ export const AssignDoctorModal: React.FC<AssignDoctorModalProps> = ({
                                                 <i
                                                     className="ti ti-user-check me-1"
                                                     aria-hidden="true"
-                                                ></i>
+                                                ></i>{' '}
                                                 Xác nhận gán
                                             </>
                                         )}

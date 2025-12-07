@@ -660,8 +660,8 @@ const ListAppointments: React.FC = () => {
                                             className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
                                             onClick={() => handleRejectClick(appointment)}
                                         >
-                                            <i className="ti ti-x me-2" aria-hidden="true"></i>
-                                            Từ chối lịch hẹn
+                                            <i className="ti ti-x me-2" aria-hidden="true"></i> Từ
+                                            chối lịch hẹn
                                         </button>
                                     </li>
                                 )}
@@ -673,8 +673,8 @@ const ListAppointments: React.FC = () => {
                                             className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-warning"
                                             onClick={() => handleCancelClick(appointment)}
                                         >
-                                            <i className="ti ti-x me-2" aria-hidden="true"></i>
-                                            Hủy lịch hẹn
+                                            <i className="ti ti-x me-2" aria-hidden="true"></i> Hủy
+                                            lịch hẹn
                                         </button>
                                     </li>
                                 )}
