@@ -9,7 +9,7 @@ import {
     UpdateDiscountRequest,
     DiscountQueryParams,
 } from '@/types/discount.types';
-import { DiscountStatus, DiscountType, DiscountApplicableTo } from '@/enums/discount.enums';
+import { DiscountStatus, DiscountType } from '@/enums/discount.enums';
 import { toast } from 'react-toastify';
 import BaseModal from '@/components/Modal/BaseModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
@@ -34,7 +34,6 @@ const HospitalDiscountManagement: React.FC = () => {
         name: '',
         description: '',
         hospitalId: hospitalProfile?.id || '',
-        applicableTo: DiscountApplicableTo.ALL,
         amount: 0,
         discountType: DiscountType.PERCENTAGE,
         startDate: '',
@@ -182,7 +181,6 @@ const HospitalDiscountManagement: React.FC = () => {
             name: discount.name,
             description: discount.description || '',
             hospitalId: discount.hospitalId,
-            applicableTo: discount.applicableTo,
             amount: discount.amount,
             discountType: discount.discountType,
             startDate: discount.startDate.split('T')[0],
@@ -198,7 +196,6 @@ const HospitalDiscountManagement: React.FC = () => {
             name: '',
             description: '',
             hospitalId: hospitalProfile?.id || '',
-            applicableTo: DiscountApplicableTo.ALL,
             amount: 0,
             discountType: DiscountType.PERCENTAGE,
             startDate: '',
@@ -690,29 +687,6 @@ const HospitalDiscountManagement: React.FC = () => {
                                             : 'VD: 50000'
                                     }
                                 />
-                            </div>
-                            <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-layer-group me-2"></i>
-                                    Áp Dụng Cho
-                                </label>
-                                <select
-                                    className="form-select"
-                                    value={formData.applicableTo}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            applicableTo: e.target
-                                                .value as unknown as DiscountApplicableTo,
-                                        })
-                                    }
-                                >
-                                    <option value={DiscountApplicableTo.ALL}>Tất cả</option>
-                                    <option value={DiscountApplicableTo.SPECIALTY}>
-                                        Chuyên khoa
-                                    </option>
-                                    <option value={DiscountApplicableTo.DOCTOR}>Bác sĩ</option>
-                                </select>
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label">

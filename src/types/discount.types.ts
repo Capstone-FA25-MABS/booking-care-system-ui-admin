@@ -1,5 +1,5 @@
 // Import discount enums
-import { DiscountApplicableTo, DiscountStatus, DiscountType } from '../enums/discount.enums';
+import { DiscountStatus, DiscountType } from '../enums/discount.enums';
 
 // Discount types based on the DDL schema
 export interface Discount {
@@ -8,7 +8,6 @@ export interface Discount {
     name: string;
     description?: string;
     hospitalId: string;
-    applicableTo: DiscountApplicableTo;
     amount: number;
     discountType: DiscountType;
     startDate: string; // ISO date string
@@ -26,7 +25,6 @@ export interface CreateDiscountRequest {
     name: string;
     description?: string;
     hospitalId: string;
-    applicableTo: DiscountApplicableTo;
     amount: number;
     discountType: DiscountType;
     startDate: string;
