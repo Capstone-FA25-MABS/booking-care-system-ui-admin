@@ -8,6 +8,7 @@ import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
 import ModalRejectPending from '@/pages/hospitals/Appointments/ModalRejectPending';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
+import InvoiceModal from '@/pages/hospitals/Appointments/InvoiceModal';
 import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
 import {
     useAppointmentFilterState,
@@ -74,6 +75,7 @@ const ListAppointments: React.FC = () => {
     const [showAssignDoctorToAppointmentModal, setShowAssignDoctorToAppointmentModal] =
         useState(false);
     const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<AppointmentCardData | null>(
         null
     );
@@ -428,8 +430,10 @@ const ListAppointments: React.FC = () => {
             return <TableSkeleton rows={itemsPerPage} columns={skeletonColumns} />;
         }
 
-        // Calculate colSpan based on current tab (cancelled has extra "Lý do" column but no actions)
-        const colSpan = isCancelledTab ? 7 : 7;
+        // Calculate colSpan based on current tab
+        // Normal: Ngày & giờ | Bệnh nhân | Người đại diện | Bác sĩ/Dịch vụ | Hình thức | Thanh toán | Trạng thái | Actions = 8
+        // Cancelled: Ngày & giờ | Bệnh nhân | Người đại diện | Bác sĩ/Dịch vụ | Hình thức | Lý do | Thanh toán | Trạng thái = 8
+        const colSpan = 8;
 
         if (apiError) {
             return (
@@ -563,6 +567,34 @@ const ListAppointments: React.FC = () => {
                             </span>
                         </td>
                     )}
+                    {/* Payment Information - Only for Staff */}
+                    <td>
+                        {appointment.amount && appointment.consultationFees !== undefined ? (
+                            <div className="d-flex flex-column gap-1">
+                                <div className="text-muted small">
+                                    Tổng: {appointment.amount.toLocaleString('vi-VN')} ₫
+                                </div>
+                                {/* Show "Còn lại" only for waiting/upcoming tabs, not for completed */}
+                                {appointment.amount !== appointment.consultationFees &&
+                                    (activeStatusTab === 'waiting' ||
+                                        activeStatusTab === 'upcoming') && (
+                                        <div className="fw-semibold text-success">
+                                            Còn lại:{' '}
+                                            {appointment.consultationFees.toLocaleString('vi-VN')} ₫
+                                        </div>
+                                    )}
+                                {appointment.amount === appointment.consultationFees &&
+                                    (activeStatusTab === 'waiting' ||
+                                        activeStatusTab === 'upcoming') && (
+                                        <div className="badge bg-warning-transparent">
+                                            Chưa thanh toán
+                                        </div>
+                                    )}
+                            </div>
+                        ) : (
+                            <span className="text-muted">-</span>
+                        )}
+                    </td>
                     <td>
                         <StatusBadge status={appointment.status} />
                     </td>
@@ -599,6 +631,27 @@ const ListAppointments: React.FC = () => {
                                             </button>
                                         </li>
                                     )}
+
+                                {/* Show "Xem hoá đơn" for appointments with partial payment */}
+                                {appointment.amount !== appointment.consultationFees && (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                            onClick={() => {
+                                                setSelectedAppointment(appointment);
+                                                setShowInvoiceModal(true);
+                                            }}
+                                        >
+                                            <i
+                                                className="ti ti-file-invoice me-2"
+                                                aria-hidden="true"
+                                            ></i>{' '}
+                                            Xem hoá đơn
+                                        </button>
+                                    </li>
+                                )}
+
                                 {/* PENDING: Show "Từ chối" (reject - no refund needed) */}
                                 {appointment.status === 'PENDING' && (
                                     <li>
@@ -694,6 +747,7 @@ const ListAppointments: React.FC = () => {
                                 <th>Bác sĩ / Dịch vụ</th>
                                 <th>Hình thức</th>
                                 {isCancelledTab && <th>Lý do</th>}
+                                <th>Thanh toán</th>
                                 <th>Trạng thái</th>
                                 {!isCancelledTab && <th></th>}
                             </tr>
@@ -786,6 +840,16 @@ const ListAppointments: React.FC = () => {
                 appointment={selectedAppointment}
                 staffId={hospitalProfile?.id || ''}
                 onSuccess={handleAssignDoctorToAppointmentSuccess}
+            />
+
+            {/* Invoice Modal */}
+            <InvoiceModal
+                show={showInvoiceModal}
+                onHide={() => {
+                    setShowInvoiceModal(false);
+                    setSelectedAppointment(null);
+                }}
+                appointment={selectedAppointment}
             />
         </>
     );
