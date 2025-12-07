@@ -53,6 +53,18 @@ export const appointmentTableColumns: SkeletonColumn[] = [
     COMMON_COLUMNS.actions.single, // Actions
 ];
 
+// Configuration for Cancelled Appointment Table Skeleton (includes Reason column)
+// Columns: Ngày & giờ | Bệnh nhân | Người đại diện | Bác sĩ / Dịch vụ | Hình thức | Lý do | Trạng thái
+export const cancelledAppointmentTableColumns: SkeletonColumn[] = [
+    COMMON_COLUMNS.special.date, // Ngày & giờ
+    COMMON_COLUMNS.avatar.medium, // Bệnh nhân
+    COMMON_COLUMNS.avatar.medium, // Người đại diện
+    COMMON_COLUMNS.avatar.large, // Bác sĩ / Dịch vụ
+    COMMON_COLUMNS.text.small, // Hình thức
+    COMMON_COLUMNS.text.xlarge, // Lý do
+    COMMON_COLUMNS.badge.medium, // Trạng thái
+];
+
 // Configuration for Doctor Table Skeleton
 // Columns: Tên & học vị | Chuyên khoa | Kinh nghiệm | Dịch vụ & giá | Ngôn ngữ | Trạng thái | Actions
 export const doctorTableColumns: SkeletonColumn[] = [

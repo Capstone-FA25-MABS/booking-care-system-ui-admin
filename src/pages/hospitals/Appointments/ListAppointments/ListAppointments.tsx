@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useDebounce } from '@/hooks/useDebounce';
 import Pagination from '@/components/Pagination';
 import ModalCancel from '@/pages/hospitals/Appointments/ModalCancel';
+import ModalRejectPending from '@/pages/hospitals/Appointments/ModalRejectPending';
 import AssignDoctorModal from '@/pages/hospitals/Appointments/AssignDoctorModal';
 import AssignDoctorToAppointmentModal from '@/pages/hospitals/Appointments/AssignDoctorToAppointmentModal';
 import { AppointmentFilterModal } from '@/components/AppointmentFilterModal';
@@ -15,7 +16,10 @@ import {
 } from '@/hooks/useAppointmentListState';
 import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
-import { appointmentTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
+import {
+    appointmentTableColumns,
+    cancelledAppointmentTableColumns,
+} from '@/components/TableSkeleton/skeletonConfigs';
 import { AppointmentService } from '@/services/appointment.service';
 import { createConversationAndNavigate } from '@/utils/chat-utils';
 import {
@@ -65,6 +69,7 @@ const ListAppointments: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRejectPendingModal, setShowRejectPendingModal] = useState(false);
     const [showAssignDoctorModal, setShowAssignDoctorModal] = useState(false);
     const [showAssignDoctorToAppointmentModal, setShowAssignDoctorToAppointmentModal] =
         useState(false);
@@ -73,6 +78,7 @@ const ListAppointments: React.FC = () => {
         null
     );
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isRejecting, setIsRejecting] = useState(false);
 
     // Search and Sort states
     const [searchTerm, setSearchTerm] = useState('');
@@ -240,14 +246,54 @@ const ListAppointments: React.FC = () => {
     };
 
     const handleCancelClick = (appointment: AppointmentCardData) => {
-        // Only allow cancellation of PENDING or CONFIRMED appointments
-        if (appointment.status !== 'PENDING' && appointment.status !== 'CONFIRMED') {
-            toast.warning('Chỉ có thể hủy lịch hẹn ở trạng thái Chờ xử lý hoặc Sắp tới');
+        // Only allow cancellation of CONFIRMED appointments (use reject for PENDING)
+        if (appointment.status !== 'CONFIRMED') {
+            toast.warning('Chỉ có thể hủy lịch hẹn ở trạng thái Sắp tới');
             return;
         }
 
         setSelectedAppointment(appointment);
         setShowCancelModal(true);
+    };
+
+    // Handler for rejecting PENDING appointments (before payment)
+    const handleRejectClick = (appointment: AppointmentCardData) => {
+        if (appointment.status !== 'PENDING') {
+            toast.warning('Chỉ có thể từ chối lịch hẹn ở trạng thái Chờ xử lý');
+            return;
+        }
+
+        setSelectedAppointment(appointment);
+        setShowRejectPendingModal(true);
+    };
+
+    // Handler for reject pending confirmation
+    const handleRejectConfirm = async (rejectionReason: string, notifyPatient: boolean) => {
+        if (!selectedAppointment) return;
+
+        setIsRejecting(true);
+        try {
+            await AppointmentService.rejectPendingAppointment(
+                selectedAppointment.appointmentId,
+                rejectionReason,
+                hospitalProfile?.id || '',
+                notifyPatient
+            );
+
+            toast.success('Đã từ chối lịch hẹn thành công');
+
+            // Close modal and reset state
+            setShowRejectPendingModal(false);
+            setSelectedAppointment(null);
+
+            // Refresh the list
+            await fetchAppointments();
+        } catch (error: any) {
+            console.error('Error rejecting appointment:', error);
+            toast.error(error.message || 'Không thể từ chối lịch hẹn');
+        } finally {
+            setIsRejecting(false);
+        }
     };
 
     // New handler for assign doctor from cancel modal
@@ -369,15 +415,26 @@ const ListAppointments: React.FC = () => {
         return <span className="text-muted">Chưa phân công</span>;
     };
 
+    // Check if current tab is cancelled to show reason column
+    const isCancelledTab = activeStatusTab === 'cancelled';
+
+    // Get appropriate skeleton columns based on tab
+    const skeletonColumns = isCancelledTab
+        ? cancelledAppointmentTableColumns
+        : appointmentTableColumns;
+
     const renderTableBody = () => {
         if (isLoading) {
-            return <TableSkeleton rows={itemsPerPage} columns={appointmentTableColumns} />;
+            return <TableSkeleton rows={itemsPerPage} columns={skeletonColumns} />;
         }
+
+        // Calculate colSpan based on current tab (cancelled has extra "Lý do" column but no actions)
+        const colSpan = isCancelledTab ? 7 : 7;
 
         if (apiError) {
             return (
                 <tr>
-                    <td colSpan={7} className="text-center py-5">
+                    <td colSpan={colSpan} className="text-center py-5">
                         <div className="text-danger">
                             <i className="ti ti-alert-circle fs-1"></i>
                             <p className="mt-2">{apiError}</p>
@@ -397,7 +454,7 @@ const ListAppointments: React.FC = () => {
         if (appointments.length === 0) {
             return (
                 <tr>
-                    <td colSpan={7} className="text-center py-5">
+                    <td colSpan={colSpan} className="text-center py-5">
                         <i className="ti ti-calendar-off fs-1 text-muted"></i>
                         <p className="mt-2 text-muted">Không có lịch hẹn nào</p>
                     </td>
@@ -494,6 +551,18 @@ const ListAppointments: React.FC = () => {
                             </button>
                         </div>
                     </td>
+                    {/* Lý do - only show for cancelled tab */}
+                    {isCancelledTab && (
+                        <td>
+                            <span
+                                className="text-muted text-truncate d-inline-block"
+                                style={{ maxWidth: '200px' }}
+                                title={appointment.reason || ''}
+                            >
+                                {appointment.reason || 'Không có lý do'}
+                            </span>
+                        </td>
+                    )}
                     <td>
                         <StatusBadge status={appointment.status} />
                     </td>
@@ -530,16 +599,32 @@ const ListAppointments: React.FC = () => {
                                             </button>
                                         </li>
                                     )}
-                                <li>
-                                    <button
-                                        type="button"
-                                        className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
-                                        onClick={() => handleCancelClick(appointment)}
-                                    >
-                                        <i className="ti ti-x me-2" aria-hidden="true"></i> Hủy lịch
-                                        hẹn
-                                    </button>
-                                </li>
+                                {/* PENDING: Show "Từ chối" (reject - no refund needed) */}
+                                {appointment.status === 'PENDING' && (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
+                                            onClick={() => handleRejectClick(appointment)}
+                                        >
+                                            <i className="ti ti-x me-2" aria-hidden="true"></i>
+                                            Từ chối lịch hẹn
+                                        </button>
+                                    </li>
+                                )}
+                                {/* CONFIRMED: Show "Hủy" (cancel - with refund options) */}
+                                {appointment.status === 'CONFIRMED' && (
+                                    <li>
+                                        <button
+                                            type="button"
+                                            className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-warning"
+                                            onClick={() => handleCancelClick(appointment)}
+                                        >
+                                            <i className="ti ti-x me-2" aria-hidden="true"></i>
+                                            Hủy lịch hẹn
+                                        </button>
+                                    </li>
+                                )}
                             </ul>
                         </td>
                     )}
@@ -608,8 +693,9 @@ const ListAppointments: React.FC = () => {
                                 <th>Người đại diện</th>
                                 <th>Bác sĩ / Dịch vụ</th>
                                 <th>Hình thức</th>
+                                {isCancelledTab && <th>Lý do</th>}
                                 <th>Trạng thái</th>
-                                <th></th>
+                                {!isCancelledTab && <th></th>}
                             </tr>
                         </thead>
                         <tbody>{renderTableBody()}</tbody>
@@ -638,7 +724,7 @@ const ListAppointments: React.FC = () => {
                 setSelectedDateRange={setSelectedDateRange}
             />
 
-            {/* Cancel Modal */}
+            {/* Cancel Modal - for CONFIRMED appointments (with refund options) */}
             <ModalCancel
                 show={showCancelModal}
                 onHide={() => {
@@ -661,6 +747,21 @@ const ListAppointments: React.FC = () => {
                 showRescheduleOptions={true}
                 hasDoctorAssigned={!!selectedAppointment?.doctorInfo?.id}
                 consultationFees={selectedAppointment?.consultationFees}
+            />
+
+            {/* Reject Pending Modal - for PENDING appointments (no refund needed) */}
+            <ModalRejectPending
+                show={showRejectPendingModal}
+                onHide={() => {
+                    if (!isRejecting) {
+                        setShowRejectPendingModal(false);
+                        setSelectedAppointment(null);
+                    }
+                }}
+                onConfirm={handleRejectConfirm}
+                loading={isRejecting}
+                appointmentId={selectedAppointment?.appointmentId}
+                patientName={selectedAppointment ? getActualPatientName(selectedAppointment) : ''}
             />
 
             {/* Assign Doctor Modal (for cancel/reschedule flow) */}
