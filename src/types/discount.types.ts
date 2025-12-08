@@ -40,7 +40,6 @@ export interface UpdateDiscountRequest extends Partial<CreateDiscountRequest> {
 // Query parameters for filtering discounts
 export interface DiscountFilters {
     hospitalId?: string;
-    applicableTo?: DiscountApplicableTo;
     discountType?: DiscountType;
     status?: DiscountStatus;
     code?: string;
