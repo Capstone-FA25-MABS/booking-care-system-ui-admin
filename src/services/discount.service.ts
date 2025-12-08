@@ -291,11 +291,13 @@ export class DiscountService {
 
             return response.data || response;
         } catch {
-            throw {
-                discountAmount: 0,
-                finalAmount: request.originalAmount,
-                originalAmount: request.originalAmount,
-            };
+            throw new Error(
+                JSON.stringify({
+                    discountAmount: 0,
+                    finalAmount: request.originalAmount,
+                    originalAmount: request.originalAmount,
+                })
+            );
         }
     }
 

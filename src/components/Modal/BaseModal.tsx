@@ -41,6 +41,10 @@ const BaseModal: React.FC<BaseModalProps> = ({
             className="modal fade show"
             style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
+            onKeyDown={(e) => e.key === 'Escape' && onClose()}
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal backdrop"
         >
             <div
                 className={`modal-dialog modal-dialog-centered ${sizeClass}`}
@@ -48,6 +52,9 @@ const BaseModal: React.FC<BaseModalProps> = ({
                 aria-labelledby={titleId}
                 style={{ maxHeight: '90vh' }}
                 onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                role="dialog"
+                tabIndex={-1}
             >
                 <div
                     className="modal-content"

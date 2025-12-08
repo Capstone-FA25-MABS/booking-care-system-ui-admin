@@ -13,6 +13,9 @@ import { DiscountStatus, DiscountType } from '@/enums/discount.enums';
 import { toast } from 'react-toastify';
 import BaseModal from '@/components/Modal/BaseModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
+import DiscountStatistics from './components/DiscountStatistics';
+import DiscountFilters from './components/DiscountFilters';
+import DiscountTableRow from './components/DiscountTableRow';
 import styles from './HospitalDiscountManagement.module.scss';
 
 const HospitalDiscountManagement: React.FC = () => {
@@ -59,7 +62,7 @@ const HospitalDiscountManagement: React.FC = () => {
                 hospitalId: hospitalProfile.id,
                 page: currentPage,
                 limit: pageSize,
-                search: searchTerm || undefined,
+                searchTerm: searchTerm || undefined,
                 status: statusFilter || undefined,
                 sortBy: 'createdAt',
                 sortOrder: 'desc',
@@ -279,71 +282,15 @@ const HospitalDiscountManagement: React.FC = () => {
             </div>
 
             {/* Statistics Cards */}
-            <div className={styles.statsGrid}>
-                <div className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>
-                        <i className="fas fa-ticket-alt" style={{ color: '#3498db' }}></i>
-                    </div>
-                    <div className={styles.statContent}>
-                        <div className={styles.statLabel}>Tổng Mã Giảm Giá</div>
-                        <div className={styles.statValue}>{statistics.total}</div>
-                    </div>
-                </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>
-                        <i className="fas fa-check-circle" style={{ color: '#4caf50' }}></i>
-                    </div>
-                    <div className={styles.statContent}>
-                        <div className={styles.statLabel}>Đang Hoạt Động</div>
-                        <div className={styles.statValue}>{statistics.active}</div>
-                    </div>
-                </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: '#ffebee' }}>
-                        <i className="fas fa-times-circle" style={{ color: '#f44336' }}></i>
-                    </div>
-                    <div className={styles.statContent}>
-                        <div className={styles.statLabel}>Đã Hết Hạn</div>
-                        <div className={styles.statValue}>{statistics.expired}</div>
-                    </div>
-                </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: '#fff3e0' }}>
-                        <i className="fas fa-users" style={{ color: '#ff9800' }}></i>
-                    </div>
-                    <div className={styles.statContent}>
-                        <div className={styles.statLabel}>Lượt Sử Dụng</div>
-                        <div className={styles.statValue}>{statistics.totalUsage}</div>
-                    </div>
-                </div>
-            </div>
+            <DiscountStatistics statistics={statistics} />
 
             {/* Filters */}
-            <div className={styles.filtersCard}>
-                <div className={styles.searchWrapper}>
-                    <i className="fas fa-search"></i>
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo mã hoặc tên..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                </div>
-                <div className={styles.filterWrapper}>
-                    <i className="fas fa-filter"></i>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as DiscountStatus | '')}
-                        className={styles.filterSelect}
-                    >
-                        <option value="">Tất cả trạng thái</option>
-                        <option value={DiscountStatus.ACTIVE}>Đang hoạt động</option>
-                        <option value={DiscountStatus.INACTIVE}>Không hoạt động</option>
-                        <option value={DiscountStatus.EXPIRED}>Đã hết hạn</option>
-                    </select>
-                </div>
-            </div>
+            <DiscountFilters
+                searchTerm={searchTerm}
+                statusFilter={statusFilter}
+                onSearchChange={setSearchTerm}
+                onStatusFilterChange={(value) => setStatusFilter(value)}
+            />
 
             {/* Discount List */}
             {loading ? (
@@ -401,121 +348,16 @@ const HospitalDiscountManagement: React.FC = () => {
                                     </tr>
                                 ) : (
                                     discounts.map((discount) => (
-                                        <tr key={discount.id}>
-                                            <td>
-                                                <div className={styles.codeCell}>
-                                                    <span className={styles.codeTag}>
-                                                        {discount.code}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className={styles.nameCell}>
-                                                    <div className={styles.name}>
-                                                        {discount.name}
-                                                    </div>
-                                                    {discount.description && (
-                                                        <div className={styles.description}>
-                                                            {discount.description}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className={styles.typeBadge}>
-                                                    {getDiscountTypeText(discount.discountType)}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={styles.amountValue}>
-                                                    {discount.discountType ===
-                                                    DiscountType.PERCENTAGE
-                                                        ? `${discount.amount}%`
-                                                        : `${discount.amount.toLocaleString('vi-VN')}₫`}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className={styles.usageCell}>
-                                                    <div className={styles.usageBar}>
-                                                        <div
-                                                            className={styles.usageProgress}
-                                                            style={{
-                                                                width: discount.maxUses
-                                                                    ? `${
-                                                                          (discount.usesCount /
-                                                                              discount.maxUses) *
-                                                                          100
-                                                                      }%`
-                                                                    : '0%',
-                                                            }}
-                                                        ></div>
-                                                    </div>
-                                                    <div className={styles.usageText}>
-                                                        {discount.usesCount}
-                                                        {discount.maxUses
-                                                            ? ` / ${discount.maxUses}`
-                                                            : ' / ∞'}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className={styles.dateRange}>
-                                                    <div className={styles.dateStart}>
-                                                        <i className="fas fa-play-circle"></i>
-                                                        {formatDate(discount.startDate)}
-                                                    </div>
-                                                    <div className={styles.dateEnd}>
-                                                        <i className="fas fa-stop-circle"></i>
-                                                        {formatDate(discount.endDate)}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{getStatusBadge(discount.status)}</td>
-                                            <td>
-                                                <div className={styles.actions}>
-                                                    <button
-                                                        onClick={() => openEditModal(discount)}
-                                                        className={styles.editBtn}
-                                                        title="Chỉnh sửa"
-                                                    >
-                                                        <i className="fas fa-edit"></i>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleToggleStatus(discount)}
-                                                        className={
-                                                            discount.status ===
-                                                            DiscountStatus.ACTIVE
-                                                                ? styles.deactivateBtn
-                                                                : styles.activateBtn
-                                                        }
-                                                        title={
-                                                            discount.status ===
-                                                            DiscountStatus.ACTIVE
-                                                                ? 'Vô hiệu hóa'
-                                                                : 'Kích hoạt'
-                                                        }
-                                                    >
-                                                        <i
-                                                            className={
-                                                                discount.status ===
-                                                                DiscountStatus.ACTIVE
-                                                                    ? 'fas fa-toggle-on'
-                                                                    : 'fas fa-toggle-off'
-                                                            }
-                                                        ></i>
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            setDeletingDiscountId(discount.id)
-                                                        }
-                                                        className={styles.deleteBtn}
-                                                        title="Xóa"
-                                                    >
-                                                        <i className="fas fa-trash-alt"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        <DiscountTableRow
+                                            key={discount.id}
+                                            discount={discount}
+                                            onEdit={openEditModal}
+                                            onToggleStatus={handleToggleStatus}
+                                            onDelete={(id) => setDeletingDiscountId(id)}
+                                            formatDate={formatDate}
+                                            getDiscountTypeText={getDiscountTypeText}
+                                            getStatusBadge={getStatusBadge}
+                                        />
                                     ))
                                 )}
                             </tbody>
@@ -710,11 +552,12 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-calendar-day me-2"></i>
-                                    Ngày Bắt Đầu <span className="text-danger">*</span>
+                                <label className="form-label" htmlFor="discountStartDate">
+                                    <i className="fas fa-calendar-day me-2"></i> Ngày Bắt Đầu{' '}
+                                    <span className="text-danger">*</span>
                                 </label>
                                 <input
+                                    id="discountStartDate"
                                     type="date"
                                     className="form-control"
                                     value={formData.startDate}
@@ -725,11 +568,12 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-calendar-check me-2"></i>
-                                    Ngày Kết Thúc <span className="text-danger">*</span>
+                                <label className="form-label" htmlFor="discountEndDate">
+                                    <i className="fas fa-calendar-check me-2"></i> Ngày Kết Thúc{' '}
+                                    <span className="text-danger">*</span>
                                 </label>
                                 <input
+                                    id="discountEndDate"
                                     type="date"
                                     className="form-control"
                                     value={formData.endDate}
@@ -773,16 +617,23 @@ const HospitalDiscountManagement: React.FC = () => {
                             Hủy Bỏ
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={loading}>
-                            <i
-                                className={
-                                    loading
-                                        ? 'fas fa-spinner fa-spin me-2'
-                                        : editingDiscount
-                                          ? 'fas fa-save me-2'
-                                          : 'fas fa-plus-circle me-2'
-                                }
-                            ></i>
-                            {loading ? 'Đang xử lý...' : editingDiscount ? 'Cập Nhật' : 'Tạo Mã'}
+                            {(() => {
+                                const iconClass = loading
+                                    ? 'fas fa-spinner fa-spin me-2'
+                                    : editingDiscount
+                                      ? 'fas fa-save me-2'
+                                      : 'fas fa-plus-circle me-2';
+                                const buttonText = loading
+                                    ? 'Đang xử lý...'
+                                    : editingDiscount
+                                      ? 'Cập Nhật'
+                                      : 'Tạo Mã';
+                                return (
+                                    <>
+                                        <i className={iconClass}></i> {buttonText}
+                                    </>
+                                );
+                            })()}
                         </button>
                     </div>
                 </form>

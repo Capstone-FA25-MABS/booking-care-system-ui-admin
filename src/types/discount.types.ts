@@ -43,7 +43,7 @@ export interface DiscountFilters {
     discountType?: DiscountType;
     status?: DiscountStatus;
     code?: string;
-    search?: string;
+    searchTerm?: string;
     startDate?: string;
     endDate?: string;
 }
