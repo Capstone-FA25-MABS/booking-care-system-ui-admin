@@ -433,11 +433,12 @@ const HospitalDiscountManagement: React.FC = () => {
                     >
                         <div className="row g-3">
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-barcode me-2"></i>
-                                    Mã Code <span className="text-danger">*</span>
+                                <label className="form-label" htmlFor="discountCode">
+                                    <i className="fas fa-barcode me-2" aria-hidden="true"></i> Mã
+                                    Code <span className="text-danger">*</span>
                                 </label>
                                 <input
+                                    id="discountCode"
                                     type="text"
                                     className="form-control"
                                     value={formData.code}
@@ -454,17 +455,21 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                                 {editingDiscount && (
                                     <small className="text-muted d-block mt-1">
-                                        <i className="fas fa-info-circle me-1"></i>
+                                        <i
+                                            className="fas fa-info-circle me-1"
+                                            aria-hidden="true"
+                                        ></i>{' '}
                                         Mã Code không thể chỉnh sửa
                                     </small>
                                 )}
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-tag me-2"></i>
-                                    Tên Mã Giảm Giá <span className="text-danger">*</span>
+                                <label className="form-label" htmlFor="discountName">
+                                    <i className="fas fa-tag me-2" aria-hidden="true"></i> Tên Mã
+                                    Giảm Giá <span className="text-danger">*</span>
                                 </label>
                                 <input
+                                    id="discountName"
                                     type="text"
                                     className="form-control"
                                     value={formData.name}
@@ -476,11 +481,12 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-percentage me-2"></i>
+                                <label className="form-label" htmlFor="discountType">
+                                    <i className="fas fa-percentage me-2" aria-hidden="true"></i>{' '}
                                     Loại Giảm Giá
                                 </label>
                                 <select
+                                    id="discountType"
                                     className="form-select"
                                     value={formData.discountType}
                                     onChange={(e) =>
@@ -497,18 +503,19 @@ const HospitalDiscountManagement: React.FC = () => {
                                 </select>
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-gift me-2"></i>
-                                    Giá Trị <span className="text-danger">*</span>
+                                <label className="form-label" htmlFor="discountAmount">
+                                    <i className="fas fa-gift me-2" aria-hidden="true"></i> Giá Trị{' '}
+                                    <span className="text-danger">*</span>
                                 </label>
                                 <input
+                                    id="discountAmount"
                                     type="number"
                                     className="form-control"
                                     value={formData.amount}
                                     onChange={(e) =>
                                         setFormData({
                                             ...formData,
-                                            amount: parseFloat(e.target.value) || 0,
+                                            amount: Number.parseFloat(e.target.value) || 0,
                                         })
                                     }
                                     required
@@ -531,11 +538,12 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">
-                                    <i className="fas fa-users me-2"></i>
-                                    Giới Hạn Sử Dụng
+                                <label className="form-label" htmlFor="discountMaxUses">
+                                    <i className="fas fa-users me-2" aria-hidden="true"></i> Giới
+                                    Hạn Sử Dụng
                                 </label>
                                 <input
+                                    id="discountMaxUses"
                                     type="number"
                                     className="form-control"
                                     value={formData.maxUses || ''}
@@ -543,7 +551,7 @@ const HospitalDiscountManagement: React.FC = () => {
                                         setFormData({
                                             ...formData,
                                             maxUses: e.target.value
-                                                ? parseInt(e.target.value)
+                                                ? Number.parseInt(e.target.value, 10)
                                                 : undefined,
                                         })
                                     }
@@ -585,11 +593,12 @@ const HospitalDiscountManagement: React.FC = () => {
                                 />
                             </div>
                             <div className="col-12">
-                                <label className="form-label">
-                                    <i className="fas fa-align-left me-2"></i>
-                                    Mô Tả
+                                <label className="form-label" htmlFor="discountDescription">
+                                    <i className="fas fa-align-left me-2" aria-hidden="true"></i> Mô
+                                    Tả
                                 </label>
                                 <textarea
+                                    id="discountDescription"
                                     className="form-control"
                                     value={formData.description}
                                     onChange={(e) =>
@@ -613,24 +622,28 @@ const HospitalDiscountManagement: React.FC = () => {
                                 setEditingDiscount(null);
                             }}
                         >
-                            <i className="fas fa-times-circle me-2"></i>
-                            Hủy Bỏ
+                            <i className="fas fa-times-circle me-2" aria-hidden="true"></i> Hủy Bỏ
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={loading}>
                             {(() => {
-                                const iconClass = loading
-                                    ? 'fas fa-spinner fa-spin me-2'
-                                    : editingDiscount
-                                      ? 'fas fa-save me-2'
-                                      : 'fas fa-plus-circle me-2';
-                                const buttonText = loading
-                                    ? 'Đang xử lý...'
-                                    : editingDiscount
-                                      ? 'Cập Nhật'
-                                      : 'Tạo Mã';
+                                let iconClass;
+                                let buttonText;
+
+                                if (loading) {
+                                    iconClass = 'fas fa-spinner fa-spin me-2';
+                                    buttonText = 'Đang xử lý...';
+                                } else if (editingDiscount) {
+                                    iconClass = 'fas fa-save me-2';
+                                    buttonText = 'Cập Nhật';
+                                } else {
+                                    iconClass = 'fas fa-plus-circle me-2';
+                                    buttonText = 'Tạo Mã';
+                                }
+
                                 return (
                                     <>
-                                        <i className={iconClass}></i> {buttonText}
+                                        <i className={iconClass} aria-hidden="true"></i>{' '}
+                                        {buttonText}
                                     </>
                                 );
                             })()}
