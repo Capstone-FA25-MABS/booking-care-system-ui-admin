@@ -83,24 +83,9 @@ export const selectDiscountsByType = createSelector(
         discounts.filter((discount) => discount.discountType === discountType)
 );
 
-export const selectDiscountsByClinic = createSelector(
-    [selectDiscounts, (_, clinicId: string) => clinicId],
-    (discounts, clinicId) =>
-        discounts.filter((discount) => !discount.clinicId || discount.clinicId === clinicId)
-);
-
-export const selectDiscountsBySpecialty = createSelector(
-    [selectDiscounts, (_, specialtyId: string) => specialtyId],
-    (discounts, specialtyId) =>
-        discounts.filter(
-            (discount) => !discount.specialtyId || discount.specialtyId === specialtyId
-        )
-);
-
-export const selectDiscountsByDoctor = createSelector(
-    [selectDiscounts, (_, doctorId: string) => doctorId],
-    (discounts, doctorId) =>
-        discounts.filter((discount) => !discount.doctorId || discount.doctorId === doctorId)
+export const selectDiscountsByHospital = createSelector(
+    [selectDiscounts, (_, hospitalId: string) => hospitalId],
+    (discounts, hospitalId) => discounts.filter((discount) => discount.hospitalId === hospitalId)
 );
 
 export const selectAvailableDiscountsForContext = createSelector(
@@ -109,30 +94,14 @@ export const selectAvailableDiscountsForContext = createSelector(
         (
             _,
             context: {
-                clinicId: string;
-                specialtyId?: string;
-                doctorId?: string;
+                hospitalId: string;
             }
         ) => context,
     ],
     (validDiscounts, context) => {
         return validDiscounts.filter((discount) => {
-            // Check clinic constraint
-            if (discount.clinicId && discount.clinicId !== context.clinicId) {
-                return false;
-            }
-
-            // Check specialty constraint
-            if (
-                discount.specialtyId &&
-                context.specialtyId &&
-                discount.specialtyId !== context.specialtyId
-            ) {
-                return false;
-            }
-
-            // Check doctor constraint
-            if (discount.doctorId && context.doctorId && discount.doctorId !== context.doctorId) {
+            // Check hospital constraint
+            if (discount.hospitalId !== context.hospitalId) {
                 return false;
             }
 

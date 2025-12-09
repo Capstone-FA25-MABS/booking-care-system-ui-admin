@@ -106,6 +106,9 @@ export const PATHS = {
         WALLET: {
             ROOT: 'wallet',
         },
+        DISCOUNTS: {
+            ROOT: 'discounts',
+        },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
         SUBSCRIPTION_INFO: 'subscription-info',

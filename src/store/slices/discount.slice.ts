@@ -5,10 +5,8 @@ import {
     UpdateDiscountRequest,
     DiscountQueryParams,
     DiscountValidationResult,
-    ApplyDiscountRequest,
     DiscountUsageStats,
 } from '../../types/discount.types';
-import { DiscountStatus } from '../../enums/discount.enums';
 import { DiscountService } from '../../services/discount.service';
 
 // State interface
@@ -123,10 +121,8 @@ export const validateDiscountCode = createAsyncThunk(
     }: {
         code: string;
         context: {
-            clinicId: number;
-            specialtyId?: number;
-            doctorId?: number;
-            amount: number;
+            hospitalId: string;
+            totalAmount: number;
         };
     }) => {
         const result = await DiscountService.validateDiscount(code, context);
@@ -134,42 +130,10 @@ export const validateDiscountCode = createAsyncThunk(
     }
 );
 
-export const applyDiscountCode = createAsyncThunk(
-    'discount/applyDiscountCode',
-    async (request: ApplyDiscountRequest) => {
-        const result = await DiscountService.applyDiscount(request);
-        return { request, result };
-    }
-);
-
-export const fetchDiscountStats = createAsyncThunk(
-    'discount/fetchDiscountStats',
-    async (filters?: { clinicId?: number; startDate?: string; endDate?: string }) => {
-        const stats = await DiscountService.getDiscountStats(filters);
-        return stats;
-    }
-);
-
-export const bulkUpdateDiscountStatus = createAsyncThunk(
-    'discount/bulkUpdateStatus',
-    async ({ discountIds, status }: { discountIds: string[]; status: DiscountStatus }) => {
-        const result = await DiscountService.bulkUpdateStatus(discountIds, status);
-        return { discountIds, status, result };
-    }
-);
-
-export const bulkDeleteDiscounts = createAsyncThunk(
-    'discount/bulkDeleteDiscounts',
-    async (discountIds: string[]) => {
-        const result = await DiscountService.bulkDeleteDiscounts(discountIds);
-        return { discountIds, result };
-    }
-);
-
 export const fetchActiveDiscounts = createAsyncThunk(
     'discount/fetchActiveDiscounts',
-    async (context: { clinicId: string; specialtyId?: string; doctorId?: string }) => {
-        const discounts = await DiscountService.getActiveDiscounts(context);
+    async (hospitalId: string) => {
+        const discounts = await DiscountService.getActiveDiscounts(hospitalId);
         return discounts;
     }
 );
@@ -369,84 +333,6 @@ const discountSlice = createSlice({
             .addCase(validateDiscountCode.rejected, (state, action) => {
                 state.loading.validation = false;
                 state.error = action.error.message || 'Failed to validate discount code';
-            });
-
-        // Apply discount code
-        builder
-            .addCase(applyDiscountCode.pending, (state) => {
-                state.loading.validation = true;
-                state.error = null;
-            })
-            .addCase(applyDiscountCode.fulfilled, (state, action) => {
-                state.loading.validation = false;
-                state.validationResult = action.payload.result;
-                // Store applied discount if validation was successful
-                if (action.payload.result.isValid && action.payload.result.discount) {
-                    state.appliedDiscount = {
-                        code: action.payload.request.code,
-                        discount: action.payload.result.discount,
-                        validationResult: action.payload.result,
-                    };
-                }
-            })
-            .addCase(applyDiscountCode.rejected, (state, action) => {
-                state.loading.validation = false;
-                state.error = action.error.message || 'Failed to apply discount code';
-            });
-
-        // Fetch discount stats
-        builder
-            .addCase(fetchDiscountStats.pending, (state) => {
-                state.loading.stats = true;
-                state.error = null;
-            })
-            .addCase(fetchDiscountStats.fulfilled, (state, action) => {
-                state.loading.stats = false;
-                state.usageStats = action.payload;
-            })
-            .addCase(fetchDiscountStats.rejected, (state, action) => {
-                state.loading.stats = false;
-                state.error = action.error.message || 'Failed to fetch discount statistics';
-            });
-
-        // Bulk update status
-        builder
-            .addCase(bulkUpdateDiscountStatus.pending, (state) => {
-                state.loading.bulkActions = true;
-                state.error = null;
-            })
-            .addCase(bulkUpdateDiscountStatus.fulfilled, (state, action) => {
-                state.loading.bulkActions = false;
-                // Update status for affected discounts
-                action.payload.discountIds.forEach((id) => {
-                    const discount = state.discounts.find((d) => d.id === id);
-                    if (discount) {
-                        discount.status = action.payload.status;
-                    }
-                });
-            })
-            .addCase(bulkUpdateDiscountStatus.rejected, (state, action) => {
-                state.loading.bulkActions = false;
-                state.error = action.error.message || 'Failed to update discount statuses';
-            });
-
-        // Bulk delete
-        builder
-            .addCase(bulkDeleteDiscounts.pending, (state) => {
-                state.loading.bulkActions = true;
-                state.error = null;
-            })
-            .addCase(bulkDeleteDiscounts.fulfilled, (state, action) => {
-                state.loading.bulkActions = false;
-                // Remove deleted discounts from state
-                state.discounts = state.discounts.filter(
-                    (d) => !action.payload.discountIds.includes(d.id)
-                );
-                state.pagination.total -= action.payload.result.deletedCount;
-            })
-            .addCase(bulkDeleteDiscounts.rejected, (state, action) => {
-                state.loading.bulkActions = false;
-                state.error = action.error.message || 'Failed to delete discounts';
             });
 
         // Fetch active discounts

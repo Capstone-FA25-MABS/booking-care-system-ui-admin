@@ -1,24 +1,4 @@
 /**
- * Specifies the entities to which a discount can be applied.
- */
-export enum DiscountApplicableTo {
-    /**
-     * The discount is applicable to all entities.
-     */
-    ALL,
-
-    /**
-     * The discount is applicable to a specific specialty.
-     */
-    SPECIALTY,
-
-    /**
-     * The discount is applicable to a specific doctor.
-     */
-    DOCTOR,
-}
-
-/**
  * Represents the status of a discount.
  */
 export enum DiscountStatus {
