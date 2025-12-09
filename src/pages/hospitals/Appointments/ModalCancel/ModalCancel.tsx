@@ -51,7 +51,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
     const [rescheduleOptions, setRescheduleOptions] = useState<RescheduleOptions>({
         enableSameDoctorReschedule: hasDoctorAssigned,
         enableNewDoctorAssignment: hasDoctorAssigned,
-        enableDoctorSelection: true,
+        enableDoctorSelection: hasDoctorAssigned,
         enableRefundRequest: (consultationFees ?? 0) > 0, // Only show if patient has paid
     });
 
@@ -63,7 +63,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
             setRescheduleOptions({
                 enableSameDoctorReschedule: hasDoctorAssigned,
                 enableNewDoctorAssignment: hasDoctorAssigned,
-                enableDoctorSelection: true,
+                enableDoctorSelection: hasDoctorAssigned,
                 enableRefundRequest: (consultationFees ?? 0) > 0, // Only show if patient has paid
             });
         }
@@ -103,6 +103,11 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
     // Other options (1, 3, 4) still need cancellation reason
     const isAssigningNewDoctor =
         showRescheduleOptions && rescheduleOptions.enableNewDoctorAssignment;
+
+    // Check if reschedule options should be shown
+    // Only show if: has doctor assigned OR has payment (consultationFees > 0)
+    const shouldShowRescheduleOptions =
+        showRescheduleOptions && (hasDoctorAssigned || (consultationFees ?? 0) > 0);
 
     if (!show) return null;
 
@@ -174,8 +179,8 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                 </div>
                             )}
 
-                            {/* Reschedule Options - Only for Staff */}
-                            {showRescheduleOptions && (
+                            {/* Reschedule Options - Only for Staff when has doctor or payment */}
+                            {shouldShowRescheduleOptions && (
                                 <div className="text-start mb-3 p-3 border rounded bg-light">
                                     <h6 className="fw-bold mb-3">
                                         <i
@@ -263,7 +268,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                             onChange={() =>
                                                 handleOptionToggle('enableDoctorSelection')
                                             }
-                                            disabled={loading}
+                                            disabled={loading || !hasDoctorAssigned}
                                         />
                                         <label
                                             className="form-check-label"
@@ -275,6 +280,19 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                                 Bệnh nhân chọn bác sĩ khác cùng bệnh viện/chuyên
                                                 khoa
                                             </small>
+                                            {!hasDoctorAssigned && (
+                                                <>
+                                                    <br />
+                                                    <small className="text-danger">
+                                                        <i
+                                                            className="ti ti-alert-circle me-1"
+                                                            aria-hidden="true"
+                                                        ></i>{' '}
+                                                        Không áp dụng cho lịch hẹn dịch vụ (không có
+                                                        bác sĩ)
+                                                    </small>
+                                                </>
+                                            )}
                                         </label>
                                     </div>
                                     {/* Option 4: Only show if patient has paid (consultationFees > 0) */}
@@ -309,7 +327,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                 </div>
                             )}
 
-                            <div className="d-flex justify-content-center gap-2">
+                            <div className="d-flex justify-content-end gap-2">
                                 <button
                                     type="button"
                                     className="btn btn-light"
