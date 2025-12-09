@@ -1,5 +1,5 @@
 // src/pages/hospitals/Discounts/HospitalDiscountManagement.module.scss
-$primary-color: #3498db;
+$primary-color: #2c7ab5;
 
 .container {
     padding: 1.5rem;
@@ -341,7 +341,7 @@ $primary-color: #3498db;
     display: inline-block;
     padding: 0.35rem 0.9rem;
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    color: #1976d2;
+    color: #0d47a1;
     border-radius: 10px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -525,7 +525,7 @@ $primary-color: #3498db;
 
         &:disabled {
             background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-            color: #adb5bd;
+            color: #6c757d;
             cursor: not-allowed;
             transform: none;
         }
@@ -687,7 +687,7 @@ $primary-color: #3498db;
         width: 38px;
         height: 38px;
         border-radius: 10px;
-        color: #6c757d;
+        color: #495057;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -697,7 +697,7 @@ $primary-color: #3498db;
 
         &:hover {
             background: #e9ecef;
-            color: #dc3545;
+            color: #c82333;
             transform: rotate(90deg);
         }
     }
