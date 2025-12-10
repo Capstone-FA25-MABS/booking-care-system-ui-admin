@@ -638,7 +638,7 @@ const ListAppointments: React.FC = () => {
                                     )}
 
                                 {/* Show "Xem hoá đơn" for appointments with partial payment */}
-                                {appointment.amount !== appointment.consultationFees && (
+                                {appointment.consultationFees != null && (
                                     <li>
                                         <button
                                             type="button"
