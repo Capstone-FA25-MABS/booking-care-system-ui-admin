@@ -407,6 +407,26 @@ export class ServiceService extends BaseService {
             this.handleError(error);
         }
     }
+
+    /**
+     * Get service IDs by hospital (optimized for performance - returns only IDs)
+     */
+    async getServiceIdsByHospital(hospitalId: string): Promise<ApiResponse<string[]>> {
+        try {
+            this.validateEntityId(hospitalId);
+            const response: any = await axiosInstance.get(
+                `/medical-services/services/hospital/${hospitalId}/ids`
+            );
+
+            return {
+                success: true,
+                data: response?.serviceIds || response?.data?.serviceIds || [],
+                message: 'Service IDs retrieved successfully',
+            };
+        } catch (error: any) {
+            this.handleError(error);
+        }
+    }
 }
 
 // Export singleton instance

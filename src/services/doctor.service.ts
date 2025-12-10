@@ -301,6 +301,22 @@ export class DoctorService {
             message: response.message || 'Doctor updated successfully',
         };
     }
+
+    /**
+     * Get doctor IDs by hospital (optimized for performance - returns only IDs)
+     */
+    static async getDoctorIdsByHospital(hospitalId: string): Promise<ApiResponse<string[]>> {
+        try {
+            const response: any = await axiosInstance.get(`/doctors/hospital/${hospitalId}/ids`);
+            return {
+                success: response.success ?? true,
+                data: response.data?.doctorIds || response.doctorIds || [],
+                message: response.message || 'Doctor IDs retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to retrieve doctor IDs');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -309,6 +325,7 @@ export const {
     getDoctorById,
     getDoctorPrices,
     getDoctorsByHospital,
+    getDoctorIdsByHospital,
     filterDoctors,
     getSpecialties,
     getPositions,

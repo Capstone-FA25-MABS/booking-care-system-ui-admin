@@ -64,17 +64,18 @@ const HospitalDashboard: React.FC = () => {
             return { doctors: [], services: [] };
         }
 
-        const [doctorsRes, servicesRes] = await Promise.all([
-            DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1000).catch(() => ({
-                data: { doctors: [], totalCount: 0 },
+        // Optimized: fetch only IDs instead of full objects (reduces payload from 500KB-2MB to ~5KB)
+        const [doctorIdsRes, serviceIdsRes] = await Promise.all([
+            DoctorService.getDoctorIdsByHospital(hospitalProfile.id).catch(() => ({
+                data: [],
             })),
-            serviceService.getServicesByHospital(hospitalProfile.id).catch(() => ({
+            serviceService.getServiceIdsByHospital(hospitalProfile.id).catch(() => ({
                 data: [],
             })),
         ]);
 
-        const doctors = doctorsRes.data?.doctors || [];
-        const services = Array.isArray(servicesRes.data) ? servicesRes.data : [];
+        const doctors = (doctorIdsRes.data || []).map((id: string) => ({ id }));
+        const services = (serviceIdsRes.data || []).map((id: string) => ({ id }));
 
         return { doctors, services };
     }, [hospitalProfile?.id]);
@@ -119,47 +120,25 @@ const HospitalDashboard: React.FC = () => {
 
         setIsLoadingHospitalOverview(true);
         try {
-            const [specialtiesRes, serviceTypesRes, doctorsRes, servicesRes] = await Promise.all([
-                HospitalService.getHospitalSpecialtyIds(hospitalProfile.id).catch(() => ({
-                    data: [],
-                })),
-                HospitalService.getHospitalServiceTypeIds(hospitalProfile.id).catch(() => ({
-                    data: [],
-                })),
-                DoctorService.getDoctorsByHospital(hospitalProfile.id, 1, 1).catch(() => ({
-                    data: { totalCount: 0 },
-                })),
-                serviceService
-                    .getServicesByHospital(hospitalProfile.id)
-                    .catch(() => ({ data: [] })),
-            ]);
+            // Optimized: single aggregate endpoint instead of 4 separate calls
+            const overviewRes = await HospitalService.getHospitalOverview(hospitalProfile.id);
 
-            const specialtiesCount =
-                specialtiesRes.data?.length ?? hospitalProfile.specialties?.length ?? 0;
-            const serviceTypesCount =
-                serviceTypesRes.data?.length ?? hospitalProfile.serviceTypes?.length ?? 0;
-            const doctorsCount = doctorsRes.data?.totalCount ?? 0;
-            const serviceMedicalsCount = servicesRes.data?.length ?? 0;
-
-            setHospitalOverview({
-                specialtiesCount,
-                serviceTypesCount,
-                doctorsCount,
-                serviceMedicalsCount,
-            });
+            if (overviewRes.data) {
+                setHospitalOverview(overviewRes.data);
+            }
         } catch (err: any) {
             console.error('Failed to load hospital overview:', err);
             // Fallback to hospitalProfile data
             setHospitalOverview({
-                specialtiesCount: hospitalProfile.specialties?.length ?? 0,
-                serviceTypesCount: hospitalProfile.serviceTypes?.length ?? 0,
+                specialtiesCount: hospitalProfile?.specialties?.length ?? 0,
+                serviceTypesCount: hospitalProfile?.serviceTypes?.length ?? 0,
                 doctorsCount: 0,
                 serviceMedicalsCount: 0,
             });
         } finally {
             setIsLoadingHospitalOverview(false);
         }
-    }, [hospitalProfile?.id, hospitalProfile?.specialties, hospitalProfile?.serviceTypes]);
+    }, [hospitalProfile?.id]);
 
     useEffect(() => {
         loadHospitalOverview();

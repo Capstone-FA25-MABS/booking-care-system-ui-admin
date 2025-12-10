@@ -346,6 +346,29 @@ export class HospitalService {
             throw new Error(error.message || 'Failed to update hospital service types');
         }
     }
+
+    /**
+     * Get hospital overview with aggregate counts (optimized for dashboard)
+     */
+    static async getHospitalOverview(hospitalId: string): Promise<
+        ApiResponse<{
+            specialtiesCount: number;
+            serviceTypesCount: number;
+            doctorsCount: number;
+            serviceMedicalsCount: number;
+        }>
+    > {
+        try {
+            const response: any = await axiosInstance.get(`/hospitals/${hospitalId}/overview`);
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Hospital overview retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get hospital overview');
+        }
+    }
 }
 
 export const {
@@ -361,6 +384,7 @@ export const {
     updateHospitalSpecialties,
     getHospitalServiceTypeIds,
     updateHospitalServiceTypes,
+    getHospitalOverview,
 } = HospitalService;
 
 export default HospitalService;
