@@ -8,6 +8,7 @@ import { ChatService } from '@/services/chat.service';
 import clsx from 'clsx';
 import styles from '../../Messages.module.scss';
 import CallLogItem from './CallLogItem/CallLogItem';
+import userDefault from '@/assets/img/users/user-default.jpg';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
 
 const MessageList = () => {
@@ -368,10 +369,7 @@ const MessageList = () => {
                                         }}
                                     >
                                         <img
-                                            src={
-                                                message.senderInfo?.avatarUrl ||
-                                                '/default-avatar.png'
-                                            }
+                                            src={message.senderInfo?.avatarUrl || userDefault}
                                             alt="avatar"
                                             style={{
                                                 width: '100%',
@@ -777,7 +775,7 @@ const MessageList = () => {
                                                 adminProfile?.avatarUrl ||
                                                 doctorProfile?.avatarUrl ||
                                                 hospitalProfile?.avatarUrl ||
-                                                '/default-avatar.png'
+                                                userDefault
                                             }
                                             alt="avatar"
                                             style={{
@@ -815,7 +813,7 @@ const MessageList = () => {
                         }}
                     >
                         <img
-                            src={typingUser.avatarUrl || '/default-avatar.png'}
+                            src={typingUser.avatarUrl || userDefault}
                             alt="avatar"
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />

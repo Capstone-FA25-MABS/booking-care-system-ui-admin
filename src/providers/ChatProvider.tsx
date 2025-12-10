@@ -14,6 +14,7 @@ import { RootState } from '@/store';
 import { useSharedChatHub } from '@/hooks/useSharedChatHub';
 import { ChatHubCallbacks } from '@/hooks/useChatHub';
 import { ChatService } from '@/services/chat.service';
+import userDefault from '@/assets/img/users/user-default.jpg';
 import {
     ConversationResponse,
     MessageResponse,
@@ -128,7 +129,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                         (doctorProfile && `${doctorProfile.firstName} ${doctorProfile.lastName}`) ||
                         hospitalProfile?.name ||
                         'You',
-                    avatarUrl: userProfile?.avatarUrl || '/default-avatar.png',
+                    avatarUrl: userProfile?.avatarUrl || userDefault,
                     phoneNumber:
                         (userProfile && 'phone' in userProfile ? userProfile.phone : undefined) ||
                         undefined,
@@ -150,7 +151,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
                 id: senderId,
                 email: '',
                 fullName: 'Unknown User',
-                avatarUrl: '/default-avatar.png',
+                avatarUrl: userDefault,
             };
         },
         [userProfile, activeConversation]
