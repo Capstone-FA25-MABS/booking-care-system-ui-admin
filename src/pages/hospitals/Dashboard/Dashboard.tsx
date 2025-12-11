@@ -9,7 +9,7 @@ import { HospitalService } from '@/services/hospital.service';
 import { serviceService } from '@/services/service.service';
 import { StatisticsPeriod, StaffHospitalStatisticsResponse } from '@/types/statistics.types';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsSingleBar } from '@/components/ChartJsLine';
+import { ChartJsMultiBar, ChartJsSingleBar } from '@/components/ChartJsLine';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { DashboardTrendCharts } from '@/components/DashboardTrendCharts';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
@@ -499,15 +499,15 @@ const HospitalDashboard: React.FC = () => {
                                 <div className={styles.trendCard}>
                                     <div className={styles.cardHeader}>
                                         <h5>Đánh giá theo bác sĩ</h5>
-                                        <span>Điểm đánh giá và số cuộc hẹn của từng bác sĩ</span>
+                                        <span>Điểm đánh giá và số đánh giá của từng bác sĩ</span>
                                     </div>
                                     <div className={styles.cardBody}>
-                                        <ChartJsMultiLine
+                                        <ChartJsMultiBar
                                             data={reviewStats.doctorChartData}
                                             color1="#8b5cf6"
                                             color2="#10b981"
                                             label1="Điểm đánh giá"
-                                            label2="Số cuộc hẹn"
+                                            label2="Số đánh giá"
                                         />
                                     </div>
                                 </div>
@@ -520,7 +520,7 @@ const HospitalDashboard: React.FC = () => {
                                         <span>Điểm đánh giá và số đánh giá của từng dịch vụ</span>
                                     </div>
                                     <div className={styles.cardBody}>
-                                        <ChartJsMultiLine
+                                        <ChartJsMultiBar
                                             data={reviewStats.serviceChartData}
                                             color1="#f59e0b"
                                             color2="#10b981"

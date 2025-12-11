@@ -15,8 +15,7 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsBar } from '@/components/ChartJsLine';
-import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
+import { ChartJsMultiBar, ChartJsTripleBar, ChartJsSingleBar } from '@/components/ChartJsLine';
 import DashboardReviewSection from '@/components/DashboardReviewSection';
 import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
 import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts';
@@ -141,8 +140,7 @@ const AdminDashboard: React.FC = () => {
     const [revenueChartData, setRevenueChartData] = useState<
         Array<{
             label: string;
-            value1: number; // Total revenue
-            value2: number; // Completed revenue
+            value: number; // Total revenue
         }>
     >([]);
     const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
@@ -529,8 +527,7 @@ const AdminDashboard: React.FC = () => {
                     point.periodStart,
                     point.periodEnd
                 ),
-                value1: point.totalAmount,
-                value2: point.completedAmount,
+                value: point.totalAmount,
             }));
 
             setRevenueChartData(chartData);
@@ -891,7 +888,7 @@ const AdminDashboard: React.FC = () => {
                                                 </span>
                                             </div>
                                             <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
+                                                <ChartJsMultiBar
                                                     data={reviewStats.doctorChartData}
                                                     color1="#8b5cf6"
                                                     color2="#10b981"
@@ -911,7 +908,7 @@ const AdminDashboard: React.FC = () => {
                                                 </span>
                                             </div>
                                             <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
+                                                <ChartJsMultiBar
                                                     data={reviewStats.serviceChartData}
                                                     color1="#f59e0b"
                                                     color2="#10b981"
@@ -965,7 +962,7 @@ const AdminDashboard: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className={styles.cardBody}>
-                                            <ChartJsTripleLine
+                                            <ChartJsTripleBar
                                                 data={subscriptionChartData}
                                                 color1="#ef4444"
                                                 color2="#10b981"
@@ -1012,13 +1009,10 @@ const AdminDashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div className={styles.cardBody}>
-                                            <ChartJsBar
+                                            <ChartJsSingleBar
                                                 data={revenueChartData}
-                                                color1="#a78bfa"
-                                                color2="#10b981"
-                                                label1="Tổng doanh thu"
-                                                label2="Đã hoàn thành"
-                                                stacked={true}
+                                                color="#10b981"
+                                                label="Tổng doanh thu"
                                             />
                                         </div>
                                     </div>
