@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 
 import styles from './VideoCall.module.scss';
 import videojpg from '@/assets/img/media/video.jpg';
+import defaultUserAvatar from '@/assets/img/users/user-01.jpg';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallRecording } from '@/hooks/useCallRecording';
 import type { RootState } from '@/store';
@@ -32,7 +33,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     participantId,
     conversationId,
     participantName: _participantName = 'Nguyễn Văn An', // Not used - showing current user info
-    participantAvatar: _participantAvatar = '/src/assets/img/users/user-01.jpg', // Not used - showing current user info
+    participantAvatar: _participantAvatar = defaultUserAvatar, // Not used - showing current user info
     callType: _callType = 'video', // Reserved for future use (audio/video mode)
     isIncoming = false,
     appointmentId,
@@ -849,7 +850,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
             screenShareTitle: isScreenSharing ? 'Dừng chia sẻ màn hình' : 'Chia sẻ màn hình',
             screenShareAriaLabel: isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình',
             micAriaLabel: isMuted ? 'Bật mic' : 'Tắt mic',
-            userAvatarUrl: userProfile?.avatarUrl || '/src/assets/img/users/user-01.jpg',
+            userAvatarUrl: userProfile?.avatarUrl || defaultUserAvatar,
             localVideoCursor: isDragging ? 'grabbing' : 'grab',
             localVideoZIndex: isDragging ? 1001 : 1000,
             localVideoDisplay: isVideoOff ? 'none' : 'block',

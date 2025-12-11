@@ -5,7 +5,7 @@ import { useChat } from '@/providers/ChatProvider';
 import { RootState } from '@/store';
 import { MessageType } from '@/types/communication.types';
 import TagManager from '../TagManager';
-
+import userDefault from '@/assets/img/users/user-default.jpg';
 import TagService from '@/services/tag.service';
 import { Tag } from '@/types/tag.types';
 import styles from '../../Messages.module.scss';
@@ -195,7 +195,7 @@ const ChatUserNav: React.FC = () => {
                                 adminProfile?.avatarUrl ||
                                 doctorProfile?.avatarUrl ||
                                 hospitalProfile?.avatarUrl ||
-                                '/default-avatar.png'
+                                userDefault
                             }
                             alt="user"
                         />
@@ -326,7 +326,7 @@ const ChatUserNav: React.FC = () => {
                                 const user = {
                                     id: conv.id,
                                     name: otherParticipant?.fullName || 'Unknown User',
-                                    avatar: otherParticipant?.avatarUrl || '/default-avatar.png',
+                                    avatar: otherParticipant?.avatarUrl || userDefault,
                                     lastMessage: formatLastMessagePreview(conv),
                                     time: conv.lastMessage
                                         ? formatTime(conv.lastMessage.createdAt)
