@@ -489,3 +489,31 @@ export const getServicesByHospital = async (
 ): Promise<ApiResponse<Service[]>> => {
     return serviceService.getServicesByHospital(hospitalId);
 };
+
+export const getServiceIdsByHospital = async (
+    hospitalId: string
+): Promise<ApiResponse<string[]>> => {
+    try {
+        const response: any = await axiosInstance.get(`/services/hospital/${hospitalId}/ids`);
+        return {
+            success: response.success ?? true,
+            data: response.data?.serviceIds || response.serviceIds || [],
+            message: response.message || 'Service IDs retrieved successfully',
+        };
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to retrieve service IDs');
+    }
+};
+
+export const getAllServiceIds = async (): Promise<ApiResponse<string[]>> => {
+    try {
+        const response: any = await axiosInstance.get('/services/ids');
+        return {
+            success: response.success ?? true,
+            data: response.data?.serviceIds || response.serviceIds || [],
+            message: response.message || 'All service IDs retrieved successfully',
+        };
+    } catch (error: any) {
+        throw new Error(error.message || 'Failed to retrieve all service IDs');
+    }
+};

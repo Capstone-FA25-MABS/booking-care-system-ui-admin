@@ -317,6 +317,22 @@ export class DoctorService {
             throw new Error(error.message || 'Failed to retrieve doctor IDs');
         }
     }
+
+    /**
+     * Get all doctor IDs (optimized for Admin Dashboard - returns only IDs)
+     */
+    static async getAllDoctorIds(): Promise<ApiResponse<string[]>> {
+        try {
+            const response: any = await axiosInstance.get('/doctors/ids');
+            return {
+                success: response.success ?? true,
+                data: response.data?.doctorIds || response.doctorIds || [],
+                message: response.message || 'All doctor IDs retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to retrieve all doctor IDs');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -326,6 +342,7 @@ export const {
     getDoctorPrices,
     getDoctorsByHospital,
     getDoctorIdsByHospital,
+    getAllDoctorIds,
     filterDoctors,
     getSpecialties,
     getPositions,

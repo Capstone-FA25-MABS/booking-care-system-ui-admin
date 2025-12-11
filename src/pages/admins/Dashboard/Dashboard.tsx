@@ -6,7 +6,7 @@ import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
 import { DiscountService } from '@/services/discount.service';
 import { SubscriptionService } from '@/services/subscription.service';
-import { serviceService } from '@/services/service.service';
+import { getAllServiceIds } from '@/services/service.service';
 import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { getAllServiceTypesSimple } from '@/services/serviceType.service';
 import { getAllPositionsSimple } from '@/services/position.service';
@@ -107,19 +107,19 @@ const AdminDashboard: React.FC = () => {
     const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
     const [isLoadingOverview, setIsLoadingOverview] = useState(false);
     const fetchAdminReviewEntities = useCallback(async () => {
-        const [doctorsRes, servicesRes] = await Promise.all([
-            DoctorService.filterDoctors({ pageNumber: 1, pageSize: 1000 }).catch(() => ({
-                data: { doctors: [], totalCount: 0 },
+        // Optimized: fetch only IDs instead of full objects (1-2MB → ~70KB)
+        const [doctorIdsRes, serviceIdsRes] = await Promise.all([
+            DoctorService.getAllDoctorIds().catch(() => ({
+                data: [],
             })),
-            serviceService.getAllServices(1, 1000).catch(() => ({
-                data: { items: [] },
+            getAllServiceIds().catch(() => ({
+                data: [],
             })),
         ]);
 
-        const doctors = (doctorsRes.data as any)?.doctors || [];
-        const services = Array.isArray((servicesRes.data as any)?.items)
-            ? (servicesRes.data as any).items
-            : [];
+        // Map IDs to minimal objects for review statistics calculation
+        const doctors = (doctorIdsRes.data || []).map((id: string) => ({ id }));
+        const services = (serviceIdsRes.data || []).map((id: string) => ({ id }));
 
         return { doctors, services };
     }, []);
