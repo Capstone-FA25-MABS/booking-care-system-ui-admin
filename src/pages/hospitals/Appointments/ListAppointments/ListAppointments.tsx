@@ -567,29 +567,34 @@ const ListAppointments: React.FC = () => {
                             </span>
                         </td>
                     )}
-                    {/* Payment Information - Only for Staff */}
+                    {/* Payment Information */}
                     <td>
-                        {appointment.amount && appointment.consultationFees !== undefined ? (
+                        {appointment.amount ? (
                             <div className="d-flex flex-column gap-1">
                                 <div className="text-muted small">
                                     Tổng: {appointment.amount.toLocaleString('vi-VN')} ₫
                                 </div>
-                                {/* Show "Còn lại" only for waiting/upcoming tabs, not for completed */}
-                                {appointment.amount !== appointment.consultationFees &&
-                                    (activeStatusTab === 'waiting' ||
-                                        activeStatusTab === 'upcoming') && (
-                                        <div className="fw-semibold text-success">
+                                {/* Đã thanh toán đủ */}
+                                {appointment.consultationFees === 0 && (
+                                    <div className="badge bg-success-transparent">
+                                        Đã thanh toán
+                                    </div>
+                                )}
+                                {/* Đã đặt cọc, còn lại cần thanh toán */}
+                                {appointment.consultationFees != null &&
+                                    appointment.consultationFees > 0 &&
+                                    appointment.consultationFees < appointment.amount && (
+                                        <div className="fw-semibold text-primary">
                                             Còn lại:{' '}
                                             {appointment.consultationFees.toLocaleString('vi-VN')} ₫
                                         </div>
                                     )}
-                                {appointment.amount === appointment.consultationFees &&
-                                    (activeStatusTab === 'waiting' ||
-                                        activeStatusTab === 'upcoming') && (
-                                        <div className="badge bg-warning-transparent">
-                                            Chưa thanh toán
-                                        </div>
-                                    )}
+                                {/* Chưa thanh toán gì */}
+                                {appointment.consultationFees === appointment.amount && (
+                                    <div className="badge bg-warning-transparent">
+                                        Chưa thanh toán
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <span className="text-muted">-</span>
@@ -633,7 +638,7 @@ const ListAppointments: React.FC = () => {
                                     )}
 
                                 {/* Show "Xem hoá đơn" for appointments with partial payment */}
-                                {appointment.amount !== appointment.consultationFees && (
+                                {appointment.consultationFees != null && (
                                     <li>
                                         <button
                                             type="button"

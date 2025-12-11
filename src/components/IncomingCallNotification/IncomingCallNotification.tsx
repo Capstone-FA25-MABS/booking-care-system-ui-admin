@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './IncomingCallNotification.module.scss';
+import userDefault from '@/assets/img/users/user-default.jpg';
 
 interface IncomingCallNotificationProps {
     callerName: string;
@@ -25,7 +26,7 @@ const IncomingCallNotification: React.FC<IncomingCallNotificationProps> = ({
                 <div className={styles.content}>
                     <div className={styles.avatar}>
                         <img
-                            src={callerAvatar || '/default-avatar.png'}
+                            src={callerAvatar || userDefault}
                             alt={callerName}
                             className="rounded-circle"
                         />
