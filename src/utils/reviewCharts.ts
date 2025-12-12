@@ -34,14 +34,9 @@ export const buildCompletionVsCancellationData = (stats: CompletionStats | null 
     if (!stats) return [];
     return [
         {
-            label: 'Hoàn thành',
-            value1: stats.completedAppointments,
-            value2: stats.confirmedAppointments,
-        },
-        {
-            label: 'Hủy/Vắng',
-            value1: stats.cancelledAppointments,
-            value2: stats.pendingAppointments,
+            label: 'Trạng thái lịch hẹn',
+            value1: stats.completedAppointments + stats.confirmedAppointments, // Hoàn thành/Xác nhận
+            value2: stats.cancelledAppointments + stats.pendingAppointments, // Hủy/Chờ
         },
     ];
 };

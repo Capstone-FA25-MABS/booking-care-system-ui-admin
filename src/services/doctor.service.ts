@@ -301,6 +301,38 @@ export class DoctorService {
             message: response.message || 'Doctor updated successfully',
         };
     }
+
+    /**
+     * Get doctor IDs by hospital (optimized for performance - returns only IDs)
+     */
+    static async getDoctorIdsByHospital(hospitalId: string): Promise<ApiResponse<string[]>> {
+        try {
+            const response: any = await axiosInstance.get(`/doctors/hospital/${hospitalId}/ids`);
+            return {
+                success: response.success ?? true,
+                data: response.data?.doctorIds || response.doctorIds || [],
+                message: response.message || 'Doctor IDs retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to retrieve doctor IDs');
+        }
+    }
+
+    /**
+     * Get all doctor IDs (optimized for Admin Dashboard - returns only IDs)
+     */
+    static async getAllDoctorIds(): Promise<ApiResponse<string[]>> {
+        try {
+            const response: any = await axiosInstance.get('/doctors/ids');
+            return {
+                success: response.success ?? true,
+                data: response.data?.doctorIds || response.doctorIds || [],
+                message: response.message || 'All doctor IDs retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to retrieve all doctor IDs');
+        }
+    }
 }
 
 // Export individual methods for convenience
@@ -309,6 +341,8 @@ export const {
     getDoctorById,
     getDoctorPrices,
     getDoctorsByHospital,
+    getDoctorIdsByHospital,
+    getAllDoctorIds,
     filterDoctors,
     getSpecialties,
     getPositions,

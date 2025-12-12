@@ -6,7 +6,7 @@ import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
 import { DiscountService } from '@/services/discount.service';
 import { SubscriptionService } from '@/services/subscription.service';
-import { serviceService } from '@/services/service.service';
+import { getAllServiceIds } from '@/services/service.service';
 import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { getAllServiceTypesSimple } from '@/services/serviceType.service';
 import { getAllPositionsSimple } from '@/services/position.service';
@@ -15,8 +15,7 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import { ChartJsMultiLine, ChartJsBar } from '@/components/ChartJsLine';
-import { ChartJsTripleLine } from '@/components/ChartJsLine/ChartJsTripleLine';
+import { ChartJsMultiBar, ChartJsTripleBar, ChartJsSingleBar } from '@/components/ChartJsLine';
 import DashboardReviewSection from '@/components/DashboardReviewSection';
 import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
 import DashboardAdditionalCharts from '@/components/DashboardAdditionalCharts';
@@ -107,19 +106,19 @@ const AdminDashboard: React.FC = () => {
     const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(null);
     const [isLoadingOverview, setIsLoadingOverview] = useState(false);
     const fetchAdminReviewEntities = useCallback(async () => {
-        const [doctorsRes, servicesRes] = await Promise.all([
-            DoctorService.filterDoctors({ pageNumber: 1, pageSize: 1000 }).catch(() => ({
-                data: { doctors: [], totalCount: 0 },
+        // Optimized: fetch only IDs instead of full objects (1-2MB → ~70KB)
+        const [doctorIdsRes, serviceIdsRes] = await Promise.all([
+            DoctorService.getAllDoctorIds().catch(() => ({
+                data: [],
             })),
-            serviceService.getAllServices(1, 1000).catch(() => ({
-                data: { items: [] },
+            getAllServiceIds().catch(() => ({
+                data: [],
             })),
         ]);
 
-        const doctors = (doctorsRes.data as any)?.doctors || [];
-        const services = Array.isArray((servicesRes.data as any)?.items)
-            ? (servicesRes.data as any).items
-            : [];
+        // Map IDs to minimal objects for review statistics calculation
+        const doctors = (doctorIdsRes.data || []).map((id: string) => ({ id }));
+        const services = (serviceIdsRes.data || []).map((id: string) => ({ id }));
 
         return { doctors, services };
     }, []);
@@ -141,8 +140,7 @@ const AdminDashboard: React.FC = () => {
     const [revenueChartData, setRevenueChartData] = useState<
         Array<{
             label: string;
-            value1: number; // Total revenue
-            value2: number; // Completed revenue
+            value: number; // Total revenue
         }>
     >([]);
     const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
@@ -529,8 +527,7 @@ const AdminDashboard: React.FC = () => {
                     point.periodStart,
                     point.periodEnd
                 ),
-                value1: point.totalAmount,
-                value2: point.completedAmount,
+                value: point.totalAmount,
             }));
 
             setRevenueChartData(chartData);
@@ -891,7 +888,7 @@ const AdminDashboard: React.FC = () => {
                                                 </span>
                                             </div>
                                             <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
+                                                <ChartJsMultiBar
                                                     data={reviewStats.doctorChartData}
                                                     color1="#8b5cf6"
                                                     color2="#10b981"
@@ -911,7 +908,7 @@ const AdminDashboard: React.FC = () => {
                                                 </span>
                                             </div>
                                             <div className={styles.cardBody}>
-                                                <ChartJsMultiLine
+                                                <ChartJsMultiBar
                                                     data={reviewStats.serviceChartData}
                                                     color1="#f59e0b"
                                                     color2="#10b981"
@@ -965,7 +962,7 @@ const AdminDashboard: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className={styles.cardBody}>
-                                            <ChartJsTripleLine
+                                            <ChartJsTripleBar
                                                 data={subscriptionChartData}
                                                 color1="#ef4444"
                                                 color2="#10b981"
@@ -1012,13 +1009,10 @@ const AdminDashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div className={styles.cardBody}>
-                                            <ChartJsBar
+                                            <ChartJsSingleBar
                                                 data={revenueChartData}
-                                                color1="#a78bfa"
-                                                color2="#10b981"
-                                                label1="Tổng doanh thu"
-                                                label2="Đã hoàn thành"
-                                                stacked={true}
+                                                color="#10b981"
+                                                label="Tổng doanh thu"
                                             />
                                         </div>
                                     </div>
