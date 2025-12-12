@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 
 import { ReviewFilters as ReviewFiltersType } from '@/types/review.types';
@@ -11,58 +11,22 @@ interface ReviewFiltersProps {
 }
 
 const ReviewFilters: React.FC<ReviewFiltersProps> = ({ filters, onFilterChange }) => {
-    const [searchInput, setSearchInput] = useState(filters.searchTerm || '');
-
-    // Debounce search input
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            onFilterChange({ searchTerm: searchInput });
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchInput]);
-
     const handleRatingFilterChange = (minRating?: number, maxRating?: number) => {
         onFilterChange({ minRating, maxRating });
     };
 
     const handleClearFilters = () => {
-        setSearchInput('');
         onFilterChange({
-            searchTerm: '',
             minRating: undefined,
             maxRating: undefined,
         });
     };
 
-    const hasActiveFilters =
-        filters.searchTerm || filters.minRating !== undefined || filters.maxRating !== undefined;
+    const hasActiveFilters = filters.minRating !== undefined || filters.maxRating !== undefined;
 
     return (
         <div className={styles.container}>
             <div className={styles.filterCard}>
-                {/* Search Input */}
-                <div className={styles.searchSection}>
-                    <div className={styles.searchInput}>
-                        <i className="ti ti-search"></i>
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm đánh giá..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                        />
-                        {searchInput && (
-                            <button
-                                className={styles.clearBtn}
-                                onClick={() => setSearchInput('')}
-                                type="button"
-                            >
-                                <i className="ti ti-x"></i>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
                 {/* Rating Filters */}
                 <div className={styles.ratingSection}>
                     <div className={styles.label}>Lọc theo đánh giá:</div>

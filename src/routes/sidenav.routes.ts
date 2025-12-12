@@ -108,6 +108,11 @@ export const listGroupMenuItemDoctor: MenuConfig = [
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
             ),
             createMessagesMenuItem('doctor'),
+            createSimpleMenuItem(
+                'Quản lý đánh giá',
+                'ti ti-star',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.REVIEWS.ROOT)
+            ),
             createNotificationsMenuItem('doctor'),
         ],
     },

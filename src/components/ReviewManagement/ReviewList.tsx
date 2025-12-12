@@ -18,8 +18,9 @@ interface ReviewListProps {
     onAddReply: (review: Review) => void;
     onEditReply: (review: Review, replyId: string) => void;
     onDeleteReply: (reviewId: string, replyId: string) => void;
-    onViewTargetDetail: (review: Review) => void;
+    onViewTargetDetail?: (review: Review) => void;
     hospitalStaffId: string;
+    showTargetDetailButton?: boolean;
 }
 
 const ReviewList: React.FC<ReviewListProps> = ({
@@ -34,6 +35,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
     onDeleteReply,
     onViewTargetDetail,
     hospitalStaffId,
+    showTargetDetailButton = true,
 }) => {
     const renderStars = (rating: number) => {
         return (
@@ -189,13 +191,15 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         )}
 
                         <div className={styles.reviewFooter}>
-                            <button
-                                className={styles.viewDetailButton}
-                                onClick={() => onViewTargetDetail(review)}
-                            >
-                                <i className="ti ti-info-circle"></i>
-                                Xem chi tiết {getTargetType(review).toLowerCase()}
-                            </button>
+                            {showTargetDetailButton && onViewTargetDetail && (
+                                <button
+                                    className={styles.viewDetailButton}
+                                    onClick={() => onViewTargetDetail(review)}
+                                >
+                                    <i className="ti ti-info-circle"></i>
+                                    Xem chi tiết {getTargetType(review).toLowerCase()}
+                                </button>
+                            )}
                             <button
                                 className={styles.replyButton}
                                 onClick={() => onAddReply(review)}

@@ -137,6 +137,9 @@ export const PATHS = {
         SCHEDULE: 'schedule',
         PATIENTS: 'patients',
         MESSAGES: 'messages',
+        REVIEWS: {
+            ROOT: 'reviews',
+        },
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },

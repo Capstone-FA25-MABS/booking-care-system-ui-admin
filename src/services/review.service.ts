@@ -10,6 +10,7 @@ import {
 const REVIEW_ENDPOINTS = {
     BASE: '/reviews',
     HEALTH: '/reviews/health',
+    DOCTOR_REVIEWS: (doctorId: string) => `/reviews/doctor/${doctorId}`,
     DOCTOR_STATISTICS: (doctorId: string) => `/reviews/doctor/${doctorId}/statistics`,
     SERVICE_STATISTICS: (serviceId: string) => `/reviews/service/${serviceId}/statistics`,
     BATCH_DOCTORS_STATISTICS: '/reviews/doctors/batch-statistics',
@@ -62,6 +63,43 @@ export interface BatchServicesStatisticsResponse {
  * Handles review statistics and related operations
  */
 export class ReviewService {
+    /**
+     * Get reviews for a specific doctor with pagination and filters
+     */
+    static async getReviewsByDoctor(
+        doctorId: string,
+        page: number = 1,
+        pageSize: number = 10,
+        minRating?: number,
+        maxRating?: number
+    ): Promise<ApiResponse<PagedReviewsResponse>> {
+        try {
+            const params = new URLSearchParams({
+                page: page.toString(),
+                pageSize: pageSize.toString(),
+            });
+
+            if (minRating !== undefined) {
+                params.append('minRating', minRating.toString());
+            }
+            if (maxRating !== undefined) {
+                params.append('maxRating', maxRating.toString());
+            }
+
+            const response: any = await axiosInstance.get(
+                `${REVIEW_ENDPOINTS.DOCTOR_REVIEWS(doctorId)}?${params.toString()}`
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Doctor reviews retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to get doctor reviews');
+        }
+    }
+
     /**
      * Get detailed statistics for a doctor
      */

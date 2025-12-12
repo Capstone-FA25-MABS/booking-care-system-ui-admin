@@ -7,10 +7,11 @@ import { ReviewDetailedStatisticsResponse } from '@/services/review.service';
 import styles from './ReviewStatistics.module.scss';
 
 interface ReviewStatisticsProps {
-    hospitalId: string;
+    entityType: 'hospital' | 'doctor';
+    entityId: string;
 }
 
-const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ hospitalId }) => {
+const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ entityType, entityId }) => {
     const [statistics, setStatistics] = useState<ReviewDetailedStatisticsResponse | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -18,24 +19,25 @@ const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ hospitalId }) => {
         const fetchStatistics = async () => {
             setLoading(true);
             try {
-                const response = await ReviewService.getHospitalStatistics(hospitalId);
-                console.log('Hospital Statistics Response:', response);
+                const response =
+                    entityType === 'hospital'
+                        ? await ReviewService.getHospitalStatistics(entityId)
+                        : await ReviewService.getDoctorStatistics(entityId);
+
                 if (response.success && response.data) {
-                    console.log('Statistics Data:', response.data);
-                    console.log('Rating Distribution:', response.data.ratingDistribution);
                     setStatistics(response.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch hospital statistics:', error);
+                console.error(`Failed to fetch ${entityType} statistics:`, error);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (hospitalId) {
+        if (entityId) {
             fetchStatistics();
         }
-    }, [hospitalId]);
+    }, [entityType, entityId]);
 
     if (loading) {
         return (

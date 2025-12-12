@@ -6,10 +6,12 @@ import { RootState } from '@/store';
 import { ReviewService } from '@/services/review.service';
 import { Review, ReviewFilters as ReviewFiltersType } from '@/types/review.types';
 
-import ReviewList from './components/ReviewList';
-import ReviewFilters from './components/ReviewFilters';
-import ReviewStatistics from './components/ReviewStatistics';
-import ReplyModal from './components/ReplyModal';
+import {
+    ReviewList,
+    ReviewFilters,
+    ReviewStatistics,
+    ReplyModal,
+} from '@/components/ReviewManagement';
 import ReviewTargetDetailModal from './components/ReviewTargetDetailModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
 
@@ -193,7 +195,7 @@ const HospitalReviewManagement: React.FC = () => {
             </div>
 
             {/* Statistics Section */}
-            <ReviewStatistics hospitalId={hospitalProfile.id} />
+            <ReviewStatistics entityType="hospital" entityId={hospitalProfile.id} />
 
             {/* Filters Section */}
             <ReviewFilters filters={filters} onFilterChange={handleFilterChange} />

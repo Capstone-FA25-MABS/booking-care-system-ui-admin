@@ -13,6 +13,7 @@ import AuthLayout from '@/layouts/AuthLayout';
 import AddDoctor from '@/pages/hospitals/Doctors/AddDoctor/AddDoctor';
 import NewAppointment from '@/pages/hospitals/Appointments/NewAppointment';
 import Messages from '@/pages/hospitals/Messages';
+import DoctorReviewManagement from '@/pages/doctors/Reviews';
 import Login from '@/pages/authentication/Login';
 import ForgotPassword from '@/pages/authentication/ForgotPassword';
 import ResetPassword from '@/pages/authentication/ResetPassword';
@@ -187,6 +188,10 @@ const routes: RouteObject[] = [
             { path: PATHS.DOCTOR.SCHEDULE, element: <h1>Doctor Schedule</h1> },
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
             { path: PATHS.DOCTOR.MESSAGES, element: <Messages /> },
+            {
+                path: PATHS.DOCTOR.REVIEWS.ROOT,
+                children: [{ index: true, element: <DoctorReviewManagement /> }],
+            },
             {
                 path: PATHS.DOCTOR.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],
