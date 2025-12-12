@@ -56,6 +56,7 @@ import HospitalServiceMedicalsManagement from '@/pages/hospitals/ServiceMedicals
 import NotificationManagement from '@/pages/notifications/NotificationManagement/NotificationManagement';
 import Wallet from '@/pages/hospitals/Wallet';
 import HospitalDiscountManagement from '@/pages/hospitals/Discounts';
+import HospitalReviewManagement from '@/pages/hospitals/Reviews';
 
 const routes: RouteObject[] = [
     {
@@ -256,6 +257,7 @@ const routes: RouteObject[] = [
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.WALLET.ROOT, element: <Wallet /> },
             { path: PATHS.HOSPITAL.DISCOUNTS.ROOT, element: <HospitalDiscountManagement /> },
+            { path: PATHS.HOSPITAL.REVIEWS.ROOT, element: <HospitalReviewManagement /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlanList /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_INFO, element: <SubscriptionInfo /> },
