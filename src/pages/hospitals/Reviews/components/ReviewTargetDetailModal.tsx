@@ -124,12 +124,12 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
         if (!doctorDetail) return null;
 
         const fullName = `${doctorDetail.lastName} ${doctorDetail.firstName}`;
-        const genderLabel =
-            doctorDetail.gender === 'MALE'
-                ? 'Nam'
-                : doctorDetail.gender === 'FEMALE'
-                  ? 'Nữ'
-                  : 'Khác';
+        let genderLabel = 'Khác';
+        if (doctorDetail.gender === 'MALE') {
+            genderLabel = 'Nam';
+        } else if (doctorDetail.gender === 'FEMALE') {
+            genderLabel = 'Nữ';
+        }
 
         return (
             <div className={styles.detailContent}>
@@ -176,24 +176,21 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 <div className={styles.infoGrid}>
                     <div className={styles.infoItem}>
                         <div className={styles.infoLabel}>
-                            <i className="ti ti-mail"></i>
-                            Email
+                            <i className="ti ti-mail"></i> Email
                         </div>
                         <div className={styles.infoValue}>{doctorDetail.email}</div>
                     </div>
 
                     <div className={styles.infoItem}>
                         <div className={styles.infoLabel}>
-                            <i className="ti ti-user"></i>
-                            Giới tính
+                            <i className="ti ti-user"></i> Giới tính
                         </div>
                         <div className={styles.infoValue}>{genderLabel}</div>
                     </div>
 
                     <div className={styles.infoItem}>
                         <div className={styles.infoLabel}>
-                            <i className="ti ti-briefcase"></i>
-                            Kinh nghiệm
+                            <i className="ti ti-briefcase"></i> Kinh nghiệm
                         </div>
                         <div className={styles.infoValue}>{doctorDetail.yearsOfExperience} năm</div>
                     </div>
@@ -201,8 +198,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                     {doctorDetail.hospital && (
                         <div className={styles.infoItem}>
                             <div className={styles.infoLabel}>
-                                <i className="ti ti-building-hospital"></i>
-                                Bệnh viện
+                                <i className="ti ti-building-hospital"></i> Bệnh viện
                             </div>
                             <div className={styles.infoValue}>{doctorDetail.hospital.name}</div>
                         </div>
@@ -212,8 +208,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 {doctorDetail.address && (
                     <div className={styles.section}>
                         <div className={styles.sectionLabel}>
-                            <i className="ti ti-map-pin"></i>
-                            Địa chỉ
+                            <i className="ti ti-map-pin"></i> Địa chỉ
                         </div>
                         <div className={styles.sectionText}>{doctorDetail.address}</div>
                     </div>
@@ -222,8 +217,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 {doctorDetail.languages && doctorDetail.languages.length > 0 && (
                     <div className={styles.section}>
                         <div className={styles.sectionLabel}>
-                            <i className="ti ti-language"></i>
-                            Ngôn ngữ
+                            <i className="ti ti-language"></i> Ngôn ngữ
                         </div>
                         <div className={styles.languageTags}>
                             {doctorDetail.languages.map((lang) => (
@@ -238,8 +232,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 {doctorDetail.prices && doctorDetail.prices.length > 0 && (
                     <div className={styles.section}>
                         <div className={styles.sectionLabel}>
-                            <i className="ti ti-coin"></i>
-                            Giá khám
+                            <i className="ti ti-coin"></i> Giá khám
                         </div>
                         <div className={styles.priceList}>
                             {doctorDetail.prices.map((price) => (
@@ -259,8 +252,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 {doctorDetail.bio && (
                     <div className={styles.section}>
                         <div className={styles.sectionLabel}>
-                            <i className="ti ti-file-description"></i>
-                            Giới thiệu
+                            <i className="ti ti-file-description"></i> Giới thiệu
                         </div>
                         <div
                             className={styles.sectionText}
@@ -317,8 +309,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 <div className={styles.infoGrid}>
                     <div className={styles.infoItem}>
                         <div className={styles.infoLabel}>
-                            <i className="ti ti-coin"></i>
-                            Giá dịch vụ
+                            <i className="ti ti-coin"></i> Giá dịch vụ
                         </div>
                         <div className={clsx(styles.infoValue, styles.price)}>
                             {formatPrice(serviceDetail.price)}
@@ -327,8 +318,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
 
                     <div className={styles.infoItem}>
                         <div className={styles.infoLabel}>
-                            <i className="ti ti-clock"></i>
-                            Thời gian
+                            <i className="ti ti-clock"></i> Thời gian
                         </div>
                         <div className={styles.infoValue}>{serviceDetail.durationTime} phút</div>
                     </div>
@@ -337,8 +327,7 @@ const ReviewTargetDetailModal: React.FC<ReviewTargetDetailModalProps> = ({
                 {serviceDetail.description && (
                     <div className={styles.description}>
                         <div className={styles.descriptionLabel}>
-                            <i className="ti ti-file-description"></i>
-                            Mô tả dịch vụ
+                            <i className="ti ti-file-description"></i> Mô tả dịch vụ
                         </div>
                         <div className={styles.descriptionText}>{serviceDetail.description}</div>
                     </div>

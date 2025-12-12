@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
-import { ReviewService } from '@/services/review.service';
-import { ReviewDetailedStatisticsResponse } from '@/services/review.service';
+import { ReviewService, ReviewDetailedStatisticsResponse } from '@/services/review.service';
 
 import styles from './ReviewStatistics.module.scss';
 

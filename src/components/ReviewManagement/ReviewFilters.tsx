@@ -37,7 +37,7 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({ filters, onFilterChange }
                                     filters.minRating === undefined &&
                                     filters.maxRating === undefined,
                             })}
-                            onClick={() => handleRatingFilterChange(undefined, undefined)}
+                            onClick={() => handleRatingFilterChange()}
                             type="button"
                         >
                             Tất cả
@@ -89,8 +89,7 @@ const ReviewFilters: React.FC<ReviewFiltersProps> = ({ filters, onFilterChange }
                             onClick={handleClearFilters}
                             type="button"
                         >
-                            <i className="ti ti-filter-off"></i>
-                            Xóa bộ lọc
+                            <i className="ti ti-filter-off"></i> Xóa bộ lọc
                         </button>
                     </div>
                 )}

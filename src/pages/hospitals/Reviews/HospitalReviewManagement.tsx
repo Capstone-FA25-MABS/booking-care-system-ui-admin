@@ -96,7 +96,7 @@ const HospitalReviewManagement: React.FC = () => {
         setFilters((prev: ReviewFiltersType) => ({
             ...prev,
             ...newFilters,
-            page: newFilters.page !== undefined ? newFilters.page : 1, // Reset to page 1 on filter change
+            page: newFilters.page ?? 1, // Reset to page 1 on filter change
         }));
     };
 

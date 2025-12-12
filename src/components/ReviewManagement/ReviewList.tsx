@@ -164,13 +164,15 @@ const ReviewList: React.FC<ReviewListProps> = ({
                                         <span className={styles.separator}>•</span>
                                         <button
                                             className={styles.targetTypeButton}
-                                            onClick={() => onViewTargetDetail(review)}
+                                            onClick={() => onViewTargetDetail?.(review)}
                                             title="Xem chi tiết"
                                         >
                                             <span className={styles.targetType}>
-                                                {getTargetType(review)}
+                                                {showTargetDetailButton && getTargetType(review)}
                                             </span>
-                                            <i className="ti ti-external-link"></i>
+                                            {showTargetDetailButton && (
+                                                <i className="ti ti-external-link"></i>
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -204,8 +206,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                                 className={styles.replyButton}
                                 onClick={() => onAddReply(review)}
                             >
-                                <i className="ti ti-message-plus"></i>
-                                Phản hồi
+                                <i className="ti ti-message-plus"></i> Phản hồi
                             </button>
                         </div>
                     </div>

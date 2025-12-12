@@ -164,17 +164,15 @@ const ReplyModal: React.FC<ReplyModalProps> = ({
                     >
                         {submitting ? (
                             <>
-                                <span
+                                <output
                                     className="spinner-border spinner-border-sm me-2"
-                                    role="status"
+                                    aria-live="polite"
                                     aria-hidden="true"
-                                ></span>
+                                ></output>{' '}
                                 Đang xử lý...
                             </>
-                        ) : isEditing ? (
-                            'Cập nhật'
                         ) : (
-                            'Gửi phản hồi'
+                            <>{isEditing ? 'Cập nhật' : 'Gửi phản hồi'}</>
                         )}
                     </button>
                 </div>
