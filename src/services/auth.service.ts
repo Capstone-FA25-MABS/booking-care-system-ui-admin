@@ -16,6 +16,8 @@ import {
     Disable2FAResponse,
     RegenerateBackupCodesResponse,
     TwoFactorStatus,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
 } from '@/types/auth.types';
 import { EMAIL_REGEX, PHONE_REGEX_VN, PASSWORD_REGEX, PASSWORD_MIN_LENGTH } from '@/constants';
 import { Role } from '@/enums/common.enums';
@@ -41,6 +43,7 @@ const AUTH_ENDPOINTS = {
     TWO_FACTOR_VERIFY: '/auth/2fa/verify',
     TWO_FACTOR_STATUS: '/auth/2fa/status',
     TWO_FACTOR_REGENERATE_BACKUP_CODES: '/auth/2fa/regenerate-backup-codes',
+    CHANGE_PASSWORD: '/auth/change-password',
 } as const;
 
 /**
@@ -482,6 +485,25 @@ export class AuthService {
     }
 
     /**
+     * Change password for authenticated user
+     */
+    static async changePassword(
+        request: ChangePasswordRequest
+    ): Promise<ApiResponse<ChangePasswordResponse>> {
+        try {
+            const response: any = await axiosInstance.post(AUTH_ENDPOINTS.CHANGE_PASSWORD, request);
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Password changed successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to change password');
+        }
+    }
+
+    /**
      * Register new doctor account using Saga pattern
      */
     static async registerDoctor(request: RegisterDoctorRequest): Promise<ApiResponse> {
@@ -567,6 +589,7 @@ export const {
     verify2FA,
     get2FAStatus,
     regenerateBackupCodes,
+    changePassword,
 } = AuthService;
 
 // Default export
