@@ -87,6 +87,7 @@ export interface AuthState {
     emailConfirmed: boolean;
     phoneConfirmed: boolean;
     hasExternalProvider: boolean;
+    mustChangePassword: boolean;
     accessToken: string | null; // Store access token for SignalR authentication
 }
 
@@ -158,4 +159,16 @@ export interface TwoFactorStatus {
     isEnabled: boolean;
     enabledAt?: string;
     remainingBackupCodes: number;
+}
+
+// Change Password Request DTOs
+export interface ChangePasswordRequest {
+    currentPassword?: string;
+    newPassword: string;
+    confirmNewPassword: string;
+}
+
+export interface ChangePasswordResponse {
+    success: boolean;
+    message: string;
 }
