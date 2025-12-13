@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChartJsMultiLine } from '@/components/ChartJsLine';
+import { ChartJsMultiBar } from '@/components/ChartJsLine';
 
 interface DashboardRatingDistributionChartProps {
     data: Array<{ label: string; value1: number; value2: number }>;
@@ -29,7 +29,7 @@ const DashboardRatingDistributionChart: React.FC<DashboardRatingDistributionChar
                 <span>{subtitle}</span>
             </div>
             <div className={cardBodyClassName}>
-                <ChartJsMultiLine
+                <ChartJsMultiBar
                     data={data}
                     color1="#8b5cf6"
                     color2="#10b981"

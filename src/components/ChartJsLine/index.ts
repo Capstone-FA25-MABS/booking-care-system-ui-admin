@@ -4,3 +4,5 @@ export { ChartJsMultiLine } from './ChartJsMultiLine';
 export { ChartJsTripleLine } from './ChartJsTripleLine';
 export { ChartJsBar } from './ChartJsBar';
 export { ChartJsSingleBar } from './ChartJsSingleBar';
+export { ChartJsTripleBar } from './ChartJsTripleBar';
+export { ChartJsMultiBar } from './ChartJsMultiBar';

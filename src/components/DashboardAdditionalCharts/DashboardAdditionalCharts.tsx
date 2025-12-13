@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChartJsLine, ChartJsMultiLine } from '@/components/ChartJsLine';
+import { ChartJsSingleBar, ChartJsMultiBar } from '@/components/ChartJsLine';
 
 interface DualValuePoint {
     label: string;
@@ -46,7 +46,7 @@ const DashboardAdditionalCharts: React.FC<DashboardAdditionalChartsProps> = ({
                         <span>Thống kê trạng thái lịch hẹn</span>
                     </div>
                     <div className={cardBodyClassName}>
-                        <ChartJsMultiLine
+                        <ChartJsMultiBar
                             data={completedVsCancelledData}
                             color1="#10b981"
                             color2="#ef4444"
@@ -64,7 +64,7 @@ const DashboardAdditionalCharts: React.FC<DashboardAdditionalChartsProps> = ({
                         <span>Giờ cao điểm và giờ ít khách</span>
                     </div>
                     <div className={cardBodyClassName}>
-                        <ChartJsLine
+                        <ChartJsSingleBar
                             data={peakHoursChartData}
                             color="#f59e0b"
                             label="Số lịch hẹn"
@@ -80,7 +80,7 @@ const DashboardAdditionalCharts: React.FC<DashboardAdditionalChartsProps> = ({
                         <span>So sánh tư vấn trực tiếp vs khám trực tiếp</span>
                     </div>
                     <div className={cardBodyClassName}>
-                        <ChartJsLine
+                        <ChartJsSingleBar
                             data={appointmentTypeChartData}
                             color="#06b6d4"
                             label="Số lịch hẹn"
