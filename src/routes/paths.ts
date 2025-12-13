@@ -119,6 +119,7 @@ export const PATHS = {
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            SECURITY: 'security',
             TWO_FACTOR: 'two-factor-authentication',
         },
     },
@@ -140,6 +141,7 @@ export const PATHS = {
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            SECURITY: 'security',
             TWO_FACTOR: 'two-factor-authentication',
         },
     },
