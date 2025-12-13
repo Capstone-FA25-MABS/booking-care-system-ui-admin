@@ -277,20 +277,15 @@ const SecuritySettings = () => {
                                                         {passwordStrength.label}
                                                     </small>
                                                 </div>
-                                                <div className="progress" style={{ height: '6px' }}>
-                                                    <div
-                                                        className="progress-bar"
-                                                        role="progressbar"
-                                                        style={{
-                                                            width: `${passwordStrength.width}%`,
-                                                            backgroundColor: passwordStrength.color,
-                                                            transition: 'width 0.3s ease',
-                                                        }}
-                                                        aria-valuenow={passwordStrength.width}
-                                                        aria-valuemin={0}
-                                                        aria-valuemax={100}
-                                                    />
-                                                </div>
+                                                <progress
+                                                    className="w-100"
+                                                    value={passwordStrength.width}
+                                                    max={100}
+                                                    style={{
+                                                        height: '6px',
+                                                        accentColor: passwordStrength.color,
+                                                    }}
+                                                />
                                             </div>
                                         )}
 
@@ -367,12 +362,13 @@ const SecuritySettings = () => {
                                             >
                                                 {isLoading ? (
                                                     <>
-                                                        <span
-                                                            className="spinner-border spinner-border-sm me-2"
-                                                            role="status"
-                                                            aria-hidden="true"
-                                                        />
-                                                        Đang xử lý...
+                                                        <output>
+                                                            <span
+                                                                className="spinner-border spinner-border-sm me-2"
+                                                                aria-hidden="true"
+                                                            />
+                                                        </output>
+                                                        {'Đang xử lý...'}
                                                     </>
                                                 ) : (
                                                     'Thay đổi mật khẩu'
