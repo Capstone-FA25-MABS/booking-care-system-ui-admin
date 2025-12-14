@@ -278,9 +278,13 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         // ✅ Keep the call in processed set to prevent re-showing
         // (It will be cleaned up by Messages component or auto-timeout)
 
+        // ✅ Navigate to correct messages page based on role
+        const messagesPath = doctorProfile ? '/doctors/messages' : '/hospitals/messages';
+        console.log('[GlobalChat] Navigating to:', messagesPath);
+
         // Navigate to messages page - the Messages component will handle the call
-        navigate('/hospitals/messages', { state: { incomingCall: callData } });
-    }, [incomingCall, navigate, stopIncomingCallSound]);
+        navigate(messagesPath, { state: { incomingCall: callData } });
+    }, [incomingCall, navigate, stopIncomingCallSound, doctorProfile]);
 
     // Handle declining incoming call
     const declineIncomingCall = useCallback(async () => {
@@ -382,6 +386,16 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         ]
     );
 
+    // ✅ Determine correct messages path based on role
+    const getMessagesPath = useCallback(() => {
+        // Doctor role uses /messages
+        if (doctorProfile) {
+            return '/doctors/messages';
+        }
+        // Staff/Admin use /hospitals/messages
+        return '/hospitals/messages';
+    }, [doctorProfile]);
+
     return (
         <GlobalChatContext.Provider value={value}>
             {children}
@@ -389,7 +403,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
             <MessageNotificationCard
                 isOpen={messageNotificationOpen}
                 onClose={() => setMessageNotificationOpen(false)}
-                onNavigate={() => navigate('/hospitals/messages')}
+                onNavigate={() => navigate(getMessagesPath())}
                 duration={6000}
             />
             {/* Global Incoming Call Notification */}
