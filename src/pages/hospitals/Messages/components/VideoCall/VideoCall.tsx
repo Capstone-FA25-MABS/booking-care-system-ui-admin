@@ -339,16 +339,19 @@ const VideoCall: React.FC<VideoCallProps> = ({
     }, [callState]);
 
     // Auto-start recording when call connects and streams are ready
+    // ✅ ONLY FOR DOCTOR ROLE - Staff Hospital should not record
+    // Recording and medical summary creation is a Doctor-only feature
     useEffect(() => {
         const shouldStartRecording =
             callState === 'connected' &&
             localStream &&
             remoteStream &&
             !recordingState.isRecording &&
-            appointmentId; // Only record if there's an appointment
+            appointmentId && // Only record if there's an appointment
+            !!doctorProfile; // ✅ ONLY allow doctors to record
 
         if (shouldStartRecording) {
-            console.log('[VideoCall] 🎙️ Auto-starting call recording');
+            console.log('[VideoCall] 🎙️ Auto-starting call recording (Doctor role)');
             startCallRecording(localStream, remoteStream)
                 .then(() => {
                     console.log('[VideoCall] ✅ Call recording started successfully');
@@ -365,6 +368,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
         remoteStream,
         recordingState.isRecording,
         appointmentId,
+        doctorProfile,
         startCallRecording,
     ]);
 
