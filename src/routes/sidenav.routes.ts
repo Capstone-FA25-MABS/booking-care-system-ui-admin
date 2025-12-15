@@ -70,6 +70,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-discount-2',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DISCOUNTS.ROOT)
             ),
+            createSimpleMenuItem(
+                'Quản lý đánh giá',
+                'ti ti-star',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REVIEWS.ROOT)
+            ),
             createNotificationsMenuItem('staff'),
         ],
     },
@@ -103,6 +108,11 @@ export const listGroupMenuItemDoctor: MenuConfig = [
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
             ),
             createMessagesMenuItem('doctor'),
+            createSimpleMenuItem(
+                'Quản lý đánh giá',
+                'ti ti-star',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.REVIEWS.ROOT)
+            ),
             createNotificationsMenuItem('doctor'),
         ],
     },

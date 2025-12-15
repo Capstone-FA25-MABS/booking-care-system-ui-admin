@@ -179,22 +179,6 @@ export const createAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.ADMIN.SETTINGS.TWO_FACTOR
             ),
         },
-        {
-            label: 'Thông báo',
-            link: buildPath(
-                PATHS.ADMIN.ROOT,
-                PATHS.ADMIN.SETTINGS.ROOT,
-                PATHS.ADMIN.SETTINGS.NOTIFICATIONS
-            ),
-        },
-        {
-            label: 'Tích hợp',
-            link: buildPath(
-                PATHS.ADMIN.ROOT,
-                PATHS.ADMIN.SETTINGS.ROOT,
-                PATHS.ADMIN.SETTINGS.INTEGRATIONS
-            ),
-        },
     ],
 });
 
@@ -211,6 +195,14 @@ export const createDoctorAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.DOCTOR.ROOT,
                 PATHS.DOCTOR.SETTINGS.ROOT,
                 PATHS.DOCTOR.SETTINGS.PROFILE
+            ),
+        },
+        {
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SETTINGS.ROOT,
+                PATHS.DOCTOR.SETTINGS.SECURITY
             ),
         },
         {
@@ -237,6 +229,14 @@ export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.HOSPITAL.ROOT,
                 PATHS.HOSPITAL.SETTINGS.ROOT,
                 PATHS.HOSPITAL.SETTINGS.PROFILE
+            ),
+        },
+        {
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SETTINGS.ROOT,
+                PATHS.HOSPITAL.SETTINGS.SECURITY
             ),
         },
         {
