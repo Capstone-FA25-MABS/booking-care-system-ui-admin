@@ -7,6 +7,7 @@ import { forgotPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { ForgotPasswordFormData } from '@/types/auth.types';
 import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
+import { getRedirectPathByRole } from '@/utils/navigation';
 import Input from '@/components/Input';
 
 const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
@@ -14,7 +15,7 @@ const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 const ForgotPassword: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { isLoading, error: authError } = useSelector((state: RootState) => state.auth);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, roles } = useAuth();
     const navigate = useNavigate();
     const recaptchaRef = useRef<ReCAPTCHA>(null);
 
@@ -32,12 +33,14 @@ const ForgotPassword: React.FC = () => {
     const [showCaptcha, setShowCaptcha] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard');
+        // Redirect to role-based dashboard if already authenticated
+        if (isAuthenticated && roles.length > 0) {
+            const redirectPath = getRedirectPathByRole(roles);
+            navigate(redirectPath);
         }
         dispatch(clearError());
         setLocalError(null);
-    }, [dispatch]);
+    }, [isAuthenticated, roles, navigate, dispatch]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

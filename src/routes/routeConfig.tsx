@@ -204,6 +204,7 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.DOCTOR.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.DOCTOR.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    { path: PATHS.DOCTOR.SETTINGS.SECURITY, element: <SecuritySettings /> },
                     {
                         path: PATHS.DOCTOR.SETTINGS.TWO_FACTOR,
                         element: <TwoFactorAuthentication />,
@@ -278,6 +279,7 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.HOSPITAL.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.HOSPITAL.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    { path: PATHS.HOSPITAL.SETTINGS.SECURITY, element: <SecuritySettings /> },
                     {
                         path: PATHS.HOSPITAL.SETTINGS.TWO_FACTOR,
                         element: <TwoFactorAuthentication />,
