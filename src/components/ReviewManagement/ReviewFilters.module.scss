@@ -1,0 +1,104 @@
+.container {
+    margin-bottom: 24px;
+
+    .filterCard {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    .ratingSection {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .ratingButtons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+
+            .ratingBtn {
+                padding: 8px 16px;
+                border: 1px solid #dee2e6;
+                background-color: #fff;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #495057;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                i {
+                    font-size: 14px;
+                    color: #ffc107;
+                }
+
+                &:hover {
+                    background-color: #f8f9fa;
+                    border-color: #adb5bd;
+                }
+
+                &.active {
+                    background-color: #0d6efd;
+                    border-color: #0d6efd;
+                    color: #fff;
+
+                    i {
+                        color: #ffc107;
+                    }
+                }
+            }
+        }
+    }
+
+    .clearSection {
+        .clearFiltersBtn {
+            padding: 8px 16px;
+            border: 1px solid #dc3545;
+            background-color: #fff;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #dc3545;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            &:hover {
+                background-color: #dc3545;
+                color: #fff;
+            }
+
+            i {
+                font-size: 16px;
+            }
+        }
+    }
+}

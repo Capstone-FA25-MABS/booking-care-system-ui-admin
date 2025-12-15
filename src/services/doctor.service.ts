@@ -10,6 +10,7 @@ const DOCTOR_ENDPOINTS = {
     BASE: '/doctors',
     HEALTH: '/doctors/health',
     PROFILE: '/doctors/profile',
+
     GET_DOCTOR: (id: string) => `/doctors/${id}`,
     GET_DOCTOR_PRICES: (id: string) => `/doctors/${id}/prices`,
     UPDATE_DOCTOR: (id: string) => `/doctors/${id}`,

@@ -1,0 +1,153 @@
+.container {
+    margin-bottom: 24px;
+
+    .skeleton {
+        background-color: #fff;
+        border-radius: 8px;
+        height: 200px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 32px;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            gap: 24px;
+        }
+    }
+
+    .mainStats {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        padding-right: 32px;
+        border-right: 1px solid #e9ecef;
+
+        @media (max-width: 768px) {
+            border-right: none;
+            border-bottom: 1px solid #e9ecef;
+            padding-right: 0;
+            padding-bottom: 24px;
+            justify-content: center;
+        }
+
+        .ratingDisplay {
+            text-align: center;
+
+            .ratingNumber {
+                font-size: 48px;
+                font-weight: 700;
+                color: #ffc107;
+                line-height: 1;
+                margin-bottom: 8px;
+            }
+
+            .stars {
+                display: flex;
+                gap: 4px;
+                justify-content: center;
+                margin-bottom: 8px;
+
+                i {
+                    font-size: 20px;
+
+                    &.filled {
+                        color: #ffc107;
+                    }
+
+                    &.empty {
+                        color: #e9ecef;
+                    }
+                }
+            }
+
+            .totalReviews {
+                font-size: 14px;
+                color: #6c757d;
+            }
+        }
+    }
+
+    .distribution {
+        flex: 1;
+
+        .distributionTitle {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .distributionRow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .ratingLabel {
+                font-size: 14px;
+                font-weight: 500;
+                color: #495057;
+                min-width: 50px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                i {
+                    font-size: 12px;
+                    color: #ffc107;
+                }
+            }
+
+            .progressBar {
+                flex: 1;
+                height: 8px;
+                background-color: #e9ecef;
+                border-radius: 4px;
+                overflow: hidden;
+
+                .progressFill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+                    border-radius: 4px;
+                    transition: width 0.3s ease;
+                }
+            }
+
+            .count {
+                font-size: 13px;
+                color: #6c757d;
+                min-width: 80px;
+                text-align: right;
+            }
+        }
+
+        .noData {
+            text-align: center;
+            padding: 16px;
+            color: #6c757d;
+            font-size: 14px;
+            font-style: italic;
+        }
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

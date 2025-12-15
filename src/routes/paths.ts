@@ -109,6 +109,9 @@ export const PATHS = {
         DISCOUNTS: {
             ROOT: 'discounts',
         },
+        REVIEWS: {
+            ROOT: 'reviews',
+        },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
         SUBSCRIPTION_INFO: 'subscription-info',
@@ -134,6 +137,9 @@ export const PATHS = {
         SCHEDULE: 'schedule',
         PATIENTS: 'patients',
         MESSAGES: 'messages',
+        REVIEWS: {
+            ROOT: 'reviews',
+        },
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },
