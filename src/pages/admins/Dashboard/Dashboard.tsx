@@ -1,6 +1,31 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { vi } from 'date-fns/locale';
+import { format } from 'date-fns';
 import styles from './Dashboard.module.scss';
+
+// Day of week formatter - hiển thị đầy đủ "Thứ 2" - "Chủ nhật"
+const dayOfWeekFormatter = (day: Date | string): string => {
+    if (day instanceof Date) {
+        const dayIndex = day.getDay();
+        const dayNames = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        return dayNames[dayIndex] || format(day, 'EEEE', { locale: vi });
+    }
+    const dayStr = String(day);
+    const dayMap: Record<string, string> = {
+        Mon: 'Thứ 2',
+        Tue: 'Thứ 3',
+        Wed: 'Thứ 4',
+        Thu: 'Thứ 5',
+        Fri: 'Thứ 6',
+        Sat: 'Thứ 7',
+        Sun: 'Chủ nhật',
+    };
+    return dayMap[dayStr] || dayStr;
+};
 import AppointmentService from '@/services/appointment.service';
 import { DoctorService } from '@/services/doctor.service';
 import { HospitalService } from '@/services/hospital.service';
@@ -330,21 +355,42 @@ const AdminDashboard: React.FC = () => {
         []
     );
 
+    // Computed date range: ưu tiên sử dụng date range từ AI insights nếu có
+    // Chỉ sử dụng aiDateRange khi đã tạo AI insights thành công
+    const activeDateRange = useMemo(() => {
+        // Nếu có AI insights, sử dụng periodStart và periodEnd từ response (ưu tiên cao nhất)
+        if (aiInsights?.periodStart && aiInsights?.periodEnd) {
+            // Parse ISO string và extract date part (YYYY-MM-DD)
+            const fromDate = new Date(aiInsights.periodStart).toISOString().split('T')[0];
+            const toDate = new Date(aiInsights.periodEnd).toISOString().split('T')[0];
+            return {
+                fromDate,
+                toDate,
+            };
+        }
+        // Mặc định sử dụng isoRange (không sử dụng aiDateRange cho đến khi tạo AI insights thành công)
+        return {
+            fromDate: isoRange.fromDate,
+            toDate: isoRange.toDate,
+        };
+    }, [aiInsights?.periodStart, aiInsights?.periodEnd, isoRange.fromDate, isoRange.toDate]);
+
     const fetchAdminAppointments = useCallback(async () => {
-        if (!isoRange.fromDate || !isoRange.toDate) {
+        if (!activeDateRange.fromDate || !activeDateRange.toDate) {
             return null;
         }
 
+        // activeDateRange đã là date string (YYYY-MM-DD), không cần split
         const response = await AppointmentService.getAppointmentsForManagement({
-            fromDate: isoRange.fromDate.split('T')[0],
-            toDate: isoRange.toDate.split('T')[0],
+            fromDate: activeDateRange.fromDate,
+            toDate: activeDateRange.toDate,
             pageNumber: 1,
             pageSize: 10000, // Get all appointments
             includeStatusCounts: false,
         });
 
         return response.data?.appointments ?? [];
-    }, [isoRange.fromDate, isoRange.toDate]);
+    }, [activeDateRange.fromDate, activeDateRange.toDate]);
 
     const handleStatisticsError = useCallback((message: string) => {
         toast.error(message);
@@ -371,8 +417,22 @@ const AdminDashboard: React.FC = () => {
                 })),
             ]);
 
-            const subscriptions = (subscriptionsRes.data as any) || [];
+            let subscriptions = (subscriptionsRes.data as any) || [];
             const plans = (plansRes.data as any)?.subscriptionPlans || [];
+
+            // Filter subscriptions theo date range của AI insights nếu có
+            if (activeDateRange.fromDate && activeDateRange.toDate) {
+                const fromDate = new Date(activeDateRange.fromDate);
+                const toDate = new Date(activeDateRange.toDate);
+                // Set to end of day for toDate
+                toDate.setHours(23, 59, 59, 999);
+
+                subscriptions = subscriptions.filter((sub: any) => {
+                    if (!sub.createdAt) return false;
+                    const createdAt = new Date(sub.createdAt);
+                    return createdAt >= fromDate && createdAt <= toDate;
+                });
+            }
 
             // Initialize all plans with counts for cancelled, upgraded, and total
             const planStats: Record<
@@ -456,18 +516,12 @@ const AdminDashboard: React.FC = () => {
             console.error('Failed to load subscription chart:', err);
             setSubscriptionChartData([]);
         }
-    }, []);
+    }, [activeDateRange.fromDate, activeDateRange.toDate]);
 
     // Load revenue statistics (subscription payments only)
     const loadRevenueChart = useCallback(async () => {
         setIsLoadingRevenueChart(true);
         try {
-            // Calculate date range based on selected revenue period
-            const now = new Date();
-            let fromDateStr: string;
-            let toDateStr: string;
-            let apiPeriod: PaymentStatisticsPeriod;
-
             // Helper function to format date as YYYY-MM-DD in local timezone
             const formatLocalDate = (date: Date): string => {
                 const year = date.getFullYear();
@@ -476,65 +530,120 @@ const AdminDashboard: React.FC = () => {
                 return `${year}-${month}-${day}`;
             };
 
-            switch (revenuePeriod) {
-                case '7days': {
-                    // Last 7 days: today and 6 days back
-                    const sevenDaysAgo = new Date(now);
-                    sevenDaysAgo.setDate(now.getDate() - 6);
-                    fromDateStr = formatLocalDate(sevenDaysAgo);
-                    toDateStr = formatLocalDate(now);
+            let fromDateStr: string;
+            let toDateStr: string;
+            let apiPeriod: PaymentStatisticsPeriod;
+
+            // Ưu tiên sử dụng date range từ AI insights nếu có
+            if (activeDateRange.fromDate && activeDateRange.toDate) {
+                const now = new Date();
+                const todayStr = formatLocalDate(now);
+
+                // activeDateRange đã là date string (YYYY-MM-DD), so sánh trực tiếp
+                let toDateStrFromRange = activeDateRange.toDate;
+                // Nếu có time component, chỉ lấy date part
+                if (toDateStrFromRange.includes('T')) {
+                    toDateStrFromRange = toDateStrFromRange.split('T')[0];
+                }
+
+                // Đảm bảo toDate không vượt quá ngày hiện tại (so sánh string YYYY-MM-DD)
+                toDateStr = toDateStrFromRange > todayStr ? todayStr : toDateStrFromRange;
+
+                // Xử lý fromDate
+                let fromDateStrFromRange = activeDateRange.fromDate;
+                // Nếu có time component, chỉ lấy date part
+                if (fromDateStrFromRange.includes('T')) {
+                    fromDateStrFromRange = fromDateStrFromRange.split('T')[0];
+                }
+
+                // Đảm bảo fromDate không vượt quá toDate
+                if (fromDateStrFromRange > toDateStr) {
+                    // Nếu fromDate > toDate, điều chỉnh fromDate về toDate
+                    fromDateStr = toDateStr;
+                } else {
+                    fromDateStr = fromDateStrFromRange;
+                }
+
+                // Xác định period dựa trên số ngày
+                const fromDate = new Date(fromDateStr + 'T00:00:00');
+                const toDate = new Date(toDateStr + 'T00:00:00');
+                const daysDiff = Math.ceil(
+                    (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)
+                );
+
+                if (daysDiff <= 7) {
                     apiPeriod = PaymentStatisticsPeriod.Daily;
-                    break;
-                }
-                case '4weeks': {
-                    // Last 4 weeks: 27 days back to today (28 days total)
-                    const fourWeeksAgo = new Date(now);
-                    fourWeeksAgo.setDate(now.getDate() - 27);
-                    fromDateStr = formatLocalDate(fourWeeksAgo);
-                    toDateStr = formatLocalDate(now);
+                } else if (daysDiff <= 28) {
                     apiPeriod = PaymentStatisticsPeriod.Weekly;
-                    break;
-                }
-                case '6months': {
-                    // Last 6 months: from start of 5 months ago to today
-                    // Example: Nov 30 → Jun 1 to Nov 30 (covers Jun, Jul, Aug, Sep, Oct, Nov)
-                    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-                    fromDateStr = formatLocalDate(sixMonthsAgo);
-                    toDateStr = formatLocalDate(now);
+                } else if (daysDiff <= 180) {
                     apiPeriod = PaymentStatisticsPeriod.Monthly;
-                    break;
-                }
-                case '4quarters': {
-                    // Last 4 quarters including current quarter
-                    // Example: Nov 30 2025 (Q4) → Q1 2025 to Q4 2025
-                    const currentMonth = now.getMonth(); // 0-11
-                    const currentQuarter = Math.floor(currentMonth / 3); // 0-3
-
-                    // Start from 3 quarters ago
-                    let startQuarter = currentQuarter - 3;
-                    let startYear = now.getFullYear();
-
-                    // Handle negative quarters (go to previous year)
-                    while (startQuarter < 0) {
-                        startQuarter += 4;
-                        startYear--;
-                    }
-
-                    // First day of the start quarter
-                    const startMonth = startQuarter * 3;
-                    const fourQuartersAgo = new Date(startYear, startMonth, 1);
-
-                    fromDateStr = formatLocalDate(fourQuartersAgo);
-                    toDateStr = formatLocalDate(now);
+                } else {
                     apiPeriod = PaymentStatisticsPeriod.Quarterly;
-                    break;
                 }
-                default: {
-                    const defaultFrom = new Date(now);
-                    defaultFrom.setDate(now.getDate() - 27);
-                    fromDateStr = formatLocalDate(defaultFrom);
-                    toDateStr = formatLocalDate(now);
-                    apiPeriod = PaymentStatisticsPeriod.Weekly;
+            } else {
+                // Nếu không có AI insights, dùng revenuePeriod như cũ
+                const now = new Date();
+
+                switch (revenuePeriod) {
+                    case '7days': {
+                        // Last 7 days: today and 6 days back
+                        const sevenDaysAgo = new Date(now);
+                        sevenDaysAgo.setDate(now.getDate() - 6);
+                        fromDateStr = formatLocalDate(sevenDaysAgo);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Daily;
+                        break;
+                    }
+                    case '4weeks': {
+                        // Last 4 weeks: 27 days back to today (28 days total)
+                        const fourWeeksAgo = new Date(now);
+                        fourWeeksAgo.setDate(now.getDate() - 27);
+                        fromDateStr = formatLocalDate(fourWeeksAgo);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Weekly;
+                        break;
+                    }
+                    case '6months': {
+                        // Last 6 months: from start of 5 months ago to today
+                        // Example: Nov 30 → Jun 1 to Nov 30 (covers Jun, Jul, Aug, Sep, Oct, Nov)
+                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+                        fromDateStr = formatLocalDate(sixMonthsAgo);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Monthly;
+                        break;
+                    }
+                    case '4quarters': {
+                        // Last 4 quarters including current quarter
+                        // Example: Nov 30 2025 (Q4) → Q1 2025 to Q4 2025
+                        const currentMonth = now.getMonth(); // 0-11
+                        const currentQuarter = Math.floor(currentMonth / 3); // 0-3
+
+                        // Start from 3 quarters ago
+                        let startQuarter = currentQuarter - 3;
+                        let startYear = now.getFullYear();
+
+                        // Handle negative quarters (go to previous year)
+                        while (startQuarter < 0) {
+                            startQuarter += 4;
+                            startYear--;
+                        }
+
+                        // First day of the start quarter
+                        const startMonth = startQuarter * 3;
+                        const fourQuartersAgo = new Date(startYear, startMonth, 1);
+
+                        fromDateStr = formatLocalDate(fourQuartersAgo);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Quarterly;
+                        break;
+                    }
+                    default: {
+                        const defaultFrom = new Date(now);
+                        defaultFrom.setDate(now.getDate() - 27);
+                        fromDateStr = formatLocalDate(defaultFrom);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Weekly;
+                    }
                 }
             }
 
@@ -582,7 +691,7 @@ const AdminDashboard: React.FC = () => {
         } finally {
             setIsLoadingRevenueChart(false);
         }
-    }, [revenuePeriod]);
+    }, [revenuePeriod, activeDateRange.fromDate, activeDateRange.toDate]);
 
     useEffect(() => {
         loadSubscriptionChart();
@@ -800,70 +909,232 @@ const AdminDashboard: React.FC = () => {
                     <div className={styles.dateRangeHeader}>
                         <span>Chọn khoảng thời gian phân tích</span>
                     </div>
-                    <div className={styles.dateRangeRow}>
-                        <div className={styles.dateRangeGroup}>
-                            <label htmlFor="aiFromDate" className={styles.dateLabel}>
-                                Từ ngày
-                            </label>
-                            <input
-                                id="aiFromDate"
-                                type="date"
-                                className={`form-control ${styles.dateInput}`}
-                                value={
-                                    aiDateRange.from
-                                        ? aiDateRange.from.toISOString().split('T')[0]
-                                        : ''
-                                }
-                                onChange={(e) =>
-                                    setAiDateRange((prev) => ({
-                                        ...prev,
-                                        from: e.target.value ? new Date(e.target.value) : null,
-                                    }))
-                                }
-                                disabled={isLoadingAi}
-                                max={
-                                    aiDateRange.to
-                                        ? aiDateRange.to.toISOString().split('T')[0]
-                                        : undefined
-                                }
-                            />
+                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
+                        <div className={styles.dateRangeRow}>
+                            <div className={styles.dateRangeGroup}>
+                                <label htmlFor="aiFromDate" className={styles.dateLabel}>
+                                    Từ ngày
+                                </label>
+                                <DatePicker
+                                    value={aiDateRange.from}
+                                    onChange={(newValue) =>
+                                        setAiDateRange((prev) => ({
+                                            ...prev,
+                                            from: newValue,
+                                        }))
+                                    }
+                                    disabled={isLoadingAi}
+                                    maxDate={aiDateRange.to || undefined}
+                                    format="dd/MM/yyyy"
+                                    dayOfWeekFormatter={dayOfWeekFormatter}
+                                    slotProps={{
+                                        textField: {
+                                            id: 'aiFromDate',
+                                            size: 'small',
+                                            placeholder: 'dd/mm/yyyy',
+                                            className: styles.muiDateInput,
+                                        },
+                                        day: {
+                                            sx: {
+                                                '&.Mui-selected': {
+                                                    backgroundColor: '#2E37A4 !important',
+                                                    color: 'white',
+                                                    '&:hover': {
+                                                        backgroundColor: '#252d8a !important',
+                                                    },
+                                                },
+                                                '&.MuiPickersDay-today': {
+                                                    border: '1px solid #2E37A4',
+                                                },
+                                            },
+                                        },
+                                        popper: {
+                                            sx: {
+                                                zIndex: 1300,
+                                                '& .MuiPaper-root': {
+                                                    borderRadius: '12px',
+                                                    boxShadow: '0 10px 40px rgba(15, 23, 42, 0.15)',
+                                                    border: '1px solid #e2e8f0',
+                                                },
+                                            },
+                                        },
+                                        calendarHeader: {
+                                            sx: {
+                                                padding: '16px',
+                                                '& .MuiPickersCalendarHeader-label': {
+                                                    fontWeight: 600,
+                                                    fontSize: '1rem',
+                                                    color: '#1e293b',
+                                                },
+                                                '& .MuiIconButton-root': {
+                                                    color: '#2E37A4',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(46, 55, 164, 0.08)',
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }}
+                                    sx={{
+                                        width: '100%',
+                                        '& .MuiInputBase-root': {
+                                            height: '38px',
+                                            fontSize: '0.95rem',
+                                            borderRadius: '10px',
+                                            border: '1.5px solid #cbd5e1',
+                                            background: 'white',
+                                            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.05)',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            '&:hover': {
+                                                borderColor: '#94a3b8',
+                                                boxShadow: '0 2px 6px rgba(15, 23, 42, 0.08)',
+                                            },
+                                            '&.Mui-focused': {
+                                                borderColor: '#2E37A4',
+                                                boxShadow:
+                                                    '0 0 0 4px rgba(46, 55, 164, 0.12), 0 4px 12px rgba(46, 55, 164, 0.15)',
+                                            },
+                                        },
+                                        '& .MuiInputBase-input': {
+                                            padding: '11px 14px',
+                                            fontWeight: 500,
+                                            color: '#1e293b',
+                                            cursor: 'pointer',
+                                        },
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            border: 'none',
+                                        },
+                                        '& .MuiInputAdornment-root': {
+                                            marginRight: '8px',
+                                            '& .MuiIconButton-root': {
+                                                color: '#000000',
+                                                padding: '4px',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                },
+                                            },
+                                        },
+                                    }}
+                                />
+                            </div>
+                            <div className={styles.dateRangeGroup}>
+                                <label htmlFor="aiToDate" className={styles.dateLabel}>
+                                    Đến ngày
+                                </label>
+                                <DatePicker
+                                    value={aiDateRange.to}
+                                    onChange={(newValue) =>
+                                        setAiDateRange((prev) => ({
+                                            ...prev,
+                                            to: newValue,
+                                        }))
+                                    }
+                                    disabled={isLoadingAi}
+                                    minDate={aiDateRange.from || undefined}
+                                    format="dd/MM/yyyy"
+                                    dayOfWeekFormatter={dayOfWeekFormatter}
+                                    slotProps={{
+                                        textField: {
+                                            id: 'aiToDate',
+                                            size: 'small',
+                                            placeholder: 'dd/mm/yyyy',
+                                            className: styles.muiDateInput,
+                                        },
+                                        day: {
+                                            sx: {
+                                                '&.Mui-selected': {
+                                                    backgroundColor: '#2E37A4 !important',
+                                                    color: 'white',
+                                                    '&:hover': {
+                                                        backgroundColor: '#252d8a !important',
+                                                    },
+                                                },
+                                                '&.MuiPickersDay-today': {
+                                                    border: '1px solid #2E37A4',
+                                                },
+                                            },
+                                        },
+                                        popper: {
+                                            sx: {
+                                                zIndex: 1300,
+                                                '& .MuiPaper-root': {
+                                                    borderRadius: '12px',
+                                                    boxShadow: '0 10px 40px rgba(15, 23, 42, 0.15)',
+                                                    border: '1px solid #e2e8f0',
+                                                },
+                                            },
+                                        },
+                                        calendarHeader: {
+                                            sx: {
+                                                padding: '16px',
+                                                '& .MuiPickersCalendarHeader-label': {
+                                                    fontWeight: 600,
+                                                    fontSize: '1rem',
+                                                    color: '#1e293b',
+                                                },
+                                                '& .MuiIconButton-root': {
+                                                    color: '#2E37A4',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(46, 55, 164, 0.08)',
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }}
+                                    sx={{
+                                        width: '100%',
+                                        '& .MuiInputBase-root': {
+                                            height: '38px',
+                                            fontSize: '0.95rem',
+                                            borderRadius: '10px',
+                                            border: '1.5px solid #cbd5e1',
+                                            background: 'white',
+                                            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.05)',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            '&:hover': {
+                                                borderColor: '#94a3b8',
+                                                boxShadow: '0 2px 6px rgba(15, 23, 42, 0.08)',
+                                            },
+                                            '&.Mui-focused': {
+                                                borderColor: '#2E37A4',
+                                                boxShadow:
+                                                    '0 0 0 4px rgba(46, 55, 164, 0.12), 0 4px 12px rgba(46, 55, 164, 0.15)',
+                                            },
+                                        },
+                                        '& .MuiInputBase-input': {
+                                            padding: '11px 14px',
+                                            fontWeight: 500,
+                                            color: '#1e293b',
+                                            cursor: 'pointer',
+                                        },
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            border: 'none',
+                                        },
+                                        '& .MuiInputAdornment-root': {
+                                            marginRight: '8px',
+                                            '& .MuiIconButton-root': {
+                                                color: '#000000',
+                                                padding: '4px',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                },
+                                            },
+                                        },
+                                    }}
+                                />
+                            </div>
+                            <div className={styles.dateRangeButton}>
+                                <button
+                                    className={`btn btn-primary ${styles.aiGenerateBtn}`}
+                                    onClick={loadAiInsights}
+                                    disabled={isLoadingAi}
+                                >
+                                    <i className="ti ti-sparkles"></i>
+                                    <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
+                                </button>
+                            </div>
                         </div>
-                        <div className={styles.dateRangeGroup}>
-                            <label htmlFor="aiToDate" className={styles.dateLabel}>
-                                Đến ngày
-                            </label>
-                            <input
-                                id="aiToDate"
-                                type="date"
-                                className={`form-control ${styles.dateInput}`}
-                                value={
-                                    aiDateRange.to ? aiDateRange.to.toISOString().split('T')[0] : ''
-                                }
-                                onChange={(e) =>
-                                    setAiDateRange((prev) => ({
-                                        ...prev,
-                                        to: e.target.value ? new Date(e.target.value) : null,
-                                    }))
-                                }
-                                disabled={isLoadingAi}
-                                min={
-                                    aiDateRange.from
-                                        ? aiDateRange.from.toISOString().split('T')[0]
-                                        : undefined
-                                }
-                            />
-                        </div>
-                        <div className={styles.dateRangeButton}>
-                            <button
-                                className={`btn btn-primary ${styles.aiGenerateBtn}`}
-                                onClick={loadAiInsights}
-                                disabled={isLoadingAi}
-                            >
-                                <i className="ti ti-sparkles"></i>
-                                <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
-                            </button>
-                        </div>
-                    </div>
+                    </LocalizationProvider>
                     <div className={styles.dateRangeInfo}>
                         <i className="ti ti-info-circle"></i>
                         <span>

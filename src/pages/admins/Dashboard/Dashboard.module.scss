@@ -699,13 +699,19 @@
 
 // AI Date Range Picker
 .aiDateRangePicker {
-    padding: 20px 28px;
-    background: #f8fafc;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-bottom: 1px solid #e2e8f0;
     margin: 0;
+    border-radius: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 1;
+    // Đảm bảo calendar popup không bị cắt
+    overflow: visible;
 
     @media (max-width: 768px) {
-        padding: 16px 20px;
+        padding: 20px 24px;
     }
 }
 
@@ -749,6 +755,10 @@
     gap: 12px;
     flex: 1;
     min-width: 200px;
+    position: relative;
+    z-index: 10;
+    // Đảm bảo calendar popup không bị cắt
+    overflow: visible;
 
     @media (max-width: 992px) {
         min-width: 180px;
@@ -794,29 +804,140 @@
     margin-bottom: 0;
     white-space: nowrap;
     min-width: 80px;
+    transition: color 0.2s ease;
 
     @media (max-width: 768px) {
         margin-bottom: 4px;
     }
+
+    // Icon cho label (nếu cần)
+    i {
+        margin-right: 6px;
+        color: #6366f1;
+        font-size: 1rem;
+    }
 }
 
+// MUI DatePicker Styles
+.muiDateInput {
+    width: 100%;
+}
+
+:global {
+    // MUI DatePicker custom styles
+    .MuiDatePicker-root {
+        width: 100%;
+    }
+}
+
+// Legacy dateInput styles (kept for backward compatibility)
 .dateInput {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 10px 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 11px 40px 11px 14px;
     font-size: 0.95rem;
-    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #1e293b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: white;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    position: relative;
+    z-index: 10;
+
+    // Custom calendar icon - đặt bên phải (mặc định của browser)
+    &::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        margin-left: 8px;
+    }
+
+    &::-moz-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        margin-left: 8px;
+    }
+
+    // Firefox
+    &::-webkit-datetime-edit {
+        padding: 0;
+    }
+
+    &::-webkit-datetime-edit-fields-wrapper {
+        padding: 0;
+    }
+
+    &::-webkit-datetime-edit-text {
+        color: #94a3b8;
+        padding: 0 4px;
+    }
+
+    &::-webkit-datetime-edit-month-field,
+    &::-webkit-datetime-edit-day-field,
+    &::-webkit-datetime-edit-year-field {
+        color: #1e293b;
+        padding: 0 2px;
+    }
+
+    &:hover {
+        border-color: #94a3b8;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+
+        &::-webkit-calendar-picker-indicator {
+            opacity: 1;
+        }
+
+        &::-moz-calendar-picker-indicator {
+            opacity: 1;
+        }
+    }
 
     &:focus {
         border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        box-shadow:
+            0 0 0 4px rgba(99, 102, 241, 0.12),
+            0 4px 12px rgba(99, 102, 241, 0.15);
         outline: none;
+
+        &::-webkit-calendar-picker-indicator {
+            opacity: 1;
+        }
+
+        &::-moz-calendar-picker-indicator {
+            opacity: 1;
+        }
     }
 
     &:disabled {
         background: #f1f5f9;
+        border-color: #e2e8f0;
         cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+    }
+
+    // Style cho placeholder và text
+    &::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    // Firefox specific
+    &::-moz-placeholder {
+        color: #94a3b8;
+        font-weight: 400;
     }
 }
 
