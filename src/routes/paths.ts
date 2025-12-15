@@ -109,6 +109,9 @@ export const PATHS = {
         DISCOUNTS: {
             ROOT: 'discounts',
         },
+        REVIEWS: {
+            ROOT: 'reviews',
+        },
         MESSAGES: 'messages',
         SUBSCRIPTION_PLAN: 'subscription-plan',
         SUBSCRIPTION_INFO: 'subscription-info',
@@ -119,6 +122,7 @@ export const PATHS = {
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            SECURITY: 'security',
             TWO_FACTOR: 'two-factor-authentication',
         },
     },
@@ -134,12 +138,16 @@ export const PATHS = {
         SCHEDULE: 'schedule',
         PATIENTS: 'patients',
         MESSAGES: 'messages',
+        REVIEWS: {
+            ROOT: 'reviews',
+        },
         NOTIFICATIONS: {
             ROOT: 'notifications',
         },
         SETTINGS: {
             ROOT: 'settings',
             PROFILE: 'profile',
+            SECURITY: 'security',
             TWO_FACTOR: 'two-factor-authentication',
         },
     },

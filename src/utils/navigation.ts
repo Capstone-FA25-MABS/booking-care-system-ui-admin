@@ -43,3 +43,29 @@ export const hasAnyRole = (userRoles: string[], requiredRoles: string[]): boolea
         userRoles.some((userRole) => userRole.toUpperCase() === requiredRole.toUpperCase())
     );
 };
+
+/**
+ * Get security settings path based on user roles
+ * @param roles - Array of user roles
+ * @returns Path to security settings page
+ */
+export const getSecuritySettingsPath = (roles: string[]): string => {
+    const primaryRole = getPrimaryRole(roles);
+
+    if (!primaryRole) {
+        return PATHS.LOGIN;
+    }
+
+    const roleUpper = primaryRole.toUpperCase();
+
+    switch (roleUpper) {
+        case 'ADMIN':
+            return `${PATHS.ADMIN.ROOT}/${PATHS.ADMIN.SETTINGS.ROOT}/${PATHS.ADMIN.SETTINGS.SECURITY}`;
+        case 'STAFF':
+            return `${PATHS.HOSPITAL.ROOT}/${PATHS.HOSPITAL.SETTINGS.ROOT}/${PATHS.HOSPITAL.SETTINGS.SECURITY}`;
+        case 'DOCTOR':
+            return `${PATHS.DOCTOR.ROOT}/${PATHS.DOCTOR.SETTINGS.ROOT}/${PATHS.DOCTOR.SETTINGS.SECURITY}`;
+        default:
+            return PATHS.LOGIN;
+    }
+};
