@@ -756,7 +756,7 @@ const HospitalDashboard: React.FC = () => {
                                         }))
                                     }
                                     disabled={isLoadingAi}
-                                    maxDate={aiDateRange.to || undefined}
+                                    maxDate={aiDateRange.to || new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{

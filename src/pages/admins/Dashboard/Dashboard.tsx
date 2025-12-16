@@ -279,14 +279,25 @@ const AdminDashboard: React.FC = () => {
         setAiError(null);
         setAiLoadingStep(1); // Start collecting data
         try {
-            // Nếu có date range tùy chỉnh, dùng nó; nếu không, dùng period mặc định
-            const request: GenerateAiInsightRequest =
-                aiDateRange.from && aiDateRange.to
-                    ? {
-                          fromDate: aiDateRange.from.toISOString().split('T')[0],
-                          toDate: aiDateRange.to.toISOString().split('T')[0],
-                      }
-                    : { period: 'week' };
+            let request: GenerateAiInsightRequest;
+
+            if (aiDateRange.from && aiDateRange.to) {
+                // Nếu người dùng chọn date range cụ thể
+                request = {
+                    fromDate: aiDateRange.from.toISOString().split('T')[0],
+                    toDate: aiDateRange.to.toISOString().split('T')[0],
+                };
+            } else {
+                // Mặc định: 7 ngày trước đến ngày hiện tại
+                const today = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+
+                request = {
+                    fromDate: sevenDaysAgo.toISOString().split('T')[0],
+                    toDate: today.toISOString().split('T')[0],
+                };
+            }
 
             // Simulate steps for better UX
             await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
@@ -924,7 +935,7 @@ const AdminDashboard: React.FC = () => {
                                         }))
                                     }
                                     disabled={isLoadingAi}
-                                    maxDate={aiDateRange.to || undefined}
+                                    maxDate={aiDateRange.to || new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{
@@ -1031,6 +1042,7 @@ const AdminDashboard: React.FC = () => {
                                     }
                                     disabled={isLoadingAi}
                                     minDate={aiDateRange.from || undefined}
+                                    maxDate={new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{
@@ -1132,6 +1144,19 @@ const AdminDashboard: React.FC = () => {
                                     <i className="ti ti-sparkles"></i>
                                     <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
                                 </button>
+                                {aiInsights && !isLoadingAi && (
+                                    <button
+                                        className={`btn btn-outline-secondary ${styles.aiClearBtn}`}
+                                        onClick={() => {
+                                            setAiInsights(null);
+                                            setAiDateRange({ from: null, to: null });
+                                            setAiError(null);
+                                        }}
+                                        title="Xóa kết quả phân tích"
+                                    >
+                                        <i className="ti ti-x"></i>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </LocalizationProvider>
@@ -1140,7 +1165,7 @@ const AdminDashboard: React.FC = () => {
                         <span>
                             {aiDateRange.from && aiDateRange.to
                                 ? `Phân tích từ ${formatDateDisplay(aiDateRange.from)} đến ${formatDateDisplay(aiDateRange.to)}`
-                                : 'Để trống để sử dụng mặc định (tuần gần nhất)'}
+                                : 'Để trống để sử dụng mặc định (7 ngày gần nhất: từ 7 ngày trước đến ngày hiện tại)'}
                         </span>
                     </div>
                 </div>
