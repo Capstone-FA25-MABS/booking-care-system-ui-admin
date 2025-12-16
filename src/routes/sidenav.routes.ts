@@ -38,11 +38,6 @@ export const listGroupMenuItemHospital: MenuConfig = [
             ),
             createDoctorsMenuItem(),
             createSimpleMenuItem(
-                'Quản lý dịch vụ bệnh viện',
-                'ti ti-building-hospital',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
-            ),
-            createSimpleMenuItem(
                 'Quản lí dịch vụ y tế',
                 'ti ti-briefcase',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
@@ -118,20 +113,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
 export const listGroupMenuItemAdmin: MenuConfig = [
     {
         title: 'Danh mục chính',
-        items: [
-            createDashboardMenuItem(),
-            {
-                label: 'Applications',
-                icon: 'ti ti-apps',
-                subItems: [
-                    { label: 'Chat', link: '/apps/chat' },
-                    { label: 'Email', link: '/apps/email' },
-                    { label: 'Calendar', link: '/apps/calendar' },
-                    { label: 'Contacts', link: '/apps/contacts' },
-                    { label: 'Invoices', link: '/apps/invoices' },
-                ],
-            },
-        ],
+        items: [createDashboardMenuItem()],
     },
     {
         title: 'Quản lý',
