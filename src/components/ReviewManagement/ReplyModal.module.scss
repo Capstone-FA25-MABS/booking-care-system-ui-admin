@@ -1,0 +1,95 @@
+.reviewPreview {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-left: 4px solid #0d6efd;
+
+    .reviewHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 12px;
+
+        .patientName {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .rating {
+            display: flex;
+            gap: 4px;
+
+            i {
+                font-size: 16px;
+
+                &.filled {
+                    color: #ffc107;
+                }
+
+                &.empty {
+                    color: #e9ecef;
+                }
+            }
+        }
+    }
+
+    .reviewComment {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #495057;
+        white-space: pre-wrap;
+    }
+}
+
+.formGroup {
+    margin-top: 20px;
+
+    .label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 8px;
+
+        .required {
+            color: #dc3545;
+        }
+    }
+
+    .textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #495057;
+        font-family: inherit;
+        resize: vertical;
+        transition: border-color 0.2s;
+
+        &:focus {
+            outline: none;
+            border-color: #0d6efd;
+        }
+
+        &::placeholder {
+            color: #adb5bd;
+        }
+
+        &:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+    }
+
+    .charCount {
+        font-size: 12px;
+        color: #6c757d;
+        text-align: right;
+        margin-top: 4px;
+    }
+}

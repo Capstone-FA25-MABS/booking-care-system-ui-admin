@@ -21,6 +21,7 @@ const validateRoles = (response: any, rejectWithValue: any) => {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            mustChangePassword: false,
             accessToken: null,
         };
     }
@@ -45,6 +46,7 @@ const validateRoles = (response: any, rejectWithValue: any) => {
             emailConfirmed: jwtInfo.emailConfirmed,
             phoneConfirmed: jwtInfo.phoneConfirmed,
             hasExternalProvider: jwtInfo.hasExternalProvider,
+            mustChangePassword: jwtInfo.mustChangePassword,
             accessToken: token,
         };
     }
@@ -62,6 +64,7 @@ const handleValidationResult = (validationResult: any) => {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            mustChangePassword: false,
             accessToken: null,
         };
     }
@@ -72,6 +75,7 @@ const handleValidationResult = (validationResult: any) => {
             emailConfirmed: validationResult.emailConfirmed,
             phoneConfirmed: validationResult.phoneConfirmed,
             hasExternalProvider: validationResult.hasExternalProvider,
+            mustChangePassword: validationResult.mustChangePassword || false,
             accessToken: validationResult.accessToken || null,
         };
     }
@@ -81,6 +85,7 @@ const handleValidationResult = (validationResult: any) => {
             emailConfirmed: false,
             phoneConfirmed: false,
             hasExternalProvider: false,
+            mustChangePassword: false,
             accessToken: null,
         };
     }
@@ -96,6 +101,7 @@ const initialState: AuthState = {
     emailConfirmed: false,
     phoneConfirmed: false,
     hasExternalProvider: false,
+    mustChangePassword: false,
     accessToken: null,
 };
 
@@ -213,11 +219,16 @@ const authSlice = createSlice({
             state.emailConfirmed = false;
             state.phoneConfirmed = false;
             state.hasExternalProvider = false;
+            state.mustChangePassword = false;
             state.accessToken = null;
         },
         updateAccessToken: (state, action) => {
             // Update access token after refresh (used by axios interceptor)
             state.accessToken = action.payload;
+        },
+        clearMustChangePassword: (state) => {
+            // Clear mustChangePassword flag after user changes password
+            state.mustChangePassword = false;
         },
     },
     extraReducers: (builder) => {
@@ -233,6 +244,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.mustChangePassword = action.payload?.mustChangePassword || false;
                 state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
@@ -273,6 +285,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = false;
                 state.error = null;
                 state.isLoading = false;
+                state.mustChangePassword = false;
                 state.accessToken = null;
             })
             // Google login cases
@@ -284,6 +297,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.mustChangePassword = action.payload?.mustChangePassword || false;
                 state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
@@ -300,6 +314,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.mustChangePassword = action.payload?.mustChangePassword || false;
                 state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
@@ -318,6 +333,7 @@ const authSlice = createSlice({
                 state.emailConfirmed = action.payload?.emailConfirmed || false;
                 state.phoneConfirmed = action.payload?.phoneConfirmed || false;
                 state.hasExternalProvider = action.payload?.hasExternalProvider || false;
+                state.mustChangePassword = action.payload?.mustChangePassword || false;
                 state.accessToken = action.payload?.accessToken || null;
                 state.isAuthenticated = state.roles.length > 0;
                 state.error = null;
@@ -329,6 +345,7 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearError, resetAuthState, updateAccessToken } = authSlice.actions;
+export const { clearError, resetAuthState, updateAccessToken, clearMustChangePassword } =
+    authSlice.actions;
 
 export default authSlice.reducer;

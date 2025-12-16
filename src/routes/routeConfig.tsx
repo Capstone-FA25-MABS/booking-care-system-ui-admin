@@ -13,6 +13,7 @@ import AuthLayout from '@/layouts/AuthLayout';
 import AddDoctor from '@/pages/hospitals/Doctors/AddDoctor/AddDoctor';
 import NewAppointment from '@/pages/hospitals/Appointments/NewAppointment';
 import Messages from '@/pages/hospitals/Messages';
+import DoctorReviewManagement from '@/pages/doctors/Reviews';
 import Login from '@/pages/authentication/Login';
 import ForgotPassword from '@/pages/authentication/ForgotPassword';
 import ResetPassword from '@/pages/authentication/ResetPassword';
@@ -55,6 +56,7 @@ import HospitalServiceTypesManagement from '@/pages/hospitals/ServiceTypes';
 import NotificationManagement from '@/pages/notifications/NotificationManagement/NotificationManagement';
 import Wallet from '@/pages/hospitals/Wallet';
 import HospitalDiscountManagement from '@/pages/hospitals/Discounts';
+import HospitalReviewManagement from '@/pages/hospitals/Reviews';
 
 const routes: RouteObject[] = [
     {
@@ -186,6 +188,10 @@ const routes: RouteObject[] = [
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
             { path: PATHS.DOCTOR.MESSAGES, element: <Messages /> },
             {
+                path: PATHS.DOCTOR.REVIEWS.ROOT,
+                children: [{ index: true, element: <DoctorReviewManagement /> }],
+            },
+            {
                 path: PATHS.DOCTOR.NOTIFICATIONS.ROOT,
                 children: [{ index: true, element: <NotificationManagement /> }],
             },
@@ -197,6 +203,7 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.DOCTOR.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.DOCTOR.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    { path: PATHS.DOCTOR.SETTINGS.SECURITY, element: <SecuritySettings /> },
                     {
                         path: PATHS.DOCTOR.SETTINGS.TWO_FACTOR,
                         element: <TwoFactorAuthentication />,
@@ -251,6 +258,7 @@ const routes: RouteObject[] = [
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.WALLET.ROOT, element: <Wallet /> },
             { path: PATHS.HOSPITAL.DISCOUNTS.ROOT, element: <HospitalDiscountManagement /> },
+            { path: PATHS.HOSPITAL.REVIEWS.ROOT, element: <HospitalReviewManagement /> },
             { path: PATHS.HOSPITAL.MESSAGES, element: <Messages /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_PLAN, element: <SubscriptionPlanList /> },
             { path: PATHS.HOSPITAL.SUBSCRIPTION_INFO, element: <SubscriptionInfo /> },
@@ -266,6 +274,7 @@ const routes: RouteObject[] = [
                         element: <Navigate to={PATHS.HOSPITAL.SETTINGS.PROFILE} replace />,
                     },
                     { path: PATHS.HOSPITAL.SETTINGS.PROFILE, element: <ProfileSettings /> },
+                    { path: PATHS.HOSPITAL.SETTINGS.SECURITY, element: <SecuritySettings /> },
                     {
                         path: PATHS.HOSPITAL.SETTINGS.TWO_FACTOR,
                         element: <TwoFactorAuthentication />,

@@ -9,7 +9,7 @@ import ExternalAuthButtons from '@/components/ExternalAuthButtons';
 import TwoFactorVerificationModal from '@/pages/authentication/TwoFactorAuthentication/Modal/TwoFactorVerificationModal';
 import Input from '@/components/Input';
 import { toast } from 'react-toastify';
-import { getRedirectPathByRole } from '@/utils/navigation';
+import { getRedirectPathByRole, getSecuritySettingsPath } from '@/utils/navigation';
 import { useAppDispatch } from '@/store/hooks';
 import { complete2FALoginAsync } from '@/store/slices/authSlice';
 
@@ -35,8 +35,15 @@ const Login: React.FC = () => {
     const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
     const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
-    // Get redirect path based on user roles
-    const handleSuccessRedirect = (rolesFromAuth: string[]) => {
+    // Get redirect path based on user roles and mustChangePassword flag
+    const handleSuccessRedirect = (rolesFromAuth: string[], shouldChangePassword?: boolean) => {
+        // Check if user must change password (from param or Redux state)
+        if (shouldChangePassword) {
+            const securityPath = getSecuritySettingsPath(rolesFromAuth);
+            navigate(securityPath);
+            return;
+        }
+
         const redirectPath = getRedirectPathByRole(rolesFromAuth);
         navigate(redirectPath);
     };
@@ -153,8 +160,15 @@ const Login: React.FC = () => {
             }
 
             const rolesFromAuth = result?.roles || [];
-            toast.success('Đăng nhập thành công');
-            handleSuccessRedirect(rolesFromAuth);
+            const shouldChangePassword = result?.mustChangePassword || false;
+
+            // Show success toast only if not redirecting to change password
+            // (toast for mustChangePassword will be shown in SecuritySettings)
+            if (!shouldChangePassword) {
+                toast.success('Đăng nhập thành công');
+            }
+
+            handleSuccessRedirect(rolesFromAuth, shouldChangePassword);
         } catch (err) {
             console.error('Login failed:', err);
         }
@@ -200,7 +214,15 @@ const Login: React.FC = () => {
                 // Điều này giúp ProtectedRoute có thể đọc được state đúng
                 await new Promise((resolve) => setTimeout(resolve, 200));
 
-                handleSuccessRedirect(result.roles);
+                const shouldChangePassword = result.mustChangePassword || false;
+
+                // Show success toast only if not redirecting to change password
+                // (toast for mustChangePassword will be shown in SecuritySettings)
+                if (!shouldChangePassword) {
+                    toast.success('Đăng nhập thành công');
+                }
+
+                handleSuccessRedirect(result.roles, shouldChangePassword);
             } else {
                 setTwoFactorError('Xác thực thất bại. Vui lòng thử lại.');
             }

@@ -6,13 +6,14 @@ import { AuthService } from '@/services/auth.service';
 import { AppDispatch, RootState } from '@/store';
 import { resetPasswordAsync, clearError } from '@/store/slices/authSlice';
 import { useAuth } from '@/hooks/useAuth';
+import { getRedirectPathByRole } from '@/utils/navigation';
 import Input from '@/components/Input';
 
 const ResetPassword: React.FC = () => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch<AppDispatch>();
     const { isLoading, error: authError } = useSelector((state: RootState) => state.auth);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, roles } = useAuth();
     const navigate = useNavigate();
     const resetToken = searchParams.get('token');
     const email = searchParams.get('email');
@@ -39,8 +40,10 @@ const ResetPassword: React.FC = () => {
     const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard');
+        // Redirect to role-based dashboard if already authenticated
+        if (isAuthenticated && roles.length > 0) {
+            const redirectPath = getRedirectPathByRole(roles);
+            navigate(redirectPath);
         }
         // Clear any previous errors when component mounts
         dispatch(clearError());
@@ -58,7 +61,7 @@ const ResetPassword: React.FC = () => {
             email: email,
             resetToken: resetToken,
         }));
-    }, [resetToken, email, dispatch]);
+    }, [isAuthenticated, roles, navigate, resetToken, email, dispatch]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

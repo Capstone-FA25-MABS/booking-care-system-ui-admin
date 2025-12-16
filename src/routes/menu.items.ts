@@ -186,6 +186,14 @@ export const createDoctorAccountSettingsMenuItem = (): MenuItem => ({
             ),
         },
         {
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SETTINGS.ROOT,
+                PATHS.DOCTOR.SETTINGS.SECURITY
+            ),
+        },
+        {
             label: 'Xác thực 2 yếu tố',
             link: buildPath(
                 PATHS.DOCTOR.ROOT,
@@ -209,6 +217,14 @@ export const createHospitalAccountSettingsMenuItem = (): MenuItem => ({
                 PATHS.HOSPITAL.ROOT,
                 PATHS.HOSPITAL.SETTINGS.ROOT,
                 PATHS.HOSPITAL.SETTINGS.PROFILE
+            ),
+        },
+        {
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SETTINGS.ROOT,
+                PATHS.HOSPITAL.SETTINGS.SECURITY
             ),
         },
         {
