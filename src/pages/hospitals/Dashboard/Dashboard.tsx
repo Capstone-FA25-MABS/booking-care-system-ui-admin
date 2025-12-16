@@ -260,13 +260,7 @@ const HospitalDashboard: React.FC = () => {
         loadSystemOverview();
     }, [loadSystemOverview]);
 
-    // Tự động tải AI insights khi vào trang (giống admin), dùng tuần gần nhất nếu chưa chọn range
-    useEffect(() => {
-        if (hospitalProfile?.id && !isLoadingAi && !aiInsights) {
-            void loadAiInsights();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [hospitalProfile?.id, isLoadingAi, aiInsights]);
+    // Không tự động tải AI insights - chỉ tải khi người dùng bấm nút "Tạo AI Insights"
 
     const activeDateRange = useMemo(() => {
         if (aiInsights?.periodStart && aiInsights?.periodEnd) {
@@ -371,13 +365,25 @@ const HospitalDashboard: React.FC = () => {
         setAiError(null);
         setAiLoadingStep(1); // Start collecting data
         try {
-            const request: GenerateAiInsightRequest =
-                aiDateRange.from && aiDateRange.to
-                    ? {
-                          fromDate: aiDateRange.from.toISOString().split('T')[0],
-                          toDate: aiDateRange.to.toISOString().split('T')[0],
-                      }
-                    : { period: 'week' };
+            let request: GenerateAiInsightRequest;
+
+            if (aiDateRange.from && aiDateRange.to) {
+                // Nếu người dùng chọn date range cụ thể
+                request = {
+                    fromDate: aiDateRange.from.toISOString().split('T')[0],
+                    toDate: aiDateRange.to.toISOString().split('T')[0],
+                };
+            } else {
+                // Mặc định: 7 ngày trước đến ngày hiện tại
+                const today = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+
+                request = {
+                    fromDate: sevenDaysAgo.toISOString().split('T')[0],
+                    toDate: today.toISOString().split('T')[0],
+                };
+            }
 
             await new Promise((resolve) => setTimeout(resolve, 500));
             setAiLoadingStep(2); // Analyzing AI
@@ -857,6 +863,7 @@ const HospitalDashboard: React.FC = () => {
                                     }
                                     disabled={isLoadingAi}
                                     minDate={aiDateRange.from || undefined}
+                                    maxDate={new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{
@@ -958,6 +965,19 @@ const HospitalDashboard: React.FC = () => {
                                     <i className="ti ti-sparkles"></i>
                                     <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
                                 </button>
+                                {aiInsights && !isLoadingAi && (
+                                    <button
+                                        className={`btn btn-outline-secondary ${styles.aiClearBtn}`}
+                                        onClick={() => {
+                                            setAiInsights(null);
+                                            setAiDateRange({ from: null, to: null });
+                                            setAiError(null);
+                                        }}
+                                        title="Xóa kết quả phân tích"
+                                    >
+                                        <i className="ti ti-x"></i>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </LocalizationProvider>
@@ -966,7 +986,7 @@ const HospitalDashboard: React.FC = () => {
                         <span>
                             {aiDateRange.from && aiDateRange.to
                                 ? `Phân tích từ ${formatDateDisplay(aiDateRange.from)} đến ${formatDateDisplay(aiDateRange.to)}`
-                                : 'Để trống để sử dụng mặc định (tuần gần nhất)'}
+                                : 'Để trống để sử dụng mặc định (7 ngày gần nhất: từ 7 ngày trước đến ngày hiện tại)'}
                         </span>
                     </div>
                 </div>
