@@ -371,9 +371,9 @@ const AdminDashboard: React.FC = () => {
     const activeDateRange = useMemo(() => {
         // Nếu có AI insights, sử dụng periodStart và periodEnd từ response (ưu tiên cao nhất)
         if (aiInsights?.periodStart && aiInsights?.periodEnd) {
-            // Parse ISO string và extract date part (YYYY-MM-DD)
-            const fromDate = new Date(aiInsights.periodStart).toISOString().split('T')[0];
-            const toDate = new Date(aiInsights.periodEnd).toISOString().split('T')[0];
+            // Extract date part from datetime string (YYYY-MM-DDTHH:mm:ss)
+            const fromDate = aiInsights.periodStart.split('T')[0];
+            const toDate = aiInsights.periodEnd.split('T')[0];
             return {
                 fromDate,
                 toDate,
@@ -987,7 +987,7 @@ const AdminDashboard: React.FC = () => {
                                         },
                                     }}
                                     sx={{
-                                        width: '100%',
+                                        width: { xs: '100%', sm: '250px' },
                                         '& .MuiInputBase-root': {
                                             height: '38px',
                                             fontSize: '0.95rem',
@@ -1094,7 +1094,7 @@ const AdminDashboard: React.FC = () => {
                                         },
                                     }}
                                     sx={{
-                                        width: '100%',
+                                        width: { xs: '100%', sm: '250px' },
                                         '& .MuiInputBase-root': {
                                             height: '38px',
                                             fontSize: '0.95rem',
@@ -1202,7 +1202,7 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 1: Thu thập dữ liệu</span>
+                                        <span>Thu thập dữ liệu</span>
                                     </div>
                                     <div
                                         className={`${styles.loadingStep} ${aiLoadingStep >= 2 ? styles.loadingStepActive : ''}`}
@@ -1216,7 +1216,7 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 2: Phân tích AI</span>
+                                        <span>Phân tích AI</span>
                                     </div>
                                     <div
                                         className={`${styles.loadingStep} ${aiLoadingStep >= 3 ? styles.loadingStepActive : ''}`}
@@ -1234,50 +1234,14 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 3: Tạo báo cáo</span>
+                                        <span>Tạo báo cáo</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : !aiInsights ? (
                         <div className={styles.aiEmptyState}></div>
-                    ) : (
-                        <>
-                            <div className={styles.aiSummaryRow}>
-                                <div className={styles.aiBadge}>
-                                    <span className={styles.aiBadgeLabel}>Đang lọc từ:</span>
-                                    <span className={styles.aiBadgeDateRange}>
-                                        {aiInsights.periodStart
-                                            ? new Date(aiInsights.periodStart)
-                                                  .toLocaleDateString('vi-VN', {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
-                                                      year: 'numeric',
-                                                  })
-                                                  .replace(/\//g, '-')
-                                            : '--'}
-                                        {' đến '}
-                                        {aiInsights.periodEnd
-                                            ? new Date(aiInsights.periodEnd)
-                                                  .toLocaleDateString('vi-VN', {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
-                                                      year: 'numeric',
-                                                  })
-                                                  .replace(/\//g, '-')
-                                            : '--'}
-                                    </span>
-                                </div>
-                                <span className={styles.aiMeta}>
-                                    <i className="ti ti-clock me-1"></i>
-                                    <span className={styles.aiMetaLabel}>Cập nhật:</span>
-                                    <span className={styles.aiMetaTime}>
-                                        {new Date(aiInsights.generatedAt).toLocaleString('vi-VN')}
-                                    </span>
-                                </span>
-                            </div>
-                        </>
-                    )}
+                    ) : null}
                 </div>
             </div>
 
