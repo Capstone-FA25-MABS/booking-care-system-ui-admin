@@ -160,6 +160,14 @@ export const createAccountSettingsMenuItem = (): MenuItem => ({
             ),
         },
         {
+            label: 'Bảo mật',
+            link: buildPath(
+                PATHS.ADMIN.ROOT,
+                PATHS.ADMIN.SETTINGS.ROOT,
+                PATHS.ADMIN.SETTINGS.SECURITY
+            ),
+        },
+        {
             label: 'Xác thực 2 yếu tố',
             link: buildPath(
                 PATHS.ADMIN.ROOT,
