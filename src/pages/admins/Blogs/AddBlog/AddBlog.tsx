@@ -11,6 +11,8 @@ import { BlogCategoryService } from '@/services/blogCategory.service';
 import { CreateBlogRequest, BlogStatus, BlogCategoryDto } from '@/types/blog.types';
 import { selectCustomStyles } from '@/constants/select.styles';
 import { PATHS, buildPath } from '@/routes/paths';
+import { useAppSelector } from '@/store/hooks';
+import { selectCurrentProfile } from '@/store/selectors/profile.selectors';
 
 interface BlogFormData {
     blogCategoryId: string;
@@ -29,6 +31,7 @@ interface BlogFormData {
 const AddBlog: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const currentProfile = useAppSelector(selectCurrentProfile);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
     const [categories, setCategories] = useState<BlogCategoryDto[]>([]);
@@ -158,6 +161,9 @@ const AddBlog: React.FC = () => {
                 status: BlogStatus.Pending,
                 featured: false,
                 publishedAt: new Date().toISOString(),
+                // Ưu tiên truyền doctor/hospital ID thay vì accountId
+                createdByDoctorId: currentProfile?.doctorId || undefined,
+                createdByHospitalId: currentProfile?.hospitalId || undefined,
             };
 
             const response = await BlogService.createBlog(request, {

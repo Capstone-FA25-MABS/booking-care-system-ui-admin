@@ -21,6 +21,7 @@ import { BlogService } from '@/services/blog.service';
 import { BlogCategoryService } from '@/services/blogCategory.service';
 import { SORT_OPTIONS } from '@/utils/sortUtils';
 import { PATHS, buildPath } from '@/routes/paths';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 
 // Skeleton columns for blog table
 const blogTableColumns = [
@@ -36,6 +37,7 @@ const blogTableColumns = [
 const ListBlogs: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { role, doctorProfile, hospitalProfile } = useCurrentUserProfile();
     // Local state
     const [blogs, setBlogs] = useState<BlogSummaryDto[]>([]);
     const [pagination, setPagination] = useState({
@@ -111,8 +113,20 @@ const ListBlogs: React.FC = () => {
                     filterParams.featured = appliedFeatured[0] === 'true';
                 }
 
-                // Only fetch blogs created by the authenticated account
-                const response = await BlogService.getMyBlogs(filterParams);
+                // Apply role-based filter
+                // If doctor, filter by doctorId; if staff, filter by hospitalId
+                if (role === 'DOCTOR' && doctorProfile?.id) {
+                    filterParams.createdByDoctorId = doctorProfile.id;
+                } else if (role === 'STAFF' && hospitalProfile?.id) {
+                    filterParams.createdByHospitalId = hospitalProfile.id;
+                }
+                // For admin, use getMyBlogs which filters by accountId
+
+                // Fetch blogs based on role
+                const response =
+                    role === 'DOCTOR' || role === 'STAFF'
+                        ? await BlogService.getBlogs(filterParams)
+                        : await BlogService.getMyBlogs(filterParams);
                 const data = response.data;
 
                 setBlogs(data.items || []);
@@ -129,7 +143,16 @@ const ListBlogs: React.FC = () => {
                 setIsLoading(false);
             }
         },
-        [searchTerm, itemsPerPage, appliedCategories, appliedStatuses, appliedFeatured]
+        [
+            searchTerm,
+            itemsPerPage,
+            appliedCategories,
+            appliedStatuses,
+            appliedFeatured,
+            role,
+            doctorProfile?.id,
+            hospitalProfile?.id,
+        ]
     );
 
     // Fetch categories

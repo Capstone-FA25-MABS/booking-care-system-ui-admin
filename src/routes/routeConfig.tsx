@@ -35,6 +35,7 @@ import ListLanguages from '@/pages/admins/Languages/ListLanguages';
 import ListSpecialties from '@/pages/admins/Specialties/ListSpecialties';
 import ListServiceTypes from '@/pages/admins/ServiceTypes/ListServiceTypes/ListServiceTypes';
 import ListServiceCategories from '@/pages/admins/ServiceCategories/ListServiceCategories';
+import AddServiceCategory from '@/pages/admins/ServiceCategories/AddServiceCategory';
 import ListServices from '@/pages/admins/Services/ListServices';
 import PaymentMethodsManagement from '@/pages/paymentMethods';
 import SubscriptionPlanList from '@/pages/hospitals/SubscriptionPlan/SubscriptionPlanList';
@@ -60,7 +61,10 @@ import HospitalReviewManagement from '@/pages/hospitals/Reviews';
 import ListBlogs from '@/pages/admins/Blogs/ListBlogs';
 import AddBlog from '@/pages/admins/Blogs/AddBlog';
 import EditBlog from '@/pages/admins/Blogs/EditBlog';
+import AddBlogCategory from '@/pages/admins/Blogs/BlogCategories/AddBlogCategory';
+import ListBlogCategories from '@/pages/admins/Blogs/BlogCategories/ListBlogCategories';
 import BlogApproval from '@/pages/admins/Blogs/ApproveBlogs';
+import { ListHospitalFaqs, AddEditHospitalFaq } from '@/pages/admins/FaqHospital';
 
 const routes: RouteObject[] = [
     {
@@ -131,7 +135,11 @@ const routes: RouteObject[] = [
             },
             {
                 path: PATHS.ADMIN.SERVICE_CATEGORIES.ROOT,
-                children: [{ index: true, element: <ListServiceCategories /> }],
+                children: [
+                    { index: true, element: <ListServiceCategories /> },
+                    { path: PATHS.ADMIN.SERVICE_CATEGORIES.ADD, element: <AddServiceCategory /> },
+                    { path: PATHS.ADMIN.SERVICE_CATEGORIES.EDIT, element: <AddServiceCategory /> },
+                ],
             },
             {
                 path: PATHS.ADMIN.SERVICES.ROOT,
@@ -171,6 +179,21 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.ADMIN.BLOGS.ROOT,
                 children: [{ index: true, element: <BlogApproval /> }],
+            },
+            {
+                path: PATHS.ADMIN.BLOG_CATEGORIES.ROOT,
+                children: [
+                    { index: true, element: <ListBlogCategories /> },
+                    { path: PATHS.ADMIN.BLOG_CATEGORIES.ADD, element: <AddBlogCategory /> },
+                ],
+            },
+            {
+                path: PATHS.ADMIN.HOSPITAL_FAQS.ROOT,
+                children: [
+                    { index: true, element: <ListHospitalFaqs /> },
+                    { path: PATHS.ADMIN.HOSPITAL_FAQS.ADD, element: <AddEditHospitalFaq /> },
+                    { path: PATHS.ADMIN.HOSPITAL_FAQS.EDIT, element: <AddEditHospitalFaq /> },
+                ],
             },
         ],
     },
@@ -288,6 +311,14 @@ const routes: RouteObject[] = [
                     { index: true, element: <ListBlogs /> },
                     { path: PATHS.HOSPITAL.BLOGS.ADD, element: <AddBlog /> },
                     { path: PATHS.HOSPITAL.BLOGS.EDIT, element: <EditBlog /> },
+                ],
+            },
+            {
+                path: PATHS.HOSPITAL.HOSPITAL_FAQS.ROOT,
+                children: [
+                    { index: true, element: <ListHospitalFaqs /> },
+                    { path: PATHS.HOSPITAL.HOSPITAL_FAQS.ADD, element: <AddEditHospitalFaq /> },
+                    { path: PATHS.HOSPITAL.HOSPITAL_FAQS.EDIT, element: <AddEditHospitalFaq /> },
                 ],
             },
             {

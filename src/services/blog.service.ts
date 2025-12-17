@@ -262,6 +262,8 @@ export class BlogService {
         formData.append('Status', request.status ?? BlogStatus.Pending);
         formData.append('Featured', String(request.featured ?? false));
         appendOptional('PublishedAt', request.publishedAt);
+        appendOptional('CreatedByDoctorId', request.createdByDoctorId);
+        appendOptional('CreatedByHospitalId', request.createdByHospitalId);
 
         if (media?.thumbnailFile) {
             formData.append('thumbnailFile', media.thumbnailFile);
@@ -291,6 +293,9 @@ export class BlogService {
         if (filter.keyword) params.append('keyword', filter.keyword);
         if (filter.createdByAccountId)
             params.append('createdByAccountId', filter.createdByAccountId);
+        if (filter.createdByDoctorId) params.append('createdByDoctorId', filter.createdByDoctorId);
+        if (filter.createdByHospitalId)
+            params.append('createdByHospitalId', filter.createdByHospitalId);
 
         return params.toString();
     }

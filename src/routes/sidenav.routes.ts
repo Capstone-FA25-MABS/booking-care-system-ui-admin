@@ -38,7 +38,12 @@ export const listGroupMenuItemHospital: MenuConfig = [
             ),
             createDoctorsMenuItem(),
             createSimpleMenuItem(
-                'Quản lí dịch vụ y tế',
+                'Quản lý dịch vụ bệnh viện',
+                'ti ti-building-hospital',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Quản lý dịch vụ y tế',
                 'ti ti-briefcase',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
             ),
@@ -74,6 +79,11 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'Blog',
                 'ti ti-file-text',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.BLOGS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'FAQ bệnh viện',
+                'ti ti-help-circle',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.HOSPITAL_FAQS.ROOT)
             ),
             createNotificationsMenuItem('staff'),
         ],
@@ -206,6 +216,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'Duyệt blog',
                 'ti ti-checkup-list',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOGS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Danh mục blog',
+                'ti ti-folders',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOG_CATEGORIES.ROOT)
             ),
             createSubscriptionPlansMenuItem(),
             createHospitalPayoutsMenuItem(),

@@ -8,6 +8,9 @@ const SERVICE_CATEGORY_ENDPOINTS = {
     CREATE_ENTITY: '/medical-services/servicecategories',
     UPDATE_ENTITY: (id: string) => `/medical-services/servicecategories/${id}`,
     DELETE_ENTITY: (id: string) => `/medical-services/servicecategories/${id}`,
+    CREATE_ENTITY_WITH_IMAGE: '/medical-services/servicecategories/upload-image',
+    UPDATE_ENTITY_WITH_IMAGE: (id: string) =>
+        `/medical-services/servicecategories/${id}/upload-image`,
 } as const;
 
 export class ServiceCategoryService extends BaseService {
@@ -95,6 +98,48 @@ export class ServiceCategoryService extends BaseService {
         }
     }
 
+    /**
+     * Create service category with image upload
+     */
+    async createServiceCategoryWithImage(
+        data: ServiceCategoryFormData,
+        imageFile: File
+    ): Promise<ApiResponse<ServiceCategory>> {
+        try {
+            if (!data.name || data.name.trim().length === 0) {
+                throw new Error(`Tên ${this.entityName.toLowerCase()} không được để trống`);
+            }
+
+            if (!imageFile) {
+                throw new Error('Vui lòng chọn hình ảnh cho danh mục dịch vụ');
+            }
+
+            const formData = new FormData();
+            formData.append('Name', data.name.trim());
+            formData.append('Description', data.description?.trim() || '');
+            formData.append('Status', data.status);
+            if (data.parentId) {
+                formData.append('ParentId', data.parentId);
+            }
+            formData.append('imageFile', imageFile);
+
+            const response: any = await axiosInstance.post(
+                SERVICE_CATEGORY_ENDPOINTS.CREATE_ENTITY_WITH_IMAGE,
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }
+            );
+
+            return this.formatResponse(
+                response,
+                `Tạo ${this.entityName.toLowerCase()} với hình ảnh thành công`
+            );
+        } catch (error: any) {
+            this.handleError(error);
+        }
+    }
+
     async updateServiceCategory(
         id: string,
         data: ServiceCategoryFormData
@@ -122,6 +167,52 @@ export class ServiceCategoryService extends BaseService {
             return this.formatResponse(
                 response,
                 `Cập nhật ${this.entityName.toLowerCase()} thành công`
+            );
+        } catch (error: any) {
+            this.handleError(error);
+        }
+    }
+
+    /**
+     * Update service category with image upload
+     */
+    async updateServiceCategoryWithImage(
+        id: string,
+        data: ServiceCategoryFormData,
+        imageFile: File
+    ): Promise<ApiResponse<ServiceCategory>> {
+        try {
+            this.validateEntityId(id);
+
+            if (!data.name || data.name.trim().length === 0) {
+                throw new Error(`Tên ${this.entityName.toLowerCase()} không được để trống`);
+            }
+
+            if (!imageFile) {
+                throw new Error('Vui lòng chọn hình ảnh cho danh mục dịch vụ');
+            }
+
+            const formData = new FormData();
+            formData.append('Id', id);
+            formData.append('Name', data.name.trim());
+            formData.append('Description', data.description?.trim() || '');
+            formData.append('Status', data.status);
+            if (data.parentId) {
+                formData.append('ParentId', data.parentId);
+            }
+            formData.append('imageFile', imageFile);
+
+            const response: any = await axiosInstance.put(
+                SERVICE_CATEGORY_ENDPOINTS.UPDATE_ENTITY_WITH_IMAGE(id),
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }
+            );
+
+            return this.formatResponse(
+                response,
+                `Cập nhật ${this.entityName.toLowerCase()} với hình ảnh thành công`
             );
         } catch (error: any) {
             this.handleError(error);
@@ -169,6 +260,21 @@ export const updateServiceCategory = async (
     data: ServiceCategoryFormData
 ): Promise<ApiResponse<ServiceCategory>> => {
     return serviceCategoryService.updateServiceCategory(id, data);
+};
+
+export const createServiceCategoryWithImage = async (
+    data: ServiceCategoryFormData,
+    imageFile: File
+): Promise<ApiResponse<ServiceCategory>> => {
+    return serviceCategoryService.createServiceCategoryWithImage(data, imageFile);
+};
+
+export const updateServiceCategoryWithImage = async (
+    id: string,
+    data: ServiceCategoryFormData,
+    imageFile: File
+): Promise<ApiResponse<ServiceCategory>> => {
+    return serviceCategoryService.updateServiceCategoryWithImage(id, data, imageFile);
 };
 
 export const deleteServiceCategory = async (id: string): Promise<ApiResponse<void>> => {

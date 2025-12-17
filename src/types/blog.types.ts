@@ -73,6 +73,8 @@ export interface BlogFilterParameters {
     pageSize?: number;
     categoryId?: string; // Guid from backend
     createdByAccountId?: string; // Optional filter from admin
+    createdByDoctorId?: string; // Filter by doctor ID
+    createdByHospitalId?: string; // Filter by hospital ID
 }
 
 // Paged Response
@@ -97,6 +99,8 @@ export interface CreateBlogRequest {
     status?: BlogStatus;
     featured?: boolean;
     publishedAt?: string;
+    createdByDoctorId?: string;
+    createdByHospitalId?: string;
 }
 
 // Update Blog Request

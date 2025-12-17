@@ -72,6 +72,16 @@ export const PATHS = {
             ADD: 'add',
             EDIT: 'edit/:id',
         },
+        BLOG_CATEGORIES: {
+            ROOT: 'blog-categories',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
+        HOSPITAL_FAQS: {
+            ROOT: 'hospital-faqs',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
     },
 
     // Hospital paths
@@ -126,6 +136,11 @@ export const PATHS = {
         },
         BLOGS: {
             ROOT: 'blogs',
+            ADD: 'add',
+            EDIT: 'edit/:id',
+        },
+        HOSPITAL_FAQS: {
+            ROOT: 'hospital-faqs',
             ADD: 'add',
             EDIT: 'edit/:id',
         },
