@@ -95,6 +95,8 @@ export interface AiInsightResponse {
 const AI_ENDPOINTS = {
     GENERATE_SUMMARY: '/ais/generate-medical-summary',
     GENERATE_INSIGHTS: '/ai-insights/generate',
+    GENERATE_INSIGHTS_FOR_DOCTOR: '/ai-insights/generate-for-doctor',
+    GENERATE_INSIGHTS_FOR_HOSPITAL: '/ai-insights/generate-for-hospital',
 } as const;
 
 /**
@@ -124,6 +126,64 @@ export class AIService {
                 responseData: error.response?.data,
             });
             throw new Error(error.message || 'Không thể tạo báo cáo AI');
+        }
+    }
+
+    /**
+     * Generate AI Insights summary for doctor dashboard
+     */
+    static async generateInsightsForDoctor(
+        doctorId: string,
+        request: GenerateAiInsightRequest = { period: 'week' }
+    ): Promise<ApiResponse<AiInsightResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                `${AI_ENDPOINTS.GENERATE_INSIGHTS_FOR_DOCTOR}/${doctorId}`,
+                request
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Tạo báo cáo AI thành công cho bác sĩ',
+            };
+        } catch (error: any) {
+            console.error('[AIService] ❌ generateInsightsForDoctor failed:', {
+                message: error.message,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                responseData: error.response?.data,
+            });
+            throw new Error(error.message || 'Không thể tạo báo cáo AI cho bác sĩ');
+        }
+    }
+
+    /**
+     * Generate AI Insights summary for hospital/staff dashboard
+     */
+    static async generateInsightsForHospital(
+        hospitalId: string,
+        request: GenerateAiInsightRequest = { period: 'week' }
+    ): Promise<ApiResponse<AiInsightResponse>> {
+        try {
+            const response: any = await axiosInstance.post(
+                `${AI_ENDPOINTS.GENERATE_INSIGHTS_FOR_HOSPITAL}/${hospitalId}`,
+                request
+            );
+
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'Tạo báo cáo AI thành công cho bệnh viện',
+            };
+        } catch (error: any) {
+            console.error('[AIService] ❌ generateInsightsForHospital failed:', {
+                message: error.message,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                responseData: error.response?.data,
+            });
+            throw new Error(error.message || 'Không thể tạo báo cáo AI cho bệnh viện');
         }
     }
     /**
@@ -166,7 +226,12 @@ export class AIService {
 }
 
 // Export individual methods for convenience
-export const { generateMedicalSummary, generateInsights } = AIService;
+export const {
+    generateMedicalSummary,
+    generateInsights,
+    generateInsightsForDoctor,
+    generateInsightsForHospital,
+} = AIService;
 
 // Default export
 export default AIService;
