@@ -49,11 +49,6 @@ import DashboardRatingDistributionChart from '@/components/DashboardRatingDistri
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useReviewInsights, ReviewStatsSummary } from '@/hooks/useReviewInsights';
-import PaymentMethodService from '@/services/paymentMethod.service';
-import { RevenueFilterButtons, RevenueViewPeriod } from '@/components/RevenueFilterButtons';
-import { StatisticsPeriod as PaymentStatisticsPeriod } from '@/types/payment.types';
-import type { GetPaymentStatisticsRequest, PaymentStatisticsResponse } from '@/types/payment.types';
-import { formatTimeLabel } from '@/utils/paymentChartFormatter';
 import {
     periodOptions,
     numberFormatter,
@@ -161,16 +156,6 @@ const HospitalDashboard: React.FC = () => {
         includeRatingDistribution: true,
     });
 
-    // Doanh thu lịch hẹn
-    const [revenueChartData, setRevenueChartData] = useState<
-        Array<{
-            label: string;
-            value: number; // Total revenue
-        }>
-    >([]);
-    const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
-    const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
-
     // Load system overview (hospitals, doctors, etc.)
     const loadSystemOverview = useCallback(async () => {
         if (!hospitalProfile?.id) {
@@ -260,101 +245,7 @@ const HospitalDashboard: React.FC = () => {
         loadSystemOverview();
     }, [loadSystemOverview]);
 
-    // Không tự động tải AI insights - chỉ tải khi người dùng bấm nút "Tạo AI Insights"
-
-    const activeDateRange = useMemo(() => {
-        if (aiInsights?.periodStart && aiInsights?.periodEnd) {
-            const fromDate = new Date(aiInsights.periodStart).toISOString().split('T')[0];
-            const toDate = new Date(aiInsights.periodEnd).toISOString().split('T')[0];
-            return {
-                fromDate,
-                toDate,
-            };
-        }
-        return {
-            fromDate: isoRange.fromDate,
-            toDate: isoRange.toDate,
-        };
-    }, [aiInsights?.periodStart, aiInsights?.periodEnd, isoRange.fromDate, isoRange.toDate]);
-
-    const loadRevenueChart = useCallback(
-        async (range?: { fromDate?: string; toDate?: string }) => {
-            if (!hospitalProfile?.id) return;
-            setIsLoadingRevenueChart(true);
-            try {
-                const formatLocalDate = (date: Date): string => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    return `${year}-${month}-${day}`;
-                };
-
-                let fromDateStr: string;
-                let toDateStr: string;
-                let apiPeriod: PaymentStatisticsPeriod;
-
-                if (range?.fromDate && range?.toDate) {
-                    fromDateStr = range.fromDate;
-                    toDateStr = range.toDate;
-                } else if (activeDateRange.fromDate && activeDateRange.toDate) {
-                    fromDateStr = activeDateRange.fromDate.split('T')[0];
-                    toDateStr = activeDateRange.toDate.split('T')[0];
-                } else {
-                    const now = new Date();
-                    const defaultFrom = new Date(now);
-                    defaultFrom.setDate(now.getDate() - 27);
-                    fromDateStr = formatLocalDate(defaultFrom);
-                    toDateStr = formatLocalDate(now);
-                }
-
-                const fromDate = new Date(fromDateStr + 'T00:00:00');
-                const toDate = new Date(toDateStr + 'T00:00:00');
-                const daysDiff = Math.ceil(
-                    (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)
-                );
-
-                if (daysDiff <= 7) {
-                    apiPeriod = PaymentStatisticsPeriod.Daily;
-                } else if (daysDiff <= 28) {
-                    apiPeriod = PaymentStatisticsPeriod.Weekly;
-                } else if (daysDiff <= 180) {
-                    apiPeriod = PaymentStatisticsPeriod.Monthly;
-                } else {
-                    apiPeriod = PaymentStatisticsPeriod.Quarterly;
-                }
-
-                const request: GetPaymentStatisticsRequest = {
-                    fromDate: fromDateStr,
-                    toDate: toDateStr,
-                    period: apiPeriod,
-                };
-
-                const response = await PaymentMethodService.getPaymentStatistics(request);
-                const statistics: PaymentStatisticsResponse = response.data;
-
-                const chartData = statistics.timeSeries.map((point) => ({
-                    label: formatTimeLabel(
-                        point.timeLabel,
-                        apiPeriod,
-                        point.periodStart,
-                        point.periodEnd
-                    ),
-                    value: point.totalAmount,
-                }));
-
-                setRevenueChartData(chartData);
-            } catch (err: any) {
-                console.error('Failed to load revenue chart:', err);
-                toast.error(
-                    `Không thể tải dữ liệu doanh thu: ${err?.response?.data?.message || err?.message || 'Lỗi không xác định'}`
-                );
-                setRevenueChartData([]);
-            } finally {
-                setIsLoadingRevenueChart(false);
-            }
-        },
-        [activeDateRange.fromDate, activeDateRange.toDate, hospitalProfile?.id]
-    );
+    // Không tự động tải AI insights - chỉ load khi user click button "Tạo AI Insights"
 
     const loadAiInsights = useCallback(async () => {
         if (!hospitalProfile?.id) {
@@ -365,25 +256,13 @@ const HospitalDashboard: React.FC = () => {
         setAiError(null);
         setAiLoadingStep(1); // Start collecting data
         try {
-            let request: GenerateAiInsightRequest;
-
-            if (aiDateRange.from && aiDateRange.to) {
-                // Nếu người dùng chọn date range cụ thể
-                request = {
-                    fromDate: aiDateRange.from.toISOString().split('T')[0],
-                    toDate: aiDateRange.to.toISOString().split('T')[0],
-                };
-            } else {
-                // Mặc định: 7 ngày trước đến ngày hiện tại
-                const today = new Date();
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(today.getDate() - 7);
-
-                request = {
-                    fromDate: sevenDaysAgo.toISOString().split('T')[0],
-                    toDate: today.toISOString().split('T')[0],
-                };
-            }
+            const request: GenerateAiInsightRequest =
+                aiDateRange.from && aiDateRange.to
+                    ? {
+                          fromDate: aiDateRange.from.toISOString().split('T')[0],
+                          toDate: aiDateRange.to.toISOString().split('T')[0],
+                      }
+                    : { period: 'week' };
 
             await new Promise((resolve) => setTimeout(resolve, 500));
             setAiLoadingStep(2); // Analyzing AI
@@ -396,17 +275,6 @@ const HospitalDashboard: React.FC = () => {
             );
             if (response.success && response.data) {
                 setAiInsights(response.data);
-                // Sau khi có AI insights, tải luôn doanh thu lịch hẹn theo cùng khoảng thời gian
-                const fromDateParam = response.data.periodStart
-                    ? new Date(response.data.periodStart).toISOString().split('T')[0]
-                    : undefined;
-                const toDateParam = response.data.periodEnd
-                    ? new Date(response.data.periodEnd).toISOString().split('T')[0]
-                    : undefined;
-                await loadRevenueChart({
-                    fromDate: fromDateParam,
-                    toDate: toDateParam,
-                });
             } else {
                 setAiError('Không thể tải AI Insights');
             }
@@ -418,7 +286,7 @@ const HospitalDashboard: React.FC = () => {
             setIsLoadingAi(false);
             setAiLoadingStep(0); // Reset step
         }
-    }, [aiDateRange.from, aiDateRange.to, hospitalProfile?.id, loadRevenueChart]);
+    }, [aiDateRange.from, aiDateRange.to, hospitalProfile?.id]);
 
     // Calculate statistics from appointments
     const calculateStatistics = useCallback(
@@ -461,6 +329,21 @@ const HospitalDashboard: React.FC = () => {
         (appointments: any[]) => calculateAdditionalStatisticsUtil(appointments),
         []
     );
+
+    const activeDateRange = useMemo(() => {
+        if (aiInsights?.periodStart && aiInsights?.periodEnd) {
+            const fromDate = new Date(aiInsights.periodStart).toISOString().split('T')[0];
+            const toDate = new Date(aiInsights.periodEnd).toISOString().split('T')[0];
+            return {
+                fromDate,
+                toDate,
+            };
+        }
+        return {
+            fromDate: isoRange.fromDate,
+            toDate: isoRange.toDate,
+        };
+    }, [aiInsights?.periodStart, aiInsights?.periodEnd, isoRange.fromDate, isoRange.toDate]);
 
     const fetchHospitalAppointments = useCallback(async () => {
         if (!activeDateRange.fromDate || !activeDateRange.toDate) {
@@ -678,7 +561,6 @@ const HospitalDashboard: React.FC = () => {
     const fallbackLineData: ChartPoint[] = [{ label: 'Chưa có dữ liệu', value: 0 }];
     const fallbackMultiBarData = [{ label: 'Chưa có dữ liệu', value1: 0, value2: 0 }];
     const fallbackPieData = [{ label: 'Chưa có dữ liệu', value: 0 }];
-    const fallbackRevenueData = [{ label: 'Chưa có dữ liệu', value: 0 }];
     const appointmentTrendSafe = appointmentTrendPoints.length
         ? appointmentTrendPoints
         : fallbackLineData;
@@ -694,7 +576,6 @@ const HospitalDashboard: React.FC = () => {
         : fallbackLineData;
     const specialtySafe = specialtyChartData.length ? specialtyChartData : fallbackPieData;
     const statusSafe = statusChartData.length ? statusChartData : fallbackPieData;
-    const revenueSafe = revenueChartData.length ? revenueChartData : fallbackRevenueData;
     const cancellationAreaSafe = predictions
         ? [
               {
@@ -965,19 +846,6 @@ const HospitalDashboard: React.FC = () => {
                                     <i className="ti ti-sparkles"></i>
                                     <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
                                 </button>
-                                {aiInsights && !isLoadingAi && (
-                                    <button
-                                        className={`btn btn-outline-secondary ${styles.aiClearBtn}`}
-                                        onClick={() => {
-                                            setAiInsights(null);
-                                            setAiDateRange({ from: null, to: null });
-                                            setAiError(null);
-                                        }}
-                                        title="Xóa kết quả phân tích"
-                                    >
-                                        <i className="ti ti-x"></i>
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </LocalizationProvider>
@@ -986,7 +854,7 @@ const HospitalDashboard: React.FC = () => {
                         <span>
                             {aiDateRange.from && aiDateRange.to
                                 ? `Phân tích từ ${formatDateDisplay(aiDateRange.from)} đến ${formatDateDisplay(aiDateRange.to)}`
-                                : 'Để trống để sử dụng mặc định (7 ngày gần nhất: từ 7 ngày trước đến ngày hiện tại)'}
+                                : 'Để trống để sử dụng mặc định (tuần gần nhất)'}
                         </span>
                     </div>
                 </div>
@@ -1553,7 +1421,6 @@ const HospitalDashboard: React.FC = () => {
                     </div>
 
                     {/* Hàng 3: loại khám + chuyên khoa (2 chart cột/tròn) */}
-                    {/* Hàng 3: 2 chart dạng cột (loại khám + doanh thu lịch hẹn) */}
                     <div className={styles.chartsRow}>
                         {appointmentTypeSafe && (
                             <div className={styles.trendCard}>
@@ -1571,30 +1438,6 @@ const HospitalDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        <div className={styles.trendCard}>
-                            <div className={styles.cardHeader}>
-                                <div>
-                                    <h5>Doanh thu lịch hẹn</h5>
-                                    <span>Thống kê doanh thu từ các lượt đặt trong kỳ</span>
-                                </div>
-                                <RevenueFilterButtons
-                                    selectedPeriod={revenuePeriod}
-                                    onPeriodChange={setRevenuePeriod}
-                                    isLoading={isLoadingRevenueChart}
-                                />
-                            </div>
-                            <div className={styles.cardBody}>
-                                <ChartJsSingleBar
-                                    data={revenueSafe}
-                                    color="#10b981"
-                                    label="Tổng doanh thu"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Hàng 4: 2 chart dạng tròn (chuyên khoa + trạng thái) */}
-                    <div className={styles.chartsRow}>
                         {specialtySafe && (
                             <div className={styles.trendCard}>
                                 <div className={styles.cardHeader}>
@@ -1606,7 +1449,10 @@ const HospitalDashboard: React.FC = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
 
+                    {/* Hàng 4: phân bổ trạng thái + xu hướng tỉ lệ hủy (2 chart) */}
+                    <div className={styles.chartsRow}>
                         {statusSafe && (
                             <div className={styles.trendCard}>
                                 <div className={styles.cardHeader}>
@@ -1618,24 +1464,23 @@ const HospitalDashboard: React.FC = () => {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Hàng 5: 1 chart vùng (tỉ lệ hủy) - vẫn hiển thị với fallback */}
-                    <div className={styles.chartsRow}>
-                        <div className={styles.trendCard}>
-                            <div className={styles.cardHeader}>
-                                <h5>Xu hướng tỉ lệ hủy</h5>
-                                <span>Biểu đồ vùng thể hiện tỉ lệ hủy qua các kỳ</span>
+                        {predictions || cancellationAreaSafe ? (
+                            <div className={styles.trendCard}>
+                                <div className={styles.cardHeader}>
+                                    <h5>Xu hướng tỉ lệ hủy</h5>
+                                    <span>Biểu đồ vùng thể hiện tỉ lệ hủy qua các kỳ</span>
+                                </div>
+                                <div className={styles.cardBody}>
+                                    <ChartJsArea
+                                        data={cancellationAreaSafe}
+                                        color="#f59e0b"
+                                        label="Tỉ lệ hủy (%)"
+                                        fillOpacity={0.3}
+                                    />
+                                </div>
                             </div>
-                            <div className={styles.cardBody}>
-                                <ChartJsArea
-                                    data={cancellationAreaSafe}
-                                    color="#f59e0b"
-                                    label="Tỉ lệ hủy (%)"
-                                    fillOpacity={0.3}
-                                />
-                            </div>
-                        </div>
+                        ) : null}
                     </div>
                 </div>
             )}
