@@ -216,9 +216,9 @@ const routes: RouteObject[] = [
     {
         path: PATHS.HOSPITAL.ROOT,
         element: (
-            // <ProtectedRoute allowedRoles={[Role.STAFF]}>
-            <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
-            // </ProtectedRoute>
+            <ProtectedRoute allowedRoles={[Role.STAFF]}>
+                <MainLayout listGroupMenuItem={listGroupMenuItemHospital} />
+            </ProtectedRoute>
         ),
         children: [
             { index: true, element: <Navigate to={PATHS.HOSPITAL.DASHBOARD} replace /> },
