@@ -60,7 +60,6 @@ import HospitalDiscountManagement from '@/pages/hospitals/Discounts';
 import HospitalReviewManagement from '@/pages/hospitals/Reviews';
 import ListBlogs from '@/pages/admins/Blogs/ListBlogs';
 import AddBlog from '@/pages/admins/Blogs/AddBlog';
-import EditBlog from '@/pages/admins/Blogs/EditBlog';
 import AddBlogCategory from '@/pages/admins/Blogs/BlogCategories/AddBlogCategory';
 import ListBlogCategories from '@/pages/admins/Blogs/BlogCategories/ListBlogCategories';
 import BlogApproval from '@/pages/admins/Blogs/ApproveBlogs';
@@ -231,7 +230,6 @@ const routes: RouteObject[] = [
                 children: [
                     { index: true, element: <ListBlogs /> },
                     { path: PATHS.DOCTOR.BLOGS.ADD, element: <AddBlog /> },
-                    { path: PATHS.DOCTOR.BLOGS.EDIT, element: <EditBlog /> },
                 ],
             },
             {
@@ -310,7 +308,6 @@ const routes: RouteObject[] = [
                 children: [
                     { index: true, element: <ListBlogs /> },
                     { path: PATHS.HOSPITAL.BLOGS.ADD, element: <AddBlog /> },
-                    { path: PATHS.HOSPITAL.BLOGS.EDIT, element: <EditBlog /> },
                 ],
             },
             {
