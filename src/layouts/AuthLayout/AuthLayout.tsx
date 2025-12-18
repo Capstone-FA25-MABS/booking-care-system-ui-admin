@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import auth_bg_top from '@/assets/img/auth/auth-bg-top.png';
 import auth_bg_bot from '@/assets/img/auth/auth-bg-bot.png';
-import logo from '@/assets/img/logo.svg';
+import logo from '@/assets/img/logo_medcure.png';
 interface AuthLayoutProps {
     children?: React.ReactNode;
 }
@@ -17,12 +17,15 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                     <div className="row justify-content-center align-items-center vh-100 overflow-auto flex-wrap py-3">
                         <div className="col-lg-4 mx-auto">
                             <div className="mx-auto mb-4 text-center">
-                                <img src={logo} className="img-fluid" alt="Logo" />
+                                <img
+                                    src={logo}
+                                    className="img-fluid"
+                                    alt="Logo"
+                                    style={{ width: '200px' }}
+                                />
                             </div>
                             {children || <Outlet />}
-                            <p className="text-dark text-center">
-                                Copyright &copy; 2025 - BookingCare.
-                            </p>
+                            <p className="text-dark text-center">Copyright &copy; 2025 - MedCure</p>
                         </div>
                     </div>
                     {/* End Row */}
