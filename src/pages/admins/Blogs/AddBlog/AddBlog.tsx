@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Select from 'react-select';
 import Button from '@/components/Button';
-import Input from '@/components/Input';
-import CKEditor from '@/components/CKEditor';
-import ImageUploadField from '@/components/ImageUploadField';
 import { BlogService } from '@/services/blog.service';
 import { BlogCategoryService } from '@/services/blogCategory.service';
 import { CreateBlogRequest, BlogStatus, BlogCategoryDto } from '@/types/blog.types';
-import { selectCustomStyles } from '@/constants/select.styles';
 import { PATHS, buildPath } from '@/routes/paths';
 import { useAppSelector } from '@/store/hooks';
 import { selectCurrentProfile } from '@/store/selectors/profile.selectors';
+import BlogFormFields from '@/pages/admins/Blogs/components/BlogFormFields';
 
 interface BlogFormData {
     blogCategoryId: string;
@@ -79,7 +75,7 @@ const AddBlog: React.FC = () => {
     };
 
     // Helper function to update form field
-    const updateFormField = (name: keyof BlogFormData, value: any) => {
+    const updateFormField = (name: keyof BlogFormData, value: string | File | null) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -87,7 +83,7 @@ const AddBlog: React.FC = () => {
     };
 
     // Handle select change
-    const handleSelectChange = (name: keyof BlogFormData, value: any) => {
+    const handleSelectChange = (name: keyof BlogFormData, value: string) => {
         updateFormField(name, value);
     };
 
@@ -121,14 +117,14 @@ const AddBlog: React.FC = () => {
     }, [location.pathname]);
 
     // Validate form
-    const validateForm = (): boolean => {
+    const validateForm = (data: BlogFormData): boolean => {
         const newErrors: Partial<Record<keyof BlogFormData, string>> = {};
 
-        if (!formData.titleVi.trim()) {
+        if (!data.titleVi.trim()) {
             newErrors.titleVi = 'Vui lòng nhập tiêu đề tiếng Việt';
         }
 
-        if (!formData.contentVi.trim()) {
+        if (!data.contentVi.trim()) {
             newErrors.contentVi = 'Vui lòng nhập nội dung tiếng Việt';
         }
 
@@ -140,7 +136,8 @@ const AddBlog: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) {
+        const isValid = validateForm(formData);
+        if (!isValid) {
             toast.error('Vui lòng kiểm tra lại thông tin');
             return;
         }
@@ -204,160 +201,18 @@ const AddBlog: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="card mb-4">
-                    <div className="card-body">
-                        <h5 className="card-title mb-4">Thông tin cơ bản</h5>
-
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <Input
-                                    label="Tiêu đề tiếng Việt"
-                                    name="titleVi"
-                                    value={formData.titleVi}
-                                    onChange={handleInputChange}
-                                    error={errors.titleVi}
-                                    required
-                                    icon="file-text"
-                                    iconPrefix="feather"
-                                />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <Input
-                                    label="Tiêu đề tiếng Anh (tùy chọn)"
-                                    name="titleEn"
-                                    value={formData.titleEn}
-                                    onChange={handleInputChange}
-                                    error={errors.titleEn}
-                                    icon="file-text"
-                                    iconPrefix="feather"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <label htmlFor="blogCategoryId" className="form-label">
-                                    <i className="feather-folder me-1"></i> Danh mục
-                                </label>
-                                <Select
-                                    inputId="blogCategoryId"
-                                    options={categoryOptions}
-                                    value={categoryOptions.find(
-                                        (opt) => opt.value === formData.blogCategoryId
-                                    )}
-                                    onChange={(option) =>
-                                        handleSelectChange('blogCategoryId', option?.value || '')
-                                    }
-                                    placeholder="Chọn danh mục..."
-                                    isClearable
-                                    isLoading={isLoadingCategories}
-                                    styles={selectCustomStyles}
-                                />
-                                {errors.blogCategoryId && (
-                                    <div className="invalid-feedback d-block">
-                                        {errors.blogCategoryId}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <Input
-                                    label="Tag (tùy chọn)"
-                                    name="tag"
-                                    value={formData.tag}
-                                    onChange={handleInputChange}
-                                    error={errors.tag}
-                                    icon="tag"
-                                    iconPrefix="feather"
-                                    placeholder="Ví dụ: sức khỏe, dinh dưỡng..."
-                                />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <Input
-                                    label="Nguồn (tùy chọn)"
-                                    name="source"
-                                    value={formData.source}
-                                    onChange={handleInputChange}
-                                    error={errors.source}
-                                    icon="link"
-                                    iconPrefix="feather"
-                                    placeholder="URL nguồn bài viết"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
-                                <ImageUploadField
-                                    label="Ảnh thumbnail"
-                                    name="thumbnailUrl"
-                                    file={formData.thumbnailFile}
-                                    imageUrl={formData.thumbnailUrl}
-                                    onFileChange={handleThumbnailFileChange}
-                                    onUrlChange={handleImageInputChange}
-                                    error={errors.thumbnailUrl}
-                                    description="Hiển thị trong danh sách blog và các khu vực liên quan."
-                                    helperText="Tối đa 5MB, định dạng JPG/PNG/GIF/WEBP."
-                                    previewAspect="landscape"
-                                />
-                            </div>
-                            <div className="col-md-6 mb-3">
-                                <ImageUploadField
-                                    label="Ảnh hero (tùy chọn)"
-                                    name="heroImageUrl"
-                                    file={formData.heroImageFile}
-                                    imageUrl={formData.heroImageUrl}
-                                    onFileChange={handleHeroFileChange}
-                                    onUrlChange={handleImageInputChange}
-                                    error={errors.heroImageUrl}
-                                    description="Ảnh lớn hiển thị ở đầu trang chi tiết blog."
-                                    helperText="Nếu bỏ trống, hệ thống sẽ sử dụng ảnh thumbnail."
-                                    previewAspect="landscape"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Content Section */}
-                <div className="card mb-4">
-                    <div className="card-body">
-                        <h5 className="card-title mb-4">Nội dung</h5>
-
-                        <div className="row">
-                            <div className="col-12 mb-4">
-                                <CKEditor
-                                    label="Nội dung tiếng Việt"
-                                    icon="file-text"
-                                    iconPrefix="feather"
-                                    required
-                                    name="contentVi"
-                                    value={formData.contentVi}
-                                    onChange={(data) => handleContentChange('contentVi', data)}
-                                    placeholder="Nhập nội dung blog bằng tiếng Việt..."
-                                    error={errors.contentVi}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="row">
-                            <div className="col-12 mb-3">
-                                <CKEditor
-                                    label="Nội dung tiếng Anh (tùy chọn)"
-                                    icon="file-text"
-                                    iconPrefix="feather"
-                                    name="contentEn"
-                                    value={formData.contentEn}
-                                    onChange={(data) => handleContentChange('contentEn', data)}
-                                    placeholder="Nhập nội dung blog bằng tiếng Anh..."
-                                    error={errors.contentEn}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <BlogFormFields
+                    formData={formData}
+                    errors={errors}
+                    categoryOptions={categoryOptions}
+                    isLoadingCategories={isLoadingCategories}
+                    onInputChange={handleInputChange}
+                    onSelectChange={handleSelectChange}
+                    onContentChange={handleContentChange}
+                    onImageInputChange={handleImageInputChange}
+                    onThumbnailFileChange={handleThumbnailFileChange}
+                    onHeroFileChange={handleHeroFileChange}
+                />
 
                 {/* Action Buttons */}
                 <div className="d-flex justify-content-end gap-2 mb-4">

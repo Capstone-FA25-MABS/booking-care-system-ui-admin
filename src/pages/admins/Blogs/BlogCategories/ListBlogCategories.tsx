@@ -58,6 +58,67 @@ const ListBlogCategories: React.FC = () => {
         );
     };
 
+    const tableBody = useMemo(() => {
+        if (isLoading) {
+            return (
+                <tr>
+                    <td colSpan={4}>
+                        <TableSkeleton
+                            rows={4}
+                            columns={[
+                                { type: 'text' },
+                                { type: 'text' },
+                                { type: 'text' },
+                                { type: 'text' },
+                            ]}
+                        />
+                    </td>
+                </tr>
+            );
+        }
+
+        if (error) {
+            return (
+                <tr>
+                    <td colSpan={4} className="text-danger text-center py-3">
+                        {error}
+                    </td>
+                </tr>
+            );
+        }
+
+        if (flatCategories.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={4} className="text-center py-3 text-muted">
+                        Chưa có danh mục nào.
+                    </td>
+                </tr>
+            );
+        }
+
+        return (
+            <>
+                {flatCategories.map((cat) => (
+                    <tr key={cat.id}>
+                        <td>
+                            <span style={{ paddingLeft: `${cat.level * 16}px` }}>
+                                {cat.categoryName}
+                            </span>
+                        </td>
+                        <td className="text-muted">{cat.description || '—'}</td>
+                        <td>
+                            <StatusBadge status={cat.status || 'INACTIVE'} />
+                        </td>
+                        <td className="text-muted">
+                            {cat.createdAt ? new Date(cat.createdAt).toLocaleDateString() : '—'}
+                        </td>
+                    </tr>
+                ))}
+            </>
+        );
+    }, [error, flatCategories, isLoading]);
+
     return (
         <div className="content">
             <div className="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom flex-wrap gap-2">
@@ -85,56 +146,7 @@ const ListBlogCategories: React.FC = () => {
                                     <th>Ngày tạo</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan={4}>
-                                            <TableSkeleton
-                                                rows={4}
-                                                columns={[
-                                                    { type: 'text' },
-                                                    { type: 'text' },
-                                                    { type: 'text' },
-                                                    { type: 'text' },
-                                                ]}
-                                            />
-                                        </td>
-                                    </tr>
-                                ) : error ? (
-                                    <tr>
-                                        <td colSpan={4} className="text-danger text-center py-3">
-                                            {error}
-                                        </td>
-                                    </tr>
-                                ) : flatCategories.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="text-center py-3 text-muted">
-                                            Chưa có danh mục nào.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    flatCategories.map((cat) => (
-                                        <tr key={cat.id}>
-                                            <td>
-                                                <span
-                                                    style={{ paddingLeft: `${cat.level * 16}px` }}
-                                                >
-                                                    {cat.categoryName}
-                                                </span>
-                                            </td>
-                                            <td className="text-muted">{cat.description || '—'}</td>
-                                            <td>
-                                                <StatusBadge status={cat.status || 'INACTIVE'} />
-                                            </td>
-                                            <td className="text-muted">
-                                                {cat.createdAt
-                                                    ? new Date(cat.createdAt).toLocaleDateString()
-                                                    : '—'}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
+                            <tbody>{tableBody}</tbody>
                         </table>
                     </div>
                 </div>

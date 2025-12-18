@@ -4,13 +4,7 @@ import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
 import BaseModal from '@/components/Modal/BaseModal';
 import StatusBadge from '@/components/StatusBadge';
-import {
-    BlogCategoryDto,
-    BlogDetailDto,
-    BlogStatus,
-    BlogSummaryDto,
-    PagedResponse,
-} from '@/types/blog.types';
+import { BlogCategoryDto, BlogDetailDto, BlogStatus, BlogSummaryDto } from '@/types/blog.types';
 import { BlogService } from '@/services/blog.service';
 import { BlogCategoryService } from '@/services/blogCategory.service';
 
@@ -40,6 +34,14 @@ const BlogApproval: React.FC = () => {
     const [selectedBlog, setSelectedBlog] = useState<BlogSummaryDto | null>(null);
     const [blogFeaturedStatus, setBlogFeaturedStatus] = useState<Record<string, boolean>>({});
 
+    const handleFeaturedCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const blogId = e.currentTarget.dataset.blogId;
+        if (!blogId) return;
+
+        const checked = e.currentTarget.checked;
+        setBlogFeaturedStatus((prev) => ({ ...prev, [blogId]: checked }));
+    }, []);
+
     const fetchCategories = useCallback(async () => {
         try {
             const response = await BlogCategoryService.getCategories(false);
@@ -61,7 +63,7 @@ const BlogApproval: React.FC = () => {
                 page: 1,
                 pageSize: ITEMS_PER_PAGE,
             });
-            const data = (response.data || {}) as PagedResponse<BlogSummaryDto>;
+            const data = response.data;
 
             setBlogs(data.items || []);
             setPendingTotal(data.totalItems || data.items?.length || 0);
@@ -115,8 +117,7 @@ const BlogApproval: React.FC = () => {
             setProcessingId(blog.id);
             try {
                 // Use provided featured or get from state, default to false
-                const featuredStatus =
-                    featured !== undefined ? featured : (blogFeaturedStatus[blog.id] ?? false);
+                const featuredStatus = featured ?? blogFeaturedStatus[blog.id] ?? false;
 
                 await BlogService.approveBlog(blog.id, featuredStatus);
                 setSelectedBlog((prev) =>
@@ -352,21 +353,17 @@ const BlogApproval: React.FC = () => {
                                                     className="form-check-input"
                                                     type="checkbox"
                                                     id={`featured-${blog.id}`}
+                                                    data-blog-id={blog.id}
                                                     checked={blogFeaturedStatus[blog.id] ?? false}
-                                                    onChange={(e) =>
-                                                        setBlogFeaturedStatus((prev) => ({
-                                                            ...prev,
-                                                            [blog.id]: e.target.checked,
-                                                        }))
-                                                    }
+                                                    onChange={handleFeaturedCheckboxChange}
                                                     disabled={processingId === blog.id}
                                                 />
                                                 <label
                                                     className="form-check-label text-muted small"
                                                     htmlFor={`featured-${blog.id}`}
                                                 >
-                                                    <i className="ti ti-star me-1"></i>
-                                                    Đánh dấu nổi bật
+                                                    <i className="ti ti-star me-1"></i> Đánh dấu nổi
+                                                    bật
                                                 </label>
                                             </div>
                                             <button
@@ -538,8 +535,7 @@ const BlogApproval: React.FC = () => {
                             disabled={!selectedBlog || processingId === selectedBlog?.id}
                         />
                         <label className="form-check-label" htmlFor="modal-featured-checkbox">
-                            <i className="ti ti-star me-1"></i>
-                            Đánh dấu nổi bật
+                            <i className="ti ti-star me-1"></i> Đánh dấu nổi bật
                         </label>
                     </div>
                     <button type="button" className="btn btn-light" onClick={handleClosePreview}>

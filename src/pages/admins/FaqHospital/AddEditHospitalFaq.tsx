@@ -75,6 +75,11 @@ const AddEditHospitalFaq: React.FC = () => {
     const [hospitalOptions, setHospitalOptions] = useState<HospitalOption[]>([]);
     const [isLoadingHospitals, setIsLoadingHospitals] = useState(false);
 
+    const submitLabel = useMemo(() => {
+        if (isSubmitting) return 'Đang lưu...';
+        return isEditMode ? 'Cập nhật' : 'Lưu';
+    }, [isEditMode, isSubmitting]);
+
     const [formData, setFormData] = useState<FaqFormData>({
         hospitalId: currentHospitalId || '',
         question: '',
@@ -245,9 +250,9 @@ const AddEditHospitalFaq: React.FC = () => {
         return (
             <div className="content">
                 <div className="text-center py-5">
-                    <div className="spinner-border" role="status">
+                    <output className="spinner-border" aria-live="polite">
                         <span className="visually-hidden">Đang tải...</span>
-                    </div>
+                    </output>
                     <p className="mt-3">Đang tải thông tin FAQ...</p>
                 </div>
             </div>
@@ -391,7 +396,7 @@ const AddEditHospitalFaq: React.FC = () => {
                         disabled={isSubmitting}
                         icon={isSubmitting ? 'ti ti-loader' : 'ti ti-check'}
                     >
-                        {isSubmitting ? 'Đang lưu...' : isEditMode ? 'Cập nhật' : 'Lưu'}
+                        {submitLabel}
                     </Button>
                 </div>
             </form>

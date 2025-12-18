@@ -170,6 +170,45 @@ const AddServiceCategory: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const buildPayload = (): ServiceCategoryFormData => ({
+        name: formData.name.trim(),
+        description: formData.description?.trim() || '',
+        imageUrl: imageFile ? '' : formData.imageUrl.trim(),
+        status: formData.status,
+        parentId: formData.parentId || null,
+    });
+
+    const getSubmitMessages = () => {
+        if (isEditMode) {
+            return {
+                success: 'Cập nhật danh mục dịch vụ thành công!',
+                failure: 'Không thể cập nhật danh mục dịch vụ',
+            };
+        }
+
+        return {
+            success: 'Tạo danh mục dịch vụ thành công!',
+            failure: 'Không thể tạo danh mục dịch vụ',
+        };
+    };
+
+    const submitCategory = async (payload: ServiceCategoryFormData) => {
+        if (isEditMode && id) {
+            return imageFile
+                ? await updateServiceCategoryWithImage(id, payload, imageFile)
+                : await updateServiceCategory(id, payload);
+        }
+
+        return imageFile
+            ? await createServiceCategoryWithImage(payload, imageFile)
+            : await createServiceCategory(payload);
+    };
+
+    const getErrorMessage = (err: unknown, fallback: string) => {
+        if (err instanceof Error && err.message) return err.message;
+        return fallback;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -181,47 +220,21 @@ const AddServiceCategory: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            const payload: ServiceCategoryFormData = {
-                name: formData.name.trim(),
-                description: formData.description?.trim() || '',
-                imageUrl: imageFile ? '' : formData.imageUrl.trim(),
-                status: formData.status,
-                parentId: formData.parentId || null,
-            };
+            const payload = buildPayload();
+            const messages = getSubmitMessages();
 
-            let response;
-            if (isEditMode && id) {
-                response = imageFile
-                    ? await updateServiceCategoryWithImage(id, payload, imageFile)
-                    : await updateServiceCategory(id, payload);
-            } else {
-                response = imageFile
-                    ? await createServiceCategoryWithImage(payload, imageFile)
-                    : await createServiceCategory(payload);
+            const response = await submitCategory(payload);
+
+            if (!response.success) {
+                toast.error(response.message || messages.failure);
+                return;
             }
 
-            if (response.success) {
-                toast.success(
-                    isEditMode
-                        ? 'Cập nhật danh mục dịch vụ thành công!'
-                        : 'Tạo danh mục dịch vụ thành công!'
-                );
-                navigate(buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_CATEGORIES.ROOT));
-            } else {
-                toast.error(
-                    response.message ||
-                        (isEditMode
-                            ? 'Không thể cập nhật danh mục dịch vụ'
-                            : 'Không thể tạo danh mục dịch vụ')
-                );
-            }
-        } catch (err: any) {
-            toast.error(
-                err.message ||
-                    (isEditMode
-                        ? 'Không thể cập nhật danh mục dịch vụ'
-                        : 'Không thể tạo danh mục dịch vụ')
-            );
+            toast.success(messages.success);
+            navigate(buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_CATEGORIES.ROOT));
+        } catch (err: unknown) {
+            const messages = getSubmitMessages();
+            toast.error(getErrorMessage(err, messages.failure));
         } finally {
             setIsSubmitting(false);
         }
@@ -335,11 +348,15 @@ const AddServiceCategory: React.FC = () => {
                                     Có thể để trống, hệ thống sẽ hiển thị biểu tượng mặc định.
                                 </small>
                                 <div className="mt-2">
-                                    <label className="form-label">
+                                    <label
+                                        className="form-label"
+                                        htmlFor="serviceCategoryImageFile"
+                                    >
                                         <i className="feather-upload-cloud me-1"></i> Hoặc tải ảnh
                                         lên (tối đa 5MB)
                                     </label>
                                     <input
+                                        id="serviceCategoryImageFile"
                                         type="file"
                                         accept="image/*"
                                         className="form-control"
