@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import logo from '@/assets/img/logo.svg';
+import logo from '@/assets/img/logo_medcure.png';
 import logoSmall from '@/assets/img/logo-small.svg';
 import logoWhite from '@/assets/img/logo-white.svg';
 import userDefault from '@/assets/img/users/user-default.jpg';

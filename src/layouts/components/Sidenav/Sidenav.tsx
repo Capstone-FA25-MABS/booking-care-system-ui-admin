@@ -3,10 +3,9 @@ import GroupMenuItem from './components/GroupMenuItem';
 import { useSidebarToggle } from '@/hooks/useSidebarToggle';
 import type { MenuConfig } from '@/types/menu.types';
 
-import logo from '@/assets/img/logo.svg';
-import logoSmall from '@/assets/img/logo-small.svg';
-import logoWhite from '@/assets/img/logo-white.svg';
-import sidebarIcon from '@/assets/img/icons/sidebar-icon.svg';
+import logo from '@/assets/img/logo_medcure.png';
+import logoSmall from '@/assets/img/icons/icon_medcure.png';
+import logoWhite from '@/assets/img/logo_medcure.png';
 import { Link } from 'react-router-dom';
 
 interface SidenavProps {
@@ -24,17 +23,17 @@ const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSi
                 <div>
                     {/* Logo Normal */}
                     <Link to={'/'} className="logo logo-normal">
-                        <img src={logo} alt="Logo" />
+                        <img src={logo} alt="Logo" style={{ marginTop: '-8px' }} />
                     </Link>
 
                     {/* Logo Small */}
                     <Link to={'/'} className="logo-small">
-                        <img src={logoSmall} alt="Logo" />
+                        <img src={logoSmall} alt="Logo" style={{ marginTop: '-4px' }} />
                     </Link>
 
                     {/* Logo Dark */}
                     <Link to={'/'} className="dark-logo">
-                        <img src={logoWhite} alt="Logo" />
+                        <img src={logoWhite} alt="Logo" style={{ marginTop: '-8px' }} />
                     </Link>
                 </div>
 
@@ -63,22 +62,6 @@ const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSi
                             <GroupMenuItem key={index} title={group.title} items={group.items} />
                         ))}
                     </ul>
-                </div>
-                <div className="sidebar-footer border-top mt-3">
-                    <div className="trial-item mt-0 p-3 text-center">
-                        <div className="trial-item-icon rounded-4 mb-3 p-2 text-center shadow-sm d-inline-flex">
-                            <img src={sidebarIcon} alt="img" />
-                        </div>
-                        <div>
-                            <h6 className="fs-14 fw-semibold mb-1">Upgrade To Pro</h6>
-                            <p className="fs-13 mb-0">
-                                Check 1 min video and begin use Preclinic like a pro
-                            </p>
-                        </div>
-                        <a href="#" className="close-icon shadow-sm">
-                            <i className="ti ti-x"></i>
-                        </a>
-                    </div>
                 </div>
             </SimpleBar>
         </div>
