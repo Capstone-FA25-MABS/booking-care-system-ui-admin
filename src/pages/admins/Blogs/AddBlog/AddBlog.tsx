@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Button from '@/components/Button';
 import { BlogService } from '@/services/blog.service';
 import { BlogCategoryService } from '@/services/blogCategory.service';
-import { CreateBlogRequest, BlogStatus, BlogCategoryDto } from '@/types/blog.types';
+import {
+    BlogDetailDto,
+    CreateBlogRequest,
+    UpdateBlogRequest,
+    BlogStatus,
+    BlogCategoryDto,
+} from '@/types/blog.types';
 import { PATHS, buildPath } from '@/routes/paths';
 import { useAppSelector } from '@/store/hooks';
 import { selectCurrentProfile } from '@/store/selectors/profile.selectors';
@@ -27,6 +33,8 @@ interface BlogFormData {
 const AddBlog: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { id } = useParams<{ id?: string }>();
+    const isEditMode = !!id;
     const currentProfile = useAppSelector(selectCurrentProfile);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -47,6 +55,49 @@ const AddBlog: React.FC = () => {
     });
 
     const [errors, setErrors] = useState<Partial<Record<keyof BlogFormData, string>>>({});
+
+    const blogListPath = useMemo(() => {
+        if (location.pathname.startsWith(PATHS.HOSPITAL.ROOT)) {
+            return buildPath(PATHS.HOSPITAL.ROOT, PATHS.ADMIN.BLOGS.ROOT);
+        }
+        if (location.pathname.startsWith(PATHS.DOCTOR.ROOT)) {
+            return buildPath(PATHS.DOCTOR.ROOT, PATHS.ADMIN.BLOGS.ROOT);
+        }
+
+        return buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOGS.ROOT);
+    }, [location.pathname]);
+
+    // Fetch blog data if in edit mode
+    useEffect(() => {
+        if (!isEditMode || !id) {
+            return;
+        }
+
+        const fetchBlog = async () => {
+            try {
+                const response = await BlogService.getBlogById(id);
+                const blog: BlogDetailDto = response.data;
+
+                setFormData((prev) => ({
+                    ...prev,
+                    blogCategoryId: blog.category?.id || '',
+                    titleVi: blog.titleVi || '',
+                    contentVi: blog.contentVi || '',
+                    titleEn: blog.titleEn || '',
+                    contentEn: blog.contentEn || '',
+                    thumbnailUrl: blog.thumbnailUrl || '',
+                    heroImageUrl: blog.heroImageUrl || '',
+                    tag: blog.tag || '',
+                    source: blog.source || '',
+                }));
+            } catch (err: any) {
+                toast.error(err.message || 'Không thể tải thông tin blog');
+                navigate(blogListPath);
+            }
+        };
+
+        fetchBlog();
+    }, [blogListPath, id, isEditMode, navigate]);
 
     // Fetch categories
     useEffect(() => {
@@ -105,17 +156,6 @@ const AddBlog: React.FC = () => {
         updateFormField('heroImageFile', file);
     };
 
-    const blogListPath = useMemo(() => {
-        if (location.pathname.startsWith(PATHS.HOSPITAL.ROOT)) {
-            return buildPath(PATHS.HOSPITAL.ROOT, PATHS.ADMIN.BLOGS.ROOT);
-        }
-        if (location.pathname.startsWith(PATHS.DOCTOR.ROOT)) {
-            return buildPath(PATHS.DOCTOR.ROOT, PATHS.ADMIN.BLOGS.ROOT);
-        }
-
-        return buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOGS.ROOT);
-    }, [location.pathname]);
-
     // Validate form
     const validateForm = (data: BlogFormData): boolean => {
         const newErrors: Partial<Record<keyof BlogFormData, string>> = {};
@@ -132,7 +172,7 @@ const AddBlog: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Handle submit
+    // Handle submit (create or update)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -145,7 +185,7 @@ const AddBlog: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            const request: CreateBlogRequest = {
+            const baseRequest: UpdateBlogRequest = {
                 blogCategoryId: formData.blogCategoryId || undefined,
                 titleVi: formData.titleVi.trim(),
                 contentVi: formData.contentVi.trim(),
@@ -155,27 +195,44 @@ const AddBlog: React.FC = () => {
                 heroImageUrl: formData.heroImageUrl.trim() || undefined,
                 tag: formData.tag.trim() || undefined,
                 source: formData.source.trim() || undefined,
-                status: BlogStatus.Pending,
-                featured: false,
-                publishedAt: new Date().toISOString(),
-                // Ưu tiên truyền doctor/hospital ID thay vì accountId
-                createdByDoctorId: currentProfile?.doctorId || undefined,
-                createdByHospitalId: currentProfile?.hospitalId || undefined,
             };
 
-            const response = await BlogService.createBlog(request, {
-                thumbnailFile: formData.thumbnailFile || undefined,
-                heroImageFile: formData.heroImageFile || undefined,
-            });
+            let response;
+            if (isEditMode && id) {
+                response = await BlogService.updateBlog(id, baseRequest, {
+                    thumbnailFile: formData.thumbnailFile || undefined,
+                    heroImageFile: formData.heroImageFile || undefined,
+                });
+            } else {
+                const createRequest: CreateBlogRequest = {
+                    ...baseRequest,
+                    status: BlogStatus.Pending,
+                    featured: false,
+                    publishedAt: new Date().toISOString(),
+                    // Ưu tiên truyền doctor/hospital ID thay vì accountId
+                    createdByDoctorId: currentProfile?.doctorId || undefined,
+                    createdByHospitalId: currentProfile?.hospitalId || undefined,
+                };
+
+                response = await BlogService.createBlog(createRequest, {
+                    thumbnailFile: formData.thumbnailFile || undefined,
+                    heroImageFile: formData.heroImageFile || undefined,
+                });
+            }
 
             if (response.success) {
-                toast.success('Tạo blog thành công!');
+                toast.success(isEditMode ? 'Cập nhật blog thành công!' : 'Tạo blog thành công!');
                 navigate(blogListPath);
             } else {
-                toast.error(response.message || 'Không thể tạo blog');
+                toast.error(
+                    response.message ||
+                        (isEditMode ? 'Không thể cập nhật blog' : 'Không thể tạo blog')
+                );
             }
         } catch (err: any) {
-            toast.error(err.message || 'Không thể tạo blog');
+            toast.error(
+                err.message || (isEditMode ? 'Không thể cập nhật blog' : 'Không thể tạo blog')
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -196,7 +253,9 @@ const AddBlog: React.FC = () => {
         <div className="content">
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
-                    <h4 className="fw-bold mb-0">Thêm blog mới</h4>
+                    <h4 className="fw-bold mb-0">
+                        {isEditMode ? 'Chỉnh sửa blog' : 'Thêm blog mới'}
+                    </h4>
                 </div>
             </div>
 
