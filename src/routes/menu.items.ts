@@ -136,16 +136,12 @@ export const createHospitalSubscriptionPlansMenuItem = (): MenuItem => ({
 });
 
 /**
- * Create Dashboard menu item for Admin with multiple dashboards
+ * Create Dashboard menu item (single entry)
  */
 export const createDashboardMenuItem = (): MenuItem => ({
     label: 'Bảng điều khiển',
     icon: 'ti ti-layout-dashboard',
-    subItems: [
-        { label: 'Admin Dashboard', link: '/admin/dashboard' },
-        { label: 'Doctor Dashboard', link: '/doctor/dashboard' },
-        { label: 'Patient Dashboard', link: '/patient/dashboard' },
-    ],
+    link: buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.DASHBOARD),
 });
 
 /**

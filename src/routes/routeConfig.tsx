@@ -53,7 +53,6 @@ import { AppointmentCalendar } from '@/pages/doctors/Appointments/Calendar';
 import { HospitalAppointmentCalendar } from '@/pages/hospitals/Appointments/Calendar';
 import HospitalSpecialtiesManagement from '@/pages/hospitals/Specialties';
 import HospitalServiceTypesManagement from '@/pages/hospitals/ServiceTypes';
-import HospitalServiceMedicalsManagement from '@/pages/hospitals/ServiceMedicals';
 import NotificationManagement from '@/pages/notifications/NotificationManagement/NotificationManagement';
 import Wallet from '@/pages/hospitals/Wallet';
 import HospitalDiscountManagement from '@/pages/hospitals/Discounts';
@@ -255,10 +254,6 @@ const routes: RouteObject[] = [
             {
                 path: PATHS.HOSPITAL.SERVICE_TYPES.ROOT,
                 element: <HospitalServiceTypesManagement />,
-            },
-            {
-                path: PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT,
-                element: <HospitalServiceMedicalsManagement />,
             },
             { path: PATHS.HOSPITAL.REFUNDS.ROOT, element: <ListRefunds /> },
             { path: PATHS.HOSPITAL.WALLET.ROOT, element: <Wallet /> },

@@ -398,41 +398,6 @@ export const useStaffTour = (role: Role | null, isAuthenticated: boolean) => {
             ],
         },
         {
-            menuSelector: '[data-tour-id="menu-item-quản-lý-dịch-vụ-bệnh-viện"]',
-            path: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT),
-            title: 'Bước 5: Quản lý dịch vụ bệnh viện',
-            description: 'Thiết lập các dịch vụ y tế mà bệnh viện cung cấp cho bệnh nhân.',
-            pageSteps: [
-                {
-                    selector: 'input[type="search"]',
-                    title: 'Tìm kiếm dịch vụ',
-                    description: 'Sử dụng thanh tìm kiếm để tìm nhanh dịch vụ bạn muốn chọn.',
-                    waitForAction: 'optional',
-                },
-                {
-                    selector: '[class*="serviceMedicalsGrid"], [class*="grid"], .grid',
-                    title: 'Danh sách dịch vụ bệnh viện',
-                    description:
-                        'Đây là danh sách tất cả các dịch vụ bệnh viện có sẵn. Hãy xem qua danh sách này.',
-                    waitForAction: 'view',
-                },
-                {
-                    selector: 'input[type="checkbox"]',
-                    title: 'Chọn dịch vụ bệnh viện',
-                    description:
-                        'Click vào checkbox để chọn các dịch vụ mà bệnh viện cung cấp. Hãy chọn ít nhất một dịch vụ.',
-                    waitForAction: 'click',
-                },
-                {
-                    selector: 'button:contains("Lưu"), button[type="button"]:has-text("Lưu")',
-                    title: 'Lưu lựa chọn',
-                    description:
-                        'Sau khi đã chọn các dịch vụ, nhấp vào nút "Lưu" để lưu lại lựa chọn của bạn.',
-                    waitForAction: 'click',
-                },
-            ],
-        },
-        {
             menuSelector: '[data-tour-id="menu-item-quản-lí-dịch-vụ-y-tế"]',
             path: buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT),
             title: 'Bước 6: Quản lí dịch vụ y tế',

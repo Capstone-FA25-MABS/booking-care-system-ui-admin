@@ -222,25 +222,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                         </button>
                     </div>
 
-                    <a href="#" className="btn btn-liner-gradient me-3 d-lg-flex d-none">
-                        AI Assistance<i className="ti ti-chart-bubble-filled ms-1"></i>
-                    </a>
-
-                    <div className="header-item">
-                        <div className="dropdown me-2">
-                            <a href="new-appointment.html" className="btn topbar-link">
-                                <i className="ti ti-calendar-due"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div className="header-item">
-                        <div className="dropdown me-2">
-                            <a href="profile-settings.html" className="btn topbar-link">
-                                <i className="ti ti-settings-2"></i>
-                            </a>
-                        </div>
-                    </div>
+                    {/* Removed AI Assistance, calendar shortcut, and profile settings shortcut */}
 
                     <div className="header-item d-none d-sm-flex me-2">
                         <button

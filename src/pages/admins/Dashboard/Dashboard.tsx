@@ -279,14 +279,25 @@ const AdminDashboard: React.FC = () => {
         setAiError(null);
         setAiLoadingStep(1); // Start collecting data
         try {
-            // Nếu có date range tùy chỉnh, dùng nó; nếu không, dùng period mặc định
-            const request: GenerateAiInsightRequest =
-                aiDateRange.from && aiDateRange.to
-                    ? {
-                          fromDate: aiDateRange.from.toISOString().split('T')[0],
-                          toDate: aiDateRange.to.toISOString().split('T')[0],
-                      }
-                    : { period: 'week' };
+            let request: GenerateAiInsightRequest;
+
+            if (aiDateRange.from && aiDateRange.to) {
+                // Nếu người dùng chọn date range cụ thể
+                request = {
+                    fromDate: aiDateRange.from.toISOString().split('T')[0],
+                    toDate: aiDateRange.to.toISOString().split('T')[0],
+                };
+            } else {
+                // Mặc định: 7 ngày trước đến ngày hiện tại
+                const today = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+
+                request = {
+                    fromDate: sevenDaysAgo.toISOString().split('T')[0],
+                    toDate: today.toISOString().split('T')[0],
+                };
+            }
 
             // Simulate steps for better UX
             await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
@@ -360,9 +371,9 @@ const AdminDashboard: React.FC = () => {
     const activeDateRange = useMemo(() => {
         // Nếu có AI insights, sử dụng periodStart và periodEnd từ response (ưu tiên cao nhất)
         if (aiInsights?.periodStart && aiInsights?.periodEnd) {
-            // Parse ISO string và extract date part (YYYY-MM-DD)
-            const fromDate = new Date(aiInsights.periodStart).toISOString().split('T')[0];
-            const toDate = new Date(aiInsights.periodEnd).toISOString().split('T')[0];
+            // Extract date part from datetime string (YYYY-MM-DDTHH:mm:ss)
+            const fromDate = aiInsights.periodStart.split('T')[0];
+            const toDate = aiInsights.periodEnd.split('T')[0];
             return {
                 fromDate,
                 toDate,
@@ -924,7 +935,7 @@ const AdminDashboard: React.FC = () => {
                                         }))
                                     }
                                     disabled={isLoadingAi}
-                                    maxDate={aiDateRange.to || undefined}
+                                    maxDate={aiDateRange.to || new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{
@@ -976,7 +987,7 @@ const AdminDashboard: React.FC = () => {
                                         },
                                     }}
                                     sx={{
-                                        width: '100%',
+                                        width: { xs: '100%', sm: '250px' },
                                         '& .MuiInputBase-root': {
                                             height: '38px',
                                             fontSize: '0.95rem',
@@ -1031,6 +1042,7 @@ const AdminDashboard: React.FC = () => {
                                     }
                                     disabled={isLoadingAi}
                                     minDate={aiDateRange.from || undefined}
+                                    maxDate={new Date()}
                                     format="dd/MM/yyyy"
                                     dayOfWeekFormatter={dayOfWeekFormatter}
                                     slotProps={{
@@ -1082,7 +1094,7 @@ const AdminDashboard: React.FC = () => {
                                         },
                                     }}
                                     sx={{
-                                        width: '100%',
+                                        width: { xs: '100%', sm: '250px' },
                                         '& .MuiInputBase-root': {
                                             height: '38px',
                                             fontSize: '0.95rem',
@@ -1132,6 +1144,19 @@ const AdminDashboard: React.FC = () => {
                                     <i className="ti ti-sparkles"></i>
                                     <span>{isLoadingAi ? 'Đang tạo...' : 'Tạo AI Insights'}</span>
                                 </button>
+                                {aiInsights && !isLoadingAi && (
+                                    <button
+                                        className={`btn btn-outline-secondary ${styles.aiClearBtn}`}
+                                        onClick={() => {
+                                            setAiInsights(null);
+                                            setAiDateRange({ from: null, to: null });
+                                            setAiError(null);
+                                        }}
+                                        title="Xóa kết quả phân tích"
+                                    >
+                                        <i className="ti ti-x"></i>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </LocalizationProvider>
@@ -1140,7 +1165,7 @@ const AdminDashboard: React.FC = () => {
                         <span>
                             {aiDateRange.from && aiDateRange.to
                                 ? `Phân tích từ ${formatDateDisplay(aiDateRange.from)} đến ${formatDateDisplay(aiDateRange.to)}`
-                                : 'Để trống để sử dụng mặc định (tuần gần nhất)'}
+                                : 'Để trống để sử dụng mặc định (7 ngày gần nhất: từ 7 ngày trước đến ngày hiện tại)'}
                         </span>
                     </div>
                 </div>
@@ -1177,7 +1202,7 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 1: Thu thập dữ liệu</span>
+                                        <span>Thu thập dữ liệu</span>
                                     </div>
                                     <div
                                         className={`${styles.loadingStep} ${aiLoadingStep >= 2 ? styles.loadingStepActive : ''}`}
@@ -1191,7 +1216,7 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 2: Phân tích AI</span>
+                                        <span>Phân tích AI</span>
                                     </div>
                                     <div
                                         className={`${styles.loadingStep} ${aiLoadingStep >= 3 ? styles.loadingStepActive : ''}`}
@@ -1209,50 +1234,14 @@ const AdminDashboard: React.FC = () => {
                                                 <div className={styles.loadingStepDot}></div>
                                             )}
                                         </div>
-                                        <span>Bước 3: Tạo báo cáo</span>
+                                        <span>Tạo báo cáo</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : !aiInsights ? (
                         <div className={styles.aiEmptyState}></div>
-                    ) : (
-                        <>
-                            <div className={styles.aiSummaryRow}>
-                                <div className={styles.aiBadge}>
-                                    <span className={styles.aiBadgeLabel}>Đang lọc từ:</span>
-                                    <span className={styles.aiBadgeDateRange}>
-                                        {aiInsights.periodStart
-                                            ? new Date(aiInsights.periodStart)
-                                                  .toLocaleDateString('vi-VN', {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
-                                                      year: 'numeric',
-                                                  })
-                                                  .replace(/\//g, '-')
-                                            : '--'}
-                                        {' đến '}
-                                        {aiInsights.periodEnd
-                                            ? new Date(aiInsights.periodEnd)
-                                                  .toLocaleDateString('vi-VN', {
-                                                      day: '2-digit',
-                                                      month: '2-digit',
-                                                      year: 'numeric',
-                                                  })
-                                                  .replace(/\//g, '-')
-                                            : '--'}
-                                    </span>
-                                </div>
-                                <span className={styles.aiMeta}>
-                                    <i className="ti ti-clock me-1"></i>
-                                    <span className={styles.aiMetaLabel}>Cập nhật:</span>
-                                    <span className={styles.aiMetaTime}>
-                                        {new Date(aiInsights.generatedAt).toLocaleString('vi-VN')}
-                                    </span>
-                                </span>
-                            </div>
-                        </>
-                    )}
+                    ) : null}
                 </div>
             </div>
 
