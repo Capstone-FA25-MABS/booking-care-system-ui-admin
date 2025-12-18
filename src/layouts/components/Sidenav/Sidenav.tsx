@@ -5,7 +5,6 @@ import type { MenuConfig } from '@/types/menu.types';
 
 import logo from '@/assets/img/logo_medcure.png';
 import logoSmall from '@/assets/img/icons/icon_medcure.png';
-import logoWhite from '@/assets/img/logo_medcure.png';
 import { Link } from 'react-router-dom';
 
 interface SidenavProps {
@@ -33,7 +32,7 @@ const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSi
 
                     {/* Logo Dark */}
                     <Link to={'/'} className="dark-logo">
-                        <img src={logoWhite} alt="Logo" style={{ marginTop: '-8px' }} />
+                        <img src={logo} alt="Logo" style={{ marginTop: '-8px' }} />
                     </Link>
                 </div>
 
