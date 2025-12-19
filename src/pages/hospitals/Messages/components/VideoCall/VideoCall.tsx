@@ -145,10 +145,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
         return transcript;
     }, [messages, userId]);
 
-    // Helper: Attempt to play remote video
-    const attemptRemoteVideoPlay = useCallback(() => {
+    // Helper: Attempt to play remote video with autoplay policy handling
+    const attemptRemoteVideoPlay = useCallback(async () => {
         console.log(
-            '[VideoCall] Attempting play (readyState:',
+            '[VideoCall] 🎬 Attempting play (readyState:',
             remoteVideoRef.current?.readyState,
             ')'
         );
@@ -158,44 +158,146 @@ const VideoCall: React.FC<VideoCallProps> = ({
             return;
         }
 
-        remoteVideoRef.current
-            .play()
-            .then(() => {
-                console.log('[VideoCall] ✅ Remote video playing successfully');
-            })
-            .catch((error) => {
-                console.error('[VideoCall] ❌ Error playing:', error);
+        const videoElement = remoteVideoRef.current;
+        console.log('[VideoCall] 🎬 Video element:', {
+            src: videoElement.src,
+            srcObject: !!videoElement.srcObject,
+            muted: videoElement.muted,
+            autoplay: videoElement.autoplay,
+            playsInline: videoElement.playsInline,
+            networkState: videoElement.networkState,
+            readyState: videoElement.readyState,
+        });
+
+        try {
+            // ✅ Force unmute for remote video (autoplay policy workaround)
+            videoElement.muted = false;
+            videoElement.playsInline = true;
+
+            await videoElement.play();
+            console.log('[VideoCall] ✅ Remote video playing successfully');
+            remoteVideoPlayingRef.current = true;
+        } catch (error: any) {
+            console.error('[VideoCall] ❌ Error playing:', error);
+            console.error('[VideoCall] ❌ Error name:', error.name);
+            console.error('[VideoCall] ❌ Error message:', error.message);
+
+            // ✅ Handle specific autoplay policy error
+            if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
+                console.log('[VideoCall] 🔇 Autoplay blocked, trying muted play...');
+                try {
+                    videoElement.muted = true;
+                    await videoElement.play();
+                    console.log('[VideoCall] ✅ Playing muted (user can unmute later)');
+                    remoteVideoPlayingRef.current = true;
+                } catch (mutedError) {
+                    console.error('[VideoCall] ❌ Even muted play failed:', mutedError);
+                    remoteVideoPlayingRef.current = false;
+                }
+            } else {
                 remoteVideoPlayingRef.current = false;
-            });
+            }
+        }
     }, []);
 
-    // Helper: Handle remote video ready state and play
+    // Helper: Handle remote video ready state and play with multiple strategies
     const handleRemoteVideoReady = useCallback(() => {
         if (!remoteVideoRef.current) return;
 
-        remoteVideoPlayingRef.current = true;
+        const videoElement = remoteVideoRef.current;
 
-        if (remoteVideoRef.current.readyState >= 2) {
-            console.log('[VideoCall] Video ready, playing immediately');
-            attemptRemoteVideoPlay();
-            return;
-        }
-
-        console.log('[VideoCall] Waiting for loadeddata event...');
-        const onLoadedData = () => {
-            console.log('[VideoCall] loadeddata fired, playing now');
-            attemptRemoteVideoPlay();
-            remoteVideoRef.current?.removeEventListener('loadeddata', onLoadedData);
-        };
-        remoteVideoRef.current.addEventListener('loadeddata', onLoadedData);
-
-        setTimeout(() => {
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.removeEventListener('loadeddata', onLoadedData);
-                console.log('[VideoCall] Timeout, force trying play');
-                attemptRemoteVideoPlay();
+        // ✅ Try multiple strategies for video playback
+        const attemptPlayback = async () => {
+            // Strategy 1: If video has enough data, play immediately
+            if (videoElement.readyState >= 2) {
+                console.log('[VideoCall] 📺 Video ready (readyState >= 2), playing immediately');
+                await attemptRemoteVideoPlay();
+                return;
             }
-        }, 2000);
+
+            // Strategy 2: If video has some data, try playing anyway
+            if (videoElement.readyState === 1) {
+                console.log(
+                    '[VideoCall] 📺 Video has metadata (readyState = 1), trying to play...'
+                );
+                await attemptRemoteVideoPlay();
+                return;
+            }
+
+            // Strategy 3: Wait for video data to load
+            console.log(
+                '[VideoCall] ⏳ Waiting for video data (readyState:',
+                videoElement.readyState,
+                ')...'
+            );
+
+            let eventFired = false;
+
+            const onLoadedMetadata = () => {
+                console.log(
+                    '[VideoCall] 📊 loadedmetadata fired (readyState:',
+                    videoElement.readyState,
+                    ')'
+                );
+                if (!eventFired) {
+                    eventFired = true;
+                    cleanup();
+                    attemptRemoteVideoPlay();
+                }
+            };
+
+            const onLoadedData = () => {
+                console.log(
+                    '[VideoCall] 📦 loadeddata fired (readyState:',
+                    videoElement.readyState,
+                    ')'
+                );
+                if (!eventFired) {
+                    eventFired = true;
+                    cleanup();
+                    attemptRemoteVideoPlay();
+                }
+            };
+
+            const onCanPlay = () => {
+                console.log(
+                    '[VideoCall] ▶️ canplay fired (readyState:',
+                    videoElement.readyState,
+                    ')'
+                );
+                if (!eventFired) {
+                    eventFired = true;
+                    cleanup();
+                    attemptRemoteVideoPlay();
+                }
+            };
+
+            const cleanup = () => {
+                videoElement.removeEventListener('loadedmetadata', onLoadedMetadata);
+                videoElement.removeEventListener('loadeddata', onLoadedData);
+                videoElement.removeEventListener('canplay', onCanPlay);
+            };
+
+            videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
+            videoElement.addEventListener('loadeddata', onLoadedData);
+            videoElement.addEventListener('canplay', onCanPlay);
+
+            // Strategy 4: Timeout fallback with force play
+            setTimeout(() => {
+                if (!eventFired) {
+                    console.log(
+                        '[VideoCall] ⏰ Timeout reached, force trying play (readyState:',
+                        videoElement.readyState,
+                        ')'
+                    );
+                    eventFired = true;
+                    cleanup();
+                    attemptRemoteVideoPlay();
+                }
+            }, 3000); // Increase timeout to 3s
+        };
+
+        attemptPlayback();
     }, [attemptRemoteVideoPlay]);
 
     // WebRTC Hook Integration
@@ -245,31 +347,57 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 }
             },
             onRemoteStream: (stream) => {
-                console.log('[VideoCall] Remote stream received:', stream);
-                console.log('[VideoCall] Remote stream tracks:', stream.getTracks());
-                console.log('[VideoCall] Remote stream active:', stream.active);
+                console.log('[VideoCall] 📡 Remote stream received:', stream);
+                console.log('[VideoCall] 📡 Remote stream tracks:', stream.getTracks());
+                console.log('[VideoCall] 📡 Remote stream active:', stream.active);
 
                 const videoTracks = stream.getVideoTracks();
                 const audioTracks = stream.getAudioTracks();
-                console.log('[VideoCall] Video tracks:', videoTracks.length);
-                console.log('[VideoCall] Audio tracks:', audioTracks.length);
+                console.log('[VideoCall] 🎥 Video tracks:', videoTracks.length);
+                console.log('[VideoCall] 🔊 Audio tracks:', audioTracks.length);
+
+                // ✅ Log track details
+                videoTracks.forEach((track, i) => {
+                    console.log(`[VideoCall] 🎥 Video track ${i}:`, {
+                        id: track.id,
+                        label: track.label,
+                        enabled: track.enabled,
+                        muted: track.muted,
+                        readyState: track.readyState,
+                        settings: track.getSettings(),
+                    });
+                });
+                audioTracks.forEach((track, i) => {
+                    console.log(`[VideoCall] 🔊 Audio track ${i}:`, {
+                        id: track.id,
+                        label: track.label,
+                        enabled: track.enabled,
+                        muted: track.muted,
+                        readyState: track.readyState,
+                        settings: track.getSettings(),
+                    });
+                });
 
                 if (remoteVideoRef.current) {
                     const currentSrcObject = remoteVideoRef.current.srcObject as MediaStream | null;
                     if (currentSrcObject === stream) {
                         console.log('[VideoCall] srcObject already set, skipping');
                     } else {
-                        console.log('[VideoCall] Setting remote video srcObject');
+                        console.log('[VideoCall] 📺 Setting remote video srcObject');
                         remoteVideoRef.current.srcObject = stream;
+
+                        // ✅ Force load the video element
+                        remoteVideoRef.current.load();
+                        console.log('[VideoCall] 📺 Called video.load() to force loading');
                     }
 
                     const hasBothTracks = videoTracks.length > 0 && audioTracks.length > 0;
                     const shouldPlay = hasBothTracks && !remoteVideoPlayingRef.current;
 
                     if (shouldPlay) {
-                        console.log('[VideoCall] Both tracks ready, preparing to play...');
+                        console.log('[VideoCall] ✅ Both tracks ready, preparing to play...');
                         console.log(
-                            '[VideoCall] Video element readyState:',
+                            '[VideoCall] 📊 Video element readyState:',
                             remoteVideoRef.current.readyState
                         );
                         handleRemoteVideoReady();

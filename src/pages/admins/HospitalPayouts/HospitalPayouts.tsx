@@ -89,16 +89,16 @@ const HospitalPayouts: React.FC = () => {
 
     const getStatusBadge = (status: PayoutStatus) => {
         return status === PayoutStatus.PENDING ? (
-            <Badge bg="warning">Pending</Badge>
+            <Badge bg="warning">Chờ thanh toán</Badge>
         ) : (
-            <Badge bg="success">Completed</Badge>
+            <Badge bg="success">Đã thanh toán</Badge>
         );
     };
 
     return (
         <div className="container-fluid p-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>Hospital Payouts Management</h2>
+                <h2>Quản lý thanh toán bệnh viện</h2>
             </div>
 
             {statistics && <StatisticsCards statistics={statistics} />}
@@ -107,19 +107,19 @@ const HospitalPayouts: React.FC = () => {
                 <Card.Header>
                     <div className="d-flex align-items-center">
                         <FiFilter className="me-2" />
-                        <h5 className="mb-0">Filters</h5>
+                        <h5 className="mb-0">Bộ lọc</h5>
                     </div>
                 </Card.Header>
                 <Card.Body>
                     <Row>
                         <Col md={3}>
                             <Form.Group className="mb-3">
-                                <Form.Label>Period Start Date</Form.Label>
+                                <Form.Label>Ngày bắt đầu kỳ</Form.Label>
                                 <Form.Control
                                     type="text"
                                     value={startDate ? startDate.toLocaleDateString('vi-VN') : ''}
                                     onClick={(e) => setStartDateAnchor(e.currentTarget)}
-                                    placeholder="Select start date"
+                                    placeholder="Chọn ngày bắt đầu"
                                     readOnly
                                     style={{ cursor: 'pointer' }}
                                 />
@@ -135,12 +135,12 @@ const HospitalPayouts: React.FC = () => {
                         </Col>
                         <Col md={3}>
                             <Form.Group className="mb-3">
-                                <Form.Label>Period End Date</Form.Label>
+                                <Form.Label>Ngày kết thúc kỳ</Form.Label>
                                 <Form.Control
                                     type="text"
                                     value={endDate ? endDate.toLocaleDateString('vi-VN') : ''}
                                     onClick={(e) => setEndDateAnchor(e.currentTarget)}
-                                    placeholder="Select end date"
+                                    placeholder="Chọn ngày kết thúc"
                                     readOnly
                                     style={{ cursor: 'pointer' }}
                                 />
@@ -156,23 +156,23 @@ const HospitalPayouts: React.FC = () => {
                         </Col>
                         <Col md={3}>
                             <Form.Group className="mb-3">
-                                <Form.Label>Status</Form.Label>
+                                <Form.Label>Trạng thái</Form.Label>
                                 <Form.Select
                                     value={filters.status || ''}
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
                                 >
-                                    <option value="">All</option>
-                                    <option value={PayoutStatus.PENDING}>Pending</option>
-                                    <option value={PayoutStatus.COMPLETED}>Completed</option>
+                                    <option value="">Tất cả</option>
+                                    <option value={PayoutStatus.PENDING}>Chờ thanh toán</option>
+                                    <option value={PayoutStatus.COMPLETED}>Đã thanh toán</option>
                                 </Form.Select>
                             </Form.Group>
                         </Col>
                         <Col md={3}>
                             <Form.Group className="mb-3">
-                                <Form.Label>Hospital Name</Form.Label>
+                                <Form.Label>Tên bệnh viện</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Search by hospital name"
+                                    placeholder="Tìm kiếm theo tên bệnh viện"
                                     value={filters.hospitalName || ''}
                                     onChange={(e) =>
                                         handleFilterChange('hospitalName', e.target.value)
@@ -183,7 +183,7 @@ const HospitalPayouts: React.FC = () => {
                     </Row>
                     <Button variant="secondary" size="sm" onClick={() => fetchPayouts(filters)}>
                         <FiRefreshCw className="me-2" />
-                        Refresh
+                        Làm mới
                     </Button>
                 </Card.Body>
             </Card>
@@ -193,7 +193,7 @@ const HospitalPayouts: React.FC = () => {
                     {loading ? (
                         <div className="text-center p-5">
                             <output className="spinner-border text-primary">
-                                <span className="visually-hidden">Loading...</span>
+                                <span className="visually-hidden">Đang tải...</span>
                             </output>
                         </div>
                     ) : (
@@ -201,20 +201,20 @@ const HospitalPayouts: React.FC = () => {
                             <Table responsive hover>
                                 <thead>
                                     <tr>
-                                        <th>Hospital</th>
-                                        <th>Period</th>
-                                        <th>Amount</th>
-                                        <th>Appointments</th>
-                                        <th>Status</th>
-                                        <th>Generated Date</th>
-                                        <th>Actions</th>
+                                        <th>Bệnh viện</th>
+                                        <th>Kỳ thanh toán</th>
+                                        <th>Số tiền</th>
+                                        <th>Số lượt khám</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {!payouts || payouts.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="text-center py-4">
-                                                No payouts found
+                                                Không tìm thấy thanh toán nào
                                             </td>
                                         </tr>
                                     ) : (
@@ -240,7 +240,7 @@ const HospitalPayouts: React.FC = () => {
                                                             setSelectedPayoutId(payout.id)
                                                         }
                                                     >
-                                                        View Details
+                                                        Xem chi tiết
                                                     </Button>
                                                     {payout.status === PayoutStatus.PENDING && (
                                                         <Button
@@ -250,7 +250,7 @@ const HospitalPayouts: React.FC = () => {
                                                                 handleMarkCompleted(payout.id)
                                                             }
                                                         >
-                                                            Mark Paid
+                                                            Đánh dấu đã thanh toán
                                                         </Button>
                                                     )}
                                                 </td>
@@ -263,16 +263,16 @@ const HospitalPayouts: React.FC = () => {
                             {totalCount > (filters.pageSize || 10) && (
                                 <div className="d-flex justify-content-between align-items-center mt-3">
                                     <div>
-                                        Showing{' '}
+                                        Hiển thị{' '}
                                         {((filters.pageNumber || 1) - 1) *
                                             (filters.pageSize || 10) +
                                             1}{' '}
-                                        to{' '}
+                                        đến{' '}
                                         {Math.min(
                                             (filters.pageNumber || 1) * (filters.pageSize || 10),
                                             totalCount
                                         )}{' '}
-                                        of {totalCount} entries
+                                        trong tổng số {totalCount} bản ghi
                                     </div>
                                     <div className="btn-group">
                                         <Button
@@ -283,7 +283,7 @@ const HospitalPayouts: React.FC = () => {
                                                 handlePageChange((filters.pageNumber || 1) - 1)
                                             }
                                         >
-                                            Previous
+                                            Trước
                                         </Button>
                                         <Button
                                             variant="outline-primary"
@@ -297,7 +297,7 @@ const HospitalPayouts: React.FC = () => {
                                                 handlePageChange((filters.pageNumber || 1) + 1)
                                             }
                                         >
-                                            Next
+                                            Sau
                                         </Button>
                                     </div>
                                 </div>
