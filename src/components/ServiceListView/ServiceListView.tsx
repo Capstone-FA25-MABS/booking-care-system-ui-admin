@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalDelete from '@/components/ModalDelete';
@@ -410,16 +409,6 @@ const ServiceListView: React.FC<ServiceListViewProps> = ({
                         onPageChange={handlePageChange}
                     />
                 )}
-
-                <div className="footer text-center bg-white p-2 border-top">
-                    <p className="text-dark mb-0">
-                        2025 &copy;{' '}
-                        <Link to="/" className="link-primary">
-                            Preclinic
-                        </Link>
-                        , Tất cả quyền được bảo lưu
-                    </p>
-                </div>
             </div>
 
             {/* Filter Modal */}
