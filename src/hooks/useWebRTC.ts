@@ -1096,28 +1096,44 @@ export const useWebRTC = (
      */
     const handleReceiveIceCandidate = useCallback(async (data: ICECandidateData) => {
         try {
-            console.log('[WebRTC] Received ICE candidate from:', data.senderId);
+            console.log('[WebRTC] 🧊 Received ICE candidate from:', data.senderId);
+            console.log('[WebRTC] 🧊 Candidate data:', {
+                type: data.candidate?.candidate?.split(' ')[7], // Extract candidate type from SDP
+                protocol: data.candidate?.candidate?.split(' ')[2],
+                address: data.candidate?.candidate?.split(' ')[4],
+            });
 
             const pc = peerConnectionRef.current;
             if (!pc) {
                 // ✅ Queue candidate even if no peer connection yet
                 console.log('[WebRTC] ⏳ No peer connection yet, queueing ICE candidate');
+                console.log('[WebRTC] 📊 Queue size:', iceCandidateQueueRef.current.length + 1);
                 iceCandidateQueueRef.current.push(data.candidate);
                 return;
             }
 
+            console.log('[WebRTC] 📊 PC state:', {
+                connectionState: pc.connectionState,
+                iceConnectionState: pc.iceConnectionState,
+                signalingState: pc.signalingState,
+                hasRemoteDescription: !!pc.remoteDescription,
+            });
+
             // If remote description is not set yet, queue the candidate
             if (!pc.remoteDescription) {
                 console.log('[WebRTC] ⏳ Queueing ICE candidate (no remote description yet)');
+                console.log('[WebRTC] 📊 Queue size:', iceCandidateQueueRef.current.length + 1);
                 iceCandidateQueueRef.current.push(data.candidate);
                 return;
             }
 
             // Add ICE candidate
             await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-            console.log('[WebRTC] ✅ Added ICE candidate');
+            console.log('[WebRTC] ✅ Added ICE candidate successfully');
+            console.log('[WebRTC] 📊 ICE connection state after add:', pc.iceConnectionState);
         } catch (error) {
             console.error('[WebRTC] ❌ Error adding ICE candidate:', error);
+            console.error('[WebRTC] ❌ Candidate that failed:', data.candidate);
         }
     }, []);
 
