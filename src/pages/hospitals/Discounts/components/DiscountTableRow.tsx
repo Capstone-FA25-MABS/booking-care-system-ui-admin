@@ -35,7 +35,9 @@ const DiscountTableRow: React.FC<DiscountTableRowProps> = ({
     };
 
     const getToggleIcon = () => {
-        return discount.status === DiscountStatus.ACTIVE ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+        return discount.status === DiscountStatus.ACTIVE
+            ? 'ti ti-toggle-right'
+            : 'ti ti-toggle-left';
     };
 
     const getToggleTitle = () => {
@@ -51,9 +53,7 @@ const DiscountTableRow: React.FC<DiscountTableRowProps> = ({
     return (
         <tr>
             <td>
-                <div className={styles.codeCell}>
-                    <span className={styles.codeTag}>{discount.code}</span>
-                </div>
+                <span className={styles.codeTag}>{discount.code}</span>
             </td>
             <td>
                 <div className={styles.nameCell}>
@@ -104,13 +104,15 @@ const DiscountTableRow: React.FC<DiscountTableRowProps> = ({
                         onClick={() => onEdit(discount)}
                         className={styles.editBtn}
                         title="Chỉnh sửa"
+                        type="button"
                     >
-                        <i className="fas fa-edit"></i>
+                        <i className="ti ti-edit"></i>
                     </button>
                     <button
                         onClick={() => onToggleStatus(discount)}
                         className={getToggleClassName()}
                         title={getToggleTitle()}
+                        type="button"
                     >
                         <i className={getToggleIcon()}></i>
                     </button>
@@ -118,8 +120,9 @@ const DiscountTableRow: React.FC<DiscountTableRowProps> = ({
                         onClick={() => onDelete(discount.id)}
                         className={styles.deleteBtn}
                         title="Xóa"
+                        type="button"
                     >
-                        <i className="fas fa-trash"></i>
+                        <i className="ti ti-trash"></i>
                     </button>
                 </div>
             </td>
