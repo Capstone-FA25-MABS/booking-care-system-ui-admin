@@ -19,7 +19,7 @@ const DiscountFilters: React.FC<DiscountFiltersProps> = ({
     return (
         <div className={styles.filtersCard}>
             <div className={styles.searchWrapper}>
-                <i className="fas fa-search"></i>
+                <i className="ti ti-search"></i>
                 <input
                     type="text"
                     placeholder="Tìm kiếm theo mã hoặc tên..."
@@ -29,7 +29,7 @@ const DiscountFilters: React.FC<DiscountFiltersProps> = ({
                 />
             </div>
             <div className={styles.filterWrapper}>
-                <i className="fas fa-filter"></i>
+                <i className="ti ti-filter"></i>
                 <select
                     value={statusFilter}
                     onChange={(e) => onStatusFilterChange(e.target.value as DiscountStatus | '')}

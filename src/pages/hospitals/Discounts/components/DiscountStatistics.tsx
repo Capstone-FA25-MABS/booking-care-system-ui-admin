@@ -15,8 +15,8 @@ const DiscountStatistics: React.FC<DiscountStatisticsProps> = ({ statistics }) =
     return (
         <div className={styles.statsGrid}>
             <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>
-                    <i className="fas fa-ticket-alt" style={{ color: '#3498db' }}></i>
+                <div className={styles.statIcon} style={{ background: '#eff6ff' }}>
+                    <i className="ti ti-ticket" style={{ color: '#3b82f6' }}></i>
                 </div>
                 <div className={styles.statContent}>
                     <div className={styles.statLabel}>Tổng Mã Giảm Giá</div>
@@ -25,8 +25,8 @@ const DiscountStatistics: React.FC<DiscountStatisticsProps> = ({ statistics }) =
             </div>
 
             <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>
-                    <i className="fas fa-check-circle" style={{ color: '#4caf50' }}></i>
+                <div className={styles.statIcon} style={{ background: '#d1fae5' }}>
+                    <i className="ti ti-circle-check" style={{ color: '#059669' }}></i>
                 </div>
                 <div className={styles.statContent}>
                     <div className={styles.statLabel}>Đang Hoạt Động</div>
@@ -35,8 +35,8 @@ const DiscountStatistics: React.FC<DiscountStatisticsProps> = ({ statistics }) =
             </div>
 
             <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#ffebee' }}>
-                    <i className="fas fa-times-circle" style={{ color: '#f44336' }}></i>
+                <div className={styles.statIcon} style={{ background: '#fee2e2' }}>
+                    <i className="ti ti-circle-x" style={{ color: '#dc2626' }}></i>
                 </div>
                 <div className={styles.statContent}>
                     <div className={styles.statLabel}>Hết Hạn</div>
@@ -45,8 +45,8 @@ const DiscountStatistics: React.FC<DiscountStatisticsProps> = ({ statistics }) =
             </div>
 
             <div className={styles.statCard}>
-                <div className={styles.statIcon} style={{ background: '#fff3e0' }}>
-                    <i className="fas fa-chart-line" style={{ color: '#ff9800' }}></i>
+                <div className={styles.statIcon} style={{ background: '#fef3c7' }}>
+                    <i className="ti ti-chart-line" style={{ color: '#d97706' }}></i>
                 </div>
                 <div className={styles.statContent}>
                     <div className={styles.statLabel}>Lượt Sử Dụng</div>

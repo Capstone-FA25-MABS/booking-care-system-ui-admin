@@ -13,6 +13,8 @@ import { DiscountStatus, DiscountType } from '@/enums/discount.enums';
 import { toast } from 'react-toastify';
 import BaseModal from '@/components/Modal/BaseModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
+import Button from '@/components/Button';
+import Pagination from '@/components/Pagination';
 import DiscountStatistics from './components/DiscountStatistics';
 import DiscountFilters from './components/DiscountFilters';
 import DiscountTableRow from './components/DiscountTableRow';
@@ -236,26 +238,26 @@ const HospitalDiscountManagement: React.FC = () => {
     };
 
     const getStatusBadge = (status: DiscountStatus) => {
-        const statusClasses = {
-            [DiscountStatus.ACTIVE]: styles.statusActive,
-            [DiscountStatus.INACTIVE]: styles.statusInactive,
-            [DiscountStatus.EXPIRED]: styles.statusExpired,
+        const statusVariants: Record<DiscountStatus, string> = {
+            [DiscountStatus.ACTIVE]: 'badge-soft-success',
+            [DiscountStatus.INACTIVE]: 'badge-soft-warning',
+            [DiscountStatus.EXPIRED]: 'badge-soft-danger',
         };
 
-        return (
-            <span className={`${styles.statusBadge} ${statusClasses[status]}`}>
-                {getStatusText(status)}
-            </span>
-        );
+        return <span className={`badge ${statusVariants[status]}`}>{getStatusText(status)}</span>;
     };
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
     if (!hospitalProfile) {
         return (
-            <div className={styles.container}>
-                <div className={styles.error}>
-                    <i className="fas fa-exclamation-circle"></i>
+            <div className="content">
+                <div className="alert alert-danger d-flex align-items-center gap-2">
+                    <i className="ti ti-alert-circle fs-4"></i>
                     <span>Không tìm thấy hồ sơ bệnh viện</span>
                 </div>
             </div>
@@ -263,157 +265,105 @@ const HospitalDiscountManagement: React.FC = () => {
     }
 
     return (
-        <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerContent}>
-                    <div className={styles.headerIcon}>
-                        <i className="fas fa-tags"></i>
+        <>
+            <div className="content">
+                {/* Page Header */}
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-semibold mb-0">Quản lý mã giảm giá</h4>
+                        <p className="text-muted mb-0 mt-1">
+                            Quản lý và theo dõi các mã giảm giá của bệnh viện
+                        </p>
                     </div>
-                    <div>
-                        <h1>Quản lý mã giảm giá</h1>
-                        <p>Quản lý và theo dõi các mã giảm giá của bệnh viện</p>
+                    <div className="text-end d-flex gap-2">
+                        <Button
+                            variant="primary"
+                            size="md"
+                            onClick={openCreateModal}
+                            icon="ti ti-plus"
+                        >
+                            Tạo Mã Giảm Giá
+                        </Button>
                     </div>
                 </div>
-                <button className={styles.createBtn} onClick={openCreateModal}>
-                    <i className="fas fa-plus-circle"></i>
-                    <span>Tạo Mã Giảm Giá</span>
-                </button>
+
+                {/* Statistics Cards */}
+                <DiscountStatistics statistics={statistics} />
+
+                {/* Filters */}
+                <DiscountFilters
+                    searchTerm={searchTerm}
+                    statusFilter={statusFilter}
+                    onSearchChange={setSearchTerm}
+                    onStatusFilterChange={(value) => setStatusFilter(value)}
+                />
+
+                {/* Discount Table */}
+                <div className="table-responsive">
+                    <table className="table datatable table-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Mã Code</th>
+                                <th>Tên Mã</th>
+                                <th>Loại</th>
+                                <th>Giá Trị</th>
+                                <th>Sử Dụng</th>
+                                <th>Thời Gian</th>
+                                <th>Trạng Thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, index) => (
+                                    <tr key={`skeleton-${index}`}>
+                                        {Array.from({ length: 8 }).map((_, colIndex) => (
+                                            <td key={`skeleton-col-${colIndex}`}>
+                                                <div className={styles.skeleton}></div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : discounts.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className="text-center py-5">
+                                        <i className="ti ti-discount-off fs-1 text-muted"></i>
+                                        <p className="mt-2 text-muted">Không có mã giảm giá nào</p>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={openCreateModal}
+                                            icon="ti ti-plus"
+                                        >
+                                            Tạo mã giảm giá đầu tiên
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ) : (
+                                discounts.map((discount) => (
+                                    <DiscountTableRow
+                                        key={discount.id}
+                                        discount={discount}
+                                        onEdit={openEditModal}
+                                        onToggleStatus={handleToggleStatus}
+                                        onDelete={(id) => setDeletingDiscountId(id)}
+                                        formatDate={formatDate}
+                                        getDiscountTypeText={getDiscountTypeText}
+                                        getStatusBadge={getStatusBadge}
+                                    />
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Statistics Cards */}
-            <DiscountStatistics statistics={statistics} />
-
-            {/* Filters */}
-            <DiscountFilters
-                searchTerm={searchTerm}
-                statusFilter={statusFilter}
-                onSearchChange={setSearchTerm}
-                onStatusFilterChange={(value) => setStatusFilter(value)}
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
             />
-
-            {/* Discount List */}
-            {loading ? (
-                <div className={styles.loading}>
-                    <div className={styles.spinner}></div>
-                    <p>Đang tải dữ liệu...</p>
-                </div>
-            ) : (
-                <>
-                    <div className={styles.tableContainer}>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <i className="fas fa-barcode"></i> Mã Code
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-tag"></i> Tên Mã
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-percentage"></i> Loại
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-gift"></i> Giá Trị
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-chart-line"></i> Sử Dụng
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-calendar-alt"></i> Thời Gian
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-info-circle"></i> Trạng Thái
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-cog"></i> Hành Động
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {discounts.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={8} className={styles.noData}>
-                                            <div className={styles.noDataContent}>
-                                                <i className="fas fa-inbox"></i>
-                                                <p>Không có mã giảm giá nào</p>
-                                                <button
-                                                    onClick={openCreateModal}
-                                                    className={styles.noDataBtn}
-                                                >
-                                                    Tạo mã giảm giá đầu tiên
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    discounts.map((discount) => (
-                                        <DiscountTableRow
-                                            key={discount.id}
-                                            discount={discount}
-                                            onEdit={openEditModal}
-                                            onToggleStatus={handleToggleStatus}
-                                            onDelete={(id) => setDeletingDiscountId(id)}
-                                            formatDate={formatDate}
-                                            getDiscountTypeText={getDiscountTypeText}
-                                            getStatusBadge={getStatusBadge}
-                                        />
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className={styles.pagination}>
-                            <button
-                                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className={styles.pageBtn}
-                            >
-                                <i className="fas fa-chevron-left"></i>
-                                <span>Trước</span>
-                            </button>
-                            <div className={styles.pageNumbers}>
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    let pageNum;
-                                    if (totalPages <= 5) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage <= 3) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage >= totalPages - 2) {
-                                        pageNum = totalPages - 4 + i;
-                                    } else {
-                                        pageNum = currentPage - 2 + i;
-                                    }
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => setCurrentPage(pageNum)}
-                                            className={`${styles.pageNumber} ${
-                                                currentPage === pageNum ? styles.active : ''
-                                            }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <button
-                                onClick={() =>
-                                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                                }
-                                disabled={currentPage === totalPages}
-                                className={styles.pageBtn}
-                            >
-                                <span>Tiếp</span>
-                                <i className="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                    )}
-                </>
-            )}
 
             {/* Create/Edit Modal */}
             <BaseModal
@@ -434,7 +384,7 @@ const HospitalDiscountManagement: React.FC = () => {
                         <div className="row g-3">
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountCode">
-                                    <i className="fas fa-barcode me-2" aria-hidden="true"></i> Mã
+                                    <i className="ti ti-barcode me-2" aria-hidden="true"></i> Mã
                                     Code <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -456,7 +406,7 @@ const HospitalDiscountManagement: React.FC = () => {
                                 {editingDiscount && (
                                     <small className="text-muted d-block mt-1">
                                         <i
-                                            className="fas fa-info-circle me-1"
+                                            className="ti ti-info-circle me-1"
                                             aria-hidden="true"
                                         ></i>{' '}
                                         Mã Code không thể chỉnh sửa
@@ -465,7 +415,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountName">
-                                    <i className="fas fa-tag me-2" aria-hidden="true"></i> Tên Mã
+                                    <i className="ti ti-tag me-2" aria-hidden="true"></i> Tên Mã
                                     Giảm Giá <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -482,7 +432,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountType">
-                                    <i className="fas fa-percentage me-2" aria-hidden="true"></i>{' '}
+                                    <i className="ti ti-percentage me-2" aria-hidden="true"></i>{' '}
                                     Loại Giảm Giá
                                 </label>
                                 <select
@@ -504,7 +454,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountAmount">
-                                    <i className="fas fa-gift me-2" aria-hidden="true"></i> Giá Trị{' '}
+                                    <i className="ti ti-gift me-2" aria-hidden="true"></i> Giá Trị{' '}
                                     <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -539,8 +489,8 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountMaxUses">
-                                    <i className="fas fa-users me-2" aria-hidden="true"></i> Giới
-                                    Hạn Sử Dụng
+                                    <i className="ti ti-users me-2" aria-hidden="true"></i> Giới Hạn
+                                    Sử Dụng
                                 </label>
                                 <input
                                     id="discountMaxUses"
@@ -561,7 +511,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountStartDate">
-                                    <i className="fas fa-calendar-day me-2"></i> Ngày Bắt Đầu{' '}
+                                    <i className="ti ti-calendar me-2"></i> Ngày Bắt Đầu{' '}
                                     <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -577,7 +527,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label" htmlFor="discountEndDate">
-                                    <i className="fas fa-calendar-check me-2"></i> Ngày Kết Thúc{' '}
+                                    <i className="ti ti-calendar-event me-2"></i> Ngày Kết Thúc{' '}
                                     <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -594,7 +544,7 @@ const HospitalDiscountManagement: React.FC = () => {
                             </div>
                             <div className="col-12">
                                 <label className="form-label" htmlFor="discountDescription">
-                                    <i className="fas fa-align-left me-2" aria-hidden="true"></i> Mô
+                                    <i className="ti ti-align-left me-2" aria-hidden="true"></i> Mô
                                     Tả
                                 </label>
                                 <textarea
@@ -614,40 +564,25 @@ const HospitalDiscountManagement: React.FC = () => {
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <button
+                        <Button
                             type="button"
-                            className="btn btn-secondary"
+                            variant="light"
                             onClick={() => {
                                 setIsModalOpen(false);
                                 setEditingDiscount(null);
                             }}
                         >
-                            <i className="fas fa-times-circle me-2" aria-hidden="true"></i> Hủy Bỏ
-                        </button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {(() => {
-                                let iconClass;
-                                let buttonText;
-
-                                if (loading) {
-                                    iconClass = 'fas fa-spinner fa-spin me-2';
-                                    buttonText = 'Đang xử lý...';
-                                } else if (editingDiscount) {
-                                    iconClass = 'fas fa-save me-2';
-                                    buttonText = 'Cập Nhật';
-                                } else {
-                                    iconClass = 'fas fa-plus-circle me-2';
-                                    buttonText = 'Tạo Mã';
-                                }
-
-                                return (
-                                    <>
-                                        <i className={iconClass} aria-hidden="true"></i>{' '}
-                                        {buttonText}
-                                    </>
-                                );
-                            })()}
-                        </button>
+                            Hủy Bỏ
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={loading}
+                            loading={loading}
+                            icon={editingDiscount ? 'ti ti-device-floppy' : 'ti ti-plus'}
+                        >
+                            {editingDiscount ? 'Cập Nhật' : 'Tạo Mã'}
+                        </Button>
                     </div>
                 </form>
             </BaseModal>
@@ -667,7 +602,7 @@ const HospitalDiscountManagement: React.FC = () => {
                 cancelText="Hủy"
                 type="danger"
             />
-        </div>
+        </>
     );
 };
 
