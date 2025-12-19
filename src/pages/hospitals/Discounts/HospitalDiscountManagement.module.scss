@@ -1,10 +1,12 @@
 // src/pages/hospitals/Discounts/HospitalDiscountManagement.module.scss
-$primary-color: #2c7ab5;
+@use '../../../styles/variables' as *;
+
+$primary-gradient: linear-gradient(90.08deg, #0e82fd 0.09%, #06aed4 70.28%);
 
 .container {
     padding: 1.5rem;
     width: 100%;
-    background: #f8f9fa;
+    background: $background-color;
     min-height: 100vh;
 
     .error {
@@ -59,14 +61,14 @@ $primary-color: #2c7ab5;
         h1 {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: $text-primary-color;
             margin: 0;
             letter-spacing: -0.5px;
         }
 
         p {
             margin: 0.4rem 0 0 0;
-            color: #7f8c8d;
+            color: $text-secondary-color;
             font-size: 0.875rem;
         }
     }
@@ -142,7 +144,7 @@ $primary-color: #2c7ab5;
 
         .statLabel {
             font-size: 0.8125rem;
-            color: #7f8c8d;
+            color: $text-secondary-color;
             font-weight: 500;
             margin-bottom: 0.4rem;
         }
@@ -150,7 +152,7 @@ $primary-color: #2c7ab5;
         .statValue {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: $text-primary-color;
             line-height: 1;
         }
     }
@@ -179,7 +181,7 @@ $primary-color: #2c7ab5;
         left: 1rem;
         top: 50%;
         transform: translateY(-50%);
-        color: #7f8c8d;
+        color: $text-secondary-color;
         font-size: 0.95rem;
     }
 }
@@ -188,12 +190,12 @@ $primary-color: #2c7ab5;
 .filterSelect {
     width: 100%;
     padding: 0.8rem 1rem 0.8rem 2.75rem;
-    border: 2px solid #e9ecef;
+    border: 2px solid $border-primary-color;
     border-radius: 10px;
     font-size: 0.9rem;
     transition: all 0.3s;
-    background: #f8f9fa;
-    color: #2c3e50;
+    background: $background-color;
+    color: $text-primary-color;
     font-weight: 500;
 
     &:focus {
@@ -233,7 +235,7 @@ $primary-color: #2c7ab5;
             padding: 1rem 0.875rem;
             text-align: left;
             font-weight: 700;
-            color: #495057;
+            color: $text-secondary-color;
             font-size: 0.8125rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -261,7 +263,7 @@ $primary-color: #2c7ab5;
 
         td {
             padding: 1rem 0.875rem;
-            color: #495057;
+            color: $text-secondary-color;
             font-size: 0.9rem;
             vertical-align: middle;
         }
@@ -326,13 +328,13 @@ $primary-color: #2c7ab5;
 .nameCell {
     .name {
         font-weight: 600;
-        color: #2c3e50;
+        color: $text-primary-color;
         margin-bottom: 0.2rem;
     }
 
     .description {
         font-size: 0.8rem;
-        color: #7f8c8d;
+        color: $text-secondary-color;
         font-style: italic;
     }
 }
@@ -372,7 +374,7 @@ $primary-color: #2c7ab5;
 
     .usageText {
         font-size: 0.8125rem;
-        color: #495057;
+        color: $text-secondary-color;
         font-weight: 600;
         text-align: center;
     }
@@ -540,9 +542,9 @@ $primary-color: #2c7ab5;
         width: 38px;
         height: 38px;
         border-radius: 10px;
-        border: 2px solid #e9ecef;
+        border: 2px solid $border-primary-color;
         background: white;
-        color: #495057;
+        color: $text-secondary-color;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
@@ -670,24 +672,24 @@ $primary-color: #2c7ab5;
         h2 {
             margin: 0;
             font-size: 1.4rem;
-            color: #2c3e50;
+            color: $text-primary-color;
             font-weight: 700;
         }
 
         p {
             margin: 0.4rem 0 0 0;
-            color: #7f8c8d;
+            color: $text-secondary-color;
             font-size: 0.875rem;
         }
     }
 
     .closeBtn {
-        background: #f8f9fa;
+        background: $background-color;
         border: none;
         width: 38px;
         height: 38px;
         border-radius: 10px;
-        color: #495057;
+        color: $text-secondary-color;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -696,7 +698,7 @@ $primary-color: #2c7ab5;
         font-size: 1.2rem;
 
         &:hover {
-            background: #e9ecef;
+            background: $border-primary-color;
             color: #c82333;
             transform: rotate(90deg);
         }
@@ -721,7 +723,7 @@ $primary-color: #2c7ab5;
 
     label {
         font-weight: 600;
-        color: #495057;
+        color: $text-secondary-color;
         font-size: 0.9rem;
         display: flex;
         align-items: center;
@@ -742,12 +744,12 @@ $primary-color: #2c7ab5;
     select,
     textarea {
         padding: 0.8rem 0.95rem;
-        border: 2px solid #e9ecef;
+        border: 2px solid $border-primary-color;
         border-radius: 10px;
         font-size: 0.9rem;
         transition: all 0.3s;
-        background: #f8f9fa;
-        color: #2c3e50;
+        background: $background-color;
+        color: $text-primary-color;
         font-weight: 500;
 
         &:focus {
@@ -804,11 +806,11 @@ $primary-color: #2c7ab5;
     }
 
     .cancelBtn {
-        background: #f8f9fa;
-        color: #495057;
+        background: $background-color;
+        color: $text-secondary-color;
 
         &:hover:not(:disabled) {
-            background: #e9ecef;
+            background: $border-primary-color;
         }
     }
 

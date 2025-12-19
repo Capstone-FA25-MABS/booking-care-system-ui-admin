@@ -271,7 +271,7 @@ const HospitalDiscountManagement: React.FC = () => {
                         <i className="fas fa-tags"></i>
                     </div>
                     <div>
-                        <h1>Quản Lý Mã Giảm Giá</h1>
+                        <h1>Quản lý mã giảm giá</h1>
                         <p>Quản lý và theo dõi các mã giảm giá của bệnh viện</p>
                     </div>
                 </div>
