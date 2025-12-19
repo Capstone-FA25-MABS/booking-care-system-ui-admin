@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
@@ -19,6 +20,7 @@ const serviceCategoryTableColumns = [
 ];
 
 const ListServiceCategories: React.FC = () => {
+    const navigate = useNavigate();
     const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -371,11 +373,9 @@ const ListServiceCategories: React.FC = () => {
                             size="md"
                             className="ms-2 fs-13"
                             icon="ti ti-plus"
-                            onClick={() =>
-                                (globalThis.location.href = '/admin/service-categories/add')
-                            }
+                            onClick={() => navigate('/admin/service-categories/add')}
                         >
-                            Thêm Danh Mục Dịch Vụ
+                            Thêm danh mục dịch vụ
                         </Button>
                     </div>
                 </div>
@@ -439,16 +439,6 @@ const ListServiceCategories: React.FC = () => {
                         onPageChange={handlePageChange}
                     />
                 )}
-
-                <div className="footer text-center bg-white p-2 border-top">
-                    <p className="text-dark mb-0">
-                        2025 &copy;{' '}
-                        <a href="/" className="link-primary">
-                            Preclinic
-                        </a>
-                        {''}, Tất Cả Quyền Được Bảo Lưu
-                    </p>
-                </div>
             </div>
 
             {/* Delete Modal */}

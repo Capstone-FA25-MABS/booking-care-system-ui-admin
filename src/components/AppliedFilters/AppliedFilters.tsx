@@ -7,7 +7,7 @@ interface AppliedFiltersProps {
     onRemoveItem: (itemId: string) => void;
     onRemoveStatus: (status: string) => void;
     onClearAll: () => void;
-    styles: {
+    styles?: {
         appliedFiltersContainer: string;
         appliedFiltersLabel: string;
         filterBadgeClose: string;
@@ -24,13 +24,20 @@ const AppliedFilters: React.FC<AppliedFiltersProps> = ({
     onClearAll,
     styles,
 }) => {
+    const mergedStyles = {
+        appliedFiltersContainer: styles?.appliedFiltersContainer || '',
+        appliedFiltersLabel: styles?.appliedFiltersLabel || '',
+        filterBadgeClose: styles?.filterBadgeClose || '',
+        clearAllButton: styles?.clearAllButton || '',
+    };
+
     if (appliedItems.length === 0 && appliedStatuses.length === 0) {
         return null;
     }
 
     return (
-        <div className={styles.appliedFiltersContainer}>
-            <span className={styles.appliedFiltersLabel}>Bộ lọc đang áp dụng:</span>
+        <div className={mergedStyles.appliedFiltersContainer}>
+            <span className={mergedStyles.appliedFiltersLabel}>Bộ lọc đang áp dụng:</span>
             {appliedItems.map((itemId) => {
                 const item = items.find((i) => i.id === itemId);
                 return item ? (
@@ -38,7 +45,7 @@ const AppliedFilters: React.FC<AppliedFiltersProps> = ({
                         {item.name}
                         <button
                             type="button"
-                            className={`btn-close ms-1 ${styles.filterBadgeClose}`}
+                            className={`btn-close ms-1 ${mergedStyles.filterBadgeClose}`}
                             onClick={() => onRemoveItem(itemId)}
                             aria-label="Remove filter"
                         ></button>
@@ -50,7 +57,7 @@ const AppliedFilters: React.FC<AppliedFiltersProps> = ({
                     {status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
                     <button
                         type="button"
-                        className={`btn-close ms-1 ${styles.filterBadgeClose}`}
+                        className={`btn-close ms-1 ${mergedStyles.filterBadgeClose}`}
                         onClick={() => onRemoveStatus(status)}
                         aria-label="Remove filter"
                     ></button>
@@ -58,7 +65,7 @@ const AppliedFilters: React.FC<AppliedFiltersProps> = ({
             ))}
             <button
                 type="button"
-                className={`btn btn-sm btn-outline-secondary fs-12 ${styles.clearAllButton}`}
+                className={`btn btn-sm btn-outline-secondary fs-12 ${mergedStyles.clearAllButton}`}
                 onClick={onClearAll}
             >
                 Xóa tất cả
