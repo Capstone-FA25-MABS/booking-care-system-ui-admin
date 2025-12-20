@@ -15,35 +15,79 @@ import type {
 // WebRTC Configuration
 // IMPORTANT: TURN server is required for production to handle NAT/firewall traversal
 // Without TURN, ~30% of connections will fail (users behind symmetric NAT)
+
+// Get TURN server from env or use Metered.ca default
+const TURN_SERVER = import.meta.env.VITE_TURN_SERVER || 'global.relay.metered.ca';
+const TURN_USERNAME = import.meta.env.VITE_TURN_USERNAME || '';
+const TURN_CREDENTIAL = import.meta.env.VITE_TURN_CREDENTIAL || '';
+
+// ExpressTURN backup credentials
+const EXPRESS_TURN_SERVER = 'relay1.expressturn.com';
+const EXPRESS_TURN_PORT = 3480;
+const EXPRESS_TURN_USERNAME = '00000002081594158';
+const EXPRESS_TURN_CREDENTIAL = 'gKqRgvgmEMMDyAoYvRCgHmY/BjQ=';
+
+// Log TURN credentials for debugging (remove in production)
+console.log('[WebRTC] 🔧 TURN Config:', {
+    primary: TURN_SERVER,
+    backup: EXPRESS_TURN_SERVER,
+    username: TURN_USERNAME ? '✅ Set' : '❌ Missing',
+    credential: TURN_CREDENTIAL ? '✅ Set' : '❌ Missing',
+});
+
 const RTC_CONFIG: RTCConfiguration = {
     iceServers: [
-        // STUN server (Metered.ca)
+        // Metered.ca STUN server
         { urls: 'stun:stun.relay.metered.ca:80' },
 
-        // TURN servers (Metered.ca - required for NAT traversal)
+        // Google STUN servers (backup)
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+
+        // PRIMARY: Metered.ca TURN servers (only if credentials are set)
+        ...(TURN_USERNAME && TURN_CREDENTIAL
+            ? [
+                  {
+                      urls: `turn:${TURN_SERVER}:80`,
+                      username: TURN_USERNAME,
+                      credential: TURN_CREDENTIAL,
+                  },
+                  {
+                      urls: `turn:${TURN_SERVER}:80?transport=tcp`,
+                      username: TURN_USERNAME,
+                      credential: TURN_CREDENTIAL,
+                  },
+                  {
+                      urls: `turn:${TURN_SERVER}:443`,
+                      username: TURN_USERNAME,
+                      credential: TURN_CREDENTIAL,
+                  },
+                  {
+                      urls: `turns:${TURN_SERVER}:443?transport=tcp`,
+                      username: TURN_USERNAME,
+                      credential: TURN_CREDENTIAL,
+                  },
+              ]
+            : []),
+
+        // BACKUP: ExpressTURN servers (always included as fallback)
         {
-            urls: 'turn:global.relay.metered.ca:80',
-            username: import.meta.env.VITE_TURN_USERNAME || '',
-            credential: import.meta.env.VITE_TURN_CREDENTIAL || '',
+            urls: `turn:${EXPRESS_TURN_SERVER}:${EXPRESS_TURN_PORT}`,
+            username: EXPRESS_TURN_USERNAME,
+            credential: EXPRESS_TURN_CREDENTIAL,
         },
         {
-            urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-            username: import.meta.env.VITE_TURN_USERNAME || '',
-            credential: import.meta.env.VITE_TURN_CREDENTIAL || '',
-        },
-        {
-            urls: 'turn:global.relay.metered.ca:443',
-            username: import.meta.env.VITE_TURN_USERNAME || '',
-            credential: import.meta.env.VITE_TURN_CREDENTIAL || '',
-        },
-        {
-            urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-            username: import.meta.env.VITE_TURN_USERNAME || '',
-            credential: import.meta.env.VITE_TURN_CREDENTIAL || '',
+            urls: `turn:${EXPRESS_TURN_SERVER}:${EXPRESS_TURN_PORT}?transport=tcp`,
+            username: EXPRESS_TURN_USERNAME,
+            credential: EXPRESS_TURN_CREDENTIAL,
         },
     ],
     iceCandidatePoolSize: 10, // Pre-gather candidates for faster connection
 };
+
+// Validate RTC_CONFIG on load
+// console.log('[WebRTC] 🔧 RTC_CONFIG iceServers count:', RTC_CONFIG.iceServers.length);
+// console.log('[WebRTC] 🔧 RTC_CONFIG iceServers:', RTC_CONFIG.iceServers.map(s => s.urls));
 
 export type CallState =
     | 'idle'
