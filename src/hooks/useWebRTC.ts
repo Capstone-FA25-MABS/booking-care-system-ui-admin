@@ -22,7 +22,8 @@ const TURN_USERNAME = import.meta.env.VITE_TURN_USERNAME || '';
 const TURN_CREDENTIAL = import.meta.env.VITE_TURN_CREDENTIAL || '';
 
 // ExpressTURN backup credentials
-const EXPRESS_TURN_SERVER = 'relay1.expressturn.com:3480';
+const EXPRESS_TURN_SERVER = 'relay1.expressturn.com';
+const EXPRESS_TURN_PORT = 3480;
 const EXPRESS_TURN_USERNAME = '00000002081594158';
 const EXPRESS_TURN_CREDENTIAL = 'gKqRgvgmEMMDyAoYvRCgHmY/BjQ=';
 
@@ -43,7 +44,7 @@ const RTC_CONFIG: RTCConfiguration = {
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
 
-        // PRIMARY: Metered.ca TURN servers
+        // PRIMARY: Metered.ca TURN servers (only if credentials are set)
         ...(TURN_USERNAME && TURN_CREDENTIAL
             ? [
                   {
@@ -69,20 +70,24 @@ const RTC_CONFIG: RTCConfiguration = {
               ]
             : []),
 
-        // BACKUP: ExpressTURN servers
+        // BACKUP: ExpressTURN servers (always included as fallback)
         {
-            urls: `turn:${EXPRESS_TURN_SERVER}`,
+            urls: `turn:${EXPRESS_TURN_SERVER}:${EXPRESS_TURN_PORT}`,
             username: EXPRESS_TURN_USERNAME,
             credential: EXPRESS_TURN_CREDENTIAL,
         },
         {
-            urls: `turn:${EXPRESS_TURN_SERVER}?transport=tcp`,
+            urls: `turn:${EXPRESS_TURN_SERVER}:${EXPRESS_TURN_PORT}?transport=tcp`,
             username: EXPRESS_TURN_USERNAME,
             credential: EXPRESS_TURN_CREDENTIAL,
         },
     ],
     iceCandidatePoolSize: 10, // Pre-gather candidates for faster connection
 };
+
+// Validate RTC_CONFIG on load
+// console.log('[WebRTC] 🔧 RTC_CONFIG iceServers count:', RTC_CONFIG.iceServers.length);
+// console.log('[WebRTC] 🔧 RTC_CONFIG iceServers:', RTC_CONFIG.iceServers.map(s => s.urls));
 
 export type CallState =
     | 'idle'
