@@ -51,6 +51,12 @@ const AddServiceCategory: React.FC = () => {
 
             setIsLoading(true);
             try {
+                console.debug(
+                    '[AddServiceCategory] Fetching service category with id:',
+                    id,
+                    'currentPath:',
+                    window.location.href
+                );
                 const response = await getServiceCategoryById(id);
                 if (response.success && response.data) {
                     const category = response.data;

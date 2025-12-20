@@ -10,6 +10,8 @@ import { HospitalFaqResponse, HospitalFaqFilterRequest } from '@/types/hospitalF
 import { HospitalFaqService } from '@/services/hospitalFaq.service';
 import { HospitalService } from '@/services/hospital.service';
 import { PATHS, buildPath } from '@/routes/paths';
+import { useAppSelector } from '@/store/hooks';
+import { selectCurrentProfile } from '@/store/selectors/profile.selectors';
 import Select from 'react-select';
 import { selectCustomStyles } from '@/constants/select.styles';
 
@@ -54,6 +56,15 @@ const ListHospitalFaqs: React.FC = () => {
         return PATHS.ADMIN.ROOT;
     }, [location.pathname]);
 
+    const currentProfile = useAppSelector(selectCurrentProfile);
+
+    // If we're in hospital area, default filter to current hospital
+    useEffect(() => {
+        if (location.pathname.startsWith(PATHS.HOSPITAL.ROOT) && currentProfile?.hospitalId) {
+            setSelectedHospitalId(currentProfile.hospitalId);
+        }
+    }, [location.pathname, currentProfile?.hospitalId]);
+
     const buildFaqPath = useCallback(
         (suffix: string) => {
             const base = location.pathname.startsWith(PATHS.HOSPITAL.ROOT)
@@ -93,10 +104,15 @@ const ListHospitalFaqs: React.FC = () => {
             setError(null);
 
             try {
+                const isHospitalArea = location.pathname.startsWith(PATHS.HOSPITAL.ROOT);
                 const filter: HospitalFaqFilterRequest = {
                     pageNumber: page,
                     pageSize: itemsPerPage,
-                    hospitalId: selectedHospitalId,
+                    // If in hospital area, always use currentProfile.hospitalId
+                    hospitalId:
+                        isHospitalArea && currentProfile?.hospitalId
+                            ? currentProfile.hospitalId
+                            : selectedHospitalId,
                 };
 
                 const response = await HospitalFaqService.getFaqs(filter);
@@ -124,7 +140,7 @@ const ListHospitalFaqs: React.FC = () => {
         fetchHospitals();
         fetchFaqs(currentPage);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
+    }, [currentPage, currentProfile?.hospitalId, location.pathname]);
 
     // Refetch when hospital filter changes
     useEffect(() => {
@@ -205,12 +221,38 @@ const ListHospitalFaqs: React.FC = () => {
 
         return faqs.map((faq) => (
             <tr key={faq.id}>
-                <td>
+                <td style={{ maxWidth: '420px', width: '420px', verticalAlign: 'top' }}>
                     <div>
-                        <h6 className="mb-1 fs-14 fw-semibold">{faq.question}</h6>
-                        <p className="text-muted fs-13 mb-0" style={{ maxWidth: '400px' }}>
-                            {faq.answer.substring(0, 100)}
-                            {faq.answer.length > 100 ? '...' : ''}
+                        <h6
+                            className="mb-1 fs-14 fw-semibold"
+                            style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'normal',
+                                margin: 0,
+                            }}
+                        >
+                            {faq.question}
+                        </h6>
+                        <p
+                            className="text-muted fs-13 mb-0"
+                            style={{
+                                maxWidth: '400px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'normal',
+                                margin: 0,
+                            }}
+                        >
+                            {faq.answer}
                         </p>
                     </div>
                 </td>
@@ -278,21 +320,23 @@ const ListHospitalFaqs: React.FC = () => {
 
             {/* Hospital Filter */}
             <div className="row mb-3">
-                <div className="col-md-4">
-                    <label htmlFor="hospitalFilter" className="form-label">
-                        Lọc theo bệnh viện
-                    </label>
-                    <Select
-                        inputId="hospitalFilter"
-                        options={hospitalOptions}
-                        value={hospitalOptions.find((opt) => opt.value === selectedHospitalId)}
-                        onChange={(option) => setSelectedHospitalId(option?.value)}
-                        placeholder="Chọn bệnh viện..."
-                        isClearable
-                        isLoading={isLoadingHospitals}
-                        styles={selectCustomStyles}
-                    />
-                </div>
+                {!location.pathname.startsWith(PATHS.HOSPITAL.ROOT) && (
+                    <div className="col-md-4">
+                        <label htmlFor="hospitalFilter" className="form-label">
+                            Lọc theo bệnh viện
+                        </label>
+                        <Select
+                            inputId="hospitalFilter"
+                            options={hospitalOptions}
+                            value={hospitalOptions.find((opt) => opt.value === selectedHospitalId)}
+                            onChange={(option) => setSelectedHospitalId(option?.value)}
+                            placeholder="Chọn bệnh viện..."
+                            isClearable
+                            isLoading={isLoadingHospitals}
+                            styles={selectCustomStyles}
+                        />
+                    </div>
+                )}
             </div>
 
             <div className="table-responsive">
