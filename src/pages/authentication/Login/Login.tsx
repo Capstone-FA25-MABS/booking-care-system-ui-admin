@@ -8,7 +8,6 @@ import { AuthService } from '@/services/auth.service';
 import ExternalAuthButtons from '@/components/ExternalAuthButtons';
 import TwoFactorVerificationModal from '@/pages/authentication/TwoFactorAuthentication/Modal/TwoFactorVerificationModal';
 import Input from '@/components/Input';
-import { toast } from 'react-toastify';
 import { getRedirectPathByRole, getSecuritySettingsPath } from '@/utils/navigation';
 import { useAppDispatch } from '@/store/hooks';
 import { complete2FALoginAsync } from '@/store/slices/authSlice';
@@ -162,12 +161,6 @@ const Login: React.FC = () => {
             const rolesFromAuth = result?.roles || [];
             const shouldChangePassword = result?.mustChangePassword || false;
 
-            // Show success toast only if not redirecting to change password
-            // (toast for mustChangePassword will be shown in SecuritySettings)
-            if (!shouldChangePassword) {
-                toast.success('Đăng nhập thành công');
-            }
-
             handleSuccessRedirect(rolesFromAuth, shouldChangePassword);
         } catch (err) {
             console.error('Login failed:', err);
@@ -215,12 +208,6 @@ const Login: React.FC = () => {
                 await new Promise((resolve) => setTimeout(resolve, 200));
 
                 const shouldChangePassword = result.mustChangePassword || false;
-
-                // Show success toast only if not redirecting to change password
-                // (toast for mustChangePassword will be shown in SecuritySettings)
-                if (!shouldChangePassword) {
-                    toast.success('Đăng nhập thành công');
-                }
 
                 handleSuccessRedirect(result.roles, shouldChangePassword);
             } else {

@@ -32,7 +32,6 @@ export const useGoogleAuth = (
                 }
 
                 const roles = result?.roles || [];
-                toast.success('Đăng nhập thành công');
                 onSuccess?.(roles);
             } catch (error) {
                 console.error('Google authentication failed:', error);

@@ -17,64 +17,89 @@ import {
 } from './menu.items';
 import { Role } from '@/enums/common.enums';
 
+/**
+ * Hospital/Staff menu configuration
+ * Organized by business logic and UX priority
+ */
 export const listGroupMenuItemHospital: MenuConfig = [
     {
-        title: 'Danh mục chính',
+        title: 'Tổng quan',
         items: [
             createSimpleMenuItem(
                 'Bảng điều khiển',
                 'ti ti-layout-dashboard',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DASHBOARD)
             ),
-            createSimpleMenuItem(
-                'Quản lí chuyên khoa',
-                'ti ti-stethoscope',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SPECIALTIES.ROOT)
-            ),
-            createSimpleMenuItem(
-                'Quản lý dịch vụ bác sĩ',
-                'ti ti-medical-cross',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_TYPES.ROOT)
-            ),
-            createDoctorsMenuItem(),
-            createSimpleMenuItem(
-                'Quản lý dịch vụ bệnh viện',
-                'ti ti-building-hospital',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_MEDICALS.ROOT)
-            ),
-            createSimpleMenuItem(
-                'Quản lý dịch vụ y tế',
-                'ti ti-briefcase',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
-            ),
+            createNotificationsMenuItem('staff'),
+            createMessagesMenuItem('staff'),
+        ],
+    },
+    {
+        title: 'Lịch khám & Bệnh nhân',
+        items: [
             createAppointmentsMenuItem('staff'),
+            createSimpleMenuItem(
+                'Quản lý đánh giá',
+                'ti ti-star',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REVIEWS.ROOT)
+            ),
+        ],
+    },
+    {
+        title: 'Nhân sự & Chuyên môn',
+        items: [
+            createDoctorsMenuItem(),
             createSimpleMenuItem(
                 'Quản lý tài khoản',
                 'ti ti-users-group',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DOCTOR_MANAGEMENT.ROOT)
             ),
-            createHospitalSubscriptionPlansMenuItem(),
-            createMessagesMenuItem('staff'),
             createSimpleMenuItem(
-                'Hoàn tiền',
-                'ti ti-receipt-refund',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
+                'Quản lý chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SPECIALTIES.ROOT)
             ),
+        ],
+    },
+    {
+        title: 'Dịch vụ',
+        items: [
+            createSimpleMenuItem(
+                'Dịch vụ bệnh viện',
+                'ti ti-briefcase',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICES.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Loại dịch vụ bác sĩ',
+                'ti ti-medical-cross',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.SERVICE_TYPES.ROOT)
+            ),
+        ],
+    },
+    {
+        title: 'Tài chính',
+        items: [
             createSimpleMenuItem(
                 'Tài khoản ngân hàng',
                 'ti ti-credit-card',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.WALLET.ROOT)
             ),
             createSimpleMenuItem(
-                'Quản lý mã giảm giá',
+                'Hoàn tiền',
+                'ti ti-receipt-refund',
+                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REFUNDS.ROOT)
+            ),
+            createSimpleMenuItem(
+                'Mã giảm giá',
                 'ti ti-discount-2',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.DISCOUNTS.ROOT)
             ),
-            createSimpleMenuItem(
-                'Quản lý đánh giá',
-                'ti ti-star',
-                buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.REVIEWS.ROOT)
-            ),
+            createHospitalSubscriptionPlansMenuItem(),
+        ],
+    },
+    {
+        title: 'Nội dung',
+        items: [
             createSimpleMenuItem(
                 'Blog',
                 'ti ti-file-text',
@@ -85,7 +110,6 @@ export const listGroupMenuItemHospital: MenuConfig = [
                 'ti ti-help-circle',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.HOSPITAL_FAQS.ROOT)
             ),
-            createNotificationsMenuItem('staff'),
         ],
     },
     {
@@ -96,39 +120,40 @@ export const listGroupMenuItemHospital: MenuConfig = [
 
 /**
  * Doctor menu configuration
+ * Organized by business logic and UX priority
  */
 export const listGroupMenuItemDoctor: MenuConfig = [
     {
-        title: 'Danh mục chính',
+        title: 'Tổng quan',
         items: [
             createSimpleMenuItem(
                 'Bảng điều khiển',
                 'ti ti-layout-dashboard',
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.DASHBOARD)
             ),
+            createNotificationsMenuItem('doctor'),
+            createMessagesMenuItem('doctor'),
+        ],
+    },
+    {
+        title: 'Công việc',
+        items: [
             createAppointmentsMenuItem('doctor'),
             createSimpleMenuItem(
-                'Schedule',
-                'ti ti-calendar-time',
-                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.SCHEDULE)
+                'Đánh giá',
+                'ti ti-star',
+                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.REVIEWS.ROOT)
             ),
-            createSimpleMenuItem(
-                'Patients',
-                'ti ti-user-heart',
-                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.PATIENTS)
-            ),
+        ],
+    },
+    {
+        title: 'Nội dung',
+        items: [
             createSimpleMenuItem(
                 'Blog',
                 'ti ti-file-text',
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.BLOGS.ROOT)
             ),
-            createMessagesMenuItem('doctor'),
-            createSimpleMenuItem(
-                'Quản lý đánh giá',
-                'ti ti-star',
-                buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.REVIEWS.ROOT)
-            ),
-            createNotificationsMenuItem('doctor'),
         ],
     },
     {
@@ -139,17 +164,18 @@ export const listGroupMenuItemDoctor: MenuConfig = [
 
 /**
  * Admin menu configuration
+ * Organized by business logic and UX priority
  */
 export const listGroupMenuItemAdmin: MenuConfig = [
     {
-        title: 'Danh mục chính',
-        items: [createDashboardMenuItem()],
+        title: 'Tổng quan',
+        items: [createDashboardMenuItem(), createNotificationsMenuItem('admin')],
     },
     {
-        title: 'Quản lý',
+        title: 'Quản lý tài khoản',
         items: [
             {
-                label: 'Quản lý tài khoản',
+                label: 'Tài khoản người dùng',
                 icon: 'ti ti-users',
                 subItems: [
                     {
@@ -177,6 +203,16 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-building-hospital',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.HOSPITAL_REGISTRATIONS.ROOT)
             ),
+        ],
+    },
+    {
+        title: 'Danh mục hệ thống',
+        items: [
+            createSimpleMenuItem(
+                'Chuyên khoa',
+                'ti ti-stethoscope',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SPECIALTIES.ROOT)
+            ),
             createSimpleMenuItem(
                 'Học vị',
                 'ti ti-certificate',
@@ -187,16 +223,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-language',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.LANGUAGES.ROOT)
             ),
-            createSimpleMenuItem(
-                'Chuyên khoa',
-                'ti ti-stethoscope',
-                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SPECIALTIES.ROOT)
-            ),
-            createSimpleMenuItem(
-                'Loại dịch vụ cho bác sĩ',
-                'ti ti-medical-cross',
-                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_TYPES.ROOT)
-            ),
+        ],
+    },
+    {
+        title: 'Quản lý dịch vụ',
+        items: [
             createSimpleMenuItem(
                 'Danh mục dịch vụ',
                 'ti ti-folder',
@@ -208,10 +239,27 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICES.ROOT)
             ),
             createSimpleMenuItem(
+                'Loại dịch vụ bác sĩ',
+                'ti ti-medical-cross',
+                buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.SERVICE_TYPES.ROOT)
+            ),
+        ],
+    },
+    {
+        title: 'Tài chính',
+        items: [
+            createSimpleMenuItem(
                 'Phương thức thanh toán',
                 'ti ti-credit-card',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.PAYMENT_METHODS.ROOT)
             ),
+            createHospitalPayoutsMenuItem(),
+            createSubscriptionPlansMenuItem(),
+        ],
+    },
+    {
+        title: 'Nội dung',
+        items: [
             createSimpleMenuItem(
                 'Duyệt blog',
                 'ti ti-checkup-list',
@@ -222,15 +270,11 @@ export const listGroupMenuItemAdmin: MenuConfig = [
                 'ti ti-folders',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOG_CATEGORIES.ROOT)
             ),
-            createSubscriptionPlansMenuItem(),
-            createHospitalPayoutsMenuItem(),
-            createAdminSignatureMenuItem(),
-            createNotificationsMenuItem('admin'),
         ],
     },
     {
         title: 'Cài đặt',
-        items: [createAccountSettingsMenuItem()],
+        items: [createAccountSettingsMenuItem(), createAdminSignatureMenuItem()],
     },
 ];
 
@@ -248,7 +292,6 @@ export const getMenuItemsByRole = (role: Role | null): MenuConfig => {
         case Role.STAFF:
             return listGroupMenuItemHospital;
         default:
-            // Fallback to admin menu if role is not determined
             return listGroupMenuItemAdmin;
     }
 };

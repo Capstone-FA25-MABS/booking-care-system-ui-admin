@@ -114,7 +114,6 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
             await dispatch(logoutAsync()).unwrap();
             dispatch(clearAllUserProfiles()); // Clear all profiles
             dispatch(clearNotifications()); // Clear notifications
-            toast.success('Đăng xuất thành công');
             navigate('/login');
         } catch (error: any) {
             toast.error(error?.message || 'Đăng xuất thất bại');

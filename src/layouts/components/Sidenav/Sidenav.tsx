@@ -22,17 +22,17 @@ const Sidenav: React.FC<SidenavProps> = ({ listGroupMenuItem, handleClickCloseSi
                 <div>
                     {/* Logo Normal */}
                     <Link to={'/'} className="logo logo-normal">
-                        <img src={logo} alt="Logo" style={{ marginTop: '-8px' }} />
+                        <img src={logo} alt="Logo" style={{ marginTop: '-14px' }} />
                     </Link>
 
                     {/* Logo Small */}
                     <Link to={'/'} className="logo-small">
-                        <img src={logoSmall} alt="Logo" style={{ marginTop: '-4px' }} />
+                        <img src={logoSmall} alt="Logo" style={{ marginTop: '-6px' }} />
                     </Link>
 
                     {/* Logo Dark */}
                     <Link to={'/'} className="dark-logo">
-                        <img src={logo} alt="Logo" style={{ marginTop: '-8px' }} />
+                        <img src={logo} alt="Logo" style={{ marginTop: '-14px' }} />
                     </Link>
                 </div>
 
