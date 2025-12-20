@@ -119,7 +119,6 @@ export const useFacebookAuth = (
 
                             const roles = result?.roles || [];
                             setIsLoading(false);
-                            toast.success('Đăng nhập Facebook thành công!');
                             onSuccess?.(roles);
                         } catch (error) {
                             setIsLoading(false);
