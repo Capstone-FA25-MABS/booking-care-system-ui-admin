@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventClickArg, EventContentArg } from '@fullcalendar/core';
 import { AppointmentService } from '@/services/appointment.service';
-import { AppointmentStatus } from '@/enums/appointment.enums';
+import { AppointmentStatus, AppointmentTime, AppointmentType } from '@/enums/appointment.enums';
 import { format } from 'date-fns';
 import { AppointmentDetailsOffcanvas } from '@/components/AppointmentDetailsOffcanvas';
 import {
@@ -362,7 +362,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
                     // Transform grouped appointments to calendar events
                     const calendarEvents: CalendarEvent[] = [];
-                    const MAX_PATIENTS_PER_DAY = 4; // Giới hạn 4 bệnh nhân hiển thị
+                    const MAX_PATIENTS_PER_DAY = 2; // Giới hạn 2 bệnh nhân hiển thị để tránh tràn layout
 
                     groupedByDateAndPatient.forEach((dateGroup, dateKey) => {
                         const patientsArray = Array.from(dateGroup.entries());
@@ -408,19 +408,19 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                     appointmentData: {
                                         appointmentId: `more-${dateKey}`,
                                         appointmentDate: dateKey,
-                                        appointmentTime: '',
-                                        appointmentTimeId: '',
-                                        appointmentType: '',
+                                        appointmentTime: AppointmentTime.AT_08_00_08_30,
+                                        appointmentTimeId: AppointmentTime.AT_08_00_08_30,
+                                        appointmentType: AppointmentType.IN_PERSON,
                                         status: AppointmentStatus.CONFIRMED,
                                         patientInfo: null as any,
-                                        relativeInfo: null,
-                                        doctorInfo: null,
-                                        serviceInfo: null,
-                                        hospitalInfo: null,
+                                        relativeInfo: undefined,
+                                        doctorInfo: undefined,
+                                        serviceInfo: undefined,
+                                        hospitalInfo: undefined,
                                         reason: '',
-                                        result: null,
-                                        symptoms: null,
-                                        attachmentUrls: null,
+                                        result: undefined,
+                                        symptoms: undefined,
+                                        attachmentUrls: undefined,
                                     },
                                     isMoreEvent: true,
                                     remainingCount,

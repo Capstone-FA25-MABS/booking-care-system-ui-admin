@@ -39,13 +39,14 @@
     background-color: transparent !important;
     overflow: visible !important;
     padding: 0 !important;
-    margin: 2px !important;
+    margin: 0 !important;
     display: inline-block !important;
     z-index: 1;
     position: relative !important;
 
     &:hover {
         z-index: 9999 !important;
+        overflow: visible !important;
     }
 }
 
@@ -350,18 +351,60 @@
 // Make events more readable in month view
 .fc-daygrid-event {
     padding: 0 !important;
-    margin: 2px !important;
+    margin: 0 !important;
     white-space: normal;
     background: transparent !important;
     border: none !important;
     display: inline-block !important;
     vertical-align: top !important;
     position: relative !important;
+    width: auto !important;
+    max-width: none !important;
 
     .fc-event-main {
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    &:hover {
+        z-index: 9999 !important;
+        overflow: visible !important;
+    }
+}
+
+// Force relative positioning for all event harnesses
+.fc-daygrid-event-harness {
+    position: relative !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+
+    &:hover {
+        z-index: 9999 !important;
+        overflow: visible !important;
+    }
+}
+
+// Specifically target absolute positioned harnesses
+.fc-daygrid-event-harness-abs {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+
+    &:hover {
+        z-index: 9999 !important;
+        overflow: visible !important;
     }
 }
 
@@ -369,33 +412,54 @@
 .fc-daygrid-day-events {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
-    padding: 2px !important;
+    gap: 6px !important;
+    padding: 0 !important;
     overflow: visible !important;
-}
-
-.fc-daygrid-event-harness {
     position: relative !important;
-    display: inline-block !important;
-    margin: 0 !important;
-    overflow: visible !important;
-
-    &:hover {
-        z-index: 9999 !important;
-    }
+    min-height: 40px !important;
+    align-items: flex-start !important;
+    box-sizing: border-box !important;
 }
 
-// Ensure day cells don't clip tooltips
+// Ensure day cells contain their content but allow vertical expansion
 .fc-daygrid-day {
     overflow: visible !important;
+    position: relative !important;
+    min-height: 100px !important;
+    box-sizing: border-box !important;
 }
 
 .fc-daygrid-day-frame {
     overflow: visible !important;
+    padding: 8px !important;
+    position: relative !important;
+    min-height: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
 }
 
 .fc-daygrid-day-top {
     overflow: visible !important;
+    padding: 4px 8px !important;
+    margin-bottom: 8px !important;
+    position: relative !important;
+    z-index: 2 !important;
+    flex-shrink: 0 !important;
+}
+
+// Allow day cells to expand vertically
+.fc-daygrid-day-bg {
+    min-height: 100px !important;
+}
+
+// Ensure rows can expand to fit content
+.fc-daygrid-body tr {
+    height: auto !important;
+}
+
+.fc-daygrid-day-events {
+    flex: 1 !important;
 }
 
 // Day grid event dot (remove default dot)
@@ -523,6 +587,12 @@
         color: #3b82f6;
         font-weight: 600;
     }
+}
+
+// Day number styling - add padding to prevent overlap with avatars
+.fc-daygrid-day-number {
+    padding: 4px 6px !important;
+    margin-bottom: 2px !important;
 }
 
 // Weekend styling
