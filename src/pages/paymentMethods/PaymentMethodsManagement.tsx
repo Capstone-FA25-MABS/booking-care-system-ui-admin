@@ -7,6 +7,8 @@ import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
 import { paymentMethodTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 
+const TABLE_COLUMNS = ['STT', 'Tên', 'Mô tả', 'Hình ảnh', 'Trạng thái', 'Thao tác'];
+
 const PaymentMethodsManagement: React.FC = () => {
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,8 +32,8 @@ const PaymentMethodsManagement: React.FC = () => {
             } else {
                 setError('Không thể tải danh sách phương thức thanh toán');
             }
-        } catch (error) {
-            console.error('Error fetching payment methods:', error);
+        } catch (err) {
+            console.error('Error fetching payment methods:', err);
             setError('Có lỗi xảy ra khi tải danh sách phương thức thanh toán');
         } finally {
             setLoading(false);
@@ -68,8 +70,8 @@ const PaymentMethodsManagement: React.FC = () => {
             } else {
                 toast.error('Không thể thay đổi trạng thái phương thức thanh toán');
             }
-        } catch (error) {
-            console.error('Error toggling payment method status:', error);
+        } catch (err) {
+            console.error('Error toggling payment method status:', err);
             toast.error('Có lỗi xảy ra khi thay đổi trạng thái');
         } finally {
             setTogglingId(null);
@@ -92,57 +94,111 @@ const PaymentMethodsManagement: React.FC = () => {
         return status === 'ACTIVE' ? 'outline-danger' : 'outline-success';
     };
 
-    if (loading) {
-        return (
-            <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                    <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">Danh sách phương thức thanh toán</h4>
-                    </div>
-                </div>
+    const renderTableBody = () => {
+        if (loading) {
+            return <TableSkeleton rows={5} columns={paymentMethodTableColumns} />;
+        }
 
-                <div className="table-responsive">
-                    <div className="bg-white rounded-3 shadow-sm border">
-                        <Table className="table table-centered mb-0">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Tên</th>
-                                    <th>Mô tả</th>
-                                    <th>Hình ảnh</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <TableSkeleton rows={5} columns={paymentMethodTableColumns} />
-                            </tbody>
-                        </Table>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+        if (error) {
+            return (
+                <tr>
+                    <td colSpan={6}>
+                        <Alert variant="danger" className="mb-0 m-3">
+                            <Alert.Heading>Lỗi!</Alert.Heading>
+                            <p>{error}</p>
+                            <Button variant="outline-danger" onClick={fetchPaymentMethods}>
+                                Thử lại
+                            </Button>
+                        </Alert>
+                    </td>
+                </tr>
+            );
+        }
 
-    if (error) {
-        return (
-            <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                    <div className="flex-grow-1">
-                        <h4 className="fw-bold mb-0">Danh sách phương thức thanh toán</h4>
-                    </div>
-                </div>
+        if (paymentMethods.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={6}>
+                        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                            <div
+                                className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
+                                style={{ width: '80px', height: '80px' }}
+                            >
+                                <i
+                                    className="ti ti-credit-card-off text-muted"
+                                    style={{ fontSize: '2rem' }}
+                                ></i>
+                            </div>
+                            <h5 className="text-muted mb-2">Chưa có phương thức thanh toán nào</h5>
+                            <p className="text-muted mb-0 small">
+                                Các phương thức thanh toán sẽ được hiển thị tại đây
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
 
-                <Alert variant="danger">
-                    <Alert.Heading>Lỗi!</Alert.Heading>
-                    <p>{error}</p>
-                    <Button variant="outline-danger" onClick={fetchPaymentMethods}>
-                        Thử lại
+        return paymentMethods.map((paymentMethod, index) => (
+            <tr key={paymentMethod.id}>
+                <td>{index + 1}</td>
+                <td>
+                    <span className="fw-semibold">{paymentMethod.name}</span>
+                </td>
+                <td>{paymentMethod.description}</td>
+                <td>
+                    {paymentMethod.imageUrl ? (
+                        <img
+                            src={paymentMethod.imageUrl}
+                            alt={paymentMethod.name}
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                objectFit: 'contain',
+                            }}
+                            className="rounded"
+                        />
+                    ) : (
+                        <div
+                            className="bg-light rounded d-flex align-items-center justify-content-center"
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                            }}
+                        >
+                            <i className="ti ti-credit-card text-muted"></i>
+                        </div>
+                    )}
+                </td>
+                <td>
+                    <StatusBadge
+                        status={paymentMethod.status}
+                        variant={getStatusVariant(paymentMethod.status)}
+                        customText={getStatusText(paymentMethod.status)}
+                    />
+                </td>
+                <td>
+                    <Button
+                        variant={getToggleButtonVariant(paymentMethod.status)}
+                        size="sm"
+                        onClick={() => handleToggleStatus(paymentMethod)}
+                        disabled={togglingId === paymentMethod.id}
+                    >
+                        {togglingId === paymentMethod.id ? (
+                            <Spinner size="sm" animation="border" />
+                        ) : (
+                            <>
+                                <i
+                                    className={`ti ti-${paymentMethod.status === 'ACTIVE' ? 'toggle-right' : 'toggle-left'}`}
+                                ></i>{' '}
+                                {getToggleButtonText(paymentMethod.status)}
+                            </>
+                        )}
                     </Button>
-                </Alert>
-            </div>
-        );
-    }
+                </td>
+            </tr>
+        ));
+    };
 
     return (
         <div className="content">
@@ -157,103 +213,12 @@ const PaymentMethodsManagement: React.FC = () => {
                     <Table className="table table-centered mb-0">
                         <thead className="table-light">
                             <tr>
-                                <th>STT</th>
-                                <th>Tên</th>
-                                <th>Mô tả</th>
-                                <th>Hình ảnh</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
+                                {TABLE_COLUMNS.map((column) => (
+                                    <th key={column}>{column}</th>
+                                ))}
                             </tr>
                         </thead>
-                        <tbody>
-                            {paymentMethods.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6}>
-                                        <div className="d-flex flex-column align-items-center justify-content-center py-5">
-                                            <div
-                                                className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
-                                                style={{ width: '80px', height: '80px' }}
-                                            >
-                                                <i
-                                                    className="ti ti-credit-card-off text-muted"
-                                                    style={{ fontSize: '2rem' }}
-                                                ></i>
-                                            </div>
-                                            <h5 className="text-muted mb-2">
-                                                Chưa có phương thức thanh toán nào
-                                            </h5>
-                                            <p className="text-muted mb-0 small">
-                                                Các phương thức thanh toán sẽ được hiển thị tại đây
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                paymentMethods.map((paymentMethod, index) => (
-                                    <tr key={paymentMethod.id}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <span className="fw-semibold">
-                                                {paymentMethod.name}
-                                            </span>
-                                        </td>
-                                        <td>{paymentMethod.description}</td>
-                                        <td>
-                                            {paymentMethod.imageUrl ? (
-                                                <img
-                                                    src={paymentMethod.imageUrl}
-                                                    alt={paymentMethod.name}
-                                                    style={{
-                                                        width: '40px',
-                                                        height: '40px',
-                                                        objectFit: 'contain',
-                                                    }}
-                                                    className="rounded"
-                                                />
-                                            ) : (
-                                                <div
-                                                    className="bg-light rounded d-flex align-items-center justify-content-center"
-                                                    style={{
-                                                        width: '40px',
-                                                        height: '40px',
-                                                    }}
-                                                >
-                                                    <i className="ti ti-credit-card text-muted"></i>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <StatusBadge
-                                                status={paymentMethod.status}
-                                                variant={getStatusVariant(paymentMethod.status)}
-                                                customText={getStatusText(paymentMethod.status)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <Button
-                                                variant={getToggleButtonVariant(
-                                                    paymentMethod.status
-                                                )}
-                                                size="sm"
-                                                onClick={() => handleToggleStatus(paymentMethod)}
-                                                disabled={togglingId === paymentMethod.id}
-                                            >
-                                                {togglingId === paymentMethod.id ? (
-                                                    <Spinner size="sm" animation="border" />
-                                                ) : (
-                                                    <>
-                                                        <i
-                                                            className={`ti ti-${paymentMethod.status === 'ACTIVE' ? 'toggle-right' : 'toggle-left'}`}
-                                                        ></i>{' '}
-                                                        {getToggleButtonText(paymentMethod.status)}
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
+                        <tbody>{renderTableBody()}</tbody>
                     </Table>
                 </div>
             </div>
