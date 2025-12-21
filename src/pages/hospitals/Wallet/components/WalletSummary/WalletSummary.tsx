@@ -1,8 +1,9 @@
 import React from 'react';
-import clsx from 'clsx';
+import { Button } from 'react-bootstrap';
+import { FiPlus, FiList } from 'react-icons/fi';
 
 import { BankAccount } from '@/types/wallet.types';
-import styles from '../../Wallet.module.scss';
+import styles from './WalletSummary.module.scss';
 
 interface WalletSummaryProps {
     defaultAccount: BankAccount | null;
@@ -23,80 +24,80 @@ const WalletSummary: React.FC<WalletSummaryProps> = ({
 }) => {
     const hasCardDetails = defaultAccount !== null;
 
+    const getValue = (value: string | undefined | null, fallback = 'Chưa được thêm') => {
+        if (loading) return { text: 'Đang tải...', isPlaceholder: true };
+        const hasValue = value !== null && value !== undefined && value !== '';
+        return { text: hasValue ? value : fallback, isPlaceholder: !hasValue };
+    };
+
+    const renderValue = (value: string | undefined | null) => {
+        const { text, isPlaceholder } = getValue(value);
+        return (
+            <span className={`${styles.value} ${isPlaceholder ? styles.placeholder : ''}`}>
+                {text}
+            </span>
+        );
+    };
+
     return (
-        <div className={clsx(styles.accountDetailsBox, 'card')}>
-            <div className="card-body">
-                <div className="row">
-                    <div className="col-lg-8">
-                        <div className={clsx(styles.bankDetailsInfo)}>
-                            <h4 className="mb-3">Tài khoản ngân hàng</h4>
-                            <ul className="list-unstyled">
-                                <li className="mb-2">
-                                    <h6 className="d-inline">Tên chủ tài khoản:</h6>
-                                    <h5 className="d-inline ms-2">
-                                        {(() => {
-                                            if (loading) return 'Đang tải...';
-                                            return hasCardDetails
-                                                ? defaultAccount.accountName
-                                                : 'Chưa được thêm';
-                                        })()}
-                                    </h5>
-                                </li>
-                                <li className="mb-2">
-                                    <h6 className="d-inline">Số tài khoản:</h6>
-                                    <h5 className="d-inline ms-2">
-                                        {(() => {
-                                            if (loading) return 'Đang tải...';
-                                            return hasCardDetails
-                                                ? defaultAccount.accountNumber
-                                                : 'Chưa được thêm';
-                                        })()}
-                                    </h5>
-                                </li>
-                                <li className="mb-2">
-                                    <h6 className="d-inline">Tên ngân hàng:</h6>
-                                    <h5 className="d-inline ms-2">
-                                        {(() => {
-                                            if (loading) return 'Đang tải...';
-                                            return hasCardDetails
-                                                ? defaultAccount.bankName
-                                                : 'Chưa được thêm';
-                                        })()}
-                                    </h5>
-                                </li>
-                                <li className="mb-2">
-                                    <h6 className="d-inline">Mã ngân hàng:</h6>
-                                    <h5 className="d-inline ms-2">
-                                        {(() => {
-                                            if (loading) return 'Đang tải...';
-                                            if (hasCardDetails && defaultAccount.bankCode)
-                                                return defaultAccount.bankCode;
-                                            return 'Chưa được thêm';
-                                        })()}
-                                    </h5>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className={clsx(styles.cardButton, 'mt-3')}>
-                            <div className="d-flex align-items-center">
-                                <div className={styles.buttonGroup}>
-                                    {hasCardDetails && (
-                                        <button className="btn btn-link" onClick={onEditDetails}>
-                                            Chỉnh sửa chi tiết
-                                        </button>
-                                    )}
-                                    <button className="btn btn-link" onClick={onAddCard}>
-                                        Thêm tài khoản ngân hàng
-                                    </button>
-                                </div>
-                                <button className="btn btn-link" onClick={onOtherAccounts}>
-                                    Tất cả các tài khoản ngân hàng{' '}
-                                    {accountsCount > 0 && `(${accountsCount})`}
-                                </button>
-                            </div>
-                        </div>
+        <div className={styles.walletSummaryCard}>
+            <div className={styles.cardHeader}>
+                <div className={styles.headerLeft}>
+                    <div className={styles.indicator}></div>
+                    <h5 className={styles.title}>Tài khoản ngân hàng</h5>
+                </div>
+                <button
+                    className={styles.setupButton}
+                    onClick={hasCardDetails ? onEditDetails : onAddCard}
+                >
+                    {hasCardDetails ? 'Chỉnh sửa' : 'Chưa thiết lập'}
+                </button>
+            </div>
+
+            <div className={styles.cardContent}>
+                <div className={styles.accountDetails}>
+                    <div className={styles.detailRow}>
+                        <span className={styles.label}>Tên chủ tài khoản:</span>
+                        {renderValue(defaultAccount?.accountName)}
+                    </div>
+                    <div className={styles.detailRow}>
+                        <span className={styles.label}>Số tài khoản:</span>
+                        {renderValue(defaultAccount?.accountNumber)}
+                    </div>
+                    <div className={styles.detailRow}>
+                        <span className={styles.label}>Tên ngân hàng:</span>
+                        {renderValue(defaultAccount?.bankName)}
+                    </div>
+                    <div className={styles.detailRow}>
+                        <span className={styles.label}>Chi nhánh:</span>
+                        {renderValue(defaultAccount?.bankCode)}
                     </div>
                 </div>
+
+                <div className={styles.illustration}>
+                    <div className={styles.iconWrapper}>
+                        <i className="ti ti-building-bank"></i>
+                    </div>
+                    <p className={styles.illustrationText}>
+                        Liên kết tài khoản ngân hàng để nhận thanh toán nhanh chóng và an toàn.
+                    </p>
+                </div>
+            </div>
+
+            <div className={styles.cardActions}>
+                <Button variant="primary" size="sm" onClick={onAddCard} className={styles.addBtn}>
+                    <FiPlus className="me-1" />
+                    Thêm tài khoản ngân hàng
+                </Button>
+                <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={onOtherAccounts}
+                    className={styles.viewAllBtn}
+                >
+                    <FiList className="me-1" />
+                    Tất cả các tài khoản {accountsCount > 0 && `(${accountsCount})`}
+                </Button>
             </div>
         </div>
     );

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import clsx from 'clsx';
 import { Button } from 'react-bootstrap';
 import { FiCalendar } from 'react-icons/fi';
 
@@ -13,8 +12,6 @@ import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { CreateBankAccountRequest } from '@/types/wallet.types';
 import { RootState } from '@/store';
 import { toast } from 'react-toastify';
-
-import styles from './Wallet.module.scss';
 
 const Wallet: React.FC = () => {
     // Get hospital ID from Redux profile
@@ -121,95 +118,82 @@ const Wallet: React.FC = () => {
     // Show loading if no hospitalId available
     if (!hospitalId) {
         return (
-            <div className={clsx(styles.walletContainer, 'page-wrapper')}>
-                <div className="content">
-                    <div className="page-header">
-                        <div className="row">
-                            <div className="col-sm-12">
-                                <h3 className="page-title">Quản lý tài khoản ngân hàng</h3>
-                            </div>
-                        </div>
+            <div className="content">
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-bold mb-0">Quản lý tài khoản ngân hàng</h4>
                     </div>
-                    <div className="text-center p-4">
-                        <p>Đang tải thông tin bệnh viện...</p>
-                    </div>
+                </div>
+                <div className="text-center p-4">
+                    <p>Đang tải thông tin bệnh viện...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={clsx(styles.walletContainer, 'page-wrapper')}>
-            <div className="content">
-                <div className="page-header">
-                    <div className="row">
-                        <div className="col-sm-12">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h3 className="page-title mb-0">Quản lý tài khoản ngân hàng</h3>
-                                </div>
-                                <Button
-                                    variant="primary"
-                                    onClick={() => setShowGenerateModal(true)}
-                                    disabled={!defaultAccount}
-                                >
-                                    <FiCalendar className="me-2" />
-                                    Yêu cầu thanh toán
-                                </Button>
-                            </div>
-                            <ul className="breadcrumb">
-                                <li className="breadcrumb-item">
-                                    <a href="/hospital/dashboard">Dashboard</a>
-                                </li>
-                                <li className="breadcrumb-item active">Tài khoản ngân hàng</li>
-                            </ul>
-                        </div>
-                    </div>
+        <div className="content">
+            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-4 pb-3 border-bottom">
+                <div className="flex-grow-1">
+                    <h4 className="fw-bold mb-1">Quản lý tài khoản ngân hàng</h4>
+                    <p className="text-muted mb-0 fs-14">
+                        Quản lý thông tin thanh toán và lịch sử giao dịch của phòng khám.
+                    </p>
                 </div>
-
-                <WalletSummary
-                    defaultAccount={defaultAccount}
-                    onAddCard={handleOpenAddCardModal}
-                    onEditDetails={handleOpenEditModal}
-                    onOtherAccounts={handleOpenOtherAccountsModal}
-                    accountsCount={accounts.length}
-                    loading={loading}
-                />
-
-                <PayoutHistory ref={payoutHistoryRef} />
-
-                <AddCardModal
-                    isOpen={isAddCardModalOpen}
-                    onClose={handleCloseAddCardModal}
-                    onSave={handleSaveAddCard}
-                    existingData={modalMode === 'edit' ? defaultAccount : null}
-                    mode={modalMode}
-                    userId={hospitalId || ''}
-                    loading={loading}
-                />
-
-                <OtherAccountsModal
-                    isOpen={isOtherAccountsModalOpen}
-                    onClose={handleCloseOtherAccountsModal}
-                    accounts={accounts}
-                    onSetDefault={handleSetDefaultAccount}
-                    onDelete={handleDeleteAccount}
-                    loading={loading}
-                />
-
-                <GeneratePayoutsModal
-                    show={showGenerateModal}
-                    onHide={() => setShowGenerateModal(false)}
-                    onSuccess={() => {
-                        setShowGenerateModal(false);
-                        toast.success('Yêu cầu thanh toán đã được tạo thành công!');
-                        // Refresh payout history to show the new payout
-                        payoutHistoryRef.current?.refresh();
-                    }}
-                    hospitalId={hospitalId}
-                    hospitalName={hospitalProfile?.name || ''}
-                />
+                <div className="text-end d-flex">
+                    <Button
+                        variant="primary"
+                        onClick={() => setShowGenerateModal(true)}
+                        disabled={!defaultAccount}
+                    >
+                        <FiCalendar className="me-2" />
+                        Yêu cầu thanh toán
+                    </Button>
+                </div>
             </div>
+
+            <WalletSummary
+                defaultAccount={defaultAccount}
+                onAddCard={handleOpenAddCardModal}
+                onEditDetails={handleOpenEditModal}
+                onOtherAccounts={handleOpenOtherAccountsModal}
+                accountsCount={accounts.length}
+                loading={loading}
+            />
+
+            <PayoutHistory ref={payoutHistoryRef} />
+
+            <AddCardModal
+                isOpen={isAddCardModalOpen}
+                onClose={handleCloseAddCardModal}
+                onSave={handleSaveAddCard}
+                existingData={modalMode === 'edit' ? defaultAccount : null}
+                mode={modalMode}
+                userId={hospitalId || ''}
+                loading={loading}
+            />
+
+            <OtherAccountsModal
+                isOpen={isOtherAccountsModalOpen}
+                onClose={handleCloseOtherAccountsModal}
+                accounts={accounts}
+                onSetDefault={handleSetDefaultAccount}
+                onDelete={handleDeleteAccount}
+                loading={loading}
+            />
+
+            <GeneratePayoutsModal
+                show={showGenerateModal}
+                onHide={() => setShowGenerateModal(false)}
+                onSuccess={() => {
+                    setShowGenerateModal(false);
+                    toast.success('Yêu cầu thanh toán đã được tạo thành công!');
+                    // Refresh payout history to show the new payout
+                    payoutHistoryRef.current?.refresh();
+                }}
+                hospitalId={hospitalId}
+                hospitalName={hospitalProfile?.name || ''}
+            />
         </div>
     );
 };

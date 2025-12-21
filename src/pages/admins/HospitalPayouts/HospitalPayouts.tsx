@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Card, Form, Table, Badge, Row, Col } from 'react-bootstrap';
+import { Button, Form, Table, Badge, Row, Col } from 'react-bootstrap';
 import { FiRefreshCw, FiFilter } from 'react-icons/fi';
 import { useHospitalPayouts, usePayoutStatistics } from '@/hooks/useHospitalPayouts';
 import { PayoutStatus } from '@/types/hospitalPayout.types';
@@ -96,21 +96,23 @@ const HospitalPayouts: React.FC = () => {
     };
 
     return (
-        <div className="container-fluid p-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>Quản lý thanh toán bệnh viện</h2>
+        <div className="content">
+            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                <div className="flex-grow-1">
+                    <h4 className="fw-bold mb-0">Quản lý thanh toán bệnh viện</h4>
+                </div>
             </div>
 
             {statistics && <StatisticsCards statistics={statistics} />}
 
-            <Card className="mb-4">
-                <Card.Header>
+            <div className="bg-white rounded-3 shadow-sm border mb-3">
+                <div className="p-3 border-bottom">
                     <div className="d-flex align-items-center">
                         <FiFilter className="me-2" />
                         <h5 className="mb-0">Bộ lọc</h5>
                     </div>
-                </Card.Header>
-                <Card.Body>
+                </div>
+                <div className="p-3">
                     <Row>
                         <Col md={3}>
                             <Form.Group className="mb-3">
@@ -185,11 +187,11 @@ const HospitalPayouts: React.FC = () => {
                         <FiRefreshCw className="me-2" />
                         Làm mới
                     </Button>
-                </Card.Body>
-            </Card>
+                </div>
+            </div>
 
-            <Card>
-                <Card.Body>
+            <div className="table-responsive">
+                <div className="bg-white rounded-3 shadow-sm border">
                     {loading ? (
                         <div className="text-center p-5">
                             <output className="spinner-border text-primary">
@@ -198,8 +200,8 @@ const HospitalPayouts: React.FC = () => {
                         </div>
                     ) : (
                         <>
-                            <Table responsive hover>
-                                <thead>
+                            <Table className="table table-centered mb-0" responsive hover>
+                                <thead className="table-light">
                                     <tr>
                                         <th>Bệnh viện</th>
                                         <th>Kỳ thanh toán</th>
@@ -261,7 +263,7 @@ const HospitalPayouts: React.FC = () => {
                             </Table>
 
                             {totalCount > (filters.pageSize || 10) && (
-                                <div className="d-flex justify-content-between align-items-center mt-3">
+                                <div className="d-flex justify-content-between align-items-center p-3 border-top">
                                     <div>
                                         Hiển thị{' '}
                                         {((filters.pageNumber || 1) - 1) *
@@ -304,8 +306,8 @@ const HospitalPayouts: React.FC = () => {
                             )}
                         </>
                     )}
-                </Card.Body>
-            </Card>
+                </div>
+            </div>
 
             {selectedPayoutId && (
                 <PayoutDetailsModal
