@@ -57,40 +57,71 @@ const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
 
     if (loading && payouts.length === 0) {
         return (
-            <div className={styles.loadingContainer}>
-                <output className="spinner-border text-primary">
-                    <span className="visually-hidden">Đang tải...</span>
-                </output>
+            <div className={styles.payoutHistoryCard}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <div className={styles.iconWrapper}>
+                            <i className="ti ti-receipt"></i>
+                        </div>
+                        <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                    </div>
+                </div>
+                <div className={styles.loadingContainer}>
+                    <output className="spinner-border text-primary">
+                        <span className="visually-hidden">Đang tải...</span>
+                    </output>
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className={styles.errorContainer}>
-                <div className="alert alert-danger" role="alert">
-                    <i className="fas fa-exclamation-circle me-2"></i>
-                    {error}
+            <div className={styles.payoutHistoryCard}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <div className={styles.iconWrapper}>
+                            <i className="ti ti-receipt"></i>
+                        </div>
+                        <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                    </div>
+                </div>
+                <div className={styles.errorContainer}>
+                    <div className="alert alert-danger" role="alert">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        {error}
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={styles.payoutHistory}>
+        <div className={styles.payoutHistoryCard}>
             <div className={styles.header}>
-                <h4 className={styles.title}>
-                    <i className="fas fa-money-bill-wave me-2"></i> Lịch sử thanh toán
-                </h4>
-                <p className={styles.subtitle}>
-                    Tổng số: <strong>{totalCount}</strong> lần thanh toán
-                </p>
+                <div className={styles.headerLeft}>
+                    <div className={styles.iconWrapper}>
+                        <i className="ti ti-receipt"></i>
+                    </div>
+                    <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                </div>
+                <div className={styles.headerRight}>
+                    <span className={styles.totalCount}>
+                        Tổng số: <strong>{totalCount}</strong> lần thanh toán
+                    </span>
+                </div>
             </div>
 
             {payouts.length === 0 ? (
                 <div className={styles.emptyState}>
-                    <i className="fas fa-inbox fa-3x mb-3 text-muted"></i>
-                    <p className="text-muted">Chưa có lịch sử thanh toán</p>
+                    <div className={styles.emptyIcon}>
+                        <i className="ti ti-folder-off"></i>
+                    </div>
+                    <h6 className={styles.emptyTitle}>Chưa có lịch sử thanh toán</h6>
+                    <p className={styles.emptyText}>
+                        Các giao dịch thanh toán sẽ xuất hiện ở đây sau khi bạn thực hiện yêu cầu
+                        rút tiền hoặc nhận thanh toán.
+                    </p>
                 </div>
             ) : (
                 <>
