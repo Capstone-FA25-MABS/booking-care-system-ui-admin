@@ -507,7 +507,7 @@ export const getServiceIdsByHospital = async (
 
 export const getAllServiceIds = async (): Promise<ApiResponse<string[]>> => {
     try {
-        const response: any = await axiosInstance.get('/services/ids');
+        const response: any = await axiosInstance.get('/medical-services/services/ids');
         return {
             success: response.success ?? true,
             data: response.data?.serviceIds || response.serviceIds || [],

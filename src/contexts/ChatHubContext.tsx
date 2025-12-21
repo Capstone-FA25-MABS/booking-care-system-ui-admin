@@ -41,6 +41,9 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
 
     // Create and manage SignalR connection
     useEffect(() => {
+        let isMounted = true;
+        let currentConnection: signalR.HubConnection | null = null;
+
         // Only connect if we have a userId
         if (!userId || !accessToken) {
             console.log('[ChatHubContext] ⏳ Waiting for user authentication...');
@@ -67,52 +70,77 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
                     return 30000;
                 },
             })
-            .configureLogging(signalR.LogLevel.Information)
+            .configureLogging(signalR.LogLevel.Warning)
             .build();
+
+        currentConnection = connection;
 
         // Connection lifecycle handlers
         connection.onreconnecting(() => {
             console.log('[ChatHubContext] 🔄 Reconnecting...');
-            setIsConnected(false);
+            if (isMounted) {
+                setIsConnected(false);
+            }
         });
 
         connection.onreconnected(() => {
             console.log('[ChatHubContext] ✅ Reconnected successfully');
-            setIsConnected(true);
+            if (isMounted) {
+                setIsConnected(true);
+            }
         });
 
         connection.onclose((error) => {
-            console.log('[ChatHubContext] ❌ Connection closed', error);
-            setIsConnected(false);
+            if (isMounted) {
+                console.log('[ChatHubContext] ❌ Connection closed', error);
+                setIsConnected(false);
+            }
         });
 
         // Start connection
         const startConnection = async () => {
+            if (!isMounted) return;
+
             try {
                 await connection.start();
-                console.log('[ChatHubContext] ✅ Connected successfully with userId:', userId);
-                setIsConnected(true);
+                if (isMounted) {
+                    console.log('[ChatHubContext] ✅ Connected successfully with userId:', userId);
+                    setIsConnected(true);
+                    connectionRef.current = connection;
+                }
             } catch (error) {
-                console.error('[ChatHubContext] ❌ Connection failed:', error);
-                setIsConnected(false);
-                // Retry after 5 seconds
-                setTimeout(startConnection, 5000);
+                if (isMounted) {
+                    console.error('[ChatHubContext] ❌ Connection failed:', error);
+                    setIsConnected(false);
+                    // Retry after 5 seconds only if still mounted
+                    setTimeout(() => {
+                        if (isMounted) {
+                            startConnection();
+                        }
+                    }, 5000);
+                }
             }
         };
 
         startConnection();
 
-        // Store connection reference
-        connectionRef.current = connection;
-
         // Cleanup on unmount or userId change
         return () => {
+            isMounted = false;
             console.log('[ChatHubContext] 🔌 Disconnecting...');
-            if (connectionRef.current) {
-                connectionRef.current.stop();
-                connectionRef.current = null;
+            if (currentConnection) {
+                // Only stop if connection is in a stable state
+                const state = currentConnection.state;
+                if (
+                    state === signalR.HubConnectionState.Connected ||
+                    state === signalR.HubConnectionState.Disconnected
+                ) {
+                    currentConnection.stop().catch(() => {
+                        // Silently ignore stop errors during unmount
+                    });
+                }
             }
-            setIsConnected(false);
+            connectionRef.current = null;
         };
     }, [userId, accessToken, chatHubUrl]);
 
