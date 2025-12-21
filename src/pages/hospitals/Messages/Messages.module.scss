@@ -17,6 +17,30 @@
     .userInfo {
         flex-shrink: 0;
         border-bottom: 1px solid #e9ecef;
+
+        // Limit the user display name container width
+        > div:first-child {
+            flex: 1;
+            min-width: 0; // Allow flex item to shrink below content size
+            overflow: hidden;
+
+            > div:last-child {
+                max-width: 160px;
+                overflow: hidden;
+
+                h6 {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                p {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            }
+        }
     }
 
     .searchSection {
@@ -86,11 +110,13 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+
     .readHistory {
         display: flex;
         flex-direction: column;
         align-items: end;
     }
+
     .messageCount {
         min-width: 20px;
         height: 20px;
@@ -157,6 +183,7 @@
         margin-right: auto;
         max-width: 70%;
     }
+
     .userNameMessage {
         font-size: 14px;
         font-weight: 400;
@@ -476,6 +503,7 @@
         opacity: 0;
         transform: scale(0.3);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
