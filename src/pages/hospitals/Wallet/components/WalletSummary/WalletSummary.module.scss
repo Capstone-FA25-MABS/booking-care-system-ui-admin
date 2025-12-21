@@ -1,0 +1,176 @@
+.walletSummaryCard {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.indicator {
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
+    border-radius: 2px;
+}
+
+.title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.setupButton {
+    background: none;
+    border: none;
+    color: #6366f1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f0f0ff;
+        color: #4f46e5;
+    }
+}
+
+.cardContent {
+    display: flex;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
+}
+
+.accountDetails {
+    min-width: 70%;
+    flex: 1;
+    display: flex;
+
+    flex-direction: column;
+    padding: 0;
+}
+
+.detailRow {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+    justify-content: space-between;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.value {
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &.placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+        font-style: italic;
+    }
+}
+
+.illustration {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: #f8fafc;
+    border-left: 1px solid #e5e7eb;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        border-left: none;
+        border-top: 1px solid #e9ecef;
+    }
+}
+
+.iconWrapper {
+    width: 48px;
+    height: 48px;
+    background: #dbeafe;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.875rem;
+
+    i {
+        font-size: 1.375rem;
+        color: #2563eb;
+    }
+}
+
+.illustrationText {
+    color: #64748b;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 220px;
+}
+
+.cardActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f1f3f5;
+    background: #fafafa;
+}
+
+.addBtn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.viewAllBtn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    color: #6b7280;
+    border-color: #e5e7eb;
+
+    &:hover {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #374151;
+    }
+}
