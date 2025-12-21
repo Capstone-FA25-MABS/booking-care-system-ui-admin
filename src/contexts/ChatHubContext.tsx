@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useRef, useEffect, useState, useMemo } from 'react';
+import React, {
+    createContext,
+    useContext,
+    useRef,
+    useEffect,
+    useState,
+    useCallback,
+    useMemo,
+} from 'react';
 import { useSelector } from 'react-redux';
 import * as signalR from '@microsoft/signalr';
 import { RootState } from '@/store';
@@ -6,6 +14,8 @@ import { RootState } from '@/store';
 interface ChatHubContextValue {
     connection: signalR.HubConnection | null;
     isConnected: boolean;
+    /** Check if connection is truly ready to send */
+    isReady: () => boolean;
 }
 
 const ChatHubContext = createContext<ChatHubContextValue | undefined>(undefined);
@@ -34,10 +44,17 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
     const userId = userProfile?.accountId || '';
 
     const connectionRef = useRef<signalR.HubConnection | null>(null);
+    const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
     const chatServiceUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const chatHubUrl = `${chatServiceUrl}/chatHub`;
+
+    // Helper to check if connection is truly ready
+    const isReady = useCallback(() => {
+        const conn = connectionRef.current;
+        return conn !== null && conn.state === signalR.HubConnectionState.Connected;
+    }, []);
 
     // Create and manage SignalR connection
     useEffect(() => {
@@ -54,7 +71,7 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
         const hubUrlWithUserId = `${chatHubUrl}?userId=${encodeURIComponent(userId)}`;
 
         // Create SignalR connection
-        const connection = new signalR.HubConnectionBuilder()
+        const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrlWithUserId, {
                 accessTokenFactory: () => accessToken || '',
                 transport:
@@ -73,27 +90,28 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
             .configureLogging(signalR.LogLevel.Warning)
             .build();
 
-        currentConnection = connection;
+        currentConnection = newConnection;
 
         // Connection lifecycle handlers
-        connection.onreconnecting(() => {
+        newConnection.onreconnecting(() => {
             console.log('[ChatHubContext] 🔄 Reconnecting...');
             if (isMounted) {
                 setIsConnected(false);
             }
         });
 
-        connection.onreconnected(() => {
+        newConnection.onreconnected(() => {
             console.log('[ChatHubContext] ✅ Reconnected successfully');
             if (isMounted) {
                 setIsConnected(true);
             }
         });
 
-        connection.onclose((error) => {
+        newConnection.onclose((error) => {
             if (isMounted) {
                 console.log('[ChatHubContext] ❌ Connection closed', error);
                 setIsConnected(false);
+                setConnection(null);
             }
         });
 
@@ -102,16 +120,18 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
             if (!isMounted) return;
 
             try {
-                await connection.start();
+                await newConnection.start();
                 if (isMounted) {
                     console.log('[ChatHubContext] ✅ Connected successfully with userId:', userId);
+                    connectionRef.current = newConnection;
+                    setConnection(newConnection); // ✅ Trigger re-render with new connection
                     setIsConnected(true);
-                    connectionRef.current = connection;
                 }
             } catch (error) {
                 if (isMounted) {
                     console.error('[ChatHubContext] ❌ Connection failed:', error);
                     setIsConnected(false);
+                    setConnection(null);
                     // Retry after 5 seconds only if still mounted
                     setTimeout(() => {
                         if (isMounted) {
@@ -141,15 +161,18 @@ export const ChatHubProvider: React.FC<ChatHubProviderProps> = ({ children }) =>
                 }
             }
             connectionRef.current = null;
+            setConnection(null);
         };
     }, [userId, accessToken, chatHubUrl]);
 
+    // ✅ Memoize value - connection and isConnected are state so they trigger re-render correctly
     const value: ChatHubContextValue = useMemo(
         () => ({
-            connection: connectionRef.current,
+            connection,
             isConnected,
+            isReady,
         }),
-        [isConnected]
+        [connection, isConnected, isReady]
     );
 
     return <ChatHubContext.Provider value={value}>{children}</ChatHubContext.Provider>;
