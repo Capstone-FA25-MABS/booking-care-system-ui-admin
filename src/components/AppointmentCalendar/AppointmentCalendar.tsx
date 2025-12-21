@@ -32,6 +32,11 @@ interface CalendarEvent {
     extendedProps: {
         appointmentData: AppointmentCardData;
         patientAvatar?: string;
+        appointmentCount?: number;
+        allAppointments?: any[];
+        isMoreEvent?: boolean;
+        remainingCount?: number;
+        totalPatients?: number;
     };
     backgroundColor: string;
     borderColor: string;
@@ -143,46 +148,135 @@ interface EventContentProps {
 
 const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
     const { extendedProps } = eventInfo.event;
-    const avatarUrl = extendedProps.appointmentData.patientInfo?.avatarUrl;
 
-    return (
-        <div className="d-flex align-items-center justify-content-center p-1">
-            {avatarUrl ? (
-                <img
-                    src={avatarUrl}
-                    alt={eventInfo.event.title}
-                    title={`${eventInfo.timeText} - ${eventInfo.event.title}`}
-                    className="rounded-circle"
-                    style={{
-                        width: '32px',
-                        height: '32px',
-                        objectFit: 'cover',
-                        border: '2px solid white',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        cursor: 'pointer',
-                    }}
-                />
-            ) : (
+    // Check if this is a "+X more" event
+    if (extendedProps.isMoreEvent) {
+        const remainingCount = extendedProps.remainingCount || 0;
+        const totalPatients = extendedProps.totalPatients || 0;
+
+        return (
+            <div className="d-flex align-items-center justify-content-center p-1 position-relative appointment-avatar-wrapper">
                 <div
-                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
-                    title={`${eventInfo.timeText} - ${eventInfo.event.title}`}
+                    className="rounded-circle d-flex align-items-center justify-content-center text-muted fw-bold appointment-more-badge"
                     style={{
                         width: '32px',
                         height: '32px',
-                        backgroundColor: '#6366f1',
-                        border: '2px solid white',
+                        backgroundColor: '#f3f4f6',
+                        border: '2px solid #d1d5db',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
                         cursor: 'pointer',
+                        transition: 'all 0.2s ease',
                     }}
                 >
-                    {eventInfo.event.title
-                        .split(' ')
-                        .map((word) => word[0])
-                        .join('')
-                        .toUpperCase()
-                        .slice(0, 2)}
+                    +{remainingCount}
                 </div>
+                <div className="custom-tooltip">
+                    Còn {remainingCount} bệnh nhân khác
+                    <br />
+                    Tổng: {totalPatients} bệnh nhân
+                </div>
+            </div>
+        );
+    }
+
+    const avatarUrl = extendedProps.appointmentData.patientInfo?.avatarUrl;
+    const appointmentCount = extendedProps.appointmentCount || 1;
+
+    return (
+        <div className="d-flex align-items-center justify-content-center p-1 position-relative appointment-avatar-wrapper">
+            {avatarUrl ? (
+                <>
+                    <img
+                        src={avatarUrl}
+                        alt={eventInfo.event.title}
+                        className="rounded-circle appointment-avatar"
+                        style={{
+                            width: '32px',
+                            height: '32px',
+                            objectFit: 'cover',
+                            border: '2px solid white',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        }}
+                    />
+                    {appointmentCount > 1 && (
+                        <span
+                            className="position-absolute badge rounded-pill bg-danger appointment-count-badge"
+                            style={{
+                                top: '-4px',
+                                right: '-8px',
+                                fontSize: '0.65rem',
+                                padding: '0.2rem 0.4rem',
+                                minWidth: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: '700',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                border: '1.5px solid white',
+                            }}
+                        >
+                            {appointmentCount}
+                        </span>
+                    )}
+                    <div className="custom-tooltip">
+                        {eventInfo.event.title}
+                        <br />
+                        {appointmentCount} cuộc hẹn trong ngày này
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div
+                        className="rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold appointment-avatar"
+                        style={{
+                            width: '32px',
+                            height: '32px',
+                            backgroundColor: '#6366f1',
+                            border: '2px solid white',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        }}
+                    >
+                        {eventInfo.event.title
+                            .split(' ')
+                            .map((word) => word[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                    </div>
+                    {appointmentCount > 1 && (
+                        <span
+                            className="position-absolute badge rounded-pill bg-danger appointment-count-badge"
+                            style={{
+                                top: '-4px',
+                                right: '-8px',
+                                fontSize: '0.65rem',
+                                padding: '0.2rem 0.4rem',
+                                minWidth: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: '700',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                border: '1.5px solid white',
+                            }}
+                        >
+                            {appointmentCount}
+                        </span>
+                    )}
+                    <div className="custom-tooltip">
+                        {eventInfo.event.title}
+                        <br />
+                        {appointmentCount} cuộc hẹn trong ngày này
+                    </div>
+                </>
             )}
         </div>
     );
@@ -240,9 +334,106 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                 const response = await AppointmentService.getAppointmentsForManagement(queryParams);
 
                 if (response.success && response.data?.appointments) {
-                    const calendarEvents = response.data.appointments.map((apt: any) =>
-                        transformToCalendarEvent(apt, includeRelativeInfo)
-                    );
+                    // Group appointments by date and patient
+                    const groupedByDateAndPatient = new Map<
+                        string,
+                        Map<string, { appointments: any[]; patientInfo: any }>
+                    >();
+
+                    response.data.appointments.forEach((apt: any) => {
+                        const dateKey = apt.appointmentDate;
+                        const patientId =
+                            apt.patientInfo?.id || apt.patientInfo?.accountId || 'unknown';
+
+                        if (!groupedByDateAndPatient.has(dateKey)) {
+                            groupedByDateAndPatient.set(dateKey, new Map());
+                        }
+
+                        const dateGroup = groupedByDateAndPatient.get(dateKey)!;
+                        if (!dateGroup.has(patientId)) {
+                            dateGroup.set(patientId, {
+                                appointments: [],
+                                patientInfo: apt.patientInfo,
+                            });
+                        }
+
+                        dateGroup.get(patientId)!.appointments.push(apt);
+                    });
+
+                    // Transform grouped appointments to calendar events
+                    const calendarEvents: CalendarEvent[] = [];
+                    const MAX_PATIENTS_PER_DAY = 4; // Giới hạn 4 bệnh nhân hiển thị
+
+                    groupedByDateAndPatient.forEach((dateGroup, dateKey) => {
+                        const patientsArray = Array.from(dateGroup.entries());
+                        const totalPatients = patientsArray.length;
+
+                        // Hiển thị tối đa MAX_PATIENTS_PER_DAY bệnh nhân
+                        const visiblePatients = patientsArray.slice(0, MAX_PATIENTS_PER_DAY);
+                        const remainingCount = totalPatients - MAX_PATIENTS_PER_DAY;
+
+                        visiblePatients.forEach(([_patientId, patientData]) => {
+                            const firstAppointment = patientData.appointments[0];
+                            const appointmentCount = patientData.appointments.length;
+
+                            // Create a single event for this patient on this date
+                            const event = transformToCalendarEvent(
+                                firstAppointment,
+                                includeRelativeInfo
+                            );
+
+                            // Add appointment count to extendedProps
+                            event.extendedProps.appointmentCount = appointmentCount;
+
+                            // Store all appointments for this patient on this date
+                            event.extendedProps.allAppointments = patientData.appointments;
+
+                            calendarEvents.push(event);
+                        });
+
+                        // Nếu có nhiều hơn MAX_PATIENTS_PER_DAY bệnh nhân, thêm event "+X"
+                        if (remainingCount > 0) {
+                            const date = new Date(dateKey);
+                            date.setHours(8, 0, 0, 0);
+                            const endDate = new Date(date);
+                            endDate.setMinutes(endDate.getMinutes() + 30);
+
+                            // Tạo một appointment data giả cho "+X" event
+                            const moreEvent: CalendarEvent = {
+                                id: `more-${dateKey}`,
+                                title: `+${remainingCount}`,
+                                start: date,
+                                end: endDate,
+                                extendedProps: {
+                                    appointmentData: {
+                                        appointmentId: `more-${dateKey}`,
+                                        appointmentDate: dateKey,
+                                        appointmentTime: '',
+                                        appointmentTimeId: '',
+                                        appointmentType: '',
+                                        status: AppointmentStatus.CONFIRMED,
+                                        patientInfo: null as any,
+                                        relativeInfo: null,
+                                        doctorInfo: null,
+                                        serviceInfo: null,
+                                        hospitalInfo: null,
+                                        reason: '',
+                                        result: null,
+                                        symptoms: null,
+                                        attachmentUrls: null,
+                                    },
+                                    isMoreEvent: true,
+                                    remainingCount,
+                                    totalPatients,
+                                },
+                                backgroundColor: '#f3f4f6',
+                                borderColor: '#9ca3af',
+                            };
+
+                            calendarEvents.push(moreEvent);
+                        }
+                    });
+
                     setEvents(calendarEvents);
                 }
             } catch (error: any) {
@@ -268,6 +459,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
     const handleEventClick = (info: EventClickArg) => {
         const { extendedProps } = info.event;
+
+        // Don't open offcanvas for "+X more" events
+        if (extendedProps.isMoreEvent) {
+            toast.info(`Có ${extendedProps.remainingCount} bệnh nhân khác trong ngày này`);
+            return;
+        }
+
         setSelectedAppointment(extendedProps.appointmentData as AppointmentCardData);
         setShowOffcanvas(true);
     };

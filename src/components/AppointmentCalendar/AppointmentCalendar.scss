@@ -1,6 +1,35 @@
 // FullCalendar custom styles for appointment calendar
 
-// Ensure calendar container doesn't block interactions
+// Ensure calendar container doesn't block interactions and doesn't clip tooltips
+.fc {
+    overflow: visible !important;
+}
+
+.fc-view-harness {
+    overflow: visible !important;
+}
+
+.fc-daygrid-body {
+    overflow: visible !important;
+}
+
+.fc-scrollgrid {
+    overflow: visible !important;
+}
+
+.fc-scrollgrid-sync-table {
+    overflow: visible !important;
+}
+
+// Header (day names) should not clip tooltips
+.fc-col-header {
+    overflow: visible !important;
+    z-index: 1 !important;
+}
+
+.fc-col-header-cell {
+    overflow: visible !important;
+}
 
 // Event styling - optimized for avatar-only display
 .fc-event {
@@ -13,6 +42,11 @@
     margin: 2px !important;
     display: inline-block !important;
     z-index: 1;
+    position: relative !important;
+
+    &:hover {
+        z-index: 9999 !important;
+    }
 }
 
 // Hide default event elements
@@ -33,6 +67,286 @@
     }
 }
 
+// Badge styling for appointment count
+.badge.rounded-pill {
+    z-index: 10 !important;
+    pointer-events: none;
+}
+
+// Appointment avatar wrapper with hover effects
+.appointment-avatar-wrapper {
+    position: relative;
+
+    &:hover {
+        .appointment-avatar {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .appointment-more-badge {
+            transform: scale(1.1);
+            background-color: #e5e7eb !important;
+            border-color: #9ca3af !important;
+        }
+
+        // Show tooltip on hover
+        .custom-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    }
+}
+
+// Beautiful custom tooltip
+.custom-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.65rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow:
+        0 10px 25px rgba(102, 126, 234, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+    z-index: 99999 !important;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    min-width: max-content;
+    max-width: 280px;
+
+    // Subtle shine effect
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.2) 0%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        border-radius: 0.75rem 0.75rem 0 0;
+        pointer-events: none;
+    }
+
+    // Arrow pointing down (default - tooltip above)
+    &::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #764ba2;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    // Allow line breaks
+    br {
+        display: block;
+        content: '';
+        margin: 0.25rem 0;
+    }
+}
+
+// Tooltip for first row - show below instead of above
+.fc-daygrid-body > tr:first-child,
+.fc-daygrid-body tbody > tr:first-child {
+    .custom-tooltip {
+        bottom: auto;
+        top: calc(100% + 10px);
+        left: 0;
+        transform: translateX(0) translateY(5px);
+
+        // Arrow pointing up (tooltip below) - positioned on left
+        &::after {
+            top: auto;
+            bottom: 100%;
+            left: 20px;
+            transform: translateX(0);
+            border-top-color: transparent;
+            border-bottom-color: #667eea;
+        }
+    }
+
+    .appointment-avatar-wrapper:hover {
+        .custom-tooltip {
+            transform: translateX(0) translateY(0);
+        }
+    }
+}
+
+// Tooltip for first column (CN) - align to left edge
+.fc-day-sun,
+.fc-daygrid-day:first-child {
+    .custom-tooltip {
+        left: 0;
+        transform: translateX(0) translateY(-5px);
+
+        // Move arrow to left side
+        &::after {
+            left: 20px;
+            transform: translateX(0);
+        }
+    }
+
+    .appointment-avatar-wrapper:hover {
+        .custom-tooltip {
+            transform: translateX(0) translateY(0);
+        }
+    }
+}
+
+// Tooltip for last column (Th 7) - align to right edge
+.fc-day-sat,
+.fc-daygrid-day:last-child {
+    .custom-tooltip {
+        left: auto;
+        right: 0;
+        transform: translateX(0) translateY(-5px);
+
+        // Move arrow to right side
+        &::after {
+            left: auto;
+            right: 20px;
+            transform: translateX(0);
+        }
+    }
+
+    .appointment-avatar-wrapper:hover {
+        .custom-tooltip {
+            transform: translateX(0) translateY(0);
+        }
+    }
+}
+
+// Tooltip for first row AND last column - show below and align right
+.fc-daygrid-body > tr:first-child,
+.fc-daygrid-body tbody > tr:first-child {
+    .fc-day-sat,
+    .fc-daygrid-day:last-child {
+        .custom-tooltip {
+            bottom: auto;
+            top: calc(100% + 10px);
+            left: auto;
+            right: 0;
+            transform: translateX(0) translateY(5px);
+
+            &::after {
+                top: auto;
+                bottom: 100%;
+                left: auto;
+                right: 20px;
+                transform: translateX(0);
+                border-top-color: transparent;
+                border-bottom-color: #667eea;
+            }
+        }
+
+        .appointment-avatar-wrapper:hover {
+            .custom-tooltip {
+                transform: translateX(0) translateY(0);
+            }
+        }
+    }
+}
+
+// Beautiful custom tooltip styling (fallback for Bootstrap if needed)
+.tooltip {
+    z-index: 9999 !important;
+
+    .tooltip-inner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.65rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        box-shadow:
+            0 10px 25px rgba(102, 126, 234, 0.3),
+            0 4px 12px rgba(0, 0, 0, 0.15);
+        max-width: 280px;
+        text-align: center;
+        white-space: pre-line;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+
+        // Subtle shine effect
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.2) 0%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            border-radius: 0.75rem 0.75rem 0 0;
+            pointer-events: none;
+        }
+    }
+
+    // Arrow styling for top placement
+    &.bs-tooltip-top .tooltip-arrow::before,
+    &.bs-tooltip-auto[data-popper-placement^='top'] .tooltip-arrow::before {
+        border-top-color: #667eea;
+    }
+
+    // Arrow styling for bottom placement
+    &.bs-tooltip-bottom .tooltip-arrow::before,
+    &.bs-tooltip-auto[data-popper-placement^='bottom'] .tooltip-arrow::before {
+        border-bottom-color: #764ba2;
+    }
+
+    // Arrow styling for left placement
+    &.bs-tooltip-start .tooltip-arrow::before,
+    &.bs-tooltip-auto[data-popper-placement^='left'] .tooltip-arrow::before {
+        border-left-color: #667eea;
+    }
+
+    // Arrow styling for right placement
+    &.bs-tooltip-end .tooltip-arrow::before,
+    &.bs-tooltip-auto[data-popper-placement^='right'] .tooltip-arrow::before {
+        border-right-color: #764ba2;
+    }
+}
+
+// Animation for tooltip appearance
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tooltip.show {
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+
 // Make events more readable in month view
 .fc-daygrid-event {
     padding: 0 !important;
@@ -42,6 +356,7 @@
     border: none !important;
     display: inline-block !important;
     vertical-align: top !important;
+    position: relative !important;
 
     .fc-event-main {
         display: flex;
@@ -56,12 +371,31 @@
     flex-wrap: wrap !important;
     gap: 4px !important;
     padding: 2px !important;
+    overflow: visible !important;
 }
 
 .fc-daygrid-event-harness {
     position: relative !important;
     display: inline-block !important;
     margin: 0 !important;
+    overflow: visible !important;
+
+    &:hover {
+        z-index: 9999 !important;
+    }
+}
+
+// Ensure day cells don't clip tooltips
+.fc-daygrid-day {
+    overflow: visible !important;
+}
+
+.fc-daygrid-day-frame {
+    overflow: visible !important;
+}
+
+.fc-daygrid-day-top {
+    overflow: visible !important;
 }
 
 // Day grid event dot (remove default dot)
