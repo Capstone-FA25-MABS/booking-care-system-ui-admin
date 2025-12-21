@@ -91,12 +91,21 @@ const ListBlogs: React.FC = () => {
             setError(null);
 
             try {
+                const isHospitalArea = location.pathname.startsWith(PATHS.HOSPITAL.ROOT);
+                const isDoctorArea = location.pathname.startsWith(PATHS.DOCTOR.ROOT);
+
                 const filterParams: BlogFilterParameters = {
                     page: page,
                     pageSize: itemsPerPage,
                     keyword: searchTerm.trim() || undefined,
                     ...filters,
                 };
+
+                // If we're in hospital/doctor area, enforce filtering by the current account id (createdBy)
+                const currentAccountId = doctorProfile?.accountId ?? hospitalProfile?.accountId;
+                if ((isDoctorArea || isHospitalArea) && currentAccountId) {
+                    filterParams.createdByAccountId = currentAccountId;
+                }
 
                 // Apply category filter
                 if (appliedCategories.length > 0) {
@@ -113,12 +122,13 @@ const ListBlogs: React.FC = () => {
                     filterParams.featured = appliedFeatured[0] === 'true';
                 }
 
-                // Apply role-based filter
-                // If doctor, filter by doctorId; if staff, filter by hospitalId
-                if (role === 'DOCTOR' && doctorProfile?.id) {
-                    filterParams.createdByDoctorId = doctorProfile.id;
-                } else if (role === 'STAFF' && hospitalProfile?.id) {
-                    filterParams.createdByHospitalId = hospitalProfile.id;
+                // Apply role-based filter as a fallback when not in specific area
+                if (!filterParams.createdByAccountId) {
+                    const fallbackAccountId =
+                        doctorProfile?.accountId ?? hospitalProfile?.accountId;
+                    if (fallbackAccountId) {
+                        filterParams.createdByAccountId = fallbackAccountId;
+                    }
                 }
                 // For admin, use getMyBlogs which filters by accountId
 
@@ -170,7 +180,7 @@ const ListBlogs: React.FC = () => {
         fetchBlogs(currentPage);
         fetchCategories();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
+    }, [currentPage, doctorProfile?.accountId, hospitalProfile?.accountId, location.pathname]);
 
     // Handle search with debounce
     useEffect(() => {
