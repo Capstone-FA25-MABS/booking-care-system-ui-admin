@@ -177,7 +177,11 @@ const routes: RouteObject[] = [
             },
             {
                 path: PATHS.ADMIN.BLOGS.ROOT,
-                children: [{ index: true, element: <BlogApproval /> }],
+                children: [
+                    { index: true, element: <BlogApproval /> },
+                    { path: PATHS.ADMIN.BLOGS.ADD, element: <AddBlog /> },
+                    { path: PATHS.ADMIN.BLOGS.EDIT, element: <AddBlog /> },
+                ],
             },
             {
                 path: PATHS.ADMIN.BLOG_CATEGORIES.ROOT,
@@ -230,6 +234,7 @@ const routes: RouteObject[] = [
                 children: [
                     { index: true, element: <ListBlogs /> },
                     { path: PATHS.DOCTOR.BLOGS.ADD, element: <AddBlog /> },
+                    { path: PATHS.DOCTOR.BLOGS.EDIT, element: <AddBlog /> },
                 ],
             },
             {
@@ -308,6 +313,7 @@ const routes: RouteObject[] = [
                 children: [
                     { index: true, element: <ListBlogs /> },
                     { path: PATHS.HOSPITAL.BLOGS.ADD, element: <AddBlog /> },
+                    { path: PATHS.HOSPITAL.BLOGS.EDIT, element: <AddBlog /> },
                 ],
             },
             {
