@@ -61,30 +61,49 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
 
     // Initialize SignalR and fetch notifications when authenticated
     useEffect(() => {
+        let isMounted = true;
+
         if (isAuthenticated && accessToken) {
             // Initialize SignalR connection
             signalRService
                 .initialize(dispatch, accessToken)
                 .then(() => {
-                    console.log('[MainHeader] SignalR connected');
+                    if (isMounted) {
+                        console.log('[MainHeader] SignalR connected');
+                    }
                 })
                 .catch((error) => {
-                    console.error('[MainHeader] SignalR connection failed:', error);
+                    if (isMounted) {
+                        console.error('[MainHeader] SignalR connection failed:', error);
+                    }
                 });
 
             // Fetch 5 unread notifications for dropdown
-            dispatch(fetchNotifications({ pageNumber: 1, pageSize: 5, isRead: false }));
-            dispatch(fetchNotificationSummary());
+            if (isMounted) {
+                dispatch(fetchNotifications({ pageNumber: 1, pageSize: 5, isRead: false }));
+                dispatch(fetchNotificationSummary());
+            }
 
             return () => {
+                isMounted = false;
                 // Cleanup: disconnect SignalR when component unmounts or user logs out
-                signalRService.stop().then(() => {
-                    console.log('[MainHeader] SignalR disconnected');
-                });
+                void signalRService
+                    .stop()
+                    .then(() => {
+                        console.log('[MainHeader] SignalR disconnected');
+                    })
+                    .catch(() => {
+                        // Silently ignore stop errors during unmount
+                    });
             };
         } else {
             // Clear notifications when user logs out
-            dispatch(clearNotifications());
+            if (isMounted) {
+                dispatch(clearNotifications());
+            }
+            return () => {
+                isMounted = false;
+            };
         }
     }, [isAuthenticated, accessToken, dispatch]);
 
