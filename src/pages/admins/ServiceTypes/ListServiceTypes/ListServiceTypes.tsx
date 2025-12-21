@@ -68,58 +68,45 @@ const ListServiceTypes: React.FC = () => {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
     // Image upload states are now handled by useImageUpload hook
 
-    // Fetch service types on component mount
-    useEffect(() => {
-        const sortParams = getSortParams(sortBy);
-        fetchServiceTypes({
-            pageNumber: currentPage,
-            pageSize: itemsPerPage,
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        });
-    }, [fetchServiceTypes, currentPage, itemsPerPage, sortBy]);
-
-    // Helper function to handle search with filters
-    const handleSearchWithFilters = () => {
-        const sortParams = getSortParams(sortBy);
-        const filterParams = {
-            pageNumber: 1,
-            pageSize: itemsPerPage,
-            searchTerm: searchTerm.trim(),
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        };
-        setCurrentPage(1);
-        filterServiceTypes(filterParams);
-    };
-
-    // Helper function to handle search clear
-    const handleSearchClear = () => {
-        setCurrentPage(1);
-        const sortParams = getSortParams(sortBy);
-        fetchServiceTypes({
-            pageNumber: 1,
-            pageSize: itemsPerPage,
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        });
-    };
-
-    // Handle search term changes with debounce
+    // Debounce search term
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (searchTerm.trim()) {
-                handleSearchWithFilters();
-            } else {
-                handleSearchClear();
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 when search changes
             }
-        }, 500); // 500ms debounce
+        }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterServiceTypes, fetchServiceTypes, sortBy]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
+    // Fetch service types when page, sort, or debounced search changes
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        if (debouncedSearchTerm.trim()) {
+            const filterParams = {
+                pageNumber: currentPage,
+                pageSize: itemsPerPage,
+                searchTerm: debouncedSearchTerm.trim(),
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            };
+            filterServiceTypes(filterParams);
+        } else {
+            fetchServiceTypes({
+                pageNumber: currentPage,
+                pageSize: itemsPerPage,
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage, sortBy, debouncedSearchTerm]);
 
     // Use entity form hook
     const {

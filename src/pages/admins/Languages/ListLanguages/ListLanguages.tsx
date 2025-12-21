@@ -12,7 +12,7 @@ import TableActions from '@/components/TableActions';
 import { languageTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Language, LanguageFormData } from '@/types/language.types';
 import useLanguage from '@/hooks/useLanguage';
-import { getAllLanguages } from '@/services/language.service';
+import { getAllLanguagesSimple } from '@/services/language.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import EntityModal from '@/components/Modal/EntityModal';
@@ -54,37 +54,38 @@ const ListLanguages: React.FC = () => {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-    // Fetch languages on component mount
-    useEffect(() => {
-        const sortParams = getSortParams(sortBy);
-        fetchLanguages(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    }, [fetchLanguages, currentPage, itemsPerPage, sortBy]);
-
-    // Handle search term changes with debounce
+    // Debounce search term
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (searchTerm.trim()) {
-                const sortParams = getSortParams(sortBy);
-                const filterParams = {
-                    pageNumber: 1,
-                    pageSize: itemsPerPage,
-                    searchTerm: searchTerm.trim(),
-                    sortBy: sortParams.sortBy,
-                    sortOrder: sortParams.sortOrder,
-                };
-                setCurrentPage(1);
-                filterLanguages(filterParams);
-            } else {
-                // If search is cleared, fetch all languages with current sort
-                setCurrentPage(1);
-                const sortParams = getSortParams(sortBy);
-                fetchLanguages(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 when search changes
             }
-        }, 500); // 500ms debounce
+        }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterLanguages, fetchLanguages]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
+    // Fetch languages when page, sort, or debounced search changes
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        if (debouncedSearchTerm.trim()) {
+            const filterParams = {
+                pageNumber: currentPage,
+                pageSize: itemsPerPage,
+                searchTerm: debouncedSearchTerm.trim(),
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            };
+            filterLanguages(filterParams);
+        } else {
+            fetchLanguages(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage, sortBy, debouncedSearchTerm]);
 
     // Language Modal States
     const [showModal, setShowModal] = useState(false);
@@ -402,8 +403,8 @@ const ListLanguages: React.FC = () => {
     // Function to fetch all languages for filter modal
     const fetchAllLanguagesForFilter = async () => {
         try {
-            const response = await getAllLanguages(1, 1000); // Large page size to get all
-            setAllLanguages(response.data.items);
+            const response = await getAllLanguagesSimple();
+            setAllLanguages(response.data || []);
         } catch (error) {
             console.error('Error fetching all languages for filter:', error);
             setAllLanguages([]);

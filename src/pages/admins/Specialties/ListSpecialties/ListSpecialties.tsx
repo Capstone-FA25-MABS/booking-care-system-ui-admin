@@ -11,7 +11,7 @@ import AppliedFilters from '@/components/AppliedFilters/AppliedFilters';
 import EntityModal from '@/components/Modal/EntityModal';
 import { Specialty, SpecialtyFormData } from '@/types/specialty.types';
 import useSpecialty from '@/hooks/useSpecialty';
-import { getAllSpecialties } from '@/services/specialty.service';
+import { getAllSpecialtiesSimple } from '@/services/specialty.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useEntityForm } from '@/hooks/useEntityForm';
 import ActionDropdown from '@/components/ActionDropdown';
@@ -64,48 +64,40 @@ const ListSpecialties: React.FC = () => {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
     // Image upload states are now handled by useImageUpload hook
 
-    // Fetch specialties on component mount
-    useEffect(() => {
-        const sortParams = getSortParams(sortBy);
-        fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    }, [fetchSpecialties, currentPage, itemsPerPage, sortBy]);
-
-    // Helper function to handle search with filters
-    const handleSearchWithFilters = () => {
-        const sortParams = getSortParams(sortBy);
-        const filterParams = {
-            pageNumber: 1,
-            pageSize: itemsPerPage,
-            searchTerm: searchTerm.trim(),
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        };
-        setCurrentPage(1);
-        filterSpecialties(filterParams);
-    };
-
-    // Helper function to handle search clear
-    const handleSearchClear = () => {
-        setCurrentPage(1);
-        const sortParams = getSortParams(sortBy);
-        fetchSpecialties(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    };
-
-    // Handle search term changes with debounce
+    // Debounce search term
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (searchTerm.trim()) {
-                handleSearchWithFilters();
-            } else {
-                handleSearchClear();
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 when search changes
             }
-        }, 500); // 500ms debounce
+        }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterSpecialties, fetchSpecialties, sortBy]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
+    // Fetch specialties when page, sort, or debounced search changes
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        if (debouncedSearchTerm.trim()) {
+            const filterParams = {
+                pageNumber: currentPage,
+                pageSize: itemsPerPage,
+                searchTerm: debouncedSearchTerm.trim(),
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            };
+            filterSpecialties(filterParams);
+        } else {
+            fetchSpecialties(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage, sortBy, debouncedSearchTerm]);
 
     // Use entity form hook
     const {
@@ -417,8 +409,8 @@ const ListSpecialties: React.FC = () => {
     // Function to fetch all specialties for filter modal
     const fetchAllSpecialtiesForFilter = async () => {
         try {
-            const response = await getAllSpecialties(1, 100); // Large page size to get all
-            setAllSpecialties(response.data.items);
+            const response = await getAllSpecialtiesSimple();
+            setAllSpecialties(response.data || []);
         } catch (error) {
             console.error('Error fetching all specialties for filter:', error);
             setAllSpecialties([]);

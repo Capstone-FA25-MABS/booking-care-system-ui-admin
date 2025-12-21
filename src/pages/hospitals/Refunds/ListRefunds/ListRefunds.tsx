@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
@@ -715,18 +714,6 @@ const ListRefunds: React.FC = () => {
                     </div>
                 </div>
             )}
-
-            {/* Footer Start */}
-            <div className="footer text-center bg-white p-2 border-top">
-                <p className="text-dark mb-0">
-                    2025 &copy;{' '}
-                    <Link to="/" className="link-primary">
-                        Preclinic
-                    </Link>
-                    , Tất cả quyền được bảo lưu
-                </p>
-            </div>
-            {/* Footer End */}
         </>
     );
 };

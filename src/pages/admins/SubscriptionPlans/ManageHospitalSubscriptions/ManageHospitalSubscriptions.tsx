@@ -103,7 +103,8 @@ const ManageHospitalSubscriptions: React.FC = () => {
 
     useEffect(() => {
         loadHospitalSubscriptions();
-    }, [loadHospitalSubscriptions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Filter hospitals based on search and status
     const filteredHospitals = useMemo(() => {

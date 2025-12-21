@@ -24,19 +24,22 @@ const DoctorManagement: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const [searchTerm, setSearchTerm] = useState('');
     const [searchInput, setSearchInput] = useState('');
     const [sortBy, setSortBy] = useState('CreatedAt_desc');
     const pageSize = 10;
+    const [debouncedSearchInput, setDebouncedSearchInput] = useState('');
 
-    // Debounce search
+    // Debounce search input
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            setSearchTerm(searchInput);
-            setCurrentPage(1); // Reset to page 1 when search changes
+            setDebouncedSearchInput(searchInput);
+            if (searchInput !== debouncedSearchInput) {
+                setCurrentPage(1); // Reset to page 1 when search changes
+            }
         }, 500);
 
         return () => clearTimeout(timeoutId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchInput]);
 
     // Fetch doctors by hospital
@@ -73,13 +76,15 @@ const DoctorManagement: React.FC = () => {
                 setIsLoading(false);
             }
         },
-        [hospitalProfile?.id, pageSize]
+        [hospitalProfile?.id]
     );
 
-    // Fetch on mount and when dependencies change
+    // Fetch when page, sort, or debounced search changes
     useEffect(() => {
-        fetchDoctors(currentPage, searchTerm, sortBy);
-    }, [currentPage, searchTerm, sortBy, fetchDoctors]);
+        if (!hospitalProfile?.id) return;
+        fetchDoctors(currentPage, debouncedSearchInput, sortBy);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, sortBy, debouncedSearchInput, hospitalProfile?.id]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -87,6 +92,7 @@ const DoctorManagement: React.FC = () => {
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(e.target.value);
+        setCurrentPage(1); // Reset to page 1 when search changes
     };
 
     const handleSortChange = (value: string) => {
@@ -98,7 +104,7 @@ const DoctorManagement: React.FC = () => {
         try {
             await toggleBanUnbanAccount(accountId);
             toast.success('Cập nhật trạng thái tài khoản thành công');
-            fetchDoctors(currentPage, searchTerm, sortBy);
+            fetchDoctors(currentPage, debouncedSearchInput, sortBy);
         } catch (error: any) {
             toast.error(error?.message || 'Không thể cập nhật trạng thái tài khoản');
         }
@@ -108,7 +114,7 @@ const DoctorManagement: React.FC = () => {
         try {
             await lockAccount(accountId);
             toast.success('Khóa tài khoản thành công');
-            fetchDoctors(currentPage, searchTerm, sortBy);
+            fetchDoctors(currentPage, debouncedSearchInput, sortBy);
         } catch (error: any) {
             toast.error(error?.message || 'Không thể khóa tài khoản');
         }
@@ -118,7 +124,7 @@ const DoctorManagement: React.FC = () => {
         try {
             await unlockAccount(accountId);
             toast.success('Mở khóa tài khoản thành công');
-            fetchDoctors(currentPage, searchTerm, sortBy);
+            fetchDoctors(currentPage, debouncedSearchInput, sortBy);
         } catch (error: any) {
             toast.error(error?.message || 'Không thể mở khóa tài khoản');
         }
