@@ -61,30 +61,49 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
 
     // Initialize SignalR and fetch notifications when authenticated
     useEffect(() => {
+        let isMounted = true;
+
         if (isAuthenticated && accessToken) {
             // Initialize SignalR connection
             signalRService
                 .initialize(dispatch, accessToken)
                 .then(() => {
-                    console.log('[MainHeader] SignalR connected');
+                    if (isMounted) {
+                        console.log('[MainHeader] SignalR connected');
+                    }
                 })
                 .catch((error) => {
-                    console.error('[MainHeader] SignalR connection failed:', error);
+                    if (isMounted) {
+                        console.error('[MainHeader] SignalR connection failed:', error);
+                    }
                 });
 
             // Fetch 5 unread notifications for dropdown
-            dispatch(fetchNotifications({ pageNumber: 1, pageSize: 5, isRead: false }));
-            dispatch(fetchNotificationSummary());
+            if (isMounted) {
+                dispatch(fetchNotifications({ pageNumber: 1, pageSize: 5, isRead: false }));
+                dispatch(fetchNotificationSummary());
+            }
 
             return () => {
+                isMounted = false;
                 // Cleanup: disconnect SignalR when component unmounts or user logs out
-                signalRService.stop().then(() => {
-                    console.log('[MainHeader] SignalR disconnected');
-                });
+                void signalRService
+                    .stop()
+                    .then(() => {
+                        console.log('[MainHeader] SignalR disconnected');
+                    })
+                    .catch(() => {
+                        // Silently ignore stop errors during unmount
+                    });
             };
         } else {
             // Clear notifications when user logs out
-            dispatch(clearNotifications());
+            if (isMounted) {
+                dispatch(clearNotifications());
+            }
+            return () => {
+                isMounted = false;
+            };
         }
     }, [isAuthenticated, accessToken, dispatch]);
 
@@ -295,96 +314,100 @@ const MainHeader: React.FC<MainHeaderProps> = ({ handleClickMenuButton }) => {
                                     {/* Notification Body */}
                                     <div
                                         className="notification-body position-relative z-2 rounded-0"
-                                        data-simplebar
                                         style={{ maxHeight: '400px', overflowY: 'auto' }}
                                     >
-                                        {notifications.length === 0 ? (
-                                            <div className="text-center py-4">
-                                                <i className="ti ti-bell-off fs-48 text-muted mb-2"></i>
-                                                <p className="text-muted mb-0">
-                                                    Chưa có thông báo nào
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div key="notifications-container">
-                                                {notifications.map((notification: Notification) => {
-                                                    const localizedNotification =
-                                                        getLocalizedNotification(
-                                                            notification,
-                                                            currentLanguage as 'vi' | 'en'
-                                                        );
-                                                    return (
-                                                        <button
-                                                            key={`notification-${notification.id}`}
-                                                            type="button"
-                                                            className="dropdown-item notification-item py-3 text-wrap border-bottom btn btn-link text-start p-3"
-                                                            style={{
-                                                                cursor: 'pointer',
-                                                                border: 'none',
-                                                                background: 'none',
-                                                            }}
-                                                            onClick={() =>
-                                                                handleNotificationClick(
-                                                                    notification.id,
-                                                                    notification.actionUrl
-                                                                )
-                                                            }
-                                                        >
-                                                            <div className="d-flex">
-                                                                <div className="me-3 position-relative flex-shrink-0">
-                                                                    <div
-                                                                        className="avatar-md rounded-circle d-flex align-items-center justify-content-center"
-                                                                        style={{
-                                                                            backgroundColor:
-                                                                                '#e3f2fd',
-                                                                            width: '40px',
-                                                                            height: '40px',
-                                                                        }}
-                                                                    >
-                                                                        <i
-                                                                            className={
-                                                                                notification.icon ||
-                                                                                'ti ti-bell fs-18'
-                                                                            }
-                                                                            style={{
-                                                                                color: '#1976d2',
-                                                                            }}
-                                                                        ></i>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex-grow-1">
-                                                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                                                        <p className="mb-0 fw-medium text-dark fs-14">
-                                                                            {
-                                                                                localizedNotification.title
-                                                                            }
-                                                                        </p>
-                                                                        {!notification.isRead && (
-                                                                            <span className="badge bg-danger ms-2">
-                                                                                Mới
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="mb-2 text-wrap fs-13 text-muted">
-                                                                        {
-                                                                            localizedNotification.content
+                                        {/* Empty state - always render but hide when has notifications */}
+                                        <div
+                                            className="text-center py-4"
+                                            style={{
+                                                display:
+                                                    notifications.length === 0 ? 'block' : 'none',
+                                            }}
+                                        >
+                                            <i className="ti ti-bell-off fs-48 text-muted mb-2"></i>
+                                            <p className="text-muted mb-0">Chưa có thông báo nào</p>
+                                        </div>
+                                        {/* Notifications list - always render container */}
+                                        <div
+                                            style={{
+                                                display:
+                                                    notifications.length > 0 ? 'block' : 'none',
+                                            }}
+                                        >
+                                            {notifications.map((notification: Notification) => {
+                                                const localizedNotification =
+                                                    getLocalizedNotification(
+                                                        notification,
+                                                        currentLanguage as 'vi' | 'en'
+                                                    );
+                                                return (
+                                                    <button
+                                                        key={notification.id}
+                                                        type="button"
+                                                        className="dropdown-item notification-item py-3 text-wrap border-bottom btn btn-link text-start p-3"
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            border: 'none',
+                                                            background: 'none',
+                                                        }}
+                                                        onClick={() =>
+                                                            handleNotificationClick(
+                                                                notification.id,
+                                                                notification.actionUrl
+                                                            )
+                                                        }
+                                                    >
+                                                        <div className="d-flex">
+                                                            <div className="me-3 position-relative flex-shrink-0">
+                                                                <div
+                                                                    className="avatar-md rounded-circle d-flex align-items-center justify-content-center"
+                                                                    style={{
+                                                                        backgroundColor: '#e3f2fd',
+                                                                        width: '40px',
+                                                                        height: '40px',
+                                                                    }}
+                                                                >
+                                                                    <i
+                                                                        className={
+                                                                            notification.icon ||
+                                                                            'ti ti-bell fs-18'
                                                                         }
-                                                                    </p>
-                                                                    <div className="d-flex align-items-center">
-                                                                        <span className="fs-12 text-muted">
-                                                                            <i className="ti ti-clock me-1"></i>
-                                                                            {formatNotificationTime(
-                                                                                notification.createdAt
-                                                                            )}
-                                                                        </span>
-                                                                    </div>
+                                                                        style={{
+                                                                            color: '#1976d2',
+                                                                        }}
+                                                                    ></i>
                                                                 </div>
                                                             </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                                            <div className="flex-grow-1">
+                                                                <div className="d-flex justify-content-between align-items-start mb-1">
+                                                                    <p className="mb-0 fw-medium text-dark fs-14">
+                                                                        {
+                                                                            localizedNotification.title
+                                                                        }
+                                                                    </p>
+                                                                    {!notification.isRead && (
+                                                                        <span className="badge bg-danger ms-2">
+                                                                            Mới
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="mb-2 text-wrap fs-13 text-muted">
+                                                                    {localizedNotification.content}
+                                                                </p>
+                                                                <div className="d-flex align-items-center">
+                                                                    <span className="fs-12 text-muted">
+                                                                        <i className="ti ti-clock me-1"></i>
+                                                                        {formatNotificationTime(
+                                                                            notification.createdAt
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
 
                                     {/* View All */}
