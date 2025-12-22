@@ -1,3 +1,4 @@
+import { AppointmentType } from '@/enums/appointment.enums';
 import React, { useState, useEffect } from 'react';
 
 interface ModalCancelProps {
@@ -17,6 +18,7 @@ interface ModalCancelProps {
     showRescheduleOptions?: boolean; // Enable reschedule options for staff
     hasDoctorAssigned?: boolean; // Whether the appointment has a doctor (not service-based)
     consultationFees?: number; // For checking if refund option should be shown
+    appointmentType?: AppointmentType;
 }
 
 export interface RescheduleOptions {
@@ -43,6 +45,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
     showRescheduleOptions = false,
     hasDoctorAssigned = true, // Default true for backward compatibility
     consultationFees = 0, // Default to 0 (no refund option)
+    appointmentType = AppointmentType.IN_PERSON, // Default to regular appointment
 }) => {
     const [cancelReason, setCancelReason] = useState('');
     const [error, setError] = useState('');
@@ -64,7 +67,8 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                 enableSameDoctorReschedule: hasDoctorAssigned,
                 enableNewDoctorAssignment: hasDoctorAssigned,
                 enableDoctorSelection: hasDoctorAssigned,
-                enableRefundRequest: (consultationFees ?? 0) > 0, // Only show if patient has paid
+                enableRefundRequest:
+                    (consultationFees ?? 0) > 0 || appointmentType === 'TELEHEALTH', // Only show if patient has paid
             });
         }
     }, [show, hasDoctorAssigned, consultationFees]);
@@ -296,7 +300,8 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                         </label>
                                     </div>
                                     {/* Option 4: Only show if patient has paid (consultationFees > 0) */}
-                                    {(consultationFees ?? 0) > 0 && (
+                                    {((consultationFees ?? 0) > 0 ||
+                                        appointmentType === 'TELEHEALTH') && (
                                         <div className="form-check">
                                             <input
                                                 className="form-check-input"
@@ -315,11 +320,7 @@ export const ModalCancel: React.FC<ModalCancelProps> = ({
                                                 <strong>4. Yêu cầu hoàn tiền</strong>
                                                 <br />
                                                 <small className="text-muted">
-                                                    Bệnh nhân yêu cầu hoàn lại tiền đặt cọc (
-                                                    {(consultationFees ?? 0).toLocaleString(
-                                                        'vi-VN'
-                                                    )}{' '}
-                                                    đ )
+                                                    Bệnh nhân yêu cầu hoàn lại tiền đặt cọc
                                                 </small>
                                             </label>
                                         </div>

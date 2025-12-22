@@ -806,6 +806,7 @@ const ListAppointments: React.FC = () => {
                 showRescheduleOptions={true}
                 hasDoctorAssigned={!!selectedAppointment?.doctorInfo?.id}
                 consultationFees={selectedAppointment?.consultationFees}
+                appointmentType={selectedAppointment?.appointmentType}
             />
 
             {/* Reject Pending Modal - for PENDING appointments (no refund needed) */}
