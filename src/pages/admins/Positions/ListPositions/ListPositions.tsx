@@ -12,7 +12,7 @@ import TableActions from '@/components/TableActions';
 import { positionTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
 import { Position, PositionFormData } from '@/types/position.types';
 import usePosition from '@/hooks/usePosition';
-import { getAllPositions } from '@/services/position.service';
+import { getAllPositionsSimple } from '@/services/position.service';
 import { getSortParams, SORT_OPTIONS } from '@/utils/sortUtils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import EntityModal from '@/components/Modal/EntityModal';
@@ -54,37 +54,38 @@ const ListPositions: React.FC = () => {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-    // Fetch positions on component mount
-    useEffect(() => {
-        const sortParams = getSortParams(sortBy);
-        fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
-    }, [fetchPositions, currentPage, itemsPerPage, sortBy]);
-
-    // Handle search term changes with debounce
+    // Debounce search term
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (searchTerm.trim()) {
-                const sortParams = getSortParams(sortBy);
-                const filterParams = {
-                    pageNumber: 1,
-                    pageSize: itemsPerPage,
-                    searchTerm: searchTerm.trim(),
-                    sortBy: sortParams.sortBy,
-                    sortOrder: sortParams.sortOrder,
-                };
-                setCurrentPage(1);
-                filterPositions(filterParams);
-            } else {
-                // If search is cleared, fetch all positions with current sort
-                setCurrentPage(1);
-                const sortParams = getSortParams(sortBy);
-                fetchPositions(1, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 when search changes
             }
-        }, 500); // 500ms debounce
+        }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, itemsPerPage, filterPositions, fetchPositions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
+    // Fetch positions when page, sort, or debounced search changes
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        if (debouncedSearchTerm.trim()) {
+            const filterParams = {
+                pageNumber: currentPage,
+                pageSize: itemsPerPage,
+                searchTerm: debouncedSearchTerm.trim(),
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            };
+            filterPositions(filterParams);
+        } else {
+            fetchPositions(currentPage, itemsPerPage, sortParams.sortBy, sortParams.sortOrder);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage, sortBy, debouncedSearchTerm]);
 
     // Position Modal States
     const [showModal, setShowModal] = useState(false);
@@ -367,8 +368,8 @@ const ListPositions: React.FC = () => {
     // Function to fetch all positions for filter modal
     const fetchAllPositionsForFilter = async () => {
         try {
-            const response = await getAllPositions(1, 100); // Large page size to get all
-            setAllPositions(response.data.items);
+            const response = await getAllPositionsSimple();
+            setAllPositions(response.data || []);
         } catch (error) {
             console.error('Error fetching all positions for filter:', error);
             setAllPositions([]);

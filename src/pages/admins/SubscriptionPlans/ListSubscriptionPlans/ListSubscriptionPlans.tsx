@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 import ModalDelete from '@/components/ModalDelete';
-import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
 import TableSkeleton from '@/components/TableSkeleton';
@@ -20,64 +19,49 @@ const ListSubscriptionPlans: React.FC = () => {
     const { subscriptionPlans, loading, error, loadFilteredSubscriptionPlans, clearError } =
         useSubscription();
 
-    // Local state for UI
-    const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
-    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-    const [selectedBillingCycles, setSelectedBillingCycles] = useState<string[]>([]);
     const [tab, setTab] = useState<'MONTHLY' | 'QUARTERLY' | 'YEARLY'>('MONTHLY');
-
-    // Applied filters (after clicking "Lọc" button)
-    const [appliedPlans, setAppliedPlans] = useState<string[]>([]);
-    const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-    const [appliedBillingCycles, setAppliedBillingCycles] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('Mới thêm gần đây');
-    const [showFilterModal, setShowFilterModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [planToDelete, setPlanToDelete] = useState<SubscriptionPlan | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    // State for all plans (for filter modal)
-    const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
-
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-    // Fetch plans on component mount
-    useEffect(() => {
-        const sortParams = getSortParams(sortBy);
-        loadFilteredSubscriptionPlans({
-            page: currentPage,
-            pageSize: itemsPerPage,
-            sortBy: sortParams.sortBy,
-            sortOrder: sortParams.sortOrder,
-        });
-    }, [loadFilteredSubscriptionPlans, currentPage, itemsPerPage, sortBy]);
-
-    // Handle search term changes with debounce
+    // Debounce search term
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (searchTerm.trim() !== '') {
-                loadFilteredSubscriptionPlans({
-                    name: searchTerm,
-                    page: 1,
-                    pageSize: itemsPerPage,
-                });
-                setCurrentPage(1);
-            } else if (searchTerm.trim() === '') {
-                const sortParams = getSortParams(sortBy);
-                loadFilteredSubscriptionPlans({
-                    page: 1,
-                    pageSize: itemsPerPage,
-                    sortBy: sortParams.sortBy,
-                    sortOrder: sortParams.sortOrder,
-                });
-                setCurrentPage(1);
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 when search changes
             }
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, loadFilteredSubscriptionPlans, itemsPerPage, sortBy]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
+    // Fetch plans when page, sort, or debounced search changes
+    useEffect(() => {
+        const sortParams = getSortParams(sortBy);
+        if (debouncedSearchTerm.trim()) {
+            loadFilteredSubscriptionPlans({
+                name: debouncedSearchTerm,
+                page: currentPage,
+                pageSize: itemsPerPage,
+            });
+        } else {
+            loadFilteredSubscriptionPlans({
+                page: currentPage,
+                pageSize: itemsPerPage,
+                sortBy: sortParams.sortBy,
+                sortOrder: sortParams.sortOrder,
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, itemsPerPage, sortBy, debouncedSearchTerm]);
 
     // Error handling
     useEffect(() => {
@@ -87,38 +71,6 @@ const ListSubscriptionPlans: React.FC = () => {
         }
     }, [error, clearError]);
 
-    // Fetch all plans for filter modal
-    const fetchAllPlansForFilter = async () => {
-        try {
-            await loadFilteredSubscriptionPlans({
-                page: 1,
-                pageSize: 1000, // Get all plans for filter
-            });
-            setAllPlans(subscriptionPlans);
-        } catch (error) {
-            console.error('Error fetching plans for filter:', error);
-        }
-    };
-
-    // Filtered plans based on applied filters
-    const filteredPlans = useMemo(() => {
-        let filtered = subscriptionPlans || [];
-
-        if (appliedPlans.length > 0) {
-            filtered = filtered.filter((plan) => appliedPlans.includes(plan.id));
-        }
-
-        if (appliedStatuses.length > 0) {
-            filtered = filtered.filter((plan) => appliedStatuses.includes(plan.status));
-        }
-
-        if (appliedBillingCycles.length > 0) {
-            filtered = filtered.filter((plan) => appliedBillingCycles.includes(plan.billingCycle));
-        }
-
-        return filtered;
-    }, [subscriptionPlans, appliedPlans, appliedStatuses, appliedBillingCycles]);
-
     // Filter theo tab
     const tabs = [
         { key: 'MONTHLY', label: 'Gói theo tháng' },
@@ -126,14 +78,14 @@ const ListSubscriptionPlans: React.FC = () => {
         { key: 'YEARLY', label: 'Gói theo năm' },
     ];
 
-    const tabbedPlans = filteredPlans.filter((p) => p.billingCycle === tab);
-    const paginatedFilteredPlans = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return tabbedPlans.slice(startIndex, startIndex + itemsPerPage);
-    }, [tabbedPlans, currentPage, itemsPerPage]);
+    const tabbedPlans = subscriptionPlans.filter((p) => p.billingCycle === tab);
+    const paginatedFilteredPlans = tabbedPlans.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     // Calculate effective total pages
-    const effectiveTotalPages = Math.ceil(filteredPlans.length / itemsPerPage);
+    const effectiveTotalPages = Math.ceil(tabbedPlans.length / itemsPerPage);
 
     // Handle page change
     const handlePageChange = useCallback((page: number) => {
@@ -188,41 +140,6 @@ const ListSubscriptionPlans: React.FC = () => {
     const handleDeleteCancel = useCallback(() => {
         setShowDeleteModal(false);
         setPlanToDelete(null);
-    }, []);
-
-    // Handle filter submit
-    const handleFilterSubmit = useCallback(() => {
-        setAppliedPlans([...selectedPlans]);
-        setAppliedStatuses([...selectedStatuses]);
-        setAppliedBillingCycles([...selectedBillingCycles]);
-        setCurrentPage(1);
-        setShowFilterModal(false);
-    }, [selectedPlans, selectedStatuses, selectedBillingCycles]);
-
-    // Handle clear filters
-    const handleClearFilters = useCallback(() => {
-        setAppliedPlans([]);
-        setAppliedStatuses([]);
-        setAppliedBillingCycles([]);
-        setSelectedPlans([]);
-        setSelectedStatuses([]);
-        setSelectedBillingCycles([]);
-        setCurrentPage(1);
-    }, []);
-
-    // Handle reset filter
-    const handleResetFilter = useCallback((filterType: string) => {
-        switch (filterType) {
-            case 'plans':
-                setSelectedPlans([]);
-                break;
-            case 'statuses':
-                setSelectedStatuses([]);
-                break;
-            case 'billingCycles':
-                setSelectedBillingCycles([]);
-                break;
-        }
     }, []);
 
     // Render table body
@@ -312,6 +229,15 @@ const ListSubscriptionPlans: React.FC = () => {
                                     plan.maxSpecialties
                                 )}
                             </div>
+                            <div className="mb-1">
+                                <i className="ti ti-medical-cross text-success me-1"></i>
+                                <strong>Dịch vụ:</strong>{' '}
+                                {plan.maxServices === null ? (
+                                    <span className="badge badge-soft-success">Không giới hạn</span>
+                                ) : (
+                                    plan.maxServices
+                                )}
+                            </div>
                             <div>
                                 <i className="ti ti-calendar text-danger me-1"></i>
                                 <strong>Lịch hẹn:</strong>{' '}
@@ -389,10 +315,7 @@ const ListSubscriptionPlans: React.FC = () => {
                         <h4 className="fw-bold mb-0">
                             Danh sách gói dịch vụ{' '}
                             <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                                Tổng gói dịch vụ:{' '}
-                                {appliedPlans.length > 0
-                                    ? filteredPlans.length
-                                    : subscriptionPlans.length}
+                                Tổng gói dịch vụ: {subscriptionPlans.length}
                             </span>
                         </h4>
                     </div>
@@ -476,23 +399,6 @@ const ListSubscriptionPlans: React.FC = () => {
                         </div>
                     </div>
                     <div className="d-flex table-dropdown mb-3 pb-1 align-items-center flex-wrap row-gap-3 ms-auto">
-                        <Button
-                            variant="white"
-                            size="md"
-                            className="me-2 fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                            icon="ti ti-filter text-gray-5"
-                            onClick={async () => {
-                                // Sync selected filters with applied filters when opening modal
-                                setSelectedPlans([...appliedPlans]);
-                                setSelectedStatuses([...appliedStatuses]);
-                                setSelectedBillingCycles([...appliedBillingCycles]);
-                                // Fetch all plans for filter modal
-                                await fetchAllPlansForFilter();
-                                setShowFilterModal(true);
-                            }}
-                        >
-                            Lọc
-                        </Button>
                         <ActionDropdown
                             type="sort"
                             options={SORT_OPTIONS}
@@ -500,101 +406,18 @@ const ListSubscriptionPlans: React.FC = () => {
                             onSelect={(newSortBy) => {
                                 setSortBy(newSortBy);
                                 setCurrentPage(1);
-
-                                // Fetch plans with new sort parameters
-                                if (appliedPlans.length === 0) {
-                                    const sortParams = getSortParams(newSortBy);
-                                    loadFilteredSubscriptionPlans({
-                                        page: 1,
-                                        pageSize: itemsPerPage,
-                                        sortBy: sortParams.sortBy,
-                                        sortOrder: sortParams.sortOrder,
-                                    });
-                                }
+                                const sortParams = getSortParams(newSortBy);
+                                loadFilteredSubscriptionPlans({
+                                    page: 1,
+                                    pageSize: itemsPerPage,
+                                    sortBy: sortParams.sortBy,
+                                    sortOrder: sortParams.sortOrder,
+                                });
                             }}
                             placeholder="Sắp xếp theo:"
                         />
                     </div>
                 </div>
-
-                {/* Applied Filters */}
-                {(appliedPlans.length > 0 ||
-                    appliedStatuses.length > 0 ||
-                    appliedBillingCycles.length > 0) && (
-                    <div className="applied-filters mb-3">
-                        <div className="d-flex align-items-center flex-wrap gap-2">
-                            <span className="text-muted fs-14">Bộ lọc đã áp dụng:</span>
-
-                            {appliedPlans.map((planId) => {
-                                const plan = subscriptionPlans.find((p) => p.id === planId);
-                                return plan ? (
-                                    <span key={planId} className="badge badge-soft-primary fs-12">
-                                        {plan.name}
-                                        <button
-                                            type="button"
-                                            className="btn-close btn-close-white ms-1"
-                                            onClick={() => {
-                                                const newAppliedPlans = appliedPlans.filter(
-                                                    (id) => id !== planId
-                                                );
-                                                setAppliedPlans(newAppliedPlans);
-                                                setSelectedPlans(newAppliedPlans);
-                                            }}
-                                        />
-                                    </span>
-                                ) : null;
-                            })}
-
-                            {appliedStatuses.map((status) => (
-                                <span key={status} className="badge badge-soft-secondary fs-12">
-                                    {status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}
-                                    <button
-                                        type="button"
-                                        className="btn-close btn-close-white ms-1"
-                                        onClick={() => {
-                                            const newAppliedStatuses = appliedStatuses.filter(
-                                                (s) => s !== status
-                                            );
-                                            setAppliedStatuses(newAppliedStatuses);
-                                            setSelectedStatuses(newAppliedStatuses);
-                                        }}
-                                    />
-                                </span>
-                            ))}
-
-                            {appliedBillingCycles.map((cycle) => {
-                                const getCycleLabel = () => {
-                                    if (cycle === 'MONTHLY') return 'Hàng tháng';
-                                    if (cycle === 'QUARTERLY') return 'Hàng quý';
-                                    return 'Hàng năm';
-                                };
-                                return (
-                                    <span key={cycle} className="badge badge-soft-info fs-12">
-                                        {getCycleLabel()}
-                                        <button
-                                            type="button"
-                                            className="btn-close btn-close-white ms-1"
-                                            onClick={() => {
-                                                const newAppliedCycles =
-                                                    appliedBillingCycles.filter((c) => c !== cycle);
-                                                setAppliedBillingCycles(newAppliedCycles);
-                                                setSelectedBillingCycles(newAppliedCycles);
-                                            }}
-                                        />
-                                    </span>
-                                );
-                            })}
-
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-outline-secondary fs-12"
-                                onClick={handleClearFilters}
-                            >
-                                Xóa tất cả
-                            </button>
-                        </div>
-                    </div>
-                )}
 
                 <div className="table-responsive">
                     <table className="table table-nowrap datatable">
@@ -637,54 +460,6 @@ const ListSubscriptionPlans: React.FC = () => {
                 message={`Bạn có chắc chắn muốn xóa gói dịch vụ "${planToDelete?.name}"? Hành động này không thể hoàn tác.`}
                 confirmText="Có, xóa"
                 cancelText="Hủy"
-            />
-
-            {/* Filter Modal */}
-            <ModalFilter
-                show={showFilterModal}
-                onHide={() => setShowFilterModal(false)}
-                onApply={handleFilterSubmit}
-                onReset={handleClearFilters}
-                title="Bộ lọc gói dịch vụ"
-                fields={[
-                    {
-                        name: 'plans',
-                        label: 'Gói dịch vụ',
-                        type: 'multiselect',
-                        options: (allPlans || []).map((plan) => ({
-                            value: plan.id,
-                            label: plan.name,
-                        })),
-                        value: selectedPlans,
-                        onChange: setSelectedPlans,
-                        resetValue: () => handleResetFilter('plans'),
-                    },
-                    {
-                        name: 'statuses',
-                        label: 'Trạng thái',
-                        type: 'multiselect',
-                        options: [
-                            { value: 'ACTIVE', label: 'Hoạt động' },
-                            { value: 'INACTIVE', label: 'Không hoạt động' },
-                        ],
-                        value: selectedStatuses,
-                        onChange: setSelectedStatuses,
-                        resetValue: () => handleResetFilter('statuses'),
-                    },
-                    {
-                        name: 'billingCycles',
-                        label: 'Chu kỳ thanh toán',
-                        type: 'multiselect',
-                        options: [
-                            { value: 'MONTHLY', label: 'Hàng tháng' },
-                            { value: 'QUARTERLY', label: 'Hàng quý' },
-                            { value: 'YEARLY', label: 'Hàng năm' },
-                        ],
-                        value: selectedBillingCycles,
-                        onChange: setSelectedBillingCycles,
-                        resetValue: () => handleResetFilter('billingCycles'),
-                    },
-                ]}
             />
         </>
     );
