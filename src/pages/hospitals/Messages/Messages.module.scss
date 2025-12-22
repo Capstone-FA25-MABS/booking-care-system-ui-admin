@@ -59,6 +59,7 @@
 .chatUsers {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; // Prevent horizontal scrollbar
     max-height: 100%;
 
     h6 {
@@ -93,6 +94,7 @@
     transition: all 0.2s ease;
     cursor: pointer;
     border: 1px solid transparent;
+    overflow: hidden; // Prevent horizontal scrollbar
 
     &:hover {
         background-color: #f8f9fa;
@@ -105,10 +107,11 @@
     }
 
     .userMessage {
-        max-width: 200px;
+        max-width: 100%; // Use 100% of parent instead of fixed width
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: block;
     }
 
     .readHistory {
@@ -272,7 +275,7 @@
         padding: 0.75rem 0.5rem;
 
         .userMessage {
-            max-width: 150px;
+            max-width: 100%; // Use 100% instead of fixed width
         }
     }
 

@@ -51,21 +51,30 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, conversationTags = []
                 'd-flex align-items-center justify-content-between rounded p-2 mb-2',
                 { [styles.active]: user.isActive }
             )}
+            style={{ overflow: 'hidden' }}
         >
-            <div className="d-flex align-items-center flex-grow-1 min-w-0">
+            <div
+                className="d-flex align-items-center flex-grow-1"
+                style={{ minWidth: 0, overflow: 'hidden' }}
+            >
                 <div className="avatar me-2 flex-shrink-0">
                     <img src={user.avatar} alt="user" />
                 </div>
-                <div className="min-w-0 flex-grow-1">
-                    <div className="d-flex align-items-center mb-1">
-                        <h6 className="fs-14 mb-0 text-truncate me-2">
+                <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                    <div className="d-flex align-items-center mb-1" style={{ overflow: 'hidden' }}>
+                        <h6 className="fs-14 mb-0 text-truncate me-2" style={{ minWidth: 0 }}>
                             <span className="text-decoration-none text-start text-truncate">
                                 {user.name}
                             </span>
                         </h6>
                         {/* Zalo-style Tag Dots */}
                         {prioritizedTags.length > 0 && (
-                            <div className={clsx(styles.tagDots, 'd-flex align-items-center')}>
+                            <div
+                                className={clsx(
+                                    styles.tagDots,
+                                    'd-flex align-items-center flex-shrink-0'
+                                )}
+                            >
                                 {prioritizedTags.slice(0, 3).map((tag, index) => (
                                     <span
                                         key={tag.id}
@@ -101,7 +110,10 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, conversationTags = []
                     </p>
                 </div>
             </div>
-            <div className={clsx(styles.readHistory, 'text-end flex-shrink-0 ms-2')}>
+            <div
+                className={clsx(styles.readHistory, 'text-end flex-shrink-0 ms-2')}
+                style={{ whiteSpace: 'nowrap' }}
+            >
                 <span className="text-muted d-block mb-1 small">{user.time}</span>
                 {user.unreadCount > 0 ? (
                     <span className={clsx(styles.messageCount, 'badge bg-danger rounded-circle')}>
