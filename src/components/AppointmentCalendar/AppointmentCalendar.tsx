@@ -17,8 +17,8 @@ import {
 } from '@/types/appointment.types';
 import Spinner from '@/components/Spinner';
 
-// Import custom SCSS
-import './AppointmentCalendar.scss';
+// Import custom CSS Module
+import styles from './AppointmentCalendar.module.scss';
 
 // ============================================================================
 // Types
@@ -148,6 +148,104 @@ interface EventContentProps {
 
 const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
     const { extendedProps } = eventInfo.event;
+    const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseEnter = () => {
+        if (wrapperRef.current) {
+            const rect = wrapperRef.current.getBoundingClientRect();
+
+            // Find calendar container
+            const calendarEl = wrapperRef.current.closest('.fc');
+            if (!calendarEl) return;
+
+            const calendarRect = calendarEl.getBoundingClientRect();
+
+            // Find the day cell to determine row position
+            const dayCell = wrapperRef.current.closest('.fc-daygrid-day');
+            const isFirstRow = dayCell?.closest('tr')?.previousElementSibling === null;
+            const isLastRow = dayCell?.closest('tr')?.nextElementSibling === null;
+
+            const tooltipHeight = 65;
+            const tooltipWidth = 240;
+            const spacing = 12;
+            const padding = 15;
+
+            let top: number;
+            let left: number;
+            let transform = 'translateX(-50%)';
+
+            // Calculate horizontal position (keep within calendar bounds)
+            left = rect.left + rect.width / 2;
+
+            // Adjust if tooltip goes beyond calendar right edge
+            const maxLeft = calendarRect.right - tooltipWidth - padding;
+            if (left + tooltipWidth / 2 > calendarRect.right - padding) {
+                left = maxLeft;
+                transform = 'translateX(0)';
+            }
+
+            // Adjust if tooltip goes beyond calendar left edge
+            const minLeft = calendarRect.left + padding;
+            if (left - tooltipWidth / 2 < minLeft) {
+                left = minLeft;
+                transform = 'translateX(0)';
+            }
+
+            // Calculate vertical position based on row position
+            let arrowDirection = 'up'; // Default: arrow points up (tooltip above avatar)
+
+            if (isFirstRow) {
+                // First row: always show below with more spacing
+                top = rect.bottom + spacing + 5;
+                arrowDirection = 'down'; // Arrow points down (tooltip below avatar)
+            } else if (isLastRow) {
+                // Last row: always show above with more spacing
+                top = rect.top - tooltipHeight - spacing - 5;
+                arrowDirection = 'up';
+            } else {
+                // Middle rows: prefer above, but show below if not enough space
+                const spaceAbove = rect.top - calendarRect.top;
+                const spaceBelow = calendarRect.bottom - rect.bottom;
+
+                if (spaceAbove >= tooltipHeight + spacing + 20) {
+                    top = rect.top - tooltipHeight - spacing;
+                    arrowDirection = 'up';
+                } else if (spaceBelow >= tooltipHeight + spacing + 20) {
+                    top = rect.bottom + spacing;
+                    arrowDirection = 'down';
+                } else {
+                    // Default to below if both spaces are tight
+                    top = rect.bottom + spacing;
+                    arrowDirection = 'down';
+                }
+            }
+
+            // Ensure tooltip doesn't go above calendar top
+            const minTop = calendarRect.top + padding;
+            if (top < minTop) {
+                top = minTop;
+            }
+
+            // Ensure tooltip doesn't go below calendar bottom
+            const maxTop = calendarRect.bottom - tooltipHeight - padding;
+            if (top > maxTop) {
+                top = maxTop;
+            }
+
+            setTooltipStyle({
+                top: `${top}px`,
+                left: `${left}px`,
+                transform,
+                // Add custom CSS variable for arrow position
+                ['--arrow-left' as any]:
+                    transform === 'translateX(0)'
+                        ? `${rect.left + rect.width / 2 - left}px`
+                        : '50%',
+                ['--arrow-direction' as any]: arrowDirection,
+            });
+        }
+    };
 
     // Check if this is a "+X more" event
     if (extendedProps.isMoreEvent) {
@@ -155,23 +253,17 @@ const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
         const totalPatients = extendedProps.totalPatients || 0;
 
         return (
-            <div className="d-flex align-items-center justify-content-center p-1 position-relative appointment-avatar-wrapper">
+            <div
+                ref={wrapperRef}
+                className={styles.appointmentAvatarWrapper}
+                onMouseEnter={handleMouseEnter}
+            >
                 <div
-                    className="rounded-circle d-flex align-items-center justify-content-center text-muted fw-bold appointment-more-badge"
-                    style={{
-                        width: '32px',
-                        height: '32px',
-                        backgroundColor: '#f3f4f6',
-                        border: '2px solid #d1d5db',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        fontSize: '0.7rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                    }}
+                    className={`rounded-circle d-flex align-items-center justify-content-center ${styles.appointmentMoreBadge}`}
                 >
                     +{remainingCount}
                 </div>
-                <div className="custom-tooltip">
+                <div className={styles.customTooltip} style={tooltipStyle}>
                     Còn {remainingCount} bệnh nhân khác
                     <br />
                     Tổng: {totalPatients} bệnh nhân
@@ -184,45 +276,26 @@ const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
     const appointmentCount = extendedProps.appointmentCount || 1;
 
     return (
-        <div className="d-flex align-items-center justify-content-center p-1 position-relative appointment-avatar-wrapper">
+        <div
+            ref={wrapperRef}
+            className={styles.appointmentAvatarWrapper}
+            onMouseEnter={handleMouseEnter}
+        >
             {avatarUrl ? (
                 <>
                     <img
                         src={avatarUrl}
                         alt={eventInfo.event.title}
-                        className="rounded-circle appointment-avatar"
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            objectFit: 'cover',
-                            border: '2px solid white',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        }}
+                        className={`rounded-circle ${styles.appointmentAvatar}`}
                     />
                     {appointmentCount > 1 && (
                         <span
-                            className="position-absolute badge rounded-pill bg-danger appointment-count-badge"
-                            style={{
-                                top: '-4px',
-                                right: '-8px',
-                                fontSize: '0.65rem',
-                                padding: '0.2rem 0.4rem',
-                                minWidth: '18px',
-                                height: '18px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: '700',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                border: '1.5px solid white',
-                            }}
+                            className={`badge rounded-pill bg-danger ${styles.appointmentCountBadge}`}
                         >
                             {appointmentCount}
                         </span>
                     )}
-                    <div className="custom-tooltip">
+                    <div className={styles.customTooltip} style={tooltipStyle}>
                         {eventInfo.event.title}
                         <br />
                         {appointmentCount} cuộc hẹn trong ngày này
@@ -231,17 +304,8 @@ const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
             ) : (
                 <>
                     <div
-                        className="rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold appointment-avatar"
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            backgroundColor: '#6366f1',
-                            border: '2px solid white',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        }}
+                        className={`rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold ${styles.appointmentAvatar}`}
+                        style={{ backgroundColor: '#6366f1', fontSize: '0.7rem' }}
                     >
                         {eventInfo.event.title
                             .split(' ')
@@ -252,26 +316,12 @@ const EventContent: React.FC<EventContentProps> = ({ eventInfo }) => {
                     </div>
                     {appointmentCount > 1 && (
                         <span
-                            className="position-absolute badge rounded-pill bg-danger appointment-count-badge"
-                            style={{
-                                top: '-4px',
-                                right: '-8px',
-                                fontSize: '0.65rem',
-                                padding: '0.2rem 0.4rem',
-                                minWidth: '18px',
-                                height: '18px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: '700',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                border: '1.5px solid white',
-                            }}
+                            className={`badge rounded-pill bg-danger ${styles.appointmentCountBadge}`}
                         >
                             {appointmentCount}
                         </span>
                     )}
-                    <div className="custom-tooltip">
+                    <div className={styles.customTooltip} style={tooltipStyle}>
                         {eventInfo.event.title}
                         <br />
                         {appointmentCount} cuộc hẹn trong ngày này
@@ -362,7 +412,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
                     // Transform grouped appointments to calendar events
                     const calendarEvents: CalendarEvent[] = [];
-                    const MAX_PATIENTS_PER_DAY = 2; // Giới hạn 2 bệnh nhân hiển thị để tránh tràn layout
+                    const MAX_PATIENTS_PER_DAY = 5; // Giới hạn 5 bệnh nhân hiển thị theo yêu cầu
 
                     groupedByDateAndPatient.forEach((dateGroup, dateKey) => {
                         const patientsArray = Array.from(dateGroup.entries());
@@ -504,7 +554,10 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                         </div>
                     )}
 
-                    <div style={{ opacity: isLoading ? 0.5 : 1, position: 'relative' }}>
+                    <div
+                        style={{ opacity: isLoading ? 0.5 : 1, position: 'relative' }}
+                        className={styles.calendarWrapper}
+                    >
                         <FullCalendar
                             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
