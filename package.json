@@ -5,13 +5,14 @@
     "type": "module",
     "scripts": {
         "dev": "vite --port 5174",
-        "build": "tsc -b && vite build",
+        "build": "vite build",
         "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --ignore-pattern \"src/assets/**\"",
         "lint:fix": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --ignore-pattern \"src/assets/**\" --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,scss,css,md}\"",
         "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,scss,css,md}\"",
         "preview": "vite preview",
-        "prepare": "husky"
+        "prepare": "husky",
+        "typecheck": "tsc -b"
     },
     "dependencies": {
         "@ckeditor/ckeditor5-react": "^11.0.0",
