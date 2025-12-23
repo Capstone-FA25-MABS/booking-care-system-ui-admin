@@ -47,6 +47,7 @@ import { ChartJsLine } from '@/components/ChartJsLine/ChartJsLine';
 import DashboardReviewSection from '@/components/DashboardReviewSection';
 import DashboardRatingDistributionChart from '@/components/DashboardRatingDistributionChart';
 import DashboardOverviewMetrics from '@/components/DashboardOverviewMetrics';
+import DeepAnalyticsSection from '@/components/DeepAnalyticsSection';
 import { useDashboardDateRange } from '@/hooks/useDashboardDateRange';
 import { useReviewInsights, ReviewStatsSummary } from '@/hooks/useReviewInsights';
 import PaymentMethodService from '@/services/paymentMethod.service';
@@ -283,9 +284,17 @@ const AdminDashboard: React.FC = () => {
 
             if (aiDateRange.from && aiDateRange.to) {
                 // Nếu người dùng chọn date range cụ thể
+                // FIX: Sử dụng local date format thay vì toISOString() để tránh timezone conversion
+                const formatLocalDate = (date: Date): string => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
                 request = {
-                    fromDate: aiDateRange.from.toISOString().split('T')[0],
-                    toDate: aiDateRange.to.toISOString().split('T')[0],
+                    fromDate: formatLocalDate(aiDateRange.from),
+                    toDate: formatLocalDate(aiDateRange.to),
                 };
             } else {
                 // Mặc định: 7 ngày trước đến ngày hiện tại
@@ -293,9 +302,16 @@ const AdminDashboard: React.FC = () => {
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(today.getDate() - 7);
 
+                const formatLocalDate = (date: Date): string => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
                 request = {
-                    fromDate: sevenDaysAgo.toISOString().split('T')[0],
-                    toDate: today.toISOString().split('T')[0],
+                    fromDate: formatLocalDate(sevenDaysAgo),
+                    toDate: formatLocalDate(today),
                 };
             }
 
@@ -1286,102 +1302,145 @@ const AdminDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Alerts, Root Cause, Predictions - Nằm trên 1 hàng */}
+            {/* Phân tích chi tiết lý do hủy, Root Cause, Predictions - Nằm trên 1 hàng */}
             {aiInsights && (
                 <div className={styles.aiInsightsRow}>
-                    {/* Alerts Section */}
-                    {aiInsights.alerts && aiInsights.alerts.length > 0 && (
-                        <div className={styles.trendCard}>
-                            <div className={styles.cardHeader}>
-                                <h5>
-                                    <i className="ti ti-alert-circle me-2"></i>
-                                    Cảnh báo & Thông báo
-                                </h5>
-                                <span>Phát hiện các chỉ số bất thường cần chú ý</span>
-                            </div>
-                            <div className={styles.cardBody}>
-                                <div className={styles.alertsGrid}>
-                                    {aiInsights.alerts.map((alert: any, index: number) => {
-                                        // Tất cả alerts đều màu đỏ (alertCritical)
-                                        const alertTypeClass = styles.alertCritical;
-
-                                        const severityIconMap: Record<string, string> = {
-                                            high: 'ti ti-alert-triangle',
-                                            medium: 'ti ti-alert-triangle',
-                                            low: 'ti ti-alert-triangle',
-                                        };
-                                        const severityIcon =
-                                            severityIconMap[alert.severity] ||
-                                            'ti ti-alert-triangle';
-
-                                        return (
+                    {/* Phân tích chi tiết lý do hủy */}
+                    {aiInsights.metrics &&
+                        aiInsights.metrics.detailedCancellationAnalysis &&
+                        aiInsights.metrics.detailedCancellationAnalysis.topReasons &&
+                        aiInsights.metrics.detailedCancellationAnalysis.topReasons.length > 0 && (
+                            <div className={styles.trendCard}>
+                                <div className={styles.cardHeader}>
+                                    <h5>
+                                        <i className="ti ti-x me-2"></i>
+                                        Phân tích chi tiết lý do hủy
+                                    </h5>
+                                    <span>Phân loại và khuyến nghị cải thiện</span>
+                                </div>
+                                <div className={styles.cardBody}>
+                                    <div className={styles.alertsGrid}>
+                                        {/* Cảnh báo tỉ lệ hủy cao */}
+                                        {aiInsights.metrics.cancellationRate > 0 && (
                                             <div
-                                                key={index}
-                                                className={`${styles.alertCard} ${alertTypeClass}`}
+                                                className={`${styles.alertCard} ${styles.alertCritical}`}
                                             >
                                                 <div className={styles.alertHeader}>
                                                     <div className={styles.alertIcon}>
-                                                        <i className={severityIcon}></i>
+                                                        <i className="ti ti-alert-triangle"></i>
                                                     </div>
                                                     <div className={styles.alertTitleSection}>
                                                         <h6 className={styles.alertTitle}>
-                                                            {alert.title}
+                                                            Tỉ lệ hủy cao
                                                         </h6>
-                                                        {alert.metric && (
-                                                            <span className={styles.alertMetric}>
-                                                                {alert.metric}
-                                                            </span>
-                                                        )}
+                                                        <span className={styles.alertMetric}>
+                                                            Tỉ lệ hủy
+                                                        </span>
                                                     </div>
                                                     <span
                                                         className={styles.alertBadge}
-                                                        data-severity={alert.severity}
+                                                        data-severity="high"
                                                     >
-                                                        {alert.severity === 'high'
-                                                            ? 'Cao'
-                                                            : alert.severity === 'medium'
-                                                              ? 'Trung bình'
-                                                              : 'Thấp'}
+                                                        Cao
                                                     </span>
                                                 </div>
                                                 <p className={styles.alertMessage}>
-                                                    {alert.message}
+                                                    Tỉ lệ hủy cao cần có biện pháp cải thiện để giảm
+                                                    thiểu số lượng hủy lịch.
                                                 </p>
-                                                {(alert.currentValue !== undefined ||
-                                                    alert.thresholdValue !== undefined) && (
-                                                    <div className={styles.alertValues}>
-                                                        {alert.currentValue !== undefined && (
-                                                            <span>
-                                                                Giá trị hiện tại:{' '}
-                                                                <strong>
-                                                                    {alert.currentValue}
-                                                                </strong>
-                                                            </span>
-                                                        )}
-                                                        {alert.thresholdValue !== undefined && (
-                                                            <span>
-                                                                Ngưỡng:{' '}
-                                                                <strong>
-                                                                    {alert.thresholdValue}
-                                                                </strong>
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                {alert.recommendedAction && (
-                                                    <div className={styles.alertAction}>
-                                                        <i className="ti ti-lightbulb me-2"></i>
-                                                        <strong>Khuyến nghị:</strong>{' '}
-                                                        {alert.recommendedAction}
-                                                    </div>
-                                                )}
+                                                <div className={styles.alertValues}>
+                                                    <span>
+                                                        Giá trị hiện tại:{' '}
+                                                        <strong
+                                                            style={{
+                                                                color: '#ef4444',
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {aiInsights.metrics.cancellationRate.toFixed(
+                                                                2
+                                                            )}
+                                                            %
+                                                        </strong>
+                                                    </span>
+                                                    <span>
+                                                        Ngưỡng:{' '}
+                                                        <strong
+                                                            style={{
+                                                                color: '#64748b',
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            40%
+                                                        </strong>
+                                                    </span>
+                                                </div>
+                                                <div className={styles.alertAction}>
+                                                    <i className="ti ti-lightbulb me-2"></i>
+                                                    <strong>Khuyến nghị:</strong> Tăng cường công
+                                                    tác tư vấn và hỗ trợ bệnh nhân, cải thiện quy
+                                                    trình đặt lịch và xác nhận.
+                                                </div>
                                             </div>
-                                        );
-                                    })}
+                                        )}
+
+                                        {/* Top reasons */}
+                                        {aiInsights.metrics.detailedCancellationAnalysis.topReasons.map(
+                                            (reason: any, index: number) => (
+                                                <div
+                                                    key={index}
+                                                    className={`${styles.alertCard} ${styles.alertCritical}`}
+                                                >
+                                                    <div className={styles.alertHeader}>
+                                                        <div className={styles.alertIcon}>
+                                                            <i className="ti ti-alert-triangle"></i>
+                                                        </div>
+                                                        <div className={styles.alertTitleSection}>
+                                                            <h6 className={styles.alertTitle}>
+                                                                {reason.reasonCategory}
+                                                            </h6>
+                                                            <span className={styles.alertMetric}>
+                                                                <strong
+                                                                    style={{
+                                                                        color: '#ef4444',
+                                                                        fontWeight: 700,
+                                                                    }}
+                                                                >
+                                                                    {reason.count}
+                                                                </strong>{' '}
+                                                                lượt hủy
+                                                            </span>
+                                                        </div>
+                                                        <span
+                                                            className={styles.alertBadge}
+                                                            data-severity="high"
+                                                        >
+                                                            {reason.percentage.toFixed(1)}%
+                                                        </span>
+                                                    </div>
+                                                    {reason.commonKeywords &&
+                                                        reason.commonKeywords.length > 0 && (
+                                                            <p className={styles.alertMessage}>
+                                                                <strong>Từ khóa phổ biến:</strong>{' '}
+                                                                {reason.commonKeywords
+                                                                    .slice(0, 5)
+                                                                    .join(', ')}
+                                                            </p>
+                                                        )}
+                                                    {reason.recommendedAction && (
+                                                        <div className={styles.alertAction}>
+                                                            <i className="ti ti-lightbulb me-2"></i>
+                                                            <strong>Khuyến nghị:</strong>{' '}
+                                                            {reason.recommendedAction}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* Root Cause Analysis Section */}
                     {aiInsights.rootCauseAnalyses && aiInsights.rootCauseAnalyses.length > 0 && (
@@ -1565,7 +1624,12 @@ const AdminDashboard: React.FC = () => {
                                                                 undefined && (
                                                                 <span>
                                                                     Lượt đặt dự đoán:{' '}
-                                                                    <strong>
+                                                                    <strong
+                                                                        style={{
+                                                                            color: '#10b981',
+                                                                            fontWeight: 700,
+                                                                        }}
+                                                                    >
                                                                         {numberFormatter.format(
                                                                             prediction.predictedAppointments
                                                                         )}
@@ -1576,7 +1640,16 @@ const AdminDashboard: React.FC = () => {
                                                                 undefined && (
                                                                 <span>
                                                                     Tỉ lệ hủy dự đoán:{' '}
-                                                                    <strong>
+                                                                    <strong
+                                                                        style={{
+                                                                            color:
+                                                                                prediction.predictedCancellationRate >
+                                                                                40
+                                                                                    ? '#ef4444'
+                                                                                    : '#f59e0b',
+                                                                            fontWeight: 700,
+                                                                        }}
+                                                                    >
                                                                         {prediction.predictedCancellationRate.toFixed(
                                                                             1
                                                                         )}
@@ -1590,7 +1663,16 @@ const AdminDashboard: React.FC = () => {
                                                                     0 && (
                                                                     <span>
                                                                         Thay đổi:{' '}
-                                                                        <strong>
+                                                                        <strong
+                                                                            style={{
+                                                                                color:
+                                                                                    prediction.predictedGrowthPercent >
+                                                                                    0
+                                                                                        ? '#10b981'
+                                                                                        : '#ef4444',
+                                                                                fontWeight: 700,
+                                                                            }}
+                                                                        >
                                                                             {prediction.predictedGrowthPercent >
                                                                             0
                                                                                 ? '+'
@@ -1620,6 +1702,14 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Deep Analytics Section - Xu hướng lịch hẹn */}
+            {aiInsights?.metrics?.rescheduleInsight && (
+                <DeepAnalyticsSection
+                    rescheduleInsight={aiInsights.metrics.rescheduleInsight}
+                    styles={styles}
+                />
             )}
 
             {/* Biểu đồ phân tích chi tiết trong AI Insights */}
