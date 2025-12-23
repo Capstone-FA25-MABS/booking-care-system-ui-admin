@@ -201,7 +201,7 @@ const HospitalDashboard: React.FC = () => {
             const totalHospitals = 1;
             const totalDoctors = (doctorsRes.data as any)?.totalCount || 0;
             const totalAppointments = (appointmentsRes.data as any)?.totalCount || 0;
-            const totalDiscounts = (discountsRes.data as any)?.pagination?.total || 0;
+            const totalDiscounts = (discountsRes.data as any)?.totalCount || 0;
             const totalSpecialties = Array.isArray(specialtiesRes.data)
                 ? specialtiesRes.data.length
                 : 0;

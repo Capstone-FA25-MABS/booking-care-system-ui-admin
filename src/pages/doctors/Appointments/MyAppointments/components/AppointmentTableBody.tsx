@@ -52,6 +52,15 @@ const parseAttachmentUrls = (attachmentUrls: string[] | string | undefined): str
     return [];
 };
 
+// Helper function to check if result is a file URL
+const isFileUrl = (result: string): boolean => {
+    return (
+        /\.(pdf|doc|docx|jpg|jpeg|png|gif|webp)(\?|$)/i.test(result) ||
+        result.startsWith('http://') ||
+        result.startsWith('https://')
+    );
+};
+
 // Component to render attachment buttons
 const AttachmentButtons: React.FC<{
     attachments: string[];
@@ -78,6 +87,35 @@ const AttachmentButtons: React.FC<{
                     </button>
                 );
             })}
+        </div>
+    );
+};
+
+// Component to render result (text or file preview button)
+const ResultDisplay: React.FC<{
+    result?: string;
+    onPreviewFile: (fileUrl: string, fileName: string) => void;
+}> = ({ result, onPreviewFile }) => {
+    if (!result) {
+        return <span className="text-muted">Chưa cập nhật</span>;
+    }
+
+    if (isFileUrl(result)) {
+        return (
+            <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => onPreviewFile(result, 'Kết quả khám')}
+                title="Xem kết quả khám"
+            >
+                <i className="ti ti-file-text me-1"></i> Xem kết quả
+            </button>
+        );
+    }
+
+    return (
+        <div className="text-truncate" style={{ maxWidth: '250px' }}>
+            {result}
         </div>
     );
 };
@@ -245,11 +283,10 @@ export const AppointmentTableBody: React.FC<AppointmentTableBodyProps> = ({
 
                         {activeStatusTab === 'completed' && (
                             <td>
-                                <div className="text-truncate" style={{ maxWidth: '250px' }}>
-                                    {appointment.result || (
-                                        <span className="text-muted">Chưa cập nhật</span>
-                                    )}
-                                </div>
+                                <ResultDisplay
+                                    result={appointment.result}
+                                    onPreviewFile={onPreviewFile}
+                                />
                             </td>
                         )}
 

@@ -408,9 +408,9 @@ const ListBlogs: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Danh sách blog{' '}
+                        Danh sách bài viết{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng blog: {pagination.totalItems}
+                            Tổng bài viết: {pagination.totalItems}
                         </span>
                     </h4>
                 </div>
@@ -439,7 +439,7 @@ const ListBlogs: React.FC = () => {
                             navigate(buildBlogPath('/add'));
                         }}
                     >
-                        Thêm blog
+                        Thêm bài viết
                     </Button>
                 </div>
             </div>
@@ -454,7 +454,7 @@ const ListBlogs: React.FC = () => {
                                         id="blogSearch"
                                         type="search"
                                         className="form-control form-control-sm"
-                                        placeholder="Tìm kiếm blog..."
+                                        placeholder="Tìm kiếm bài viết..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     ></input>
@@ -553,8 +553,8 @@ const ListBlogs: React.FC = () => {
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xóa blog"
-                message={`Bạn có chắc chắn muốn xóa blog "${blogToDelete?.titleVi}"? Hành động này không thể hoàn tác.`}
+                title="Xóa bài viết"
+                message={`Bạn có chắc chắn muốn xóa bài viết "${blogToDelete?.titleVi}"? Hành động này không thể hoàn tác.`}
                 confirmText="Có, Xóa"
             />
 
@@ -564,7 +564,7 @@ const ListBlogs: React.FC = () => {
                 onHide={() => setShowFilterModal(false)}
                 onApply={handleFilterSubmit}
                 onReset={handleClearFilters}
-                title="Bộ lọc blog"
+                title="Bộ lọc bài viết"
                 fields={[
                     {
                         name: 'categories',
