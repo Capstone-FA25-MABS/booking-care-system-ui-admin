@@ -126,8 +126,8 @@ const ListHospitalFaqs: React.FC = () => {
                     totalPages: data.totalPages || 0,
                 });
             } catch (err: any) {
-                setError(err.message || 'Không thể tải danh sách FAQ');
-                toast.error(err.message || 'Không thể tải danh sách FAQ');
+                setError(err.message || 'Không thể tải danh sách câu hỏi thường gặp');
+                toast.error(err.message || 'Không thể tải danh sách câu hỏi thường gặp');
             } finally {
                 setIsLoading(false);
             }
@@ -165,12 +165,12 @@ const ListHospitalFaqs: React.FC = () => {
 
         try {
             await HospitalFaqService.deleteFaq(faqToDelete.id);
-            toast.success('Xóa FAQ thành công!');
+            toast.success('Xóa câu hỏi thường gặp thành công!');
             setShowDeleteModal(false);
             setFaqToDelete(null);
             fetchFaqs(currentPage);
         } catch (err: any) {
-            toast.error(err.message || 'Không thể xóa FAQ');
+            toast.error(err.message || 'Không thể xóa câu hỏi thường gặp');
         }
     };
 
@@ -294,9 +294,9 @@ const ListHospitalFaqs: React.FC = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">
-                        Quản lý FAQ bệnh viện{' '}
+                        Quản lý câu hỏi thường gặp bệnh viện{' '}
                         <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                            Tổng FAQ: {pagination.totalItems}
+                            Tổng câu hỏi thường gặp: {pagination.totalItems}
                         </span>
                     </h4>
                 </div>
@@ -313,7 +313,7 @@ const ListHospitalFaqs: React.FC = () => {
                             navigate(buildFaqPath(addPath));
                         }}
                     >
-                        Thêm FAQ
+                        Thêm câu hỏi thường gặp
                     </Button>
                 </div>
             </div>
@@ -370,8 +370,8 @@ const ListHospitalFaqs: React.FC = () => {
                 show={showDeleteModal}
                 onHide={handleDeleteCancel}
                 onConfirm={handleDeleteConfirm}
-                title="Xóa FAQ"
-                message={`Bạn có chắc chắn muốn xóa FAQ "${faqToDelete?.question}"? Hành động này không thể hoàn tác.`}
+                title="Xóa câu hỏi thường gặp"
+                message={`Bạn có chắc chắn muốn xóa câu hỏi thường gặp "${faqToDelete?.question}"? Hành động này không thể hoàn tác.`}
                 confirmText="Có, Xóa"
             />
         </div>
