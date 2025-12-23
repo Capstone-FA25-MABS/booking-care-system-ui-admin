@@ -172,6 +172,15 @@ const SubscriptionPlanList: React.FC = () => {
         return null;
     }, [currentActiveSubscription, subscriptionPlans]);
 
+    // Helper to get tier level from plan name for comparison
+    const getTierLevel = (planName: string): number => {
+        const lowerName = planName.toLowerCase();
+        if (lowerName.includes('cơ bản') || lowerName.includes('basic')) return 1;
+        if (lowerName.includes('nâng cao') || lowerName.includes('advanced')) return 2;
+        if (lowerName.includes('chuyên nghiệp') || lowerName.includes('professional')) return 3;
+        return 0; // Unknown tier
+    };
+
     // Helper to get billing cycle value for comparison
     const getBillingCycleValue = (billingCycle: string | null): number => {
         if (!billingCycle) return 0;
@@ -182,10 +191,28 @@ const SubscriptionPlanList: React.FC = () => {
         return 0;
     };
 
-    // Check if downgrading (from higher billing cycle to lower OR same billing cycle but lower price)
+    // Check if downgrading (from higher tier OR higher billing cycle OR same billing cycle but lower price)
     const isDowngrade = useCallback(
         (newPlanBillingCycle: string, newPlanPrice: number): boolean => {
             if (!currentSubscriptionBillingCycle || !currentActiveSubscription) return false;
+
+            // Find current and new plans to compare tiers
+            const currentPlan = subscriptionPlans.find((p) => p.id === currentSubscriptionPlanId);
+            const newPlan = subscriptionPlans.find(
+                (p) =>
+                    p.billingCycle === newPlanBillingCycle.toUpperCase() && p.price === newPlanPrice
+            );
+
+            // Case 0: Check tier downgrade (e.g., "Gói nâng cao" MONTHLY -> "Gói cơ bản" YEARLY)
+            // This should be checked first regardless of billing cycle
+            if (currentPlan && newPlan) {
+                const currentTier = getTierLevel(currentPlan.name);
+                const newTier = getTierLevel(newPlan.name);
+
+                if (currentTier > newTier) {
+                    return true;
+                }
+            }
 
             const currentValue = getBillingCycleValue(currentSubscriptionBillingCycle);
             const newValue = getBillingCycleValue(newPlanBillingCycle);
@@ -197,10 +224,6 @@ const SubscriptionPlanList: React.FC = () => {
 
             // Case 2: Same billing cycle but lower price (e.g., "Gói nâng cao" QUARTERLY -> "Gói cơ bản" QUARTERLY)
             if (currentValue === newValue) {
-                // Find current plan to get its price
-                const currentPlan = subscriptionPlans.find(
-                    (p) => p.id === currentSubscriptionPlanId
-                );
                 if (currentPlan && currentPlan.price > newPlanPrice) {
                     return true;
                 }
@@ -601,6 +624,20 @@ const SubscriptionPlanList: React.FC = () => {
 
         const billingCycleText = getBillingCycleLabel(planBillingCycle);
 
+        // Check if it's a tier downgrade
+        if (currentPlan && targetPlan) {
+            const currentTier = getTierLevel(currentPlan.name);
+            const targetTier = getTierLevel(targetPlan.name);
+
+            if (currentTier > targetTier) {
+                toast.error(
+                    `Không thể chuyển từ "${currentPlan.name}" xuống "${targetPlan.name}". Vui lòng đợi gói hiện tại hết hạn.`
+                );
+                return true;
+            }
+        }
+
+        // Check if it's a billing cycle downgrade with same tier
         if (
             currentPlan &&
             currentPlan.price > targetPlan.price &&
