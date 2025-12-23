@@ -737,13 +737,6 @@ const AdminDashboard: React.FC = () => {
                 icon: 'ti ti-calendar-event',
             },
             {
-                label: 'Tổng số mã giảm giá',
-                value: systemOverview.totalDiscounts,
-                sub: 'Mã giảm giá hiện có',
-                className: `${styles.metricCard} ${styles.cardDiscounts}`,
-                icon: 'ti ti-discount',
-            },
-            {
                 label: 'Gói đăng ký',
                 value: systemOverview.totalSubscriptionPlans,
                 sub: 'Tổng số gói đăng ký',
