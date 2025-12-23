@@ -20,6 +20,7 @@ interface ServiceListViewProps {
     pageTitle?: string;
     useEditModal?: boolean; // Use modal instead of navigation for editing
     useCreateModal?: boolean; // Use modal instead of navigation for creating
+    isSideAdmin?: boolean; // when true, hide add and edit actions
 }
 
 const ServiceListView: React.FC<ServiceListViewProps> = ({
@@ -30,6 +31,7 @@ const ServiceListView: React.FC<ServiceListViewProps> = ({
     pageTitle = 'Danh sách dịch vụ',
     useEditModal = false,
     useCreateModal = false,
+    isSideAdmin = false,
 }) => {
     const {
         services,
@@ -233,7 +235,7 @@ const ServiceListView: React.FC<ServiceListViewProps> = ({
                                 ? undefined
                                 : editServicePathTemplate.replace(':id', service.id)
                         }
-                        showEdit={true}
+                        showEdit={!isSideAdmin}
                         showDelete={true}
                         showView={false}
                     />
@@ -328,15 +330,17 @@ const ServiceListView: React.FC<ServiceListViewProps> = ({
                                 console.log('Exporting:', format);
                             }}
                         />
-                        <Button
-                            variant="primary"
-                            size="md"
-                            className="ms-2 fs-13"
-                            icon="ti ti-plus"
-                            onClick={handleCreateClick}
-                        >
-                            Thêm dịch vụ
-                        </Button>
+                        {!isSideAdmin && (
+                            <Button
+                                variant="primary"
+                                size="md"
+                                className="ms-2 fs-13"
+                                icon="ti ti-plus"
+                                onClick={handleCreateClick}
+                            >
+                                Thêm dịch vụ
+                            </Button>
+                        )}
                     </div>
                 </div>
 
