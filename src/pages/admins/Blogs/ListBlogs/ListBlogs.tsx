@@ -130,21 +130,30 @@ const ListBlogs: React.FC = () => {
                         filterParams.createdByAccountId = fallbackAccountId;
                     }
                 }
-                // For admin, use getMyBlogs which filters by accountId
-
-                // Fetch blogs based on role
+                // Choose API based on role:
+                // - Doctors/Staff: fetch blogs for the current account (getMyBlogs)
+                // - Admin: fetch all blogs with pagination and filters (getBlogs)
                 const response =
                     role === 'DOCTOR' || role === 'STAFF'
-                        ? await BlogService.getBlogs(filterParams)
-                        : await BlogService.getMyBlogs(filterParams);
+                        ? await BlogService.getMyBlogs(filterParams)
+                        : await BlogService.getBlogs(filterParams);
                 const data = response.data;
+
+                const totalItemsValue = data.totalItems ?? (data.items ? data.items.length : 0);
+                const pageSizeValue = data.pageSize ?? itemsPerPage;
+                const totalPagesValue =
+                    pageSizeValue > 0
+                        ? Math.ceil(totalItemsValue / pageSizeValue)
+                        : totalItemsValue > 0
+                          ? Math.ceil(totalItemsValue / itemsPerPage)
+                          : 0;
 
                 setBlogs(data.items || []);
                 setPagination({
-                    totalItems: data.totalItems || 0,
+                    totalItems: totalItemsValue || 0,
                     page: data.page || page,
-                    pageSize: data.pageSize || itemsPerPage,
-                    totalPages: Math.ceil((data.totalItems || 0) / (data.pageSize || itemsPerPage)),
+                    pageSize: pageSizeValue,
+                    totalPages: totalPagesValue,
                 });
             } catch (err: any) {
                 setError(err.message || 'Không thể tải danh sách blog');
@@ -538,7 +547,8 @@ const ListBlogs: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
+            {((pagination.totalPages && pagination.totalPages > 1) ||
+                blogs.length > itemsPerPage) && (
                 <div className="d-flex justify-content-center mt-3">
                     <Pagination
                         currentPage={currentPage}
