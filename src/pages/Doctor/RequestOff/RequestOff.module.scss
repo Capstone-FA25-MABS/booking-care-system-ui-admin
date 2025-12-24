@@ -1,15 +1,65 @@
-.requestOff {
-    .exceptionsGrid {
+.dashboardSection {
+    .metricsGrid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 1rem;
-    }
-}
+        margin-bottom: 1.5rem;
 
-@media (max-width: 768px) {
-    .requestOff {
-        .exceptionsGrid {
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.85rem;
+        }
+
+        @media (max-width: 992px) {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.7rem;
+        }
+
+        @media (max-width: 576px) {
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+    }
+
+    .overviewGrid {
+        grid-template-columns: repeat(4, 1fr);
+
+        @media (max-width: 992px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 576px) {
             grid-template-columns: 1fr;
         }
     }
+}
+
+// MetricCard color variants
+.pending {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: #fcd34d;
+    color: #92400e;
+}
+
+.approved {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border-color: #86efac;
+    color: #166534;
+}
+
+.rejected {
+    background: linear-gradient(135deg, #ffe4e6, #fecdd3);
+    border-color: #fda4af;
+    color: #9f1239;
+}
+
+.total {
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    border-color: #7dd3fc;
+    color: #0f172a;
 }

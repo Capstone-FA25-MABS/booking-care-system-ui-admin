@@ -21,31 +21,36 @@ export enum ExceptionRequestStatus {
     CANCELLED = 'CANCELLED',
 }
 
+// AppointmentTime enum matching backend format (30-minute intervals)
 export enum AppointmentTime {
-    T08_00 = 'T08_00',
-    T08_30 = 'T08_30',
-    T09_00 = 'T09_00',
-    T09_30 = 'T09_30',
-    T10_00 = 'T10_00',
-    T10_30 = 'T10_30',
-    T11_00 = 'T11_00',
-    T11_30 = 'T11_30',
-    T13_00 = 'T13_00',
-    T13_30 = 'T13_30',
-    T14_00 = 'T14_00',
-    T14_30 = 'T14_30',
-    T15_00 = 'T15_00',
-    T15_30 = 'T15_30',
-    T16_00 = 'T16_00',
-    T16_30 = 'T16_30',
-    T17_00 = 'T17_00',
-    T17_30 = 'T17_30',
-    T18_00 = 'T18_00',
-    T18_30 = 'T18_30',
-    T19_00 = 'T19_00',
-    T19_30 = 'T19_30',
-    T20_00 = 'T20_00',
-    T20_30 = 'T20_30',
+    AT_08_00_08_30 = 'AT_08_00_08_30',
+    AT_08_30_09_00 = 'AT_08_30_09_00',
+    AT_09_00_09_30 = 'AT_09_00_09_30',
+    AT_09_30_10_00 = 'AT_09_30_10_00',
+    AT_10_00_10_30 = 'AT_10_00_10_30',
+    AT_10_30_11_00 = 'AT_10_30_11_00',
+    AT_11_00_11_30 = 'AT_11_00_11_30',
+    AT_11_30_12_00 = 'AT_11_30_12_00',
+    AT_13_00_13_30 = 'AT_13_00_13_30',
+    AT_13_30_14_00 = 'AT_13_30_14_00',
+    AT_14_00_14_30 = 'AT_14_00_14_30',
+    AT_14_30_15_00 = 'AT_14_30_15_00',
+    AT_15_00_15_30 = 'AT_15_00_15_30',
+    AT_15_30_16_00 = 'AT_15_30_16_00',
+    AT_16_00_16_30 = 'AT_16_00_16_30',
+    AT_16_30_17_00 = 'AT_16_30_17_00',
+    AT_17_00_17_30 = 'AT_17_00_17_30',
+    AT_17_30_18_00 = 'AT_17_30_18_00',
+    AT_18_00_18_30 = 'AT_18_00_18_30',
+    AT_18_30_19_00 = 'AT_18_30_19_00',
+    AT_19_00_19_30 = 'AT_19_00_19_30',
+    AT_19_30_20_00 = 'AT_19_30_20_00',
+    AT_20_00_20_30 = 'AT_20_00_20_30',
+    AT_20_30_21_00 = 'AT_20_30_21_00',
+    AT_21_00_21_30 = 'AT_21_00_21_30',
+    AT_21_30_22_00 = 'AT_21_30_22_00',
+    AT_22_00_22_30 = 'AT_22_00_22_30',
+    AT_22_30_23_00 = 'AT_22_30_23_00',
 }
 
 export interface AppointmentTimeDto {
@@ -76,6 +81,25 @@ export interface DoctorScheduleException {
     id: string;
     doctorId: string;
     exceptionDate: string; // DateOnly format: yyyy-MM-dd
+    appointmentTime?: AppointmentTime;
+    exceptionType: ExceptionType;
+    isAvailable: boolean;
+    reason?: string;
+    status: ExceptionRequestStatus;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    reviewComments?: string;
+    createdAt: string;
+}
+
+// Doctor schedule exception with doctor info (for Staff management)
+export interface DoctorScheduleExceptionWithInfo {
+    id: string;
+    doctorId: string;
+    doctorName: string;
+    doctorAvatarUrl?: string;
+    doctorEmail?: string;
+    exceptionDate: string;
     appointmentTime?: AppointmentTime;
     exceptionType: ExceptionType;
     isAvailable: boolean;
@@ -168,6 +192,48 @@ export interface ListServiceMedicalSchedulesRequest {
 // Response types
 export interface ListSchedulesResponse<T> {
     items: T[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+// Doctor schedule with doctor info (for Staff management)
+export interface DoctorScheduleWithInfo {
+    id: string;
+    doctorId: string;
+    doctorName: string;
+    doctorAvatarUrl?: string;
+    doctorEmail?: string;
+    scheduleDate: string;
+    schedulePatterns: SchedulePattern[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Response for listing doctor schedules by hospital
+export interface ListDoctorSchedulesResponse {
+    items: DoctorScheduleWithInfo[];
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+// Service medical schedule with service info (for Staff management)
+export interface ServiceMedicalScheduleWithInfo {
+    id: string;
+    serviceMedicalId: string;
+    serviceMedicalName: string;
+    serviceMedicalImageUrl?: string;
+    serviceCategoryName?: string;
+    scheduleDate: string;
+    schedulePatterns: SchedulePattern[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Response for listing service medical schedules by hospital
+export interface ListServiceMedicalSchedulesResponse {
+    items: ServiceMedicalScheduleWithInfo[];
     totalCount: number;
     pageNumber: number;
     pageSize: number;

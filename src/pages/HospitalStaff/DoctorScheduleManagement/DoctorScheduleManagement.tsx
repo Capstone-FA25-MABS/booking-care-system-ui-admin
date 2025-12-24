@@ -1,234 +1,575 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { format, eachDayOfInterval, startOfDay, isBefore } from 'date-fns';
 import SchedulePatternSelector from '@/components/Schedule/SchedulePatternSelector';
-import ScheduleCalendar from '@/components/Schedule/ScheduleCalendar';
-import {
-    DoctorScheduleDto,
-    SchedulePattern,
-    CreateDoctorScheduleRequest,
-} from '@/types/schedule.types';
+import ModalDelete from '@/components/ModalDelete/ModalDelete';
+import Pagination from '@/components/Pagination';
+import TableSkeleton from '@/components/TableSkeleton';
+import DateRangePicker from '@/components/DateRangePicker/DateRangePicker';
+import { DoctorScheduleWithInfo, SchedulePattern } from '@/types/schedule.types';
+import { DoctorOptimizedResponse } from '@/types/doctor.types';
 import { ScheduleService } from '@/services/schedule.service';
-import styles from './DoctorScheduleManagement.module.scss';
+import { DoctorService } from '@/services/doctor.service';
+import { RootState } from '@/store';
+
+// Skeleton columns for schedule table
+const scheduleTableColumns = [
+    { type: 'avatar' as const, width: 150 },
+    { type: 'badge' as const, width: 120 },
+    { type: 'badge' as const, width: 200 },
+    { type: 'text' as const, width: 100 },
+    { type: 'actions' as const, items: 2 },
+];
+
+// Helper to get pattern display name
+const getPatternDisplayName = (pattern: SchedulePattern): string => {
+    const patternNames: Record<SchedulePattern, string> = {
+        [SchedulePattern.MORNING]: 'Sáng',
+        [SchedulePattern.AFTERNOON]: 'Chiều',
+        [SchedulePattern.EVENING]: 'Tối',
+        [SchedulePattern.NIGHT]: 'Đêm',
+    };
+    return patternNames[pattern] || pattern;
+};
+
+// Helper to get pattern badge color
+const getPatternBadgeClass = (pattern: SchedulePattern): string => {
+    const patternColors: Record<SchedulePattern, string> = {
+        [SchedulePattern.MORNING]: 'bg-warning',
+        [SchedulePattern.AFTERNOON]: 'bg-info',
+        [SchedulePattern.EVENING]: 'bg-primary',
+        [SchedulePattern.NIGHT]: 'bg-secondary',
+    };
+    return patternColors[pattern] || 'bg-info';
+};
+
+// Helper to get full name from doctor
+const getDoctorFullName = (doctor: DoctorOptimizedResponse): string => {
+    return `${doctor.firstName} ${doctor.lastName}`.trim();
+};
+
+interface DateRange {
+    start: Date | null;
+    end: Date | null;
+}
 
 const DoctorScheduleManagement: React.FC = () => {
-    const [schedules, setSchedules] = useState<DoctorScheduleDto[]>([]);
+    const [schedules, setSchedules] = useState<DoctorScheduleWithInfo[]>([]);
+    const [doctors, setDoctors] = useState<DoctorOptimizedResponse[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadingDoctors, setLoadingDoctors] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState<DoctorScheduleWithInfo | null>(null);
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageNumber, setPageNumber] = useState(1);
+    const pageSize = 10;
+
+    // Get hospitalId from user profile (Staff role)
+    const hospitalProfile = useSelector((state: RootState) => state.user.hospitalProfile);
+    const hospitalId = hospitalProfile?.id;
 
     // Filter states
-    const [filterDoctorId, setFilterDoctorId] = useState('');
-    const [filterStartDate, setFilterStartDate] = useState('');
-    const [filterEndDate, setFilterEndDate] = useState('');
-
-    // Form states
-    const [formData, setFormData] = useState<CreateDoctorScheduleRequest>({
-        doctorId: '',
-        scheduleDate: '',
-        schedulePatterns: [SchedulePattern.MORNING],
+    const [filterDoctorName, setFilterDoctorName] = useState('');
+    const [filterStartDate, setFilterStartDate] = useState(() => {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    });
+    const [filterEndDate, setFilterEndDate] = useState(() => {
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        return nextMonth.toISOString().split('T')[0];
     });
 
-    useEffect(() => {
-        loadSchedules();
-    }, [filterDoctorId, filterStartDate, filterEndDate]);
+    // Form states for creating schedule
+    const [selectedDoctorId, setSelectedDoctorId] = useState('');
+    const [scheduleDateRange, setScheduleDateRange] = useState<DateRange>({
+        start: null,
+        end: null,
+    });
+    const [schedulePatterns, setSchedulePatterns] = useState<SchedulePattern[]>([
+        SchedulePattern.MORNING,
+    ]);
 
-    const loadSchedules = async () => {
+    // Form states for editing schedule
+    const [editPatterns, setEditPatterns] = useState<SchedulePattern[]>([]);
+
+    // Load doctors for the hospital
+    const loadDoctors = useCallback(async () => {
+        if (!hospitalId) return;
+
+        try {
+            setLoadingDoctors(true);
+            const response = await DoctorService.getDoctorsByHospital(hospitalId, 1, 100);
+            setDoctors(response.data?.doctors || []);
+        } catch (error: any) {
+            toast.error(error.message || 'Không thể tải danh sách bác sĩ');
+        } finally {
+            setLoadingDoctors(false);
+        }
+    }, [hospitalId]);
+
+    useEffect(() => {
+        if (hospitalId) {
+            loadDoctors();
+        }
+    }, [hospitalId, loadDoctors]);
+
+    const loadSchedules = useCallback(async () => {
+        if (!hospitalId) {
+            toast.warning('Không tìm thấy thông tin bệnh viện');
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await ScheduleService.listDoctorSchedules({
-                doctorId: filterDoctorId || undefined,
+                hospitalId,
                 startDate: filterStartDate || undefined,
                 endDate: filterEndDate || undefined,
+                pageNumber,
+                pageSize,
             });
-            setSchedules(response.data || []);
+
+            const data = response.data;
+            setSchedules(data?.items || []);
+            setTotalCount(data?.totalCount || 0);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Không thể tải danh sách lịch khám');
+            toast.error(error.message || 'Không thể tải danh sách lịch làm việc');
         } finally {
             setLoading(false);
         }
+    }, [hospitalId, filterStartDate, filterEndDate, pageNumber, pageSize]);
+
+    useEffect(() => {
+        if (hospitalId) {
+            loadSchedules();
+        }
+    }, [loadSchedules, hospitalId]);
+
+    // Filter schedules by doctor name (client-side)
+    const filteredSchedules = schedules.filter((schedule) => {
+        if (!filterDoctorName) return true;
+        return schedule.doctorName.toLowerCase().includes(filterDoctorName.toLowerCase());
+    });
+
+    // Get minimum date for date range picker (today)
+    const getMinDateForSchedule = (): Date => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return today;
+    };
+
+    // Handle date range change from DateRangePicker
+    const handleDateRangeChange = (range: DateRange) => {
+        // Validate that dates are in the future
+        const today = startOfDay(new Date());
+
+        if (range.start && isBefore(startOfDay(range.start), today)) {
+            toast.warning('Ngày bắt đầu phải từ hôm nay trở đi');
+            return;
+        }
+
+        setScheduleDateRange(range);
     };
 
     const handleCreateSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.doctorId || !formData.scheduleDate) {
-            toast.warning('Vui lòng điền đầy đủ thông tin');
+        if (!selectedDoctorId) {
+            toast.warning('Vui lòng chọn bác sĩ');
+            return;
+        }
+
+        if (!scheduleDateRange.start || !scheduleDateRange.end) {
+            toast.warning('Vui lòng chọn khoảng thời gian');
+            return;
+        }
+
+        if (schedulePatterns.length === 0) {
+            toast.warning('Vui lòng chọn ít nhất một ca làm việc');
+            return;
+        }
+
+        // Validate dates are in the future
+        const today = startOfDay(new Date());
+        if (isBefore(startOfDay(scheduleDateRange.start), today)) {
+            toast.warning('Ngày bắt đầu phải từ hôm nay trở đi');
             return;
         }
 
         try {
             setLoading(true);
-            await ScheduleService.createOrUpdateDoctorSchedule(formData);
-            toast.success('Tạo lịch khám thành công');
+
+            // Get all dates in the range
+            const dates = eachDayOfInterval({
+                start: scheduleDateRange.start,
+                end: scheduleDateRange.end,
+            });
+
+            // Create schedule for each date
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const date of dates) {
+                try {
+                    await ScheduleService.createOrUpdateDoctorSchedule({
+                        doctorId: selectedDoctorId,
+                        scheduleDate: format(date, 'yyyy-MM-dd'),
+                        schedulePatterns,
+                    });
+                    successCount++;
+                } catch {
+                    errorCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                toast.success(`Đã tạo lịch làm việc cho ${successCount} ngày`);
+            }
+            if (errorCount > 0) {
+                toast.warning(`${errorCount} ngày không thể tạo lịch (có thể đã tồn tại)`);
+            }
+
             setShowCreateModal(false);
             resetForm();
             loadSchedules();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Không thể tạo lịch khám');
+            toast.error(error.message || 'Không thể tạo lịch làm việc');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDeleteSchedule = async (doctorId: string, scheduleDate: string) => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa lịch khám này?')) {
+    const handleUpdateSchedule = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!selectedSchedule) return;
+
+        if (editPatterns.length === 0) {
+            toast.warning('Vui lòng chọn ít nhất một ca làm việc');
             return;
         }
 
         try {
             setLoading(true);
-            await ScheduleService.deleteDoctorSchedule(doctorId, scheduleDate);
-            toast.success('Xóa lịch khám thành công');
+            await ScheduleService.createOrUpdateDoctorSchedule({
+                doctorId: selectedSchedule.doctorId,
+                scheduleDate: selectedSchedule.scheduleDate,
+                schedulePatterns: editPatterns,
+            });
+            toast.success('Cập nhật lịch làm việc thành công');
+            setShowEditModal(false);
+            setSelectedSchedule(null);
             loadSchedules();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Không thể xóa lịch khám');
+            toast.error(error.message || 'Không thể cập nhật lịch làm việc');
         } finally {
             setLoading(false);
         }
     };
 
-    const resetForm = () => {
-        setFormData({
-            doctorId: '',
-            scheduleDate: '',
-            schedulePatterns: [SchedulePattern.MORNING],
-        });
+    const handleDeleteSchedule = async () => {
+        if (!selectedSchedule) return;
+
+        try {
+            setLoading(true);
+            await ScheduleService.deleteDoctorSchedule(
+                selectedSchedule.doctorId,
+                selectedSchedule.scheduleDate
+            );
+            toast.success('Xóa lịch làm việc thành công');
+            setShowDeleteModal(false);
+            setSelectedSchedule(null);
+            loadSchedules();
+        } catch (error: any) {
+            toast.error(error.message || 'Không thể xóa lịch làm việc');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    return (
-        <div className={styles.doctorScheduleManagement}>
-            <div className="card">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                    <h4 className="mb-0">
-                        <i className="ti ti-calendar-time me-2"></i>
-                        Quản lý lịch khám bác sĩ
-                    </h4>
+    const handleOpenEditModal = (schedule: DoctorScheduleWithInfo) => {
+        setSelectedSchedule(schedule);
+        setEditPatterns(schedule.schedulePatterns);
+        setShowEditModal(true);
+    };
+
+    const handleOpenDeleteModal = (schedule: DoctorScheduleWithInfo) => {
+        setSelectedSchedule(schedule);
+        setShowDeleteModal(true);
+    };
+
+    const resetForm = () => {
+        setSelectedDoctorId('');
+        setScheduleDateRange({ start: null, end: null });
+        setSchedulePatterns([SchedulePattern.MORNING]);
+    };
+
+    const handleResetFilters = () => {
+        setFilterDoctorName('');
+        const today = new Date();
+        setFilterStartDate(today.toISOString().split('T')[0]);
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        setFilterEndDate(nextMonth.toISOString().split('T')[0]);
+        setPageNumber(1);
+    };
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Get selected doctor info for display
+    const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
+
+    // Get date range display text
+    const getDateRangeText = () => {
+        if (scheduleDateRange.start && scheduleDateRange.end) {
+            return `${format(scheduleDateRange.start, 'dd/MM/yyyy')} - ${format(scheduleDateRange.end, 'dd/MM/yyyy')}`;
+        }
+        if (scheduleDateRange.start) {
+            return `${format(scheduleDateRange.start, 'dd/MM/yyyy')} - Chọn ngày kết thúc`;
+        }
+        return 'Chọn khoảng thời gian...';
+    };
+
+    // Render table body
+    const renderTableBody = () => {
+        if (loading) {
+            return <TableSkeleton rows={pageSize} columns={scheduleTableColumns} />;
+        }
+
+        if (filteredSchedules.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={5} className="text-center py-5">
+                        <i className="ti ti-calendar-off fs-1 text-muted"></i>
+                        <p className="mt-2 text-muted">Không có dữ liệu lịch làm việc</p>
+                    </td>
+                </tr>
+            );
+        }
+
+        return filteredSchedules.map((schedule) => (
+            <tr key={schedule.id}>
+                <td>
+                    <div className="d-flex align-items-center">
+                        {schedule.doctorAvatarUrl ? (
+                            <span className="avatar avatar-md me-2">
+                                <img
+                                    src={schedule.doctorAvatarUrl}
+                                    alt={schedule.doctorName}
+                                    className="rounded-circle"
+                                />
+                            </span>
+                        ) : (
+                            <span className="avatar avatar-md me-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                                <i className="ti ti-user"></i>
+                            </span>
+                        )}
+                        <div>
+                            <span className="fw-semibold">{schedule.doctorName}</span>
+                            {schedule.doctorEmail && (
+                                <span className="text-body fs-13 fw-normal d-block">
+                                    {schedule.doctorEmail}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </td>
+                <td className="text-center">
+                    <span className="badge bg-light text-dark">
+                        {new Date(schedule.scheduleDate).toLocaleDateString('vi-VN', {
+                            weekday: 'short',
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                        })}
+                    </span>
+                </td>
+                <td>
+                    {schedule.schedulePatterns.map((pattern, idx) => (
+                        <span key={idx} className={`badge ${getPatternBadgeClass(pattern)} me-1`}>
+                            {getPatternDisplayName(pattern)}
+                        </span>
+                    ))}
+                </td>
+                <td className="text-center">
+                    <small className="text-muted">
+                        {new Date(schedule.updatedAt).toLocaleDateString('vi-VN')}
+                    </small>
+                </td>
+                <td className="action-item">
                     <button
-                        className="btn btn-primary"
-                        onClick={() => setShowCreateModal(true)}
-                        disabled={loading}
+                        type="button"
+                        className="btn btn-link p-0"
+                        data-bs-toggle="dropdown"
+                        aria-label="Thao tác"
                     >
-                        <i className="ti ti-plus me-1"></i>
-                        Tạo lịch khám
+                        <i className="ti ti-dots-vertical"></i>
                     </button>
-                </div>
+                    <ul className="dropdown-menu p-2">
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent"
+                                onClick={() => handleOpenEditModal(schedule)}
+                                disabled={loading}
+                            >
+                                <i className="ti ti-edit me-2" aria-hidden="true"></i>
+                                Chỉnh sửa
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                type="button"
+                                className="dropdown-item d-flex align-items-center w-100 text-start border-0 bg-transparent text-danger"
+                                onClick={() => handleOpenDeleteModal(schedule)}
+                                disabled={loading}
+                            >
+                                <i className="ti ti-trash me-2" aria-hidden="true"></i>
+                                Xóa
+                            </button>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        ));
+    };
 
-                <div className="card-body">
-                    {/* Filters */}
-                    <div className="row mb-4">
-                        <div className="col-md-4">
-                            <label className="form-label">Mã bác sĩ</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Nhập mã bác sĩ..."
-                                value={filterDoctorId}
-                                onChange={(e) => setFilterDoctorId(e.target.value)}
-                            />
-                        </div>
-                        <div className="col-md-4">
-                            <label className="form-label">Từ ngày</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={filterStartDate}
-                                onChange={(e) => setFilterStartDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="col-md-4">
-                            <label className="form-label">Đến ngày</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={filterEndDate}
-                                onChange={(e) => setFilterEndDate(e.target.value)}
-                            />
-                        </div>
+    // Show loading if hospital profile not loaded yet
+    if (!hospitalId) {
+        return (
+            <div className="content">
+                <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
                     </div>
-
-                    {/* Calendar View */}
-                    {filterStartDate && filterEndDate && (
-                        <ScheduleCalendar
-                            schedules={schedules}
-                            startDate={new Date(filterStartDate)}
-                            endDate={new Date(filterEndDate)}
-                        />
-                    )}
-
-                    {/* List View */}
-                    <div className="table-responsive mt-4">
-                        <table className="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Bác sĩ</th>
-                                    <th>Ngày khám</th>
-                                    <th>Ca khám</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={4} className="text-center">
-                                            <div className="spinner-border" role="status">
-                                                <span className="visually-hidden">Loading...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : schedules.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="text-center">
-                                            Không có dữ liệu
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    schedules.map((schedule) => (
-                                        <tr key={schedule.id}>
-                                            <td>{schedule.doctorId}</td>
-                                            <td>
-                                                {new Date(schedule.scheduleDate).toLocaleDateString(
-                                                    'vi-VN'
-                                                )}
-                                            </td>
-                                            <td>
-                                                {schedule.schedulePatterns.map((pattern, idx) => (
-                                                    <span key={idx} className="badge bg-info me-1">
-                                                        {pattern}
-                                                    </span>
-                                                ))}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={() =>
-                                                        handleDeleteSchedule(
-                                                            schedule.doctorId,
-                                                            schedule.scheduleDate
-                                                        )
-                                                    }
-                                                    disabled={loading}
-                                                >
-                                                    <i className="ti ti-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <p className="mt-3 text-muted">Đang tải thông tin bệnh viện...</p>
                 </div>
             </div>
+        );
+    }
+
+    return (
+        <>
+            <div className="content">
+                {/* Page Header */}
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-semibold mb-0">
+                            <i className="ti ti-calendar-time me-2"></i>
+                            Quản lý lịch làm việc bác sĩ
+                        </h4>
+                    </div>
+                    <div className="text-end d-flex gap-2">
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => setShowCreateModal(true)}
+                            disabled={loading}
+                        >
+                            <i className="ti ti-plus me-1"></i>
+                            Tạo lịch làm việc
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="card mb-3">
+                    <div className="card-body">
+                        <div className="row align-items-end">
+                            <div className="col-md-4 mb-3 mb-md-0">
+                                <label className="form-label">Tìm theo tên bác sĩ</label>
+                                <div className="input-icon-start position-relative">
+                                    <span className="input-icon-addon">
+                                        <i className="ti ti-search"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        className="form-control ps-5"
+                                        placeholder="Nhập tên bác sĩ..."
+                                        value={filterDoctorName}
+                                        onChange={(e) => setFilterDoctorName(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-md-3 mb-3 mb-md-0">
+                                <label className="form-label">Từ ngày</label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={filterStartDate}
+                                    onChange={(e) => {
+                                        setFilterStartDate(e.target.value);
+                                        setPageNumber(1);
+                                    }}
+                                />
+                            </div>
+                            <div className="col-md-3 mb-3 mb-md-0">
+                                <label className="form-label">Đến ngày</label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={filterEndDate}
+                                    onChange={(e) => {
+                                        setFilterEndDate(e.target.value);
+                                        setPageNumber(1);
+                                    }}
+                                />
+                            </div>
+                            <div className="col-md-2">
+                                <button
+                                    className="btn btn-outline-secondary w-100"
+                                    onClick={handleResetFilters}
+                                >
+                                    <i className="ti ti-refresh me-1"></i>
+                                    Đặt lại
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="table-responsive">
+                    <table className="table datatable table-nowrap">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '280px' }}>Bác sĩ</th>
+                                <th style={{ width: '160px' }} className="text-center">
+                                    Ngày làm việc
+                                </th>
+                                <th>Ca làm việc</th>
+                                <th style={{ width: '120px' }} className="text-center">
+                                    Cập nhật
+                                </th>
+                                <th style={{ width: '80px' }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>{renderTableBody()}</tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={pageNumber}
+                totalPages={totalPages}
+                onPageChange={setPageNumber}
+            />
 
             {/* Create Modal */}
             {showCreateModal && (
                 <>
-                    <div className={`modal fade ${showCreateModal ? 'show d-block' : ''}`}>
+                    <div className="modal fade show d-block">
                         <div className="modal-dialog modal-lg modal-dialog-centered">
                             <div className="modal-content">
                                 <div className="modal-header">
                                     <h5 className="modal-title">
                                         <i className="ti ti-calendar-plus me-2"></i>
-                                        Tạo lịch khám mới
+                                        Tạo lịch làm việc mới
                                     </h5>
                                     <button
                                         type="button"
@@ -238,57 +579,115 @@ const DoctorScheduleManagement: React.FC = () => {
                                             resetForm();
                                         }}
                                         disabled={loading}
+                                        aria-label="Đóng"
                                     ></button>
                                 </div>
 
                                 <form onSubmit={handleCreateSchedule}>
                                     <div className="modal-body">
                                         <div className="row">
+                                            {/* Doctor Select */}
                                             <div className="col-md-6 mb-3">
                                                 <label className="form-label">
-                                                    Mã bác sĩ <span className="text-danger">*</span>
+                                                    Chọn bác sĩ{' '}
+                                                    <span className="text-danger">*</span>
                                                 </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    value={formData.doctorId}
+                                                <select
+                                                    className="form-select"
+                                                    value={selectedDoctorId}
                                                     onChange={(e) =>
-                                                        setFormData({
-                                                            ...formData,
-                                                            doctorId: e.target.value,
-                                                        })
+                                                        setSelectedDoctorId(e.target.value)
                                                     }
                                                     required
-                                                />
+                                                    disabled={loadingDoctors}
+                                                >
+                                                    <option value="">
+                                                        {loadingDoctors
+                                                            ? 'Đang tải...'
+                                                            : '-- Chọn bác sĩ --'}
+                                                    </option>
+                                                    {doctors.map((doctor) => (
+                                                        <option key={doctor.id} value={doctor.id}>
+                                                            {getDoctorFullName(doctor)}
+                                                            {doctor.position?.name &&
+                                                                ` - ${doctor.position.name}`}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {selectedDoctor && (
+                                                    <div className="mt-2 p-2 bg-light rounded d-flex align-items-center">
+                                                        {selectedDoctor.avatarUrl ? (
+                                                            <img
+                                                                src={selectedDoctor.avatarUrl}
+                                                                alt={getDoctorFullName(
+                                                                    selectedDoctor
+                                                                )}
+                                                                className="rounded-circle me-2"
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    objectFit: 'cover',
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span className="avatar avatar-sm me-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                                                                <i className="ti ti-user"></i>
+                                                            </span>
+                                                        )}
+                                                        <div>
+                                                            <div className="fw-medium">
+                                                                {getDoctorFullName(selectedDoctor)}
+                                                            </div>
+                                                            {selectedDoctor.position?.name && (
+                                                                <small className="text-muted">
+                                                                    {selectedDoctor.position.name}
+                                                                </small>
+                                                            )}
+                                                            {selectedDoctor.specialty?.name && (
+                                                                <small className="d-block text-info">
+                                                                    {selectedDoctor.specialty.name}
+                                                                </small>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
+                                            {/* Date Range Picker */}
                                             <div className="col-md-6 mb-3">
                                                 <label className="form-label">
-                                                    Ngày khám <span className="text-danger">*</span>
+                                                    Khoảng thời gian{' '}
+                                                    <span className="text-danger">*</span>
                                                 </label>
-                                                <input
-                                                    type="date"
-                                                    className="form-control"
-                                                    value={formData.scheduleDate}
-                                                    onChange={(e) =>
-                                                        setFormData({
-                                                            ...formData,
-                                                            scheduleDate: e.target.value,
-                                                        })
-                                                    }
-                                                    required
-                                                />
+                                                <button
+                                                    type="button"
+                                                    className="form-control text-start d-flex align-items-center justify-content-between"
+                                                    onClick={() => setShowDateRangePicker(true)}
+                                                >
+                                                    <span
+                                                        className={
+                                                            scheduleDateRange.start
+                                                                ? ''
+                                                                : 'text-muted'
+                                                        }
+                                                    >
+                                                        {getDateRangeText()}
+                                                    </span>
+                                                    <i className="ti ti-calendar"></i>
+                                                </button>
+                                                <small className="text-muted">
+                                                    <i className="ti ti-info-circle me-1"></i>
+                                                    Lịch sẽ được tạo cho tất cả các ngày trong
+                                                    khoảng thời gian (chỉ chọn ngày từ hôm nay trở
+                                                    đi)
+                                                </small>
                                             </div>
 
+                                            {/* Schedule Patterns */}
                                             <div className="col-12 mb-3">
                                                 <SchedulePatternSelector
-                                                    selectedPatterns={formData.schedulePatterns}
-                                                    onChange={(schedulePatterns) =>
-                                                        setFormData({
-                                                            ...formData,
-                                                            schedulePatterns,
-                                                        })
-                                                    }
+                                                    selectedPatterns={schedulePatterns}
+                                                    onChange={setSchedulePatterns}
                                                     singleSelect={false}
                                                 />
                                             </div>
@@ -310,7 +709,12 @@ const DoctorScheduleManagement: React.FC = () => {
                                         <button
                                             type="submit"
                                             className="btn btn-primary"
-                                            disabled={loading}
+                                            disabled={
+                                                loading ||
+                                                !selectedDoctorId ||
+                                                !scheduleDateRange.start ||
+                                                !scheduleDateRange.end
+                                            }
                                         >
                                             {loading ? (
                                                 <>
@@ -323,7 +727,7 @@ const DoctorScheduleManagement: React.FC = () => {
                                             ) : (
                                                 <>
                                                     <i className="ti ti-check me-1"></i>
-                                                    Tạo lịch khám
+                                                    Tạo lịch làm việc
                                                 </>
                                             )}
                                         </button>
@@ -332,10 +736,160 @@ const DoctorScheduleManagement: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    {showCreateModal && <div className="modal-backdrop fade show"></div>}
+                    <div className="modal-backdrop fade show"></div>
                 </>
             )}
-        </div>
+
+            {/* Edit Modal */}
+            {showEditModal && selectedSchedule && (
+                <>
+                    <div className="modal fade show d-block">
+                        <div className="modal-dialog modal-dialog-centered">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        <i className="ti ti-edit me-2"></i>
+                                        Chỉnh sửa lịch làm việc
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            setShowEditModal(false);
+                                            setSelectedSchedule(null);
+                                        }}
+                                        disabled={loading}
+                                        aria-label="Đóng"
+                                    ></button>
+                                </div>
+
+                                <form onSubmit={handleUpdateSchedule}>
+                                    <div className="modal-body">
+                                        {/* Doctor Info (Read-only) */}
+                                        <div className="mb-3">
+                                            <label className="form-label">Bác sĩ</label>
+                                            <div className="p-2 bg-light rounded d-flex align-items-center">
+                                                {selectedSchedule.doctorAvatarUrl ? (
+                                                    <img
+                                                        src={selectedSchedule.doctorAvatarUrl}
+                                                        alt={selectedSchedule.doctorName}
+                                                        className="rounded-circle me-2"
+                                                        style={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            objectFit: 'cover',
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <span className="avatar avatar-sm me-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                                                        <i className="ti ti-user"></i>
+                                                    </span>
+                                                )}
+                                                <div>
+                                                    <div className="fw-medium">
+                                                        {selectedSchedule.doctorName}
+                                                    </div>
+                                                    {selectedSchedule.doctorEmail && (
+                                                        <small className="text-muted">
+                                                            {selectedSchedule.doctorEmail}
+                                                        </small>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Date (Read-only) */}
+                                        <div className="mb-3">
+                                            <label className="form-label">Ngày làm việc</label>
+                                            <div className="form-control bg-light">
+                                                {new Date(
+                                                    selectedSchedule.scheduleDate
+                                                ).toLocaleDateString('vi-VN', {
+                                                    weekday: 'long',
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Schedule Patterns */}
+                                        <SchedulePatternSelector
+                                            selectedPatterns={editPatterns}
+                                            onChange={setEditPatterns}
+                                            singleSelect={false}
+                                        />
+                                    </div>
+
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary"
+                                            onClick={() => {
+                                                setShowEditModal(false);
+                                                setSelectedSchedule(null);
+                                            }}
+                                            disabled={loading}
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary"
+                                            disabled={loading || editPatterns.length === 0}
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <span
+                                                        className="spinner-border spinner-border-sm me-2"
+                                                        role="status"
+                                                    ></span>
+                                                    Đang cập nhật...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="ti ti-check me-1"></i>
+                                                    Cập nhật
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-backdrop fade show"></div>
+                </>
+            )}
+
+            {/* Delete Modal */}
+            <ModalDelete
+                show={showDeleteModal}
+                onHide={() => {
+                    setShowDeleteModal(false);
+                    setSelectedSchedule(null);
+                }}
+                onConfirm={handleDeleteSchedule}
+                title="Xóa lịch làm việc"
+                message={
+                    selectedSchedule
+                        ? `Bạn có chắc chắn muốn xóa lịch làm việc của bác sĩ "${selectedSchedule.doctorName}" vào ngày ${new Date(selectedSchedule.scheduleDate).toLocaleDateString('vi-VN')}`
+                        : ''
+                }
+                loading={loading}
+            />
+
+            {/* Date Range Picker Modal */}
+            <DateRangePicker
+                value={scheduleDateRange}
+                onChange={handleDateRangeChange}
+                open={showDateRangePicker}
+                onClose={() => setShowDateRangePicker(false)}
+                placeholder="Chọn khoảng thời gian..."
+                minDate={getMinDateForSchedule()}
+                maxDate={undefined}
+            />
+        </>
     );
 };
 

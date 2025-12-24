@@ -115,20 +115,13 @@ const SchedulePatternSelector: React.FC<SchedulePatternSelectorProps> = ({
                                     <div className={styles.patternTime}>{info.time}</div>
                                 </div>
                                 <div className={styles.patternCheckbox}>
-                                    <input
-                                        type="checkbox"
-                                        checked={isSelected}
-                                        onChange={() => handleTogglePattern(pattern)}
-                                        disabled={disabled}
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
+                                    {isSelected ? (
+                                        <i className="ti ti-square-rounded-check-filled text-primary fs-4"></i>
+                                    ) : (
+                                        <i className="ti ti-square-rounded text-muted fs-4"></i>
+                                    )}
                                 </div>
                             </div>
-                            {isSelected && (
-                                <div className={`${styles.selectedBadge} badge bg-${info.color}`}>
-                                    <i className="ti ti-check"></i>
-                                </div>
-                            )}
                         </div>
                     );
                 })}

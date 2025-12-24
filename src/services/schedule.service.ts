@@ -3,6 +3,7 @@ import {
     DoctorDailySchedule,
     ServiceMedicalDailySchedule,
     DoctorScheduleException,
+    DoctorScheduleExceptionWithInfo,
     ServiceMedicalScheduleException,
     CreateDoctorDailyScheduleRequest,
     CreateServiceMedicalDailyScheduleRequest,
@@ -10,6 +11,8 @@ import {
     CreateServiceMedicalScheduleExceptionRequest,
     ReviewExceptionRequest,
     AppointmentTimeDto,
+    ListDoctorSchedulesResponse,
+    ListServiceMedicalSchedulesResponse,
 } from '@/types/schedule.types';
 
 // Base API endpoints
@@ -17,14 +20,14 @@ const SCHEDULE_ENDPOINTS = {
     // Doctor Schedules
     DOCTOR_SCHEDULES: {
         GET_DAILY: (doctorId: string, date: string) =>
-            `/schedules/doctor-schedules/${doctorId}/daily/${date}`,
-        GET_RANGE: (doctorId: string) => `/schedules/doctor-schedules/${doctorId}/range`,
-        CREATE_OR_UPDATE: '/schedules/doctor-schedules',
+            `/schedules/doctor-schedule/${doctorId}/daily/${date}`,
+        GET_RANGE: (doctorId: string) => `/schedules/doctor-schedule/${doctorId}/range`,
+        CREATE_OR_UPDATE: '/schedules/doctor-schedule',
         DELETE: (doctorId: string, date: string) =>
-            `/schedules/doctor-schedules/${doctorId}/daily/${date}`,
+            `/schedules/doctor-schedule/${doctorId}/daily/${date}`,
         GET_AVAILABLE_SLOTS: (doctorId: string) =>
-            `/schedules/doctor-schedules/${doctorId}/available-slots`,
-        LIST: '/schedules/doctor-schedules/list',
+            `/schedules/doctor-schedule/${doctorId}/available-slots`,
+        LIST: '/schedules/doctor-schedule/list',
     },
     // Service Medical Schedules
     SERVICE_MEDICAL_SCHEDULES: {
@@ -42,10 +45,12 @@ const SCHEDULE_ENDPOINTS = {
     // Doctor Schedule Exceptions
     DOCTOR_EXCEPTIONS: {
         GET: (doctorId: string, date: string) =>
-            `/schedules/doctor-schedule-exceptions/${doctorId}/${date}`,
+            `/schedules/doctor-schedule-exceptions/by-date/${doctorId}/${date}`,
         CREATE: '/schedules/doctor-schedule-exceptions',
         DELETE: (id: string) => `/schedules/doctor-schedule-exceptions/${id}`,
         GET_PENDING: '/schedules/doctor-schedule-exceptions/pending',
+        GET_MY_REQUESTS: (doctorId: string) =>
+            `/schedules/doctor-schedule-exceptions/my-requests/${doctorId}`,
         REVIEW: '/schedules/doctor-schedule-exceptions/review',
     },
     // Service Medical Schedule Exceptions
@@ -178,7 +183,9 @@ export class ScheduleService {
         hospitalId?: string;
         startDate?: string;
         endDate?: string;
-    }): Promise<ApiResponse<DoctorDailySchedule[]>> {
+        pageNumber?: number;
+        pageSize?: number;
+    }): Promise<ApiResponse<ListDoctorSchedulesResponse>> {
         try {
             const response: any = await axiosInstance.get(
                 SCHEDULE_ENDPOINTS.DOCTOR_SCHEDULES.LIST,
@@ -294,7 +301,9 @@ export class ScheduleService {
         hospitalId?: string;
         startDate?: string;
         endDate?: string;
-    }): Promise<ApiResponse<ServiceMedicalDailySchedule[]>> {
+        pageNumber?: number;
+        pageSize?: number;
+    }): Promise<ApiResponse<ListServiceMedicalSchedulesResponse>> {
         try {
             const response: any = await axiosInstance.get(
                 SCHEDULE_ENDPOINTS.SERVICE_MEDICAL_SCHEDULES.LIST,
@@ -375,12 +384,12 @@ export class ScheduleService {
     }
 
     /**
-     * Get pending doctor exception requests
+     * Get pending doctor exception requests (with doctor info for Staff management)
      */
     static async getPendingDoctorExceptions(
         hospitalId?: string,
         doctorId?: string
-    ): Promise<ApiResponse<DoctorScheduleException[]>> {
+    ): Promise<ApiResponse<DoctorScheduleExceptionWithInfo[]>> {
         try {
             const response: any = await axiosInstance.get(
                 SCHEDULE_ENDPOINTS.DOCTOR_EXCEPTIONS.GET_PENDING,
@@ -414,6 +423,26 @@ export class ScheduleService {
             };
         } catch (error: any) {
             throw new Error(error.message || 'Failed to review doctor exception');
+        }
+    }
+
+    /**
+     * Get doctor's own exception requests (all statuses)
+     */
+    static async getMyExceptionRequests(
+        doctorId: string
+    ): Promise<ApiResponse<DoctorScheduleException[]>> {
+        try {
+            const response: any = await axiosInstance.get(
+                SCHEDULE_ENDPOINTS.DOCTOR_EXCEPTIONS.GET_MY_REQUESTS(doctorId)
+            );
+            return {
+                success: response.success ?? true,
+                data: response.data || response,
+                message: response.message || 'My exception requests retrieved successfully',
+            };
+        } catch (error: any) {
+            throw new Error(error.message || 'Failed to retrieve my exception requests');
         }
     }
 
