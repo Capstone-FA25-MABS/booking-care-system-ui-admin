@@ -174,11 +174,15 @@ const AdminDashboard: React.FC = () => {
     const [revenueChartData, setRevenueChartData] = useState<
         Array<{
             label: string;
-            value: number; // Total revenue
+            value: number;
         }>
     >([]);
     const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
     const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
+    const [customRevenueDateRange, setCustomRevenueDateRange] = useState<{
+        start: Date | null;
+        end: Date | null;
+    }>({ start: null, end: null });
 
     // Load system overview (hospitals, doctors, etc.)
     const loadSystemOverview = useCallback(async () => {
@@ -561,116 +565,88 @@ const AdminDashboard: React.FC = () => {
             let toDateStr: string;
             let apiPeriod: PaymentStatisticsPeriod;
 
-            // Ưu tiên sử dụng date range từ AI insights nếu có
-            if (activeDateRange.fromDate && activeDateRange.toDate) {
-                const now = new Date();
-                const todayStr = formatLocalDate(now);
+            const now = new Date();
 
-                // activeDateRange đã là date string (YYYY-MM-DD), so sánh trực tiếp
-                let toDateStrFromRange = activeDateRange.toDate;
-                // Nếu có time component, chỉ lấy date part
-                if (toDateStrFromRange.includes('T')) {
-                    toDateStrFromRange = toDateStrFromRange.split('T')[0];
-                }
-
-                // Đảm bảo toDate không vượt quá ngày hiện tại (so sánh string YYYY-MM-DD)
-                toDateStr = toDateStrFromRange > todayStr ? todayStr : toDateStrFromRange;
-
-                // Xử lý fromDate
-                let fromDateStrFromRange = activeDateRange.fromDate;
-                // Nếu có time component, chỉ lấy date part
-                if (fromDateStrFromRange.includes('T')) {
-                    fromDateStrFromRange = fromDateStrFromRange.split('T')[0];
-                }
-
-                // Đảm bảo fromDate không vượt quá toDate
-                if (fromDateStrFromRange > toDateStr) {
-                    // Nếu fromDate > toDate, điều chỉnh fromDate về toDate
-                    fromDateStr = toDateStr;
-                } else {
-                    fromDateStr = fromDateStrFromRange;
-                }
-
-                // Xác định period dựa trên số ngày
-                const fromDate = new Date(fromDateStr + 'T00:00:00');
-                const toDate = new Date(toDateStr + 'T00:00:00');
-                const daysDiff = Math.ceil(
-                    (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)
-                );
-
-                if (daysDiff <= 7) {
+            // Xử lý theo revenuePeriod được chọn
+            switch (revenuePeriod) {
+                case '7days': {
+                    const sevenDaysAgo = new Date(now);
+                    sevenDaysAgo.setDate(now.getDate() - 6);
+                    fromDateStr = formatLocalDate(sevenDaysAgo);
+                    toDateStr = formatLocalDate(now);
                     apiPeriod = PaymentStatisticsPeriod.Daily;
-                } else if (daysDiff <= 28) {
-                    apiPeriod = PaymentStatisticsPeriod.Weekly;
-                } else if (daysDiff <= 180) {
-                    apiPeriod = PaymentStatisticsPeriod.Monthly;
-                } else {
-                    apiPeriod = PaymentStatisticsPeriod.Quarterly;
+                    break;
                 }
-            } else {
-                // Nếu không có AI insights, dùng revenuePeriod như cũ
-                const now = new Date();
-
-                switch (revenuePeriod) {
-                    case '7days': {
-                        // Last 7 days: today and 6 days back
-                        const sevenDaysAgo = new Date(now);
-                        sevenDaysAgo.setDate(now.getDate() - 6);
-                        fromDateStr = formatLocalDate(sevenDaysAgo);
-                        toDateStr = formatLocalDate(now);
-                        apiPeriod = PaymentStatisticsPeriod.Daily;
-                        break;
+                case '4weeks': {
+                    const fourWeeksAgo = new Date(now);
+                    fourWeeksAgo.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(fourWeeksAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Weekly;
+                    break;
+                }
+                case '6months': {
+                    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+                    fromDateStr = formatLocalDate(sixMonthsAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Monthly;
+                    break;
+                }
+                case '4quarters': {
+                    const currentMonth = now.getMonth();
+                    const currentQuarter = Math.floor(currentMonth / 3);
+                    let startQuarter = currentQuarter - 3;
+                    let startYear = now.getFullYear();
+                    while (startQuarter < 0) {
+                        startQuarter += 4;
+                        startYear--;
                     }
-                    case '4weeks': {
-                        // Last 4 weeks: 27 days back to today (28 days total)
+                    const startMonth = startQuarter * 3;
+                    const fourQuartersAgo = new Date(startYear, startMonth, 1);
+                    fromDateStr = formatLocalDate(fourQuartersAgo);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Quarterly;
+                    break;
+                }
+                case 'custom': {
+                    // Sử dụng custom date range từ DateRangePicker
+                    if (!customRevenueDateRange.start || !customRevenueDateRange.end) {
+                        // Nếu chưa chọn custom range, dùng mặc định 4 tuần
                         const fourWeeksAgo = new Date(now);
                         fourWeeksAgo.setDate(now.getDate() - 27);
                         fromDateStr = formatLocalDate(fourWeeksAgo);
                         toDateStr = formatLocalDate(now);
                         apiPeriod = PaymentStatisticsPeriod.Weekly;
-                        break;
-                    }
-                    case '6months': {
-                        // Last 6 months: from start of 5 months ago to today
-                        // Example: Nov 30 → Jun 1 to Nov 30 (covers Jun, Jul, Aug, Sep, Oct, Nov)
-                        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-                        fromDateStr = formatLocalDate(sixMonthsAgo);
-                        toDateStr = formatLocalDate(now);
-                        apiPeriod = PaymentStatisticsPeriod.Monthly;
-                        break;
-                    }
-                    case '4quarters': {
-                        // Last 4 quarters including current quarter
-                        // Example: Nov 30 2025 (Q4) → Q1 2025 to Q4 2025
-                        const currentMonth = now.getMonth(); // 0-11
-                        const currentQuarter = Math.floor(currentMonth / 3); // 0-3
+                    } else {
+                        fromDateStr = formatLocalDate(customRevenueDateRange.start);
+                        toDateStr = formatLocalDate(customRevenueDateRange.end);
 
-                        // Start from 3 quarters ago
-                        let startQuarter = currentQuarter - 3;
-                        let startYear = now.getFullYear();
+                        // Xác định period dựa trên số ngày
+                        const daysDiff = Math.ceil(
+                            (customRevenueDateRange.end.getTime() -
+                                customRevenueDateRange.start.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                        );
 
-                        // Handle negative quarters (go to previous year)
-                        while (startQuarter < 0) {
-                            startQuarter += 4;
-                            startYear--;
+                        if (daysDiff <= 7) {
+                            apiPeriod = PaymentStatisticsPeriod.Daily;
+                        } else if (daysDiff <= 28) {
+                            apiPeriod = PaymentStatisticsPeriod.Weekly;
+                        } else if (daysDiff <= 180) {
+                            apiPeriod = PaymentStatisticsPeriod.Monthly;
+                        } else {
+                            apiPeriod = PaymentStatisticsPeriod.Quarterly;
                         }
-
-                        // First day of the start quarter
-                        const startMonth = startQuarter * 3;
-                        const fourQuartersAgo = new Date(startYear, startMonth, 1);
-
-                        fromDateStr = formatLocalDate(fourQuartersAgo);
-                        toDateStr = formatLocalDate(now);
-                        apiPeriod = PaymentStatisticsPeriod.Quarterly;
-                        break;
                     }
-                    default: {
-                        const defaultFrom = new Date(now);
-                        defaultFrom.setDate(now.getDate() - 27);
-                        fromDateStr = formatLocalDate(defaultFrom);
-                        toDateStr = formatLocalDate(now);
-                        apiPeriod = PaymentStatisticsPeriod.Weekly;
-                    }
+                    break;
+                }
+
+                default: {
+                    const defaultFrom = new Date(now);
+                    defaultFrom.setDate(now.getDate() - 27);
+                    fromDateStr = formatLocalDate(defaultFrom);
+                    toDateStr = formatLocalDate(now);
+                    apiPeriod = PaymentStatisticsPeriod.Weekly;
                 }
             }
 
@@ -718,7 +694,7 @@ const AdminDashboard: React.FC = () => {
         } finally {
             setIsLoadingRevenueChart(false);
         }
-    }, [revenuePeriod, activeDateRange.fromDate, activeDateRange.toDate]);
+    }, [revenuePeriod, customRevenueDateRange.start, customRevenueDateRange.end]);
 
     useEffect(() => {
         loadSubscriptionChart();
@@ -1731,35 +1707,8 @@ const AdminDashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Doanh thu từ đăng ký gói và Xu hướng tỉ lệ hủy - Cùng 1 hàng */}
+                    {/* Xu hướng tỉ lệ hủy */}
                     <div className={styles.chartsRow}>
-                        {/* Doanh thu từ đăng ký gói */}
-                        {revenueChartData.length > 0 && (
-                            <div className={styles.trendCard}>
-                                <div className={styles.cardHeader}>
-                                    <div>
-                                        <h5>Doanh thu từ đăng ký gói</h5>
-                                        <span>
-                                            Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao
-                                            gồm thanh toán lịch hẹn)
-                                        </span>
-                                    </div>
-                                    <RevenueFilterButtons
-                                        selectedPeriod={revenuePeriod}
-                                        onPeriodChange={setRevenuePeriod}
-                                        isLoading={isLoadingRevenueChart}
-                                    />
-                                </div>
-                                <div className={styles.cardBody}>
-                                    <ChartJsSingleBar
-                                        data={revenueChartData}
-                                        color="#10b981"
-                                        label="Tổng doanh thu"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
                         {/* Xu hướng tỉ lệ hủy */}
                         {predictions && (
                             <div className={styles.trendCard}>
@@ -2039,6 +1988,51 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     )}
                 </>
+            )}
+            {/* Doanh thu từ đăng ký gói - Standalone section outside AI Insights */}
+            {isLoadingRevenueChart ? (
+                <div className={styles.trendCard}>
+                    <div className={styles.cardHeader}>
+                        <h5>Doanh thu từ đăng ký gói</h5>
+                        <span>
+                            Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm thanh toán
+                            lịch hẹn)
+                        </span>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.chartJsWrapper}>
+                            <div className={styles.chartSkeleton} />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                revenueChartData.length > 0 && (
+                    <div className={styles.trendCard}>
+                        <div className={styles.cardHeader}>
+                            <div>
+                                <h5>Doanh thu từ đăng ký gói</h5>
+                                <span>
+                                    Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm
+                                    thanh toán lịch hẹn)
+                                </span>
+                            </div>
+                            <RevenueFilterButtons
+                                selectedPeriod={revenuePeriod}
+                                onPeriodChange={setRevenuePeriod}
+                                isLoading={isLoadingRevenueChart}
+                                customDateRange={customRevenueDateRange}
+                                onCustomDateRangeChange={setCustomRevenueDateRange}
+                            />
+                        </div>
+                        <div className={styles.cardBody}>
+                            <ChartJsSingleBar
+                                data={revenueChartData}
+                                color="#a78bfa"
+                                label="Tổng doanh thu"
+                            />
+                        </div>
+                    </div>
+                )
             )}
         </div>
     );

@@ -25,7 +25,6 @@ interface DateRangePickerProps {
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
     value,
     onChange,
-    anchorEl,
     open = false,
     onClose,
     placeholder = 'Chọn khoảng thời gian...',
@@ -38,48 +37,45 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         value.end,
     ]);
 
-    // Update internal value when prop changes
+    // Default maxDate to today (no future dates allowed for revenue statistics)
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const effectiveMaxDate = maxDate || today;
+
+    // Update internal value when prop changes or modal opens
     useEffect(() => {
-        setInternalValue([value.start, value.end]);
-    }, [value]);
-
-    // Handle click outside to close
-    useEffect(() => {
-        if (!open || !onClose) return;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                popperRef.current &&
-                !popperRef.current.contains(event.target as Node) &&
-                anchorEl &&
-                !anchorEl.contains(event.target as Node)
-            ) {
-                onClose();
-            }
-        };
-
         if (open) {
-            document.addEventListener('mousedown', handleClickOutside);
+            setInternalValue([value.start, value.end]);
         }
+    }, [open, value.start, value.end]);
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [open, anchorEl, onClose]);
+    // Only update internal state when selecting dates (don't call onChange)
+    const handleStartDateChange = (newValue: Date | null) => {
+        setInternalValue([newValue, internalValue[1]]);
+    };
 
-    const handleChange = (newValue: [Date | null, Date | null]) => {
-        setInternalValue(newValue);
-        onChange({
-            start: newValue[0],
-            end: newValue[1],
-        });
+    const handleEndDateChange = (newValue: Date | null) => {
+        setInternalValue([internalValue[0], newValue]);
     };
 
     const handleApply = () => {
-        onChange({
-            start: internalValue[0],
-            end: internalValue[1],
-        });
+        const startDate = internalValue[0];
+        let endDate = internalValue[1];
+
+        // If only start date is selected, default end date to today
+        if (startDate && !endDate) {
+            endDate = new Date();
+            endDate.setHours(23, 59, 59, 999);
+        }
+
+        // Only apply if at least start date is selected
+        if (startDate) {
+            onChange({
+                start: startDate,
+                end: endDate,
+            });
+        }
+
         if (onClose) {
             onClose();
         }
@@ -87,17 +83,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
     const handleClear = () => {
         setInternalValue([null, null]);
-        onChange({
-            start: null,
-            end: null,
-        });
     };
 
     const getDisplayText = () => {
-        if (value.start && value.end) {
-            return `${format(value.start, 'dd/MM/yyyy', { locale: vi })} - ${format(value.end, 'dd/MM/yyyy', { locale: vi })}`;
-        } else if (value.start) {
-            return `${format(value.start, 'dd/MM/yyyy', { locale: vi })} - Chọn ngày kết thúc`;
+        const [start, end] = internalValue;
+        if (start && end) {
+            return `${format(start, 'dd/MM/yyyy', { locale: vi })} - ${format(end, 'dd/MM/yyyy', { locale: vi })}`;
+        } else if (start) {
+            return `${format(start, 'dd/MM/yyyy', { locale: vi })} - Chọn ngày kết thúc`;
         }
         return placeholder;
     };
@@ -193,11 +186,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                                 </Typography>
                                 <DateCalendar
                                     value={internalValue[0]}
-                                    onChange={(newValue) =>
-                                        handleChange([newValue, internalValue[1]])
-                                    }
+                                    onChange={handleStartDateChange}
                                     minDate={minDate}
-                                    maxDate={internalValue[1] || maxDate}
+                                    maxDate={internalValue[1] || effectiveMaxDate}
                                     sx={{
                                         '& .MuiPickersDay-root': {
                                             fontSize: '14px',
@@ -211,11 +202,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                                 </Typography>
                                 <DateCalendar
                                     value={internalValue[1]}
-                                    onChange={(newValue) =>
-                                        handleChange([internalValue[0], newValue])
-                                    }
+                                    onChange={handleEndDateChange}
                                     minDate={internalValue[0] || minDate}
-                                    maxDate={maxDate}
+                                    maxDate={effectiveMaxDate}
                                     sx={{
                                         '& .MuiPickersDay-root': {
                                             fontSize: '14px',
