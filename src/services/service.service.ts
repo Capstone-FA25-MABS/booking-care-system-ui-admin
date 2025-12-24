@@ -134,7 +134,7 @@ export class ServiceService extends BaseService {
                 hospitalId: serviceData.hospitalId,
                 serviceCategoryId: serviceData.serviceTypeId, // Map serviceTypeId to serviceCategoryId for API
                 serviceTypeId: serviceData.serviceTypeId, // Keep for backward compatibility
-                status: serviceData.status,
+                status: serviceData.status ?? 'ACTIVE',
             };
 
             const response: any = await axiosInstance.post(
@@ -208,7 +208,8 @@ export class ServiceService extends BaseService {
             formData.append('DurationTime', serviceData.durationTime.toString());
             formData.append('HospitalId', serviceData.hospitalId);
             formData.append('ServiceCategoryId', serviceData.serviceTypeId);
-            // Note: CreateServiceRequest doesn't have Status field, backend will set default
+            // Ensure the created service is active by default
+            formData.append('Status', serviceData.status ?? 'ACTIVE');
             formData.append('imageFile', serviceData.imageFile);
 
             const response: any = await axiosInstance.post(

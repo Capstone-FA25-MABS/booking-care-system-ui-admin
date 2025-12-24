@@ -101,12 +101,12 @@ export const listGroupMenuItemHospital: MenuConfig = [
         title: 'Nội dung',
         items: [
             createSimpleMenuItem(
-                'Blog',
+                'Bài viết',
                 'ti ti-file-text',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.BLOGS.ROOT)
             ),
             createSimpleMenuItem(
-                'FAQ bệnh viện',
+                'Câu hỏi thường gặp',
                 'ti ti-help-circle',
                 buildPath(PATHS.HOSPITAL.ROOT, PATHS.HOSPITAL.HOSPITAL_FAQS.ROOT)
             ),
@@ -150,7 +150,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
         title: 'Nội dung',
         items: [
             createSimpleMenuItem(
-                'Blog',
+                'Bài viết',
                 'ti ti-file-text',
                 buildPath(PATHS.DOCTOR.ROOT, PATHS.DOCTOR.BLOGS.ROOT)
             ),
@@ -261,12 +261,12 @@ export const listGroupMenuItemAdmin: MenuConfig = [
         title: 'Nội dung',
         items: [
             createSimpleMenuItem(
-                'Duyệt blog',
+                'Duyệt bài viết',
                 'ti ti-checkup-list',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOGS.ROOT)
             ),
             createSimpleMenuItem(
-                'Danh mục blog',
+                'Danh mục bài viết',
                 'ti ti-folders',
                 buildPath(PATHS.ADMIN.ROOT, PATHS.ADMIN.BLOG_CATEGORIES.ROOT)
             ),

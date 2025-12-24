@@ -59,6 +59,54 @@ export interface RootCauseAnalysis {
     impactScore: number; // 0-100
 }
 
+// Deep Analytics Types
+export interface ReasonAnalysis {
+    reasonCategory: string;
+    count: number;
+    percentage: number;
+    commonKeywords: string[];
+}
+
+export interface SymptomAnalysis {
+    symptomCategory: string;
+    count: number;
+    percentage: number;
+    commonSymptoms: string[];
+    relatedSpecialty?: string;
+}
+
+export interface ReschedulePattern {
+    patternType: string; // "by_doctor", "by_specialty", "by_time"
+    patternValue: string;
+    rescheduleCount: number;
+    rescheduleRate: number;
+}
+
+export interface RescheduleInsight {
+    totalRescheduled: number;
+    rescheduleRate: number;
+    rescheduledAndCompleted: number;
+    rescheduledAndCancelled: number;
+    rescheduledCompletionRate: number;
+    patterns: ReschedulePattern[];
+}
+
+export interface CancellationReasonDetail {
+    reasonCategory: string;
+    count: number;
+    percentage: number;
+    commonKeywords: string[];
+    recommendedAction?: string;
+}
+
+export interface DetailedCancellationAnalysis {
+    topReasons: CancellationReasonDetail[];
+    reasonsByTimeSlot: Record<string, number>;
+    reasonsBySpecialty: Record<string, number>;
+    cancellationsWithReason: number;
+    cancellationsWithoutReason: number;
+}
+
 export interface AiInsightMetrics {
     currentTotal: number;
     previousTotal: number;
@@ -71,6 +119,11 @@ export interface AiInsightMetrics {
     topSpecialtyName?: string;
     topSpecialtyCount: number;
     topSpecialtyShare: number;
+    // Deep Analytics
+    reasonAnalyses?: ReasonAnalysis[];
+    symptomAnalyses?: SymptomAnalysis[];
+    rescheduleInsight?: RescheduleInsight;
+    detailedCancellationAnalysis?: DetailedCancellationAnalysis;
 }
 
 export interface AiInsightResponse {
