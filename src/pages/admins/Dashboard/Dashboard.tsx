@@ -1271,7 +1271,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Phân tích chi tiết lý do hủy, Root Cause, Predictions - Nằm trên 1 hàng */}
+            {/* Phân tích chi tiết lý do hủy và Predictions - Nằm trên 1 hàng */}
             {aiInsights && (
                 <div className={styles.aiInsightsRow}>
                     {/* Phân tích chi tiết lý do hủy */}
@@ -1410,102 +1410,6 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             </div>
                         )}
-
-                    {/* Root Cause Analysis Section */}
-                    {aiInsights.rootCauseAnalyses && aiInsights.rootCauseAnalyses.length > 0 && (
-                        <div className={styles.trendCard}>
-                            <div className={styles.cardHeader}>
-                                <h5>
-                                    <i className="ti ti-search me-2"></i>
-                                    Phân tích nguyên nhân gốc rễ
-                                </h5>
-                                <span>Phân tích sâu các chỉ số bất thường để tìm nguyên nhân</span>
-                            </div>
-                            <div className={styles.cardBody}>
-                                <div className={styles.alertsGrid}>
-                                    {aiInsights.rootCauseAnalyses.map((rca: any, index: number) => (
-                                        <div
-                                            key={index}
-                                            className={`${styles.alertCard} ${styles.alertWarning}`}
-                                        >
-                                            <div className={styles.alertHeader}>
-                                                <div className={styles.alertIcon}>
-                                                    <i className="ti ti-chart-line"></i>
-                                                </div>
-                                                <div className={styles.alertTitleSection}>
-                                                    <h6 className={styles.alertTitle}>
-                                                        {rca.metric}
-                                                    </h6>
-                                                    <span className={styles.alertMetric}>
-                                                        Phân tích nguyên nhân
-                                                    </span>
-                                                </div>
-                                                <span
-                                                    className={styles.alertBadge}
-                                                    data-severity={
-                                                        rca.impactScore >= 70
-                                                            ? 'high'
-                                                            : rca.impactScore >= 40
-                                                              ? 'medium'
-                                                              : 'low'
-                                                    }
-                                                >
-                                                    Tác động: {rca.impactScore.toFixed(0)}%
-                                                </span>
-                                            </div>
-                                            <p className={styles.alertMessage}>
-                                                <strong>Vấn đề:</strong> {rca.issue}
-                                            </p>
-                                            {rca.potentialCauses &&
-                                                rca.potentialCauses.length > 0 && (
-                                                    <div className={styles.alertValues}>
-                                                        <strong>Nguyên nhân tiềm năng:</strong>
-                                                        <ul
-                                                            style={{
-                                                                margin: '0.5rem 0 0 0',
-                                                                paddingLeft: '1.25rem',
-                                                            }}
-                                                        >
-                                                            {rca.potentialCauses.map(
-                                                                (
-                                                                    cause: string,
-                                                                    causeIndex: number
-                                                                ) => (
-                                                                    <li
-                                                                        key={causeIndex}
-                                                                        style={{
-                                                                            marginBottom: '0.5rem',
-                                                                        }}
-                                                                    >
-                                                                        {cause}
-                                                                    </li>
-                                                                )
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            {rca.mostLikelyCause && (
-                                                <div className={styles.alertAction}>
-                                                    <i className="ti ti-target me-2"></i>
-                                                    <strong>
-                                                        Nguyên nhân có khả năng cao nhất:
-                                                    </strong>{' '}
-                                                    {rca.mostLikelyCause}
-                                                </div>
-                                            )}
-                                            {rca.analysis && (
-                                                <div className={styles.alertAction}>
-                                                    <i className="ti ti-file-analytics me-2"></i>
-                                                    <strong>Phân tích chi tiết:</strong>{' '}
-                                                    {rca.analysis}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Enhanced Predictions Section - Hiển thị như text card giống alert card */}
                     {aiInsights.predictions && aiInsights.predictions.length > 0 && (
