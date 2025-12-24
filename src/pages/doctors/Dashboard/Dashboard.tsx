@@ -150,11 +150,19 @@ const DoctorDashboard: React.FC = () => {
         setAiError(null);
         setAiLoadingStep(1); // Start collecting data
         try {
+            // FIX: Sử dụng local date format thay vì toISOString() để tránh timezone conversion
+            const formatLocalDate = (date: Date): string => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
             const request: GenerateAiInsightRequest =
                 aiDateRange.from && aiDateRange.to
                     ? {
-                          fromDate: aiDateRange.from.toISOString().split('T')[0],
-                          toDate: aiDateRange.to.toISOString().split('T')[0],
+                          fromDate: formatLocalDate(aiDateRange.from),
+                          toDate: formatLocalDate(aiDateRange.to),
                       }
                     : { period: 'week' };
 
