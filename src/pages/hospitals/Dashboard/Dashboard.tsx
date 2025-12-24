@@ -1050,41 +1050,57 @@ const HospitalDashboard: React.FC = () => {
                                 dangerouslySetInnerHTML={{
                                     __html: aiInsights.predictionConclusion
                                         // Highlight percentages with context-aware colors
-                                        .replace(/(\d+(?:\.\d+)?%)/g, (match) => {
-                                            const value = parseFloat(match);
-                                            let color = '#64748b';
+                                        .replace(/(\d+(?:[.,]\d+)?)\s*%/g, (match, num) => {
+                                            const value = parseFloat(num.replace(',', '.'));
                                             // Check context for color
-                                            const text =
-                                                aiInsights.predictionConclusion.toLowerCase();
-                                            const matchIndex = text.indexOf(match.toLowerCase());
-                                            const context = text.substring(
-                                                Math.max(0, matchIndex - 30),
-                                                matchIndex + 30
-                                            );
+                                            const beforeText = aiInsights.predictionConclusion
+                                                .substring(
+                                                    Math.max(
+                                                        0,
+                                                        aiInsights.predictionConclusion.indexOf(
+                                                            match
+                                                        ) - 50
+                                                    ),
+                                                    aiInsights.predictionConclusion.indexOf(match)
+                                                )
+                                                .toLowerCase();
 
+                                            let color = '#3b82f6'; // default blue
                                             if (
-                                                context.includes('tăng') ||
-                                                context.includes('cao hơn') ||
-                                                context.includes('cải thiện')
+                                                beforeText.includes('hủy') ||
+                                                beforeText.includes('giảm') ||
+                                                beforeText.includes('vắng')
                                             ) {
-                                                color = '#10b981'; // green for positive growth
+                                                color =
+                                                    value > 40
+                                                        ? '#ef4444'
+                                                        : value > 20
+                                                          ? '#f59e0b'
+                                                          : '#10b981';
                                             } else if (
-                                                context.includes('giảm') ||
-                                                context.includes('thấp hơn')
+                                                beforeText.includes('tăng') ||
+                                                beforeText.includes('hoàn thành')
                                             ) {
-                                                color = '#ef4444'; // red for decline
-                                            } else if (context.includes('hủy')) {
-                                                color = value > 40 ? '#ef4444' : '#f59e0b'; // red/orange for cancellation
+                                                color = '#10b981';
+                                            } else if (
+                                                beforeText.includes('tỉ lệ') ||
+                                                beforeText.includes('tỷ lệ')
+                                            ) {
+                                                color = '#f59e0b';
                                             }
-                                            return `<strong style="color: ${color}; font-weight: 700;">${match}</strong>`;
+                                            return `<strong style="color: ${color}; font-weight: 700;">${num}%</strong>`;
                                         })
-                                        // Highlight numbers (predictions, counts)
+                                        // Highlight large numbers (appointments, counts) - match numbers with commas or dots
                                         .replace(
-                                            /(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(lượt|cuộc|bệnh nhân|lần)/gi,
+                                            /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*(lượt|cuộc|bệnh nhân|lần|người)/gi,
                                             (match, num, unit) => {
-                                                return `<strong style="color: #10b981; font-weight: 700;">${num}</strong> ${unit}`;
+                                                return `<strong style="color: #3b82f6; font-weight: 700;">${num}</strong> ${unit}`;
                                             }
-                                        ),
+                                        )
+                                        // Highlight standalone numbers
+                                        .replace(/\b(\d{1,3}(?:[.,]\d{3})+)\b/g, (match) => {
+                                            return `<strong style="color: #3b82f6; font-weight: 700;">${match}</strong>`;
+                                        }),
                                 }}
                             />
                         </div>
@@ -1230,106 +1246,6 @@ const HospitalDashboard: React.FC = () => {
                                 </div>
                             </div>
                         )}
-
-                    <div className={styles.trendCard}>
-                        <div className={styles.cardHeader}>
-                            <h5>
-                                <i className="ti ti-search me-2"></i>
-                                Phân tích nguyên nhân gốc rễ
-                            </h5>
-                            <span>Phân tích sâu các chỉ số bất thường để tìm nguyên nhân</span>
-                        </div>
-                        <div className={styles.cardBody}>
-                            {aiInsights.rootCauseAnalyses &&
-                            aiInsights.rootCauseAnalyses.length > 0 ? (
-                                <div className={styles.alertsGrid}>
-                                    {aiInsights.rootCauseAnalyses.map((rca: any, index: number) => (
-                                        <div
-                                            key={index}
-                                            className={`${styles.alertCard} ${styles.alertWarning}`}
-                                        >
-                                            <div className={styles.alertHeader}>
-                                                <div className={styles.alertIcon}>
-                                                    <i className="ti ti-chart-line"></i>
-                                                </div>
-                                                <div className={styles.alertTitleSection}>
-                                                    <h6 className={styles.alertTitle}>
-                                                        {rca.metric}
-                                                    </h6>
-                                                    <span className={styles.alertMetric}>
-                                                        Phân tích nguyên nhân
-                                                    </span>
-                                                </div>
-                                                <span
-                                                    className={styles.alertBadge}
-                                                    data-severity={
-                                                        rca.impactScore >= 70
-                                                            ? 'high'
-                                                            : rca.impactScore >= 40
-                                                              ? 'medium'
-                                                              : 'low'
-                                                    }
-                                                >
-                                                    Tác động: {rca.impactScore.toFixed(0)}%
-                                                </span>
-                                            </div>
-                                            <p className={styles.alertMessage}>
-                                                <strong>Vấn đề:</strong> {rca.issue}
-                                            </p>
-                                            {rca.potentialCauses &&
-                                                rca.potentialCauses.length > 0 && (
-                                                    <div className={styles.alertValues}>
-                                                        <strong>Nguyên nhân tiềm năng:</strong>
-                                                        <ul
-                                                            style={{
-                                                                margin: '0.5rem 0 0 0',
-                                                                paddingLeft: '1.25rem',
-                                                            }}
-                                                        >
-                                                            {rca.potentialCauses.map(
-                                                                (
-                                                                    cause: string,
-                                                                    causeIndex: number
-                                                                ) => (
-                                                                    <li
-                                                                        key={causeIndex}
-                                                                        style={{
-                                                                            marginBottom: '0.5rem',
-                                                                        }}
-                                                                    >
-                                                                        {cause}
-                                                                    </li>
-                                                                )
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            {rca.mostLikelyCause && (
-                                                <div className={styles.alertAction}>
-                                                    <i className="ti ti-target me-2"></i>
-                                                    <strong>
-                                                        Nguyên nhân có khả năng cao nhất:
-                                                    </strong>{' '}
-                                                    {rca.mostLikelyCause}
-                                                </div>
-                                            )}
-                                            {rca.analysis && (
-                                                <div className={styles.alertAction}>
-                                                    <i className="ti ti-file-analytics me-2"></i>
-                                                    <strong>Phân tích chi tiết:</strong>{' '}
-                                                    {rca.analysis}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className={styles.emptyState}>
-                                    Chưa có phân tích nguyên nhân gốc rễ trong kỳ này.
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
                     <div className={styles.trendCard}>
                         <div className={styles.cardHeader}>
