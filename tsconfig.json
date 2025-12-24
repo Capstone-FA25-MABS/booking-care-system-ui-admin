@@ -1,0 +1,34 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        },
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ],
+    "compilerOptions": {
+        "types": ["vitest", "vite/client"],
+        "composite": true,
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"],
+            "@/components/*": ["src/components/*"],
+            "@/pages/*": ["src/pages/*"],
+            "@/layouts/*": ["src/layouts/*"],
+            "@/hooks/*": ["src/hooks/*"],
+            "@/services/*": ["src/services/*"],
+            "@/utils/*": ["src/utils/*"],
+            "@/types/*": ["src/types/*"],
+            "@/constants/*": ["src/constants/*"],
+            "@/store/*": ["src/store/*"],
+            "@/assets/*": ["src/assets/*"]
+        }
+    }
+}

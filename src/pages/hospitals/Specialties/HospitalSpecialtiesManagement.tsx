@@ -1,0 +1,316 @@
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
+import { getAllSpecialtiesSimple } from '@/services/specialty.service';
+import { Specialty } from '@/types/specialty.types';
+import Button from '@/components/Button';
+import HospitalService from '@/services/hospital.service';
+import { useSubscription } from '@/hooks/useSubscription';
+import SpecialtyCardSkeleton from './SpecialtyCardSkeleton';
+import styles from './HospitalSpecialtiesManagement.module.scss';
+
+const HospitalSpecialtiesManagement: React.FC = () => {
+    const { profile, hospitalProfile } = useCurrentUserProfile();
+    const hospitalId = hospitalProfile?.id || (profile as any)?.id;
+    const { checkSpecialtyLimit, usageData, loadUsageData } = useSubscription();
+
+    // State
+    const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([]);
+    const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<string[]>([]);
+    const [initialSpecialtyIds, setInitialSpecialtyIds] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Load usage data on mount
+    useEffect(() => {
+        if (hospitalId) {
+            loadUsageData(hospitalId);
+        }
+    }, [hospitalId, loadUsageData]);
+
+    // Load all specialties and current hospital specialties
+    useEffect(() => {
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                // Load all active specialties using getAllSpecialtiesSimple (no pagination)
+                const specialtiesResponse = await getAllSpecialtiesSimple();
+
+                // Handle both response structures: array directly or wrapped in data
+                let specialtiesList: Specialty[] = [];
+                const responseData = specialtiesResponse.data as any;
+
+                if (Array.isArray(responseData)) {
+                    specialtiesList = responseData;
+                } else if (responseData?.items && Array.isArray(responseData.items)) {
+                    specialtiesList = responseData.items;
+                } else if (responseData?.specialties && Array.isArray(responseData.specialties)) {
+                    specialtiesList = responseData.specialties;
+                }
+
+                // Filter only ACTIVE specialties (or show all if status field doesn't exist)
+                const activeSpecialties = specialtiesList.filter(
+                    (s: Specialty) => !s.status || s.status === 'ACTIVE'
+                );
+
+                // If no ACTIVE specialties but we have data, show all
+                if (activeSpecialties.length === 0 && specialtiesList.length > 0) {
+                    setAllSpecialties(specialtiesList);
+                } else {
+                    setAllSpecialties(activeSpecialties);
+                }
+
+                // Load current hospital specialties via lightweight endpoint
+                if (hospitalId) {
+                    const idsResponse = await HospitalService.getHospitalSpecialtyIds(hospitalId);
+                    const idsData = idsResponse.data as any;
+                    const ids: string[] = Array.isArray(idsData)
+                        ? idsData
+                              .map((x: any) =>
+                                  typeof x === 'string' ? x : x?.specialtyId || x?.id
+                              )
+                              .filter(Boolean)
+                        : [];
+                    setSelectedSpecialtyIds(ids);
+                    setInitialSpecialtyIds(ids);
+                }
+            } catch (error: any) {
+                console.error('Error loading specialties:', error);
+                toast.error(
+                    error?.message || 'Không thể tải danh sách chuyên khoa. Vui lòng thử lại!'
+                );
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, [hospitalProfile]);
+
+    // Filter specialties by search term
+    const filteredSpecialties = allSpecialties.filter((specialty) =>
+        specialty.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Handle specialty toggle
+    const handleSpecialtyToggle = (specialtyId: string) => {
+        setSelectedSpecialtyIds((prev) => {
+            if (prev.includes(specialtyId)) {
+                return prev.filter((id) => id !== specialtyId);
+            } else {
+                return [...prev, specialtyId];
+            }
+        });
+    };
+
+    // Handle save
+    const handleSave = async () => {
+        if (!hospitalId) {
+            toast.error('Không tìm thấy thông tin bệnh viện!');
+            return;
+        }
+
+        if (!hospitalProfile) {
+            toast.error('Không tìm thấy thông tin bệnh viện. Vui lòng tải lại trang!');
+            return;
+        }
+
+        // Calculate how many specialties are being added
+        const specialtiesToAdd = selectedSpecialtyIds.filter(
+            (id) => !initialSpecialtyIds.includes(id)
+        );
+
+        // Check limit before saving if adding specialties
+        if (specialtiesToAdd.length > 0) {
+            const currentCount = usageData?.currentSpecialtyCount || initialSpecialtyIds.length;
+
+            // Check if we can add all new specialties
+            const canAdd = await checkSpecialtyLimit(hospitalId);
+            if (!canAdd) {
+                const maxCount = usageData?.maxSpecialties ?? Number.MAX_SAFE_INTEGER;
+                const isUnlimited =
+                    maxCount === null ||
+                    maxCount === undefined ||
+                    maxCount === -1 ||
+                    maxCount === Number.MAX_SAFE_INTEGER;
+                const displayMax = isUnlimited ? '∞' : maxCount.toString();
+                toast.error(
+                    `Bạn đã đạt giới hạn số lượng chuyên khoa cho phép trong gói đăng ký. Hiện tại: ${currentCount}/${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+
+            // Check if adding these specialties would exceed the limit
+            const newCount = currentCount + specialtiesToAdd.length;
+            const maxSpecialties = usageData?.maxSpecialties;
+            const hasLimitedSpecialties =
+                maxSpecialties !== null &&
+                maxSpecialties !== undefined &&
+                maxSpecialties !== Number.MAX_SAFE_INTEGER &&
+                maxSpecialties !== -1;
+
+            if (
+                hasLimitedSpecialties &&
+                maxSpecialties !== undefined &&
+                newCount > maxSpecialties
+            ) {
+                const displayMax = maxSpecialties.toString();
+                toast.error(
+                    `Không thể thêm ${specialtiesToAdd.length} chuyên khoa. Giới hạn hiện tại: ${displayMax}. Vui lòng nâng cấp gói để thêm chuyên khoa.`
+                );
+                return;
+            }
+        }
+
+        setIsSaving(true);
+        try {
+            // Update only hospital specialties
+            await HospitalService.updateHospitalSpecialties(hospitalId, selectedSpecialtyIds);
+            // No need to refresh profile - update local state only for better performance
+            setInitialSpecialtyIds(selectedSpecialtyIds);
+
+            // Reload usage data to reflect changes
+            if (hospitalId) {
+                await loadUsageData(hospitalId);
+            }
+
+            toast.success('Cập nhật chuyên khoa thành công!');
+        } catch (error: any) {
+            console.error('Error updating specialties:', error);
+            const errorMessage =
+                error?.message || 'Không thể cập nhật chuyên khoa. Vui lòng thử lại!';
+            toast.error(errorMessage);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Check if has changes
+    const hasChanges =
+        selectedSpecialtyIds.length !== initialSpecialtyIds.length ||
+        selectedSpecialtyIds.some((id) => !initialSpecialtyIds.includes(id)) ||
+        initialSpecialtyIds.some((id) => !selectedSpecialtyIds.includes(id));
+
+    return (
+        <div className={`content ${styles.pageContainer}`}>
+            <div className={styles.contentWrapper}>
+                {/* Header */}
+                <div className="mb-3 border-bottom pb-3">
+                    <h4 className="fw-bold mb-0">Quản lý chuyên khoa</h4>
+                    <p className="text-muted mt-2 mb-0">
+                        Chọn các chuyên khoa mà bệnh viện của bạn cung cấp dịch vụ
+                    </p>
+                </div>
+
+                {/* Search and Filter Bar */}
+                <div
+                    className={`d-flex align-items-center flex-wrap gap-3 mb-4 ${styles.searchBar}`}
+                >
+                    <div className={styles.searchInput} data-tour-id="specialty-search-input">
+                        <div className={styles.inputIconStart}>
+                            <i className={`ti ti-search ${styles.inputIconAddon}`}></i>
+                            <input
+                                type="search"
+                                className={`form-control ${styles.formControl}`}
+                                placeholder="Tìm kiếm chuyên khoa..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    {/* Selected count */}
+                    <div className={styles.selectedCount}>
+                        <span className="badge badge-soft-primary fs-13 fw-medium">
+                            Đã chọn: {selectedSpecialtyIds.length} / {allSpecialties.length} chuyên
+                            khoa
+                        </span>
+                    </div>
+                </div>
+
+                {/* Specialties grid */}
+                <div className={styles.specialtiesGrid} data-tour-id="specialty-grid">
+                    {(() => {
+                        if (isLoading) {
+                            // Show skeleton cards while loading
+                            return Array.from({ length: 12 }, (_, index) => (
+                                <SpecialtyCardSkeleton key={`specialty-skeleton-${index}`} />
+                            ));
+                        }
+
+                        if (filteredSpecialties.length === 0) {
+                            return (
+                                <div className="text-center py-5">
+                                    <p className="text-muted">Không tìm thấy chuyên khoa nào</p>
+                                </div>
+                            );
+                        }
+
+                        return filteredSpecialties.map((specialty) => {
+                            const isSelected = selectedSpecialtyIds.includes(specialty.id);
+                            const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleSpecialtyToggle(specialty.id);
+                                }
+                            };
+                            return (
+                                <div
+                                    key={specialty.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
+                                    aria-pressed={isSelected}
+                                    className={`${styles.specialtyCard} ${isSelected ? styles.selected : ''}`}
+                                    data-tour-id="specialty-card"
+                                    onClick={() => handleSpecialtyToggle(specialty.id)}
+                                    onKeyDown={handleKeyDown}
+                                >
+                                    <div className={styles.specialtyCardContent}>
+                                        <div className={styles.checkboxWrapper}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleSpecialtyToggle(specialty.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                aria-label={`${isSelected ? 'Bỏ chọn' : 'Chọn'} chuyên khoa ${specialty.name}`}
+                                            />
+                                        </div>
+                                        <div className={styles.specialtyImage}>
+                                            <img
+                                                src={specialty.imageUrl}
+                                                alt={specialty.name}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src =
+                                                        'https://via.placeholder.com/80x80?text=No+Image';
+                                                }}
+                                            />
+                                        </div>
+                                        <div className={styles.specialtyName}>{specialty.name}</div>
+                                    </div>
+                                </div>
+                            );
+                        });
+                    })()}
+                </div>
+
+                {/* Save button at bottom */}
+                {hasChanges && (
+                    <div className="mt-4 d-flex justify-content-end">
+                        <Button
+                            variant="primary"
+                            size="md"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            icon={isSaving ? undefined : 'ti ti-device-floppy'}
+                        >
+                            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                        </Button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default HospitalSpecialtiesManagement;

@@ -1,0 +1,315 @@
+.metricCard {
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1px solid #f1f5f9;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-start;
+    position: relative;
+
+    .metricHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .metricBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        background: rgba(255, 255, 255, 0.65);
+        color: inherit;
+        white-space: nowrap;
+        width: fit-content;
+    }
+
+    .metricIcon {
+        font-size: 1.5rem;
+        opacity: 0.8;
+        color: inherit;
+        flex-shrink: 0;
+        transition:
+            transform 0.2s ease,
+            opacity 0.2s ease;
+
+        @media (max-width: 1200px) {
+            font-size: 1.35rem;
+        }
+
+        @media (max-width: 992px) {
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            font-size: 1.15rem;
+        }
+
+        @media (max-width: 576px) {
+            font-size: 1rem;
+        }
+    }
+
+    &:hover .metricIcon {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .metricValue {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+        margin: 0;
+        white-space: nowrap;
+        text-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
+    }
+
+    .metricSub {
+        font-size: 0.85rem;
+        color: rgba(15, 23, 42, 0.65);
+        margin: 0;
+        font-weight: 600;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        line-height: 1.3;
+        max-width: 100%;
+    }
+
+    &.total {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-color: #fcd34d;
+        color: #92400e;
+    }
+
+    &.completed {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        border-color: #86efac;
+        color: #166534;
+    }
+
+    &.pending {
+        background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+        border-color: #7dd3fc;
+        color: #0f172a;
+    }
+
+    &.cancelled {
+        background: linear-gradient(135deg, #ffe4e6, #fecdd3);
+        border-color: #fda4af;
+        color: #9f1239;
+    }
+
+    &.newPatients {
+        background: linear-gradient(135deg, #eef2ff, #c7d2fe);
+        border-color: #a5b4fc;
+        color: #312e81;
+    }
+
+    &.cardSpecialty {
+        background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+        border-color: #8b5cf6;
+        color: #6366f1;
+    }
+
+    &.cardDoctorServices {
+        background: linear-gradient(135deg, #a5f3fc, #67e8f9);
+        border-color: #22d3ee;
+        color: #0ea5e9;
+    }
+
+    &.cardDoctors {
+        background: linear-gradient(135deg, #fdba74, #fb923c);
+        border-color: #f97316;
+        color: #ea580c;
+    }
+
+    &.cardMedicalServices {
+        background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+        border-color: #34d399;
+        color: #10b981;
+    }
+
+    &.skeleton {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+    }
+
+    // Responsive styles
+    @media (max-width: 1400px) {
+        .metricValue {
+            font-size: 2.2rem;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        padding: 0.85rem;
+
+        .metricValue {
+            font-size: 2rem;
+        }
+
+        .metricBadge {
+            font-size: 0.78rem;
+            padding: 0.12rem 0.5rem;
+        }
+
+        .metricSub {
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        padding: 0.75rem;
+        gap: 0.3rem;
+
+        .metricValue {
+            font-size: 1.75rem;
+        }
+
+        .metricBadge {
+            font-size: 0.75rem;
+            padding: 0.1rem 0.45rem;
+        }
+
+        .metricSub {
+            font-size: 0.78rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        padding: 0.7rem;
+        gap: 0.25rem;
+
+        .metricValue {
+            font-size: 1.5rem;
+        }
+
+        .metricBadge {
+            font-size: 0.72rem;
+            padding: 0.1rem 0.4rem;
+        }
+
+        .metricSub {
+            font-size: 0.75rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        padding: 0.65rem;
+        gap: 0.2rem;
+
+        .metricValue {
+            font-size: 1.35rem;
+            text-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .metricBadge {
+            font-size: 0.7rem;
+            padding: 0.08rem 0.35rem;
+        }
+
+        .metricSub {
+            font-size: 0.72rem;
+        }
+    }
+
+    // Đảm bảo text không bị tràn trên màn hình nhỏ
+    @media (max-width: 480px) {
+        .metricValue,
+        .metricBadge,
+        .metricSub {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .metricValue {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+@keyframes skeleton-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.skeletonBadge {
+    width: 100px;
+    height: 20px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+
+    @media (max-width: 768px) {
+        width: 80px;
+        height: 18px;
+    }
+
+    @media (max-width: 576px) {
+        width: 70px;
+        height: 16px;
+    }
+}
+
+.skeletonValue {
+    width: 120px;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+
+    @media (max-width: 992px) {
+        width: 100px;
+        height: 35px;
+    }
+
+    @media (max-width: 768px) {
+        width: 90px;
+        height: 30px;
+    }
+
+    @media (max-width: 576px) {
+        width: 80px;
+        height: 28px;
+    }
+}
+
+.skeletonSub {
+    width: 150px;
+    height: 16px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+
+    @media (max-width: 992px) {
+        width: 130px;
+        height: 14px;
+    }
+
+    @media (max-width: 768px) {
+        width: 110px;
+        height: 13px;
+    }
+
+    @media (max-width: 576px) {
+        width: 100px;
+        height: 12px;
+    }
+}

@@ -1,0 +1,317 @@
+// src/pages/hospitals/Discounts/HospitalDiscountManagement.module.scss
+@use '../../../styles/variables' as *;
+
+// Statistics Cards
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.statCard {
+    background: #ffffff;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .statIcon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+            font-size: 1.25rem;
+        }
+    }
+
+    .statContent {
+        flex: 1;
+
+        .statLabel {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .statValue {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1;
+        }
+    }
+}
+
+// Filters
+.filtersCard {
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border: 1px solid #e5e7eb;
+}
+
+.searchWrapper,
+.filterWrapper {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+
+    i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+}
+
+.searchInput,
+.filterSelect {
+    width: 100%;
+    padding: 0.625rem 1rem 0.625rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: #f9fafb;
+    color: #111827;
+
+    &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+        color: #9ca3af;
+    }
+}
+
+.filterSelect {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+// Table Cell Styles
+.codeTag {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.nameCell {
+    .name {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 0.125rem;
+    }
+
+    .description {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+}
+
+.typeBadge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.amountValue {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: #059669;
+}
+
+.usageCell {
+    min-width: 100px;
+
+    .usageBar {
+        width: 100%;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 0.375rem;
+
+        .usageProgress {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+    }
+
+    .usageText {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-align: center;
+    }
+}
+
+.dateRange {
+    font-size: 0.75rem;
+
+    .dateStart,
+    .dateEnd {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        margin: 0.125rem 0;
+
+        i {
+            font-size: 0.625rem;
+        }
+    }
+
+    .dateStart {
+        color: #059669;
+        font-weight: 500;
+    }
+
+    .dateEnd {
+        color: #dc2626;
+        font-weight: 500;
+    }
+}
+
+// Actions
+.actions {
+    display: flex;
+    gap: 0.375rem;
+
+    button {
+        padding: 0.375rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+            font-size: 0.875rem;
+        }
+
+        &:hover {
+            transform: translateY(-1px);
+        }
+    }
+
+    .editBtn {
+        background: #fef3c7;
+        color: #d97706;
+
+        &:hover {
+            background: #fde68a;
+        }
+    }
+
+    .activateBtn {
+        background: #d1fae5;
+        color: #059669;
+
+        &:hover {
+            background: #a7f3d0;
+        }
+    }
+
+    .deactivateBtn {
+        background: #f3f4f6;
+        color: #6b7280;
+
+        &:hover {
+            background: #e5e7eb;
+        }
+    }
+
+    .deleteBtn {
+        background: #fee2e2;
+        color: #dc2626;
+
+        &:hover {
+            background: #fecaca;
+        }
+    }
+}
+
+// Skeleton Loading
+.skeleton {
+    height: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filtersCard {
+        flex-direction: column;
+    }
+
+    .searchWrapper,
+    .filterWrapper {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}

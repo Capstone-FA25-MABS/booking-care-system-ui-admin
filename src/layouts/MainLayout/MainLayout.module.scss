@@ -1,0 +1,8 @@
+.mainLayoutContainer {
+    .contentContainer {
+        min-height: calc(100vh - 98px);
+
+        // margin-left is handled by .page-wrapper class in style.css
+        // Default: 276px (expanded), Mini-sidebar: 70px
+    }
+}

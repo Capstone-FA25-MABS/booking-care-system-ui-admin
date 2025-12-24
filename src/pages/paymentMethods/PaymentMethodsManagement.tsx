@@ -1,0 +1,229 @@
+import React, { useState, useEffect } from 'react';
+import { Button, Table, Spinner, Alert } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import PaymentMethodService from '@/services/paymentMethod.service';
+import type { PaymentMethod } from '@/types/paymentMethod.types';
+import StatusBadge from '@/components/StatusBadge';
+import TableSkeleton from '@/components/TableSkeleton';
+import { paymentMethodTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
+
+const TABLE_COLUMNS = ['STT', 'Tên', 'Mô tả', 'Hình ảnh', 'Trạng thái', 'Thao tác'];
+
+const PaymentMethodsManagement: React.FC = () => {
+    const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch payment methods on component mount
+    useEffect(() => {
+        fetchPaymentMethods();
+    }, []);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await PaymentMethodService.getAllPaymentMethods();
+            if (response.success) {
+                // Handle different response structures
+                const paymentMethodsData = response.data?.data || response.data || [];
+                setPaymentMethods(Array.isArray(paymentMethodsData) ? paymentMethodsData : []);
+            } else {
+                setError('Không thể tải danh sách phương thức thanh toán');
+            }
+        } catch (err) {
+            console.error('Error fetching payment methods:', err);
+            setError('Có lỗi xảy ra khi tải danh sách phương thức thanh toán');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleToggleStatus = async (paymentMethod: PaymentMethod) => {
+        try {
+            setTogglingId(paymentMethod.id);
+            const response = await PaymentMethodService.togglePaymentMethodStatus({
+                id: paymentMethod.id,
+            });
+
+            if (response.success) {
+                // Handle different response structures
+                const updatedPaymentMethod = response.data?.data || response.data;
+                const newStatus = updatedPaymentMethod?.status;
+
+                if (newStatus) {
+                    // Update the payment method in the list
+                    setPaymentMethods((prev) =>
+                        prev.map((pm) =>
+                            pm.id === paymentMethod.id ? { ...pm, status: newStatus } : pm
+                        )
+                    );
+
+                    const statusText = newStatus === 'ACTIVE' ? 'kích hoạt' : 'vô hiệu hóa';
+                    toast.success(
+                        `Đã ${statusText} phương thức thanh toán ${paymentMethod.description}`
+                    );
+                } else {
+                    toast.error('Không thể cập nhật trạng thái - dữ liệu trả về không hợp lệ');
+                }
+            } else {
+                toast.error('Không thể thay đổi trạng thái phương thức thanh toán');
+            }
+        } catch (err) {
+            console.error('Error toggling payment method status:', err);
+            toast.error('Có lỗi xảy ra khi thay đổi trạng thái');
+        } finally {
+            setTogglingId(null);
+        }
+    };
+
+    const getStatusVariant = (status: string) => {
+        return status === 'ACTIVE' ? 'success' : 'secondary';
+    };
+
+    const getStatusText = (status: string) => {
+        return status === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động';
+    };
+
+    const getToggleButtonText = (status: string) => {
+        return status === 'ACTIVE' ? 'Tắt' : 'Bật';
+    };
+
+    const getToggleButtonVariant = (status: string) => {
+        return status === 'ACTIVE' ? 'outline-danger' : 'outline-success';
+    };
+
+    const renderTableBody = () => {
+        if (loading) {
+            return <TableSkeleton rows={5} columns={paymentMethodTableColumns} />;
+        }
+
+        if (error) {
+            return (
+                <tr>
+                    <td colSpan={6}>
+                        <Alert variant="danger" className="mb-0 m-3">
+                            <Alert.Heading>Lỗi!</Alert.Heading>
+                            <p>{error}</p>
+                            <Button variant="outline-danger" onClick={fetchPaymentMethods}>
+                                Thử lại
+                            </Button>
+                        </Alert>
+                    </td>
+                </tr>
+            );
+        }
+
+        if (paymentMethods.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={6}>
+                        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                            <div
+                                className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
+                                style={{ width: '80px', height: '80px' }}
+                            >
+                                <i
+                                    className="ti ti-credit-card-off text-muted"
+                                    style={{ fontSize: '2rem' }}
+                                ></i>
+                            </div>
+                            <h5 className="text-muted mb-2">Chưa có phương thức thanh toán nào</h5>
+                            <p className="text-muted mb-0 small">
+                                Các phương thức thanh toán sẽ được hiển thị tại đây
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+
+        return paymentMethods.map((paymentMethod, index) => (
+            <tr key={paymentMethod.id}>
+                <td>{index + 1}</td>
+                <td>
+                    <span className="fw-semibold">{paymentMethod.name}</span>
+                </td>
+                <td>{paymentMethod.description}</td>
+                <td>
+                    {paymentMethod.imageUrl ? (
+                        <img
+                            src={paymentMethod.imageUrl}
+                            alt={paymentMethod.name}
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                objectFit: 'contain',
+                            }}
+                            className="rounded"
+                        />
+                    ) : (
+                        <div
+                            className="bg-light rounded d-flex align-items-center justify-content-center"
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                            }}
+                        >
+                            <i className="ti ti-credit-card text-muted"></i>
+                        </div>
+                    )}
+                </td>
+                <td>
+                    <StatusBadge
+                        status={paymentMethod.status}
+                        variant={getStatusVariant(paymentMethod.status)}
+                        customText={getStatusText(paymentMethod.status)}
+                    />
+                </td>
+                <td>
+                    <Button
+                        variant={getToggleButtonVariant(paymentMethod.status)}
+                        size="sm"
+                        onClick={() => handleToggleStatus(paymentMethod)}
+                        disabled={togglingId === paymentMethod.id}
+                    >
+                        {togglingId === paymentMethod.id ? (
+                            <Spinner size="sm" animation="border" />
+                        ) : (
+                            <>
+                                <i
+                                    className={`ti ti-${paymentMethod.status === 'ACTIVE' ? 'toggle-right' : 'toggle-left'}`}
+                                ></i>{' '}
+                                {getToggleButtonText(paymentMethod.status)}
+                            </>
+                        )}
+                    </Button>
+                </td>
+            </tr>
+        ));
+    };
+
+    return (
+        <div className="content">
+            <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+                <div className="flex-grow-1">
+                    <h4 className="fw-bold mb-0">Danh sách phương thức thanh toán</h4>
+                </div>
+            </div>
+
+            <div className="table-responsive">
+                <div className="bg-white rounded-3 shadow-sm border">
+                    <Table className="table table-centered mb-0">
+                        <thead className="table-light">
+                            <tr>
+                                {TABLE_COLUMNS.map((column) => (
+                                    <th key={column}>{column}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>{renderTableBody()}</tbody>
+                    </Table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default PaymentMethodsManagement;

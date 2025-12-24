@@ -1,0 +1,60 @@
+.filterContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.filterButtons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filterButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+        font-size: 1rem;
+    }
+
+    &:hover:not(:disabled) {
+        border-color: #8b5cf6;
+        color: #8b5cf6;
+        background-color: #f5f3ff;
+    }
+
+    &.active {
+        border-color: #8b5cf6;
+        background-color: #8b5cf6;
+        color: #ffffff;
+
+        &:hover {
+            background-color: #7c3aed;
+            border-color: #7c3aed;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.dateRangeWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

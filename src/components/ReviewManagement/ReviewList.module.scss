@@ -1,0 +1,335 @@
+.container {
+    .header {
+        margin-bottom: 16px;
+
+        .resultInfo {
+            font-size: 14px;
+            color: #6c757d;
+        }
+    }
+
+    .emptyState {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 64px 24px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        i {
+            font-size: 64px;
+            color: #adb5bd;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #6c757d;
+            margin: 0;
+        }
+    }
+
+    .reviewsList {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .reviewCard {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.2s;
+
+        &:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .reviewHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            gap: 16px;
+
+            @media (max-width: 768px) {
+                flex-direction: column;
+            }
+
+            .patientInfo {
+                display: flex;
+                gap: 12px;
+                flex: 1;
+
+                .avatar {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .info {
+                    .patientName {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #2c3e50;
+                        margin-bottom: 4px;
+                    }
+
+                    .metadata {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 13px;
+                        color: #6c757d;
+
+                        .separator {
+                            color: #dee2e6;
+                        }
+
+                        .targetTypeButton {
+                            background: none;
+                            border: none;
+                            padding: 0;
+                            cursor: pointer;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 4px;
+                            transition: all 0.2s;
+
+                            &:hover {
+                                .targetType {
+                                    color: #0b5ed7;
+                                    text-decoration: underline;
+                                }
+
+                                i {
+                                    transform: translateX(2px);
+                                }
+                            }
+
+                            .targetType {
+                                color: #0d6efd;
+                                font-weight: 500;
+                            }
+
+                            i {
+                                font-size: 14px;
+                                color: #0d6efd;
+                                transition: transform 0.2s;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .stars {
+                display: flex;
+                gap: 4px;
+
+                i {
+                    font-size: 18px;
+
+                    &.filled {
+                        color: #ffc107;
+                    }
+
+                    &.empty {
+                        color: #e9ecef;
+                    }
+                }
+            }
+        }
+
+        .reviewContent {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #495057;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+
+        .repliesSection {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+
+            .repliesHeader {
+                font-size: 14px;
+                font-weight: 600;
+                color: #495057;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+
+                i {
+                    font-size: 16px;
+                    color: #0d6efd;
+                }
+            }
+
+            .reply {
+                background-color: #fff;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 12px;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+
+                .replyHeader {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 8px;
+                    gap: 8px;
+
+                    .replyAuthor {
+                        display: flex;
+                        gap: 10px;
+                        flex: 1;
+
+                        .avatar {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                        }
+
+                        .authorInfo {
+                            .authorName {
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #2c3e50;
+                                margin-bottom: 2px;
+
+                                .role {
+                                    font-size: 12px;
+                                    font-weight: 400;
+                                    color: #6c757d;
+                                    margin-left: 4px;
+                                }
+                            }
+
+                            .replyDate {
+                                font-size: 12px;
+                                color: #6c757d;
+
+                                .edited {
+                                    font-style: italic;
+                                    color: #95a5a6;
+                                }
+                            }
+                        }
+                    }
+
+                    .replyActions {
+                        display: flex;
+                        gap: 4px;
+
+                        button {
+                            background: none;
+                            border: none;
+                            padding: 4px 8px;
+                            cursor: pointer;
+                            border-radius: 4px;
+                            transition: background-color 0.2s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            i {
+                                font-size: 16px;
+                            }
+
+                            &.editBtn {
+                                color: #0d6efd;
+
+                                &:hover {
+                                    background-color: #e7f1ff;
+                                }
+                            }
+
+                            &.deleteBtn {
+                                color: #dc3545;
+
+                                &:hover {
+                                    background-color: #f8d7da;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .replyContent {
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: #495057;
+                    white-space: pre-wrap;
+                }
+            }
+        }
+
+        .reviewFooter {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+
+            .viewDetailButton {
+                padding: 8px 16px;
+                background-color: #6c757d;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+
+                i {
+                    font-size: 16px;
+                }
+
+                &:hover {
+                    background-color: #5a6268;
+                }
+            }
+
+            .replyButton {
+                padding: 8px 16px;
+                background-color: #0d6efd;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+
+                i {
+                    font-size: 16px;
+                }
+
+                &:hover {
+                    background-color: #0b5ed7;
+                }
+            }
+        }
+    }
+
+    .paginationWrapper {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+    }
+}

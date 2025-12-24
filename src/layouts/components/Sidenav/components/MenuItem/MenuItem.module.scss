@@ -1,0 +1,66 @@
+.subMenuList {
+    display: block !important;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+        max-height 0.2s ease-out,
+        opacity 0.2s ease-out;
+    margin: 4px 0 0 !important;
+    &.open {
+        max-height: 1000px; /* big enough to fit all items */
+        opacity: 1;
+        transition:
+            max-height 0.3s ease-in,
+            opacity 0.3s ease-in;
+    }
+
+    // Reset all li items to inactive state by default
+    li {
+        &::before {
+            background: #e0e0e0 !important; // Gray dot for inactive items
+        }
+
+        // Only active items get the blue dot
+        &.active-item::before {
+            background: var(--primary) !important; // Blue dot for active item
+        }
+    }
+}
+
+/* Override default styles for submenu */
+:global(.sidebar .sidebar-menu > ul > li > a) {
+    // Reset default active styling for non-active items
+    &:not(.active):not(.subdrop) {
+        background: transparent !important;
+        border-left: none !important;
+        color: var(--menu-item-color) !important;
+    }
+}
+
+/* Override submenu item active states and mini mode behavior */
+:global {
+    // Force inactive items to have gray dots
+    .sidebar .sidebar-menu .submenu.subdrop ul li {
+        &::before {
+            background: #e0e0e0 !important;
+        }
+
+        // Only items with active-item class get blue dots
+        &.active-item::before {
+            background: #4299e1 !important;
+        }
+    }
+
+    // Auto-close submenus in mini mode when not hovering
+    .mini-sidebar:not(.expand-menu) .sidebar-menu .submenu {
+        ul {
+            display: none !important;
+        }
+
+        &.subdrop > a,
+        &.subdrop > button {
+            background: transparent !important;
+        }
+    }
+}

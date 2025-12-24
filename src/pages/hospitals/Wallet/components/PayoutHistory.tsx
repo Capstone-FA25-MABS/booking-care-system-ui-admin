@@ -1,0 +1,272 @@
+import { useState, forwardRef, useImperativeHandle } from 'react';
+import clsx from 'clsx';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { useSelector } from 'react-redux';
+
+import { useHospitalPayoutHistory } from '@/hooks/useHospitalPayoutHistory';
+import { PayoutStatus } from '@/types/hospitalPayout.types';
+import { RootState } from '@/store';
+import { formatCurrency, getPayoutStatusBadge, getBankLogoUrl } from '@/utils/wallet.utils';
+
+import styles from './PayoutHistory.module.scss';
+
+export interface PayoutHistoryRef {
+    refresh: () => void;
+}
+
+const PayoutHistory = forwardRef<PayoutHistoryRef>((_props, ref) => {
+    const { hospitalProfile } = useSelector((state: RootState) => state.user);
+    const hospitalId = hospitalProfile?.id;
+    const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
+
+    const {
+        payouts,
+        loading,
+        error,
+        currentPage,
+        totalPages,
+        totalCount,
+        handlePageChange,
+        fetchPayouts,
+    } = useHospitalPayoutHistory(hospitalId);
+
+    // Expose refresh function to parent component
+    useImperativeHandle(ref, () => ({
+        refresh: () => {
+            fetchPayouts(currentPage);
+        },
+    }));
+
+    const handleLogoError = (payoutId: string) => {
+        setFailedLogos((prev) => new Set(prev).add(payoutId));
+    };
+
+    const getStatusBadge = (status: PayoutStatus) => {
+        const { className, label } = getPayoutStatusBadge(status);
+        return <span className={className}>{label}</span>;
+    };
+
+    const formatDate = (dateString: string) => {
+        try {
+            return format(new Date(dateString), 'dd/MM/yyyy', { locale: vi });
+        } catch {
+            return 'N/A';
+        }
+    };
+
+    if (loading && payouts.length === 0) {
+        return (
+            <div className={styles.payoutHistoryCard}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <div className={styles.iconWrapper}>
+                            <i className="ti ti-receipt"></i>
+                        </div>
+                        <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                    </div>
+                </div>
+                <div className={styles.loadingContainer}>
+                    <output className="spinner-border text-primary">
+                        <span className="visually-hidden">Đang tải...</span>
+                    </output>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className={styles.payoutHistoryCard}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <div className={styles.iconWrapper}>
+                            <i className="ti ti-receipt"></i>
+                        </div>
+                        <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                    </div>
+                </div>
+                <div className={styles.errorContainer}>
+                    <div className="alert alert-danger" role="alert">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        {error}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.payoutHistoryCard}>
+            <div className={styles.header}>
+                <div className={styles.headerLeft}>
+                    <div className={styles.iconWrapper}>
+                        <i className="ti ti-receipt"></i>
+                    </div>
+                    <h5 className={styles.title}>Lịch sử thanh toán</h5>
+                </div>
+                <div className={styles.headerRight}>
+                    <span className={styles.totalCount}>
+                        Tổng số: <strong>{totalCount}</strong> lần thanh toán
+                    </span>
+                </div>
+            </div>
+
+            {payouts.length === 0 ? (
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>
+                        <i className="ti ti-folder-off"></i>
+                    </div>
+                    <h6 className={styles.emptyTitle}>Chưa có lịch sử thanh toán</h6>
+                    <p className={styles.emptyText}>
+                        Các giao dịch thanh toán sẽ xuất hiện ở đây sau khi bạn thực hiện yêu cầu
+                        rút tiền hoặc nhận thanh toán.
+                    </p>
+                </div>
+            ) : (
+                <>
+                    <div className={clsx('table-responsive', styles.tableContainer)}>
+                        <table className="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th className={styles.colPeriod}>Kỳ thanh toán</th>
+                                    <th className={styles.colCount}>Số cuộc hẹn</th>
+                                    <th className={clsx(styles.colAmount, 'text-end')}>
+                                        Tổng tiền
+                                    </th>
+                                    <th className={styles.colStatus}>Trạng thái</th>
+                                    <th className={styles.colDate}>Ngày hoàn thành</th>
+                                    <th className={styles.colBank}>Tài khoản nhận</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {payouts.map((payout) => (
+                                    <tr key={payout.id}>
+                                        <td className={styles.colPeriod}>
+                                            <div className={styles.periodInfo}>
+                                                <div className={styles.periodDates}>
+                                                    {formatDate(payout.periodStart)} -{' '}
+                                                    {formatDate(payout.periodEnd)}
+                                                </div>
+                                                <small className="text-muted">
+                                                    Tạo: {formatDate(payout.createdAt)}
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td className={styles.colCount}>
+                                            <span className="badge bg-info">
+                                                {payout.appointmentCount}
+                                            </span>
+                                        </td>
+                                        <td className={clsx(styles.colAmount, 'text-end')}>
+                                            <strong className={styles.amount}>
+                                                {formatCurrency(payout.totalAmount)}
+                                            </strong>
+                                        </td>
+                                        <td className={styles.colStatus}>
+                                            {getStatusBadge(payout.status)}
+                                        </td>
+                                        <td className={styles.colDate}>
+                                            {payout.processedAt
+                                                ? formatDate(payout.processedAt)
+                                                : '-'}
+                                        </td>
+                                        <td className={styles.colBank}>
+                                            {payout.bankAccount ? (
+                                                <div className={styles.bankAccountInfo}>
+                                                    <div className={styles.bankLogoSmall}>
+                                                        {failedLogos.has(payout.id) ? (
+                                                            <i className="fas fa-university"></i>
+                                                        ) : (
+                                                            <img
+                                                                src={getBankLogoUrl(
+                                                                    payout.bankAccount.bankCode
+                                                                )}
+                                                                alt={payout.bankAccount.bankName}
+                                                                onError={() =>
+                                                                    handleLogoError(payout.id)
+                                                                }
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className={styles.bankAccountDetails}>
+                                                        <div className={styles.accountNumber}>
+                                                            {payout.bankAccount.accountNumber}
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            {payout.bankAccount.accountName}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <small className="text-muted">-</small>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className={styles.pagination}>
+                            <nav>
+                                <ul className="pagination justify-content-center">
+                                    <li
+                                        className={clsx('page-item', {
+                                            disabled: currentPage === 1,
+                                        })}
+                                    >
+                                        <button
+                                            className="page-link"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                        >
+                                            <i className="fas fa-chevron-left"></i>
+                                        </button>
+                                    </li>
+
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                                        (page) => (
+                                            <li
+                                                key={page}
+                                                className={clsx('page-item', {
+                                                    active: currentPage === page,
+                                                })}
+                                            >
+                                                <button
+                                                    className="page-link"
+                                                    onClick={() => handlePageChange(page)}
+                                                >
+                                                    {page}
+                                                </button>
+                                            </li>
+                                        )
+                                    )}
+
+                                    <li
+                                        className={clsx('page-item', {
+                                            disabled: currentPage === totalPages,
+                                        })}
+                                    >
+                                        <button
+                                            className="page-link"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            <i className="fas fa-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+});
+
+PayoutHistory.displayName = 'PayoutHistory';
+
+export default PayoutHistory;

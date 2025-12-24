@@ -1,0 +1,565 @@
+.subscriptionPlan {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    position: relative;
+}
+
+.closeButton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.container {
+    max-width: 1400px;
+    width: 100%;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.title {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    font-size: 3rem;
+    color: #1a1a1a;
+}
+
+.subtitle {
+    margin-bottom: 0.25rem;
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.subtitleSecond {
+    margin-bottom: 1.5rem;
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.billingToggle {
+    display: inline-flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 50px;
+    padding: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid #dee2e6;
+}
+
+.billingButton {
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    border: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+
+    &.active {
+        background-color: #e9ecef;
+        color: #2e37a4;
+    }
+
+    &.inactive {
+        background-color: white;
+        color: #6c757d;
+    }
+}
+
+.savingsText {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: #ff6b35;
+}
+
+.plansContainerWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.plansContainer {
+    overflow: hidden;
+    flex: 1;
+    width: 100%;
+}
+
+.plansSlider {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 2rem) / 3);
+    gap: 1rem;
+    transition: transform 0.3s ease-in-out;
+}
+
+.planColumn {
+    min-width: 0;
+    width: 100%;
+}
+
+.carouselButton {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    color: #2e37a4;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:hover:not(:disabled) {
+        background-color: #2e37a4;
+        color: white;
+        border-color: #2e37a4;
+        box-shadow: 0 4px 12px rgba(46, 55, 164, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+.backButton {
+    text-align: center;
+}
+
+.backButtonStyle {
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    background-color: #2e37a4;
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: #1e2a7a;
+    }
+}
+
+.termsButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    color: #2e37a4;
+
+    &:hover {
+        background-color: #e9ecef;
+        border-color: #2e37a4;
+    }
+}
+
+// Modal Styles
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    border: none;
+    margin: 0;
+    padding: 0;
+
+    // Padding only applied to modal content, not overlay
+    .modalContent {
+        margin: 1rem;
+    }
+
+    // Reset default dialog backdrop and use our custom overlay
+    &::backdrop {
+        display: none;
+    }
+}
+
+.modalContent {
+    background-color: white;
+    border-radius: 0.5rem;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #2e37a4;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.modalCloseButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: #f8f9fa;
+        color: #1a1a1a;
+    }
+}
+
+.modalBody {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+// Notice Section with blue border
+.noticeSection {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #f0f7ff;
+    border: 1px solid #2e37a4;
+    border-radius: 0.375rem;
+    margin-bottom: 1.5rem;
+}
+
+.noticeIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #2e37a4;
+    color: white;
+    flex-shrink: 0;
+}
+
+.noticeContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.noticeLabel {
+    font-weight: 600;
+    color: #2e37a4;
+    font-size: 0.875rem;
+}
+
+.noticeText {
+    color: #2e37a4;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.termsContent {
+    text-align: left;
+}
+
+.termItem {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.termHeading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.75rem;
+}
+
+.termList {
+    margin: 0;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+    color: #495057;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.termList li {
+    margin-bottom: 0.5rem;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.termSubList {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    list-style-type: circle;
+    color: #6c757d;
+}
+
+.termSubList li {
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+}
+
+@media (max-width: 1400px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .container {
+        max-width: 1000px;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: calc((100% - 0.75rem) / 2);
+        gap: 0.75rem;
+    }
+
+    .carouselButton {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        max-width: 800px;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: calc((100% - 0.75rem) / 2);
+        gap: 0.75rem;
+    }
+
+    .carouselButton {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    .title {
+        font-size: 2.25rem;
+    }
+
+    .billingToggle {
+        max-width: 100%;
+    }
+
+    .billingButton {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    .savingsText {
+        font-size: 0.65rem;
+        margin-left: 0.35rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        max-width: 600px;
+        padding: 0 0.75rem;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.5rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: 100%;
+        gap: 0;
+    }
+
+    .planColumn {
+        min-width: 0;
+    }
+
+    .carouselButton {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .title {
+        font-size: 1.85rem;
+    }
+
+    .subtitle,
+    .subtitleSecond {
+        font-size: 0.875rem;
+    }
+
+    .billingToggle {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        padding: 0.25rem;
+        gap: 0.25rem;
+        border-radius: 12px;
+    }
+
+    .billingButton {
+        width: 100%;
+        text-align: center;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 10px;
+    }
+
+    .savingsText {
+        display: inline;
+        margin-left: 0.5rem;
+        font-size: 0.7rem;
+    }
+
+    .termsContent {
+        padding: 1rem;
+        font-size: 0.8125rem;
+    }
+
+    .termHeading {
+        font-size: 0.9375rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+
+    .title {
+        font-size: 1.65rem;
+    }
+
+    .subtitle,
+    .subtitleSecond {
+        font-size: 0.8rem;
+    }
+
+    .billingToggle {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        padding: 0.25rem;
+        gap: 0.25rem;
+        border-radius: 12px;
+    }
+
+    .billingButton {
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 10px;
+    }
+
+    .savingsText {
+        display: inline;
+        margin-left: 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .plansContainerWrapper {
+        gap: 0.25rem;
+    }
+
+    .plansSlider {
+        grid-auto-columns: 100%;
+        gap: 0;
+    }
+
+    .carouselButton {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
