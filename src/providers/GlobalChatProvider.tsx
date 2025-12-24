@@ -15,6 +15,8 @@ interface GlobalChatContextValue {
     onlineUsers: Set<string>;
     isUserOnline: (userId: string) => boolean;
     incomingCall: IncomingCallData | null;
+    isInCall: boolean; // ✅ FIX #6: Track if user is currently in a call
+    setIsInCall: (value: boolean) => void; // ✅ FIX #6: Allow updating call state
     acceptIncomingCall: () => void;
     declineIncomingCall: () => void;
     clearIncomingCall: () => void;
@@ -50,6 +52,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
     const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
     const [messageNotificationOpen, setMessageNotificationOpen] = useState(false);
+    const [isInCall, setIsInCall] = useState(false); // ✅ FIX #6: Track if user is in call
 
     // ✅ Track processed calls to prevent spam/duplicates
     const processedCallsRef = React.useRef<Set<string>>(new Set());
@@ -119,6 +122,23 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
             (data: IncomingCallData) => {
                 console.log('[GlobalChat] 📞 Incoming call:', data);
 
+                // ✅ FIX #6: Auto-reject if already in call (BUSY)
+                if (isInCall) {
+                    console.warn(
+                        '[GlobalChat] ⚠️ User is BUSY - auto-rejecting incoming call from:',
+                        data.callerId
+                    );
+                    // Send BUSY signal back to caller
+                    chatHub.connection
+                        ?.invoke('CallBusy', {
+                            CallerId: data.callerId,
+                        })
+                        .catch((err: Error) => {
+                            console.error('[GlobalChat] ❌ Error sending CallBusy signal:', err);
+                        });
+                    return;
+                }
+
                 // ✅ Create unique call ID from caller and conversation
                 const callId = `${data.callerId}-${data.conversationId}`;
 
@@ -156,7 +176,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
                     });
                 }, 60000);
             },
-            [playIncomingCallSound, stopIncomingCallSound]
+            [playIncomingCallSound, stopIncomingCallSound, isInCall, chatHub]
         ),
 
         onCallEnded: useCallback(
@@ -368,6 +388,8 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
             onlineUsers,
             isUserOnline,
             incomingCall,
+            isInCall, // ✅ FIX #6: Export call state
+            setIsInCall, // ✅ FIX #6: Export setter
             acceptIncomingCall,
             declineIncomingCall,
             clearIncomingCall,
@@ -379,6 +401,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
             onlineUsers,
             isUserOnline,
             incomingCall,
+            isInCall, // ✅ Add dependency
             acceptIncomingCall,
             declineIncomingCall,
             clearIncomingCall,

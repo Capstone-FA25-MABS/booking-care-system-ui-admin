@@ -27,14 +27,6 @@ const EXPRESS_TURN_PORT = 3480;
 const EXPRESS_TURN_USERNAME = '00000002081594158';
 const EXPRESS_TURN_CREDENTIAL = 'gKqRgvgmEMMDyAoYvRCgHmY/BjQ=';
 
-// Log TURN credentials for debugging (remove in production)
-console.log('[WebRTC] 🔧 TURN Config:', {
-    primary: TURN_SERVER,
-    backup: EXPRESS_TURN_SERVER,
-    username: TURN_USERNAME ? '✅ Set' : '❌ Missing',
-    credential: TURN_CREDENTIAL ? '✅ Set' : '❌ Missing',
-});
-
 // ✅ FIX #3: Remove iceCandidatePoolSize (conflicts with 2-phase signaling)
 // ✅ FIX #4: Add explicit transport=udp for TURN URLs
 const RTC_CONFIG: RTCConfiguration = {
@@ -116,6 +108,7 @@ export interface UseWebRTCReturn {
     isMuted: boolean;
     isVideoOff: boolean;
     isScreenSharing: boolean;
+    isInCall: () => boolean; // ✅ FIX #6: Helper to check if in call
     startCall: (receiverId: string, conversationId: string) => Promise<void>;
     acceptCall: (callerId: string, conversationId: string) => Promise<void>;
     declineCall: (callerId: string, reason?: string) => Promise<void>;
@@ -618,6 +611,16 @@ export const useWebRTC = (
      */
     const acceptCall = useCallback(
         async (callerId: string, conversationId: string) => {
+            // ✅ FIX #6: Auto-reject if already in call (BUSY state)
+            if (callState !== 'idle' && callState !== 'ringing') {
+                console.warn('[WebRTC] ⚠️ Cannot accept call - already in call state:', callState);
+                // Send BUSY signal to caller
+                await chatHub.connection?.invoke('CallBusy', {
+                    CallerId: callerId,
+                });
+                return;
+            }
+
             try {
                 console.log('[WebRTC] 📞 Accepting call from:', callerId);
 
@@ -987,6 +990,16 @@ export const useWebRTC = (
         return () => cleanup();
     }, [cleanup]);
 
+    // ✅ FIX #6: Helper to check if user is currently in a call
+    const isInCall = useCallback(() => {
+        return (
+            callState === 'calling' ||
+            callState === 'ringing' ||
+            callState === 'connecting' ||
+            callState === 'connected'
+        );
+    }, [callState]);
+
     return {
         callState,
         localStream,
@@ -994,6 +1007,7 @@ export const useWebRTC = (
         isMuted,
         isVideoOff,
         isScreenSharing,
+        isInCall, // ✅ Export helper
         startCall,
         acceptCall,
         declineCall,
