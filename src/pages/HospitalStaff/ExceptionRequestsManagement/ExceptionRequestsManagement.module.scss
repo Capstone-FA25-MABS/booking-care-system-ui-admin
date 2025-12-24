@@ -1,0 +1,15 @@
+.exceptionRequestsManagement {
+    .exceptionsGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .exceptionRequestsManagement {
+        .exceptionsGrid {
+            grid-template-columns: 1fr;
+        }
+    }
+}

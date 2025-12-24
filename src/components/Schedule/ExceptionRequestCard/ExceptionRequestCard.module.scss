@@ -1,0 +1,23 @@
+.exceptionCard {
+    transition: all 0.3s ease;
+    border-left: 4px solid #dee2e6;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .exceptionDetails {
+        font-size: 0.9rem;
+
+        strong {
+            color: #495057;
+            display: inline-block;
+            margin-bottom: 0.25rem;
+        }
+
+        p {
+            margin-left: 1.5rem;
+        }
+    }
+}

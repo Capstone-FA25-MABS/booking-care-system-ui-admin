@@ -290,6 +290,66 @@ export const createNotificationsMenuItem = (role: 'admin' | 'staff' | 'doctor'):
 };
 
 /**
+ * Create Schedules menu item for Hospital Staff
+ */
+export const createHospitalSchedulesMenuItem = (): MenuItem => ({
+    label: 'Quản lý lịch làm việc',
+    icon: 'ti ti-calendar-time',
+    subItems: [
+        {
+            label: 'Lịch bác sĩ',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.DOCTORS
+            ),
+        },
+        {
+            label: 'Lịch dịch vụ',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.SERVICES
+            ),
+        },
+        {
+            label: 'Yêu cầu nghỉ/thay đổi',
+            link: buildPath(
+                PATHS.HOSPITAL.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.ROOT,
+                PATHS.HOSPITAL.SCHEDULES.EXCEPTIONS
+            ),
+        },
+    ],
+});
+
+/**
+ * Create Schedules menu item for Doctor
+ */
+export const createDoctorSchedulesMenuItem = (): MenuItem => ({
+    label: 'Lịch làm việc',
+    icon: 'ti ti-calendar-user',
+    subItems: [
+        {
+            label: 'Lịch của tôi',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SCHEDULE.ROOT,
+                PATHS.DOCTOR.SCHEDULE.MY_SCHEDULES
+            ),
+        },
+        {
+            label: 'Yêu cầu nghỉ',
+            link: buildPath(
+                PATHS.DOCTOR.ROOT,
+                PATHS.DOCTOR.SCHEDULE.ROOT,
+                PATHS.DOCTOR.SCHEDULE.REQUEST_OFF
+            ),
+        },
+    ],
+});
+
+/**
  * Create simple menu items
  */
 export const createSimpleMenuItem = (label: string, icon: string, link: string): MenuItem => ({
