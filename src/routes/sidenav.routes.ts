@@ -14,6 +14,8 @@ import {
     createNotificationsMenuItem,
     createSimpleMenuItem,
     createSubscriptionPlansMenuItem,
+    createHospitalSchedulesMenuItem,
+    createDoctorSchedulesMenuItem,
 } from './menu.items';
 import { Role } from '@/enums/common.enums';
 
@@ -38,6 +40,7 @@ export const listGroupMenuItemHospital: MenuConfig = [
         title: 'Lịch khám & Bệnh nhân',
         items: [
             createAppointmentsMenuItem('staff'),
+            createHospitalSchedulesMenuItem(),
             createSimpleMenuItem(
                 'Quản lý đánh giá',
                 'ti ti-star',
@@ -139,6 +142,7 @@ export const listGroupMenuItemDoctor: MenuConfig = [
         title: 'Công việc',
         items: [
             createAppointmentsMenuItem('doctor'),
+            createDoctorSchedulesMenuItem(),
             createSimpleMenuItem(
                 'Đánh giá',
                 'ti ti-star',

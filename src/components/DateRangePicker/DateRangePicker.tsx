@@ -37,10 +37,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         value.end,
     ]);
 
-    // Default maxDate to today (no future dates allowed for revenue statistics)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const effectiveMaxDate = maxDate || today;
+    // Default maxDate: if not provided, allow future dates (no restriction)
+    // For revenue statistics, pass maxDate={new Date()} to restrict to today
+    const effectiveMaxDate = maxDate || undefined;
 
     // Update internal value when prop changes or modal opens
     useEffect(() => {

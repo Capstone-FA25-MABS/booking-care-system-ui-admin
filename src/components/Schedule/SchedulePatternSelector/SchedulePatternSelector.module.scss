@@ -1,0 +1,75 @@
+.patternSelector {
+    .patternsGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .patternCard {
+        position: relative;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+
+        &:hover:not(.disabled) {
+            border-color: #0d6efd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        &.selected {
+            border-color: #0d6efd;
+            background: #f8f9fa;
+        }
+
+        &.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .patternCardContent {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            .patternIcon {
+                font-size: 1.5rem;
+                color: #6c757d;
+            }
+
+            .patternInfo {
+                flex: 1;
+
+                .patternLabel {
+                    font-weight: 600;
+                    font-size: 1rem;
+                    color: #212529;
+                }
+
+                .patternTime {
+                    font-size: 0.875rem;
+                    color: #6c757d;
+                }
+            }
+
+            .patternCheckbox {
+                input[type='checkbox'] {
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        .selectedBadge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+}

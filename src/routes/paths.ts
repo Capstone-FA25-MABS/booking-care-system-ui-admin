@@ -82,6 +82,12 @@ export const PATHS = {
             ADD: 'add',
             EDIT: 'edit/:id',
         },
+        SCHEDULES: {
+            ROOT: 'schedules',
+            DOCTOR_SCHEDULES: 'doctor-schedules',
+            SERVICE_SCHEDULES: 'service-schedules',
+            EXCEPTION_REQUESTS: 'exception-requests',
+        },
     },
 
     // Hospital paths
@@ -100,6 +106,12 @@ export const PATHS = {
             ROOT: 'appointments',
             NEW: 'new',
             CALENDAR: 'calendar',
+        },
+        SCHEDULES: {
+            ROOT: 'schedules',
+            DOCTORS: 'doctors',
+            SERVICES: 'services',
+            EXCEPTIONS: 'exceptions',
         },
         SERVICES: {
             ROOT: 'services',
@@ -160,7 +172,11 @@ export const PATHS = {
             ROOT: 'appointments',
             CALENDAR: 'calendar',
         },
-        SCHEDULE: 'schedule',
+        SCHEDULE: {
+            ROOT: 'schedule',
+            MY_SCHEDULES: 'my-schedules',
+            REQUEST_OFF: 'request-off',
+        },
         PATIENTS: 'patients',
         MESSAGES: 'messages',
         REVIEWS: {
