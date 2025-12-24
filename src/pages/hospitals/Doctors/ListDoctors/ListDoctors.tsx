@@ -2,11 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
-import ModalDelete from '@/components/ModalDelete';
+
 import ModalFilter from '@/components/ModalFilter';
 import ActionDropdown from '@/components/ActionDropdown';
 import StatusBadge from '@/components/StatusBadge';
-import TableActions from '@/components/TableActions';
+
 import { useDoctor } from '@/hooks/useDoctor';
 import { useDoctorFilterOptions } from '@/hooks/useDoctorFilterOptions';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
@@ -59,8 +59,6 @@ const ListDoctors: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [sortBy, setSortBy] = useState<string>('Tên A-Z');
     const [showFilterModal, setShowFilterModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [doctorToDelete, setDoctorToDelete] = useState<DoctorOptimizedResponse | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -225,25 +223,6 @@ const ListDoctors: React.FC = () => {
         return pagination.totalPages <= 1;
     }, [sortedDoctors.length, pagination.totalPages]);
 
-    const handleDeleteDoctor = (doctor: DoctorOptimizedResponse) => {
-        setDoctorToDelete(doctor);
-        setShowDeleteModal(true);
-    };
-
-    const handleDeleteConfirm = () => {
-        if (doctorToDelete) {
-            // TODO: Implement delete API call
-            console.log('Delete doctor:', doctorToDelete.id);
-            setShowDeleteModal(false);
-            setDoctorToDelete(null);
-        }
-    };
-
-    const handleDeleteCancel = () => {
-        setShowDeleteModal(false);
-        setDoctorToDelete(null);
-    };
-
     // Render table body content based on loading, error, and data states
     const renderTableBody = () => {
         if (isLoading) {
@@ -344,15 +323,9 @@ const ListDoctors: React.FC = () => {
                             </Link>
                         </div>
                         <div className="action-item">
-                            <TableActions
-                                id={doctor.id}
-                                onEdit={() => {}}
-                                onDelete={() => handleDeleteDoctor(doctor)}
-                                editLink={`/hospitals/doctors/edit/${doctor.id}`}
-                                showEdit={true}
-                                showDelete={true}
-                                showView={false}
-                            />
+                            <Link to={`/hospitals/doctors/edit/${doctor.id}`}>
+                                <i className="ti ti-edit"></i>
+                            </Link>
                         </div>
                     </div>
                 </td>
@@ -783,18 +756,6 @@ const ListDoctors: React.FC = () => {
                         resetValue: [],
                     },
                 ]}
-            />
-
-            {/* Delete Modal */}
-            <ModalDelete
-                show={showDeleteModal}
-                onHide={handleDeleteCancel}
-                onConfirm={handleDeleteConfirm}
-                title="Xác nhận xóa"
-                message="Bạn có chắc chắn muốn xóa bác sĩ này?"
-                itemName={
-                    doctorToDelete ? `${doctorToDelete.lastName} ${doctorToDelete.firstName}` : ''
-                }
             />
         </>
     );
