@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import clsx from 'clsx';
 
 import { ReviewService, ReviewDetailedStatisticsResponse } from '@/services/review.service';
-
 import styles from './ReviewStatistics.module.scss';
-
+import clsx from 'clsx';
 interface ReviewStatisticsProps {
     entityType: 'hospital' | 'doctor';
     entityId: string;
@@ -40,8 +38,13 @@ const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ entityType, entityI
 
     if (loading) {
         return (
-            <div className={styles.container}>
-                <div className={styles.skeleton}></div>
+            <div className="card mb-3">
+                <div className="card-body">
+                    <div
+                        className="placeholder-glow"
+                        style={{ height: '150px', background: '#f8f9fa', borderRadius: '8px' }}
+                    ></div>
+                </div>
             </div>
         );
     }
@@ -74,14 +77,15 @@ const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ entityType, entityI
 
     const renderStars = (rating: number) => {
         return (
-            <div className={styles.stars}>
+            <div className={clsx(styles.stars, 'd-flex gap-1 justify-content-center mb-2')}>
                 {[1, 2, 3, 4, 5].map((star) => (
                     <i
                         key={star}
-                        className={clsx('ti ti-star-filled', {
-                            [styles.filled]: star <= Math.round(rating),
-                            [styles.empty]: star > Math.round(rating),
-                        })}
+                        className="ti ti-star-filled"
+                        style={{
+                            fontSize: '1.25rem',
+                            color: star <= Math.round(rating) ? '#ffc107' : '#e9ecef',
+                        }}
                     ></i>
                 ))}
             </div>
@@ -89,42 +93,68 @@ const ReviewStatistics: React.FC<ReviewStatisticsProps> = ({ entityType, entityI
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.mainStats}>
-                    <div className={styles.ratingDisplay}>
-                        <div className={styles.ratingNumber}>
+        <div className="card mb-3">
+            <div className="card-body">
+                <div className="row align-items-center">
+                    {/* Main Rating Display */}
+                    <div className="col-md-3 text-center border-end">
+                        <div
+                            className="fw-bold mb-1"
+                            style={{ fontSize: '3rem', color: '#ffc107', lineHeight: 1 }}
+                        >
                             {statistics.averageRating.toFixed(1)}
                         </div>
                         {renderStars(statistics.averageRating)}
-                        <div className={styles.totalReviews}>
-                            {statistics.totalReviews} đánh giá
-                        </div>
+                        <div className="text-muted small">{statistics.totalReviews} đánh giá</div>
                     </div>
-                </div>
 
-                <div className={styles.distribution}>
-                    <div className={styles.distributionTitle}>Phân bố đánh giá</div>
-                    {ratingDistribution.length > 0 ? (
-                        ratingDistribution.map((dist) => (
-                            <div key={dist.rating} className={styles.distributionRow}>
-                                <div className={styles.ratingLabel}>
-                                    {dist.rating} <i className="ti ti-star-filled"></i>
-                                </div>
-                                <div className={styles.progressBar}>
+                    {/* Rating Distribution */}
+                    <div className="col-md-9">
+                        <h6 className="fw-semibold mb-3">Phân bố đánh giá</h6>
+                        {ratingDistribution.length > 0 ? (
+                            ratingDistribution.map((dist) => (
+                                <div
+                                    key={dist.rating}
+                                    className="d-flex align-items-center gap-2 mb-2"
+                                >
                                     <div
-                                        className={styles.progressFill}
-                                        style={{ width: `${dist.percentage}%` }}
-                                    ></div>
+                                        className="d-flex align-items-center gap-1"
+                                        style={{ minWidth: '50px' }}
+                                    >
+                                        <span className="fw-medium">{dist.rating}</span>
+                                        <i
+                                            className="ti ti-star-filled"
+                                            style={{ color: '#ffc107', fontSize: '0.875rem' }}
+                                        ></i>
+                                    </div>
+                                    <div className="progress flex-grow-1" style={{ height: '8px' }}>
+                                        <div
+                                            className="progress-bar"
+                                            role="progressbar"
+                                            style={{
+                                                width: `${dist.percentage}%`,
+                                                background:
+                                                    'linear-gradient(90deg, #ffc107 0%, #ff9800 100%)',
+                                            }}
+                                            aria-valuenow={dist.percentage}
+                                            aria-valuemin={0}
+                                            aria-valuemax={100}
+                                        ></div>
+                                    </div>
+                                    <div
+                                        className="text-muted small text-end"
+                                        style={{ minWidth: '80px' }}
+                                    >
+                                        {dist.count} ({dist.percentage.toFixed(0)}%)
+                                    </div>
                                 </div>
-                                <div className={styles.count}>
-                                    {dist.count} ({dist.percentage.toFixed(0)}%)
-                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center text-muted py-3">
+                                Chưa có dữ liệu phân bố
                             </div>
-                        ))
-                    ) : (
-                        <div className={styles.noData}>Chưa có dữ liệu phân bố</div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
