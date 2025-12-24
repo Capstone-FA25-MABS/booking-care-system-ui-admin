@@ -1,3 +1,10 @@
+.filterContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
 .filterButtons {
     display: flex;
     gap: 0.5rem;
@@ -44,4 +51,10 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+}
+
+.dateRangeWrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
