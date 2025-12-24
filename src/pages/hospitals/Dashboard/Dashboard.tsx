@@ -142,6 +142,10 @@ const HospitalDashboard: React.FC = () => {
     const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
     const [revenueChartData, setRevenueChartData] = useState<ChartPoint[]>([]);
     const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
+    const [customRevenueDateRange, setCustomRevenueDateRange] = useState<{
+        start: Date | null;
+        end: Date | null;
+    }>({ start: null, end: null });
 
     const fetchHospitalReviewEntities = useCallback(async () => {
         // Optimized: fetch only IDs instead of full objects (1-2MB → ~70KB)
@@ -408,7 +412,6 @@ const HospitalDashboard: React.FC = () => {
 
             switch (revenuePeriod) {
                 case '7days': {
-                    // Last 7 days: today and 6 days back
                     const sevenDaysAgo = new Date(now);
                     sevenDaysAgo.setDate(now.getDate() - 6);
                     fromDateStr = formatLocalDate(sevenDaysAgo);
@@ -418,7 +421,6 @@ const HospitalDashboard: React.FC = () => {
                     break;
                 }
                 case '4weeks': {
-                    // Last 4 weeks: 27 days back to today (28 days total)
                     const fourWeeksAgo = new Date(now);
                     fourWeeksAgo.setDate(now.getDate() - 27);
                     fromDateStr = formatLocalDate(fourWeeksAgo);
@@ -428,7 +430,6 @@ const HospitalDashboard: React.FC = () => {
                     break;
                 }
                 case '6months': {
-                    // Last 6 months: from start of 5 months ago to today
                     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
                     fromDateStr = formatLocalDate(sixMonthsAgo);
                     toDateStr = formatLocalDate(now);
@@ -437,7 +438,6 @@ const HospitalDashboard: React.FC = () => {
                     break;
                 }
                 case '4quarters': {
-                    // Last 4 quarters including current quarter
                     const currentMonth = now.getMonth();
                     const currentQuarter = Math.floor(currentMonth / 3);
                     let startQuarter = currentQuarter - 3;
@@ -452,6 +452,43 @@ const HospitalDashboard: React.FC = () => {
                     toDateStr = formatLocalDate(now);
                     period = 'Quarterly';
                     displayPeriod = PaymentStatisticsPeriod.Quarterly;
+                    break;
+                }
+                case 'custom': {
+                    // Sử dụng custom date range từ DateRangePicker
+                    if (!customRevenueDateRange.start || !customRevenueDateRange.end) {
+                        // Nếu chưa chọn custom range, dùng mặc định 4 tuần
+                        const fourWeeksAgo = new Date(now);
+                        fourWeeksAgo.setDate(now.getDate() - 27);
+                        fromDateStr = formatLocalDate(fourWeeksAgo);
+                        toDateStr = formatLocalDate(now);
+                        period = 'Weekly';
+                        displayPeriod = PaymentStatisticsPeriod.Weekly;
+                    } else {
+                        fromDateStr = formatLocalDate(customRevenueDateRange.start);
+                        toDateStr = formatLocalDate(customRevenueDateRange.end);
+
+                        // Xác định period dựa trên số ngày
+                        const daysDiff = Math.ceil(
+                            (customRevenueDateRange.end.getTime() -
+                                customRevenueDateRange.start.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                        );
+
+                        if (daysDiff <= 7) {
+                            period = 'Daily';
+                            displayPeriod = PaymentStatisticsPeriod.Daily;
+                        } else if (daysDiff <= 28) {
+                            period = 'Weekly';
+                            displayPeriod = PaymentStatisticsPeriod.Weekly;
+                        } else if (daysDiff <= 180) {
+                            period = 'Monthly';
+                            displayPeriod = PaymentStatisticsPeriod.Monthly;
+                        } else {
+                            period = 'Quarterly';
+                            displayPeriod = PaymentStatisticsPeriod.Quarterly;
+                        }
+                    }
                     break;
                 }
                 default: {
@@ -491,7 +528,12 @@ const HospitalDashboard: React.FC = () => {
         } finally {
             setIsLoadingRevenueChart(false);
         }
-    }, [hospitalProfile?.id, revenuePeriod]);
+    }, [
+        hospitalProfile?.id,
+        revenuePeriod,
+        customRevenueDateRange.start,
+        customRevenueDateRange.end,
+    ]);
 
     useEffect(() => {
         loadRevenueChart();
@@ -1793,6 +1835,8 @@ const HospitalDashboard: React.FC = () => {
                                                 selectedPeriod={revenuePeriod}
                                                 onPeriodChange={setRevenuePeriod}
                                                 isLoading={isLoadingRevenueChart}
+                                                customDateRange={customRevenueDateRange}
+                                                onCustomDateRangeChange={setCustomRevenueDateRange}
                                             />
                                         </div>
                                         <div className={styles.cardBody}>

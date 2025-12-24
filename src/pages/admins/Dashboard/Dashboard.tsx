@@ -40,12 +40,7 @@ import { StatisticsPeriod } from '@/types/statistics.types';
 import { AppointmentStatus } from '@/enums/appointment.enums';
 import { calculateAdditionalStatistics as calculateAdditionalStatisticsUtil } from '@/utils/dashboardStatistics';
 import { MetricCard, MetricCardSkeleton } from '@/components/MetricCard';
-import {
-    ChartJsMultiBar,
-    ChartJsTripleBar,
-    ChartJsSingleBar,
-    ChartJsBar,
-} from '@/components/ChartJsLine';
+import { ChartJsMultiBar, ChartJsTripleBar, ChartJsSingleBar } from '@/components/ChartJsLine';
 import { ChartJsPie } from '@/components/ChartJsLine/ChartJsPie';
 import { ChartJsArea } from '@/components/ChartJsLine/ChartJsArea';
 import { ChartJsLine } from '@/components/ChartJsLine/ChartJsLine';
@@ -178,12 +173,15 @@ const AdminDashboard: React.FC = () => {
     const [revenueChartData, setRevenueChartData] = useState<
         Array<{
             label: string;
-            value1: number; // Total revenue
-            value2: number; // Completed revenue
+            value: number;
         }>
     >([]);
     const [isLoadingRevenueChart, setIsLoadingRevenueChart] = useState(false);
     const [revenuePeriod, setRevenuePeriod] = useState<RevenueViewPeriod>('4weeks');
+    const [customRevenueDateRange, setCustomRevenueDateRange] = useState<{
+        start: Date | null;
+        end: Date | null;
+    }>({ start: null, end: null });
 
     // Load system overview (hospitals, doctors, etc.)
     const loadSystemOverview = useCallback(async () => {
@@ -594,6 +592,38 @@ const AdminDashboard: React.FC = () => {
                     apiPeriod = PaymentStatisticsPeriod.Quarterly;
                     break;
                 }
+                case 'custom': {
+                    // Sử dụng custom date range từ DateRangePicker
+                    if (!customRevenueDateRange.start || !customRevenueDateRange.end) {
+                        // Nếu chưa chọn custom range, dùng mặc định 4 tuần
+                        const fourWeeksAgo = new Date(now);
+                        fourWeeksAgo.setDate(now.getDate() - 27);
+                        fromDateStr = formatLocalDate(fourWeeksAgo);
+                        toDateStr = formatLocalDate(now);
+                        apiPeriod = PaymentStatisticsPeriod.Weekly;
+                    } else {
+                        fromDateStr = formatLocalDate(customRevenueDateRange.start);
+                        toDateStr = formatLocalDate(customRevenueDateRange.end);
+
+                        // Xác định period dựa trên số ngày
+                        const daysDiff = Math.ceil(
+                            (customRevenueDateRange.end.getTime() -
+                                customRevenueDateRange.start.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                        );
+
+                        if (daysDiff <= 7) {
+                            apiPeriod = PaymentStatisticsPeriod.Daily;
+                        } else if (daysDiff <= 28) {
+                            apiPeriod = PaymentStatisticsPeriod.Weekly;
+                        } else if (daysDiff <= 180) {
+                            apiPeriod = PaymentStatisticsPeriod.Monthly;
+                        } else {
+                            apiPeriod = PaymentStatisticsPeriod.Quarterly;
+                        }
+                    }
+                    break;
+                }
 
                 default: {
                     const defaultFrom = new Date(now);
@@ -630,8 +660,7 @@ const AdminDashboard: React.FC = () => {
                     point.periodStart,
                     point.periodEnd
                 ),
-                value1: point.totalAmount,
-                value2: point.completedAmount,
+                value: point.totalAmount,
             }));
 
             setRevenueChartData(chartData);
@@ -1766,53 +1795,6 @@ const AdminDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Doanh thu từ đăng ký gói - Standalone section outside AI Insights */}
-            {isLoadingRevenueChart ? (
-                <div className={styles.trendCard}>
-                    <div className={styles.cardHeader}>
-                        <h5>Doanh thu từ đăng ký gói</h5>
-                        <span>
-                            Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm thanh toán
-                            lịch hẹn)
-                        </span>
-                    </div>
-                    <div className={styles.cardBody}>
-                        <div className={styles.chartJsWrapper}>
-                            <div className={styles.chartSkeleton} />
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                revenueChartData.length > 0 && (
-                    <div className={styles.trendCard}>
-                        <div className={styles.cardHeader}>
-                            <div>
-                                <h5>Doanh thu từ đăng ký gói</h5>
-                                <span>
-                                    Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm
-                                    thanh toán lịch hẹn)
-                                </span>
-                            </div>
-                            <RevenueFilterButtons
-                                selectedPeriod={revenuePeriod}
-                                onPeriodChange={setRevenuePeriod}
-                                isLoading={isLoadingRevenueChart}
-                            />
-                        </div>
-                        <div className={styles.cardBody}>
-                            <ChartJsBar
-                                data={revenueChartData}
-                                color1="#a78bfa"
-                                color2="#10b981"
-                                label1="Tổng doanh thu"
-                                label2="Đã hoàn thành"
-                                stacked={true}
-                            />
-                        </div>
-                    </div>
-                )
-            )}
-
             {isLoadingOverview ? (
                 <div className={styles.trendCard}>
                     <div className={styles.cardHeader}>
@@ -2019,6 +2001,51 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     )}
                 </>
+            )}
+            {/* Doanh thu từ đăng ký gói - Standalone section outside AI Insights */}
+            {isLoadingRevenueChart ? (
+                <div className={styles.trendCard}>
+                    <div className={styles.cardHeader}>
+                        <h5>Doanh thu từ đăng ký gói</h5>
+                        <span>
+                            Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm thanh toán
+                            lịch hẹn)
+                        </span>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.chartJsWrapper}>
+                            <div className={styles.chartSkeleton} />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                revenueChartData.length > 0 && (
+                    <div className={styles.trendCard}>
+                        <div className={styles.cardHeader}>
+                            <div>
+                                <h5>Doanh thu từ đăng ký gói</h5>
+                                <span>
+                                    Biểu đồ thống kê doanh thu từ các gói đăng ký (không bao gồm
+                                    thanh toán lịch hẹn)
+                                </span>
+                            </div>
+                            <RevenueFilterButtons
+                                selectedPeriod={revenuePeriod}
+                                onPeriodChange={setRevenuePeriod}
+                                isLoading={isLoadingRevenueChart}
+                                customDateRange={customRevenueDateRange}
+                                onCustomDateRangeChange={setCustomRevenueDateRange}
+                            />
+                        </div>
+                        <div className={styles.cardBody}>
+                            <ChartJsSingleBar
+                                data={revenueChartData}
+                                color="#a78bfa"
+                                label="Tổng doanh thu"
+                            />
+                        </div>
+                    </div>
+                )
             )}
         </div>
     );
