@@ -1,6 +1,5 @@
 import React from 'react';
 import DashboardReviewStats from '@/components/DashboardReviewStats';
-import DashboardTopRankings from '@/components/DashboardTopRankings/DashboardTopRankings';
 
 interface RankingsClassNames {
     containerClassName: string;
@@ -46,7 +45,6 @@ const DashboardReviewSection: React.FC<DashboardReviewSectionProps> = ({
     cardBodyClassName,
     metricsGridClassName,
     overviewGridClassName,
-    rankingsClassNames,
 }) => {
     if (!reviewStats) {
         return null;
@@ -66,23 +64,6 @@ const DashboardReviewSection: React.FC<DashboardReviewSectionProps> = ({
                 cardBodyClassName={cardBodyClassName}
                 metricsGridClassName={metricsGridClassName}
                 hospitalOverviewGridClassName={overviewGridClassName}
-            />
-
-            <DashboardTopRankings
-                topDoctors={reviewStats.topDoctors}
-                topServices={reviewStats.topServices}
-                containerClassName={rankingsClassNames.containerClassName}
-                cardClassName={rankingsClassNames.cardClassName}
-                cardHeaderClassName={rankingsClassNames.cardHeaderClassName}
-                cardBodyClassName={rankingsClassNames.cardBodyClassName}
-                listClassName={rankingsClassNames.listClassName}
-                itemClassName={rankingsClassNames.itemClassName}
-                rankClassName={rankingsClassNames.rankClassName}
-                infoClassName={rankingsClassNames.infoClassName}
-                nameClassName={rankingsClassNames.nameClassName}
-                statsClassName={rankingsClassNames.statsClassName}
-                ratingClassName={rankingsClassNames.ratingClassName}
-                reviewsClassName={rankingsClassNames.reviewsClassName}
             />
         </>
     );
