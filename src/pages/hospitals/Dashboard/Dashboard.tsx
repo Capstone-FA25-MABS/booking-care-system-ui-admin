@@ -149,9 +149,14 @@ const HospitalDashboard: React.FC = () => {
     }>({ start: null, end: null });
 
     const fetchHospitalReviewEntities = useCallback(async () => {
-        // Optimized: fetch only IDs instead of full objects (1-2MB → ~70KB)
+        if (!hospitalProfile?.id) {
+            return { doctors: [], services: [] };
+        }
+
+        // Optimized: fetch only doctor IDs for this hospital, and all service IDs
+        // Backend will filter services by hospitalId when calling batch-statistics
         const [doctorIdsRes, serviceIdsRes] = await Promise.all([
-            DoctorService.getAllDoctorIds().catch(() => ({
+            DoctorService.getDoctorIdsByHospital(hospitalProfile.id).catch(() => ({
                 data: [],
             })),
             getAllServiceIds().catch(() => ({
@@ -164,10 +169,11 @@ const HospitalDashboard: React.FC = () => {
         const services = (serviceIdsRes.data || []).map((id: string) => ({ id }));
 
         return { doctors, services };
-    }, []);
+    }, [hospitalProfile?.id]);
     const { reviewStats, isLoadingReviewStats } = useReviewInsights({
         fetchEntities: fetchHospitalReviewEntities,
         includeRatingDistribution: true,
+        hospitalId: hospitalProfile?.id,
     });
 
     // Load system overview (hospitals, doctors, etc.)

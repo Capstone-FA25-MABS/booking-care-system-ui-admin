@@ -15,8 +15,6 @@ import {
 import ReviewTargetDetailModal from './components/ReviewTargetDetailModal';
 import ConfirmDialog from '@/components/ConfirmDialog/ConfirmDialog';
 
-import styles from './HospitalReviewManagement.module.scss';
-
 const HospitalReviewManagement: React.FC = () => {
     const { hospitalProfile } = useSelector((state: RootState) => state.user);
 
@@ -177,50 +175,62 @@ const HospitalReviewManagement: React.FC = () => {
 
     if (!hospitalProfile?.id) {
         return (
-            <div className={styles.container}>
-                <div className={styles.error}>
-                    <p>Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.</p>
+            <div className="content">
+                <div className="alert alert-danger d-flex align-items-center gap-2">
+                    <i className="ti ti-alert-circle fs-4"></i>
+                    <span>Không tìm thấy thông tin bệnh viện. Vui lòng đăng nhập lại.</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <h1 className={styles.title}>Quản lý đánh giá</h1>
-                <p className={styles.subtitle}>
-                    Xem và phản hồi đánh giá từ bệnh nhân về bác sĩ và dịch vụ của bệnh viện
-                </p>
-            </div>
-
-            {/* Statistics Section */}
-            <ReviewStatistics entityType="hospital" entityId={hospitalProfile.id} />
-
-            {/* Filters Section */}
-            <ReviewFilters filters={filters} onFilterChange={handleFilterChange} />
-
-            {/* Reviews List */}
-            {loading ? (
-                <div className={styles.loading}>
-                    <div className={styles.spinner}></div>
-                    <p>Đang tải danh sách đánh giá...</p>
+        <>
+            <div className="content">
+                {/* Page Header */}
+                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+                    <div className="flex-grow-1">
+                        <h4 className="fw-semibold mb-0">Quản lý đánh giá</h4>
+                        <p className="text-muted mb-0 mt-1">
+                            Xem và phản hồi đánh giá từ bệnh nhân về bác sĩ và dịch vụ của bệnh viện
+                        </p>
+                    </div>
                 </div>
-            ) : (
-                <ReviewList
-                    reviews={reviews}
-                    totalCount={totalCount}
-                    currentPage={filters.page}
-                    totalPages={totalPages}
-                    pageSize={filters.pageSize}
-                    onPageChange={handlePageChange}
-                    onAddReply={handleAddReply}
-                    onEditReply={handleEditReply}
-                    onDeleteReply={handleDeleteReplyClick}
-                    onViewTargetDetail={handleViewTargetDetail}
-                    hospitalStaffId={hospitalProfile.accountId}
-                />
-            )}
+
+                {/* Statistics Section */}
+                <ReviewStatistics entityType="hospital" entityId={hospitalProfile.id} />
+
+                {/* Filters Section */}
+                <ReviewFilters filters={filters} onFilterChange={handleFilterChange} />
+
+                {/* Reviews List */}
+                {loading ? (
+                    <div className="bg-white rounded-3 p-5 text-center shadow-sm">
+                        <div
+                            className="spinner-border text-primary mb-3"
+                            role="status"
+                            style={{ width: '3rem', height: '3rem' }}
+                        >
+                            <span className="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p className="text-muted mb-0">Đang tải danh sách đánh giá...</p>
+                    </div>
+                ) : (
+                    <ReviewList
+                        reviews={reviews}
+                        totalCount={totalCount}
+                        currentPage={filters.page}
+                        totalPages={totalPages}
+                        pageSize={filters.pageSize}
+                        onPageChange={handlePageChange}
+                        onAddReply={handleAddReply}
+                        onEditReply={handleEditReply}
+                        onDeleteReply={handleDeleteReplyClick}
+                        onViewTargetDetail={handleViewTargetDetail}
+                        hospitalStaffId={hospitalProfile.accountId}
+                    />
+                )}
+            </div>
 
             {/* Reply Modal */}
             {isReplyModalOpen && selectedReview && (
@@ -262,7 +272,7 @@ const HospitalReviewManagement: React.FC = () => {
                 }}
                 onConfirm={handleConfirmDelete}
             />
-        </div>
+        </>
     );
 };
 
