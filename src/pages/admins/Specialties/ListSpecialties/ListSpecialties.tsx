@@ -534,25 +534,10 @@ const ListSpecialties: React.FC = () => {
                     </h4>
                 </div>
                 <div className="text-end d-flex">
-                    <ActionDropdown
-                        type="export"
-                        options={[
-                            { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                            {
-                                value: 'excel',
-                                label: 'Tải xuống dạng Excel',
-                                format: 'excel',
-                            },
-                        ]}
-                        onExport={(format: string) => {
-                            console.log('Exporting:', format);
-                            // Handle export logic here
-                        }}
-                    />
                     <Button
                         variant="primary"
                         size="md"
-                        className="ms-2 fs-13"
+                        className="fs-13"
                         icon="ti ti-plus"
                         onClick={handleAddClick}
                     >

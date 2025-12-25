@@ -8,6 +8,7 @@ import { vi } from 'date-fns/locale';
 import { format } from 'date-fns';
 import styles from './Dashboard.module.scss';
 import { RootState } from '@/store';
+import ActionDropdown from '@/components/ActionDropdown';
 
 // Day of week formatter - hiển thị đầy đủ "Thứ 2" - "Chủ nhật"
 const dayOfWeekFormatter = (day: Date | string): string => {
@@ -392,6 +393,253 @@ const HospitalDashboard: React.FC = () => {
     const handleStatisticsError = useCallback((message: string) => {
         toast.error(message);
     }, []);
+
+    // Handle export dashboard to PDF (simple print method like invoice)
+    const handleExportDashboard = useCallback(() => {
+        try {
+            // Get the dashboard element
+            const dashboardElement = document.getElementById('hospitalDashboardPage');
+
+            if (!dashboardElement) {
+                toast.error('Không tìm thấy nội dung dashboard');
+                return;
+            }
+
+            // Clone the dashboard content
+            const clonedContent = dashboardElement.cloneNode(true) as HTMLElement;
+
+            // Copy computed styles from original elements to cloned elements
+            const copyComputedStyles = (source: Element, target: Element) => {
+                const computedStyle = window.getComputedStyle(source);
+                const targetElement = target as HTMLElement;
+
+                // Copy all computed styles
+                Array.from(computedStyle).forEach((key) => {
+                    targetElement.style.setProperty(
+                        key,
+                        computedStyle.getPropertyValue(key),
+                        computedStyle.getPropertyPriority(key)
+                    );
+                });
+
+                // Recursively copy styles for children
+                Array.from(source.children).forEach((child, index) => {
+                    if (target.children[index]) {
+                        copyComputedStyles(child, target.children[index]);
+                    }
+                });
+            };
+
+            // Copy all styles from original to clone
+            copyComputedStyles(dashboardElement, clonedContent);
+
+            // Convert all canvas elements to images (for charts)
+            const originalCanvases = dashboardElement.querySelectorAll('canvas');
+            const clonedCanvases = clonedContent.querySelectorAll('canvas');
+
+            originalCanvases.forEach((canvas, index) => {
+                const clonedCanvas = clonedCanvases[index];
+                if (clonedCanvas && clonedCanvas.parentNode) {
+                    // Convert canvas to image
+                    const img = document.createElement('img');
+                    img.src = (canvas as HTMLCanvasElement).toDataURL('image/png');
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+
+                    // Replace canvas with image
+                    clonedCanvas.parentNode.replaceChild(img, clonedCanvas);
+                }
+            });
+
+            // Replace all input fields with their displayed values (like canvas to image)
+            const originalInputs = dashboardElement.querySelectorAll('input');
+            const clonedInputs = clonedContent.querySelectorAll('input');
+
+            originalInputs.forEach((originalInput, index) => {
+                const clonedInput = clonedInputs[index];
+                if (clonedInput && clonedInput.parentNode) {
+                    const value = (originalInput as HTMLInputElement).value;
+                    const placeholder = (originalInput as HTMLInputElement).placeholder;
+
+                    // Skip if value is empty, placeholder, or just slashes
+                    if (
+                        value &&
+                        value !== placeholder &&
+                        value.trim() !== '/' &&
+                        !value.match(/^[\s/]*$/)
+                    ) {
+                        // Create a span to replace the input with its value
+                        const span = document.createElement('span');
+                        span.textContent = value;
+
+                        // Copy styles from original input
+                        const inputStyle = window.getComputedStyle(originalInput);
+                        span.style.cssText = inputStyle.cssText;
+                        span.style.border = 'none';
+                        span.style.background = 'transparent';
+                        span.style.display = 'inline-block';
+                        span.style.padding = inputStyle.padding;
+                        span.style.fontSize = inputStyle.fontSize;
+                        span.style.fontFamily = inputStyle.fontFamily;
+                        span.style.color = inputStyle.color;
+
+                        // Replace input with span
+                        clonedInput.parentNode.replaceChild(span, clonedInput);
+                    } else {
+                        // If no valid value, remove the input
+                        clonedInput.remove();
+                    }
+                }
+            });
+
+            // Remove buttons, dropdowns, and other interactive elements
+            const elementsToRemove = clonedContent.querySelectorAll(
+                'button, .dropdown, select, textarea, [contenteditable="true"]'
+            );
+            elementsToRemove.forEach((el) => el.remove());
+
+            // Get current date range info
+            const dateRangeText =
+                activeDateRange.fromDate && activeDateRange.toDate
+                    ? `Từ ${format(new Date(activeDateRange.fromDate), 'dd/MM/yyyy')} đến ${format(new Date(activeDateRange.toDate), 'dd/MM/yyyy')}`
+                    : 'Tất cả thời gian';
+
+            // Create print window with smaller size (like invoice)
+            const printWindow = window.open('', '_blank', 'width=1200,height=800');
+
+            if (!printWindow) {
+                toast.error('Popup bị chặn. Vui lòng cho phép popup để in báo cáo.');
+                return;
+            }
+
+            // Create print-friendly HTML (simpler, like invoice)
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Báo Cáo Dashboard - ${hospitalProfile?.name || 'Bệnh viện'}</title>
+                    <style>
+                        /* Reset and base styles */
+                        * {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            padding: 20px;
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 12px;
+                            background: white !important;
+                            margin: 0;
+                        }
+                        
+                        .print-header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                            border-bottom: 3px solid #0d6efd;
+                            padding-bottom: 15px;
+                        }
+                        
+                        .print-header h2 {
+                            color: #0d6efd;
+                            margin-bottom: 5px;
+                            font-size: 24px;
+                            font-weight: bold;
+                        }
+                        
+                        .print-header .subtitle {
+                            color: #6c757d;
+                            font-size: 16px;
+                            margin: 5px 0;
+                        }
+                        
+                        .print-header .info {
+                            color: #6c757d;
+                            font-size: 11px;
+                            margin-top: 10px;
+                        }
+                        
+                        /* Chart images */
+                        img {
+                            max-width: 100% !important;
+                            height: auto !important;
+                        }
+                        
+                        /* Footer */
+                        .print-footer {
+                            margin-top: 30px;
+                            padding-top: 15px;
+                            border-top: 2px solid #dee2e6;
+                            text-align: center;
+                            font-size: 10px;
+                            color: #6c757d;
+                        }
+                        
+                        @media print {
+                            @page { 
+                                size: A4 landscape; 
+                                margin: 15mm 10mm;
+                            }
+                            body {
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h2>BÁO CÁO DASHBOARD</h2>
+                        <p class="subtitle">${hospitalProfile?.name || 'Bệnh viện'}</p>
+                        <p class="info">
+                            📅 ${dateRangeText}<br>
+                            Ngày xuất: ${new Date().toLocaleString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </p>
+                    </div>
+                    
+                    ${clonedContent.outerHTML}
+                    
+                    <div class="print-footer">
+                        <p><strong>© ${new Date().getFullYear()} MedCure</strong> - Hệ thống quản lý bệnh viện</p>
+                        <p>Báo cáo này được tạo tự động từ hệ thống</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+
+            // Wait for content to load, then print (like invoice)
+            // Don't close the window automatically - let user close it
+            printWindow.onload = () => {
+                printWindow.focus();
+                printWindow.print();
+                // Removed: printWindow.close() - let user close manually
+            };
+
+            // Fallback if onload doesn't trigger
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+                // Removed: printWindow.close() - let user close manually
+            }, 250);
+
+            toast.success('Đang mở cửa sổ in. Chọn "Save as PDF" để lưu file.');
+        } catch (error) {
+            console.error('Export dashboard error:', error);
+            toast.error('Lỗi khi xuất báo cáo. Vui lòng thử lại.');
+        }
+    }, [hospitalProfile?.name, activeDateRange.fromDate, activeDateRange.toDate]);
 
     const { stats, appointmentTrendPoints, newPatientTrendPoints, additionalStats, isLoading } =
         useAppointmentStatistics<HospitalStatistics, HospitalAdditionalStats>({
@@ -788,6 +1036,17 @@ const HospitalDashboard: React.FC = () => {
                 <div className="flex-grow-1">
                     <h4 className="fw-bold mb-0">Bảng điều khiển bệnh viện</h4>
                 </div>
+                <div className="text-end d-flex">
+                    <ActionDropdown
+                        type="export"
+                        options={[{ value: 'pdf', label: 'Xuất báo cáo PDF', format: 'pdf' }]}
+                        onExport={(format: string) => {
+                            if (format === 'pdf') {
+                                handleExportDashboard();
+                            }
+                        }}
+                    />
+                </div>
             </div>
 
             <div className={styles.trendCard}>
@@ -1142,20 +1401,22 @@ const HospitalDashboard: React.FC = () => {
                             <p
                                 className={styles.alertMessage}
                                 dangerouslySetInnerHTML={{
-                                    __html: aiInsights.analysisConclusion
+                                    __html: (aiInsights.analysisConclusion || '')
                                         // Highlight percentages with context-aware colors
-                                        .replace(/(\d+(?:[.,]\d+)?)\s*%/g, (match, num) => {
+                                        .replace(/(\d+(?:[.,]\d+)?)\s*%/g, (_match, num) => {
                                             const value = parseFloat(num.replace(',', '.'));
                                             // Check context for color
-                                            const beforeText = aiInsights.analysisConclusion
+                                            const beforeText = (aiInsights.analysisConclusion || '')
                                                 .substring(
                                                     Math.max(
                                                         0,
-                                                        aiInsights.analysisConclusion.indexOf(
-                                                            match
-                                                        ) - 50
+                                                        (
+                                                            aiInsights.analysisConclusion || ''
+                                                        ).indexOf(_match) - 50
                                                     ),
-                                                    aiInsights.analysisConclusion.indexOf(match)
+                                                    (aiInsights.analysisConclusion || '').indexOf(
+                                                        _match
+                                                    )
                                                 )
                                                 .toLowerCase();
 
@@ -1187,7 +1448,7 @@ const HospitalDashboard: React.FC = () => {
                                         // Highlight large numbers (appointments, counts) - match numbers with commas or dots
                                         .replace(
                                             /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*(lượt|cuộc|bệnh nhân|lần|người)/gi,
-                                            (match, num, unit) => {
+                                            (_match, num, unit) => {
                                                 return `<strong style="color: #3b82f6; font-weight: 700;">${num}</strong> ${unit}`;
                                             }
                                         )
@@ -1216,20 +1477,24 @@ const HospitalDashboard: React.FC = () => {
                             <p
                                 className={styles.alertMessage}
                                 dangerouslySetInnerHTML={{
-                                    __html: aiInsights.predictionConclusion
+                                    __html: (aiInsights.predictionConclusion || '')
                                         // Highlight percentages with context-aware colors
-                                        .replace(/(\d+(?:[.,]\d+)?)\s*%/g, (match, num) => {
+                                        .replace(/(\d+(?:[.,]\d+)?)\s*%/g, (_match, num) => {
                                             const value = parseFloat(num.replace(',', '.'));
                                             // Check context for color
-                                            const beforeText = aiInsights.predictionConclusion
+                                            const beforeText = (
+                                                aiInsights.predictionConclusion || ''
+                                            )
                                                 .substring(
                                                     Math.max(
                                                         0,
-                                                        aiInsights.predictionConclusion.indexOf(
-                                                            match
-                                                        ) - 50
+                                                        (
+                                                            aiInsights.predictionConclusion || ''
+                                                        ).indexOf(_match) - 50
                                                     ),
-                                                    aiInsights.predictionConclusion.indexOf(match)
+                                                    (aiInsights.predictionConclusion || '').indexOf(
+                                                        _match
+                                                    )
                                                 )
                                                 .toLowerCase();
 
@@ -1261,7 +1526,7 @@ const HospitalDashboard: React.FC = () => {
                                         // Highlight large numbers (appointments, counts) - match numbers with commas or dots
                                         .replace(
                                             /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*(lượt|cuộc|bệnh nhân|lần|người)/gi,
-                                            (match, num, unit) => {
+                                            (_match, num, unit) => {
                                                 return `<strong style="color: #3b82f6; font-weight: 700;">${num}</strong> ${unit}`;
                                             }
                                         )

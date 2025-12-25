@@ -21,6 +21,8 @@ const DOCTOR_ENDPOINTS = {
     GET_SERVICE_TYPES: '/servicetypes/all',
     GET_LANGUAGES: '/languages/all',
     FILTER_DOCTORS: '/doctors/filter',
+    EXPORT_EXCEL: '/doctors/export/excel',
+    EXPORT_PDF: '/doctors/export/pdf',
 } as const;
 
 export class DoctorService {
@@ -334,6 +336,56 @@ export class DoctorService {
             throw new Error(error.message || 'Failed to retrieve all doctor IDs');
         }
     }
+
+    /**
+     * Export doctors list to Excel
+     */
+    static async exportDoctorsToExcel(filterParams: DoctorSearchParams): Promise<Blob> {
+        const response = await axiosInstance.post(DOCTOR_ENDPOINTS.EXPORT_EXCEL, filterParams, {
+            responseType: 'blob',
+        });
+
+        // Axios interceptor returns response.data directly
+        // For blob, response itself might be the blob or response.data
+        const blob = response instanceof Blob ? response : response.data;
+
+        if (!blob || !(blob instanceof Blob)) {
+            console.error('Export response:', response);
+            throw new Error('Invalid response: Expected a Blob');
+        }
+
+        // Validate blob has content
+        if (blob.size === 0) {
+            throw new Error('Export failed: Received empty file from server');
+        }
+
+        return blob;
+    }
+
+    /**
+     * Export doctors list to PDF
+     */
+    static async exportDoctorsToPdf(filterParams: DoctorSearchParams): Promise<Blob> {
+        const response = await axiosInstance.post(DOCTOR_ENDPOINTS.EXPORT_PDF, filterParams, {
+            responseType: 'blob',
+        });
+
+        // Axios interceptor returns response.data directly
+        // For blob, response itself might be the blob or response.data
+        const blob = response instanceof Blob ? response : response.data;
+
+        if (!blob || !(blob instanceof Blob)) {
+            console.error('Export response:', response);
+            throw new Error('Invalid response: Expected a Blob');
+        }
+
+        // Validate blob has content
+        if (blob.size === 0) {
+            throw new Error('Export failed: Received empty file from server');
+        }
+
+        return blob;
+    }
 }
 
 // Export individual methods for convenience
@@ -351,4 +403,6 @@ export const {
     getLanguages,
     updateDoctor,
     updateDoctorWithAvatar,
+    exportDoctorsToExcel,
+    exportDoctorsToPdf,
 } = DoctorService;
