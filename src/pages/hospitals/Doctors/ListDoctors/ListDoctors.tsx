@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import Button from '@/components/Button';
 
@@ -13,6 +14,8 @@ import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile';
 import { DoctorOptimizedResponse, DoctorSearchParams } from '@/types/doctor.types';
 import TableSkeleton from '@/components/TableSkeleton';
 import { doctorTableColumns } from '@/components/TableSkeleton/skeletonConfigs';
+import { DoctorService } from '@/services/doctor.service';
+import { downloadBlob, generateExportFilename } from '@/utils/export.utils';
 
 const ListDoctors: React.FC = () => {
     const {
@@ -434,6 +437,96 @@ const ListDoctors: React.FC = () => {
         }
     };
 
+    // Handle export functionality
+    const handleExport = async (format: string) => {
+        console.log('=== HANDLE EXPORT ===');
+        console.log('Format received:', format);
+        console.log('Format type:', typeof format);
+
+        if (!hospitalId) {
+            toast.error('Không thể xuất dữ liệu: Không tìm thấy thông tin bệnh viện');
+            return;
+        }
+
+        try {
+            toast.info(`Đang xuất dữ liệu dạng ${format.toUpperCase()}...`);
+
+            // Build filter params based on current filters
+            const filterParams: DoctorSearchParams = {
+                hospitalId: hospitalId,
+                searchTerm: searchTerm.trim() || undefined,
+                specialtyIds:
+                    appliedSelectedSpecialties.length > 0 ? appliedSelectedSpecialties : undefined,
+                positionIds:
+                    appliedSelectedPositions.length > 0 ? appliedSelectedPositions : undefined,
+                serviceTypes:
+                    appliedSelectedServiceTypes.length > 0
+                        ? appliedSelectedServiceTypes
+                        : undefined,
+                languages:
+                    appliedSelectedLanguages.length > 0 ? appliedSelectedLanguages : undefined,
+                status:
+                    appliedSelectedStatuses.length > 0
+                        ? (appliedSelectedStatuses[0] as any)
+                        : undefined,
+                // Required fields for backend validation
+                pageNumber: 1,
+                pageSize: 1000, // Reduced to avoid timeout (backend will handle pagination if needed)
+            };
+
+            let blob: Blob;
+            let filename: string;
+
+            console.log('Checking format:', format);
+
+            if (format === 'excel') {
+                console.log('Exporting to Excel...');
+                blob = await DoctorService.exportDoctorsToExcel(filterParams);
+                filename = generateExportFilename('DanhSachBacSi', 'csv');
+
+                // Download CSV file
+                downloadBlob(blob, filename);
+                toast.success(`Xuất dữ liệu Excel thành công! File đã được tải xuống.`);
+            } else if (format === 'pdf') {
+                console.log('Exporting to PDF...');
+                blob = await DoctorService.exportDoctorsToPdf(filterParams);
+
+                // For PDF, open HTML in new tab and let user print to PDF
+                const url = window.URL.createObjectURL(blob);
+                const newWindow = window.open(url, '_blank');
+
+                if (newWindow) {
+                    // Wait for content to load, then trigger print dialog
+                    newWindow.onload = () => {
+                        setTimeout(() => {
+                            newWindow.print();
+                        }, 500);
+                    };
+                    toast.success('Đang mở cửa sổ in PDF. Chọn "Save as PDF" để lưu file.');
+                } else {
+                    // If popup blocked, download HTML file instead
+                    filename = generateExportFilename('DanhSachBacSi', 'html');
+                    downloadBlob(blob, filename);
+                    toast.info(
+                        'Popup bị chặn. File HTML đã được tải xuống. Mở file và nhấn Ctrl+P để in ra PDF.'
+                    );
+                }
+
+                // Clean up URL after 1 minute
+                setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+            } else {
+                console.error('Invalid format:', format);
+                toast.error('Định dạng xuất không hợp lệ');
+                return;
+            }
+        } catch (error: any) {
+            console.error('Export error:', error);
+            const errorMessage =
+                error.response?.data?.message || error.message || 'Vui lòng thử lại';
+            toast.error(`Lỗi khi xuất dữ liệu: ${errorMessage}`);
+        }
+    };
+
     // Show loading state while profile is loading
     if (profileLoading) {
         return (
@@ -530,10 +623,7 @@ const ListDoctors: React.FC = () => {
                                     format: 'excel',
                                 },
                             ]}
-                            onExport={(format: string) => {
-                                console.log('Exporting:', format);
-                                // Handle export logic here
-                            }}
+                            onExport={handleExport}
                         />
                         <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
                             <Link

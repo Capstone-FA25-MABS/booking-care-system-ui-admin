@@ -480,21 +480,6 @@ const ListLanguages: React.FC = () => {
                         </h4>
                     </div>
                     <div className="text-end d-flex">
-                        <ActionDropdown
-                            type="export"
-                            options={[
-                                { value: 'pdf', label: 'Tải xuống dạng PDF', format: 'pdf' },
-                                {
-                                    value: 'excel',
-                                    label: 'Tải xuống dạng Excel',
-                                    format: 'excel',
-                                },
-                            ]}
-                            onExport={(format: string) => {
-                                console.log('Exporting:', format);
-                                // Handle export logic here
-                            }}
-                        />
                         <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
                             <Link
                                 to="/admins/languages"
