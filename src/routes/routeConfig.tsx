@@ -64,6 +64,11 @@ import AddBlogCategory from '@/pages/admins/Blogs/BlogCategories/AddBlogCategory
 import ListBlogCategories from '@/pages/admins/Blogs/BlogCategories/ListBlogCategories';
 import BlogApproval from '@/pages/admins/Blogs/ApproveBlogs';
 import { ListHospitalFaqs, AddEditHospitalFaq } from '@/pages/admins/FaqHospital';
+import DoctorScheduleManagement from '@/pages/HospitalStaff/DoctorScheduleManagement';
+import ServiceScheduleManagement from '@/pages/HospitalStaff/ServiceScheduleManagement';
+import ExceptionRequestsManagement from '@/pages/HospitalStaff/ExceptionRequestsManagement';
+import MySchedules from '@/pages/Doctor/MySchedules';
+import RequestOff from '@/pages/Doctor/RequestOff';
 
 const routes: RouteObject[] = [
     {
@@ -218,7 +223,17 @@ const routes: RouteObject[] = [
                     { path: PATHS.DOCTOR.APPOINTMENTS.CALENDAR, element: <AppointmentCalendar /> },
                 ],
             },
-            { path: PATHS.DOCTOR.SCHEDULE, element: <h1>Doctor Schedule</h1> },
+            {
+                path: PATHS.DOCTOR.SCHEDULE.ROOT,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to={PATHS.DOCTOR.SCHEDULE.MY_SCHEDULES} replace />,
+                    },
+                    { path: PATHS.DOCTOR.SCHEDULE.MY_SCHEDULES, element: <MySchedules /> },
+                    { path: PATHS.DOCTOR.SCHEDULE.REQUEST_OFF, element: <RequestOff /> },
+                ],
+            },
             { path: PATHS.DOCTOR.PATIENTS, element: <h1>Doctor Patients</h1> },
             { path: PATHS.DOCTOR.MESSAGES, element: <Messages /> },
             {
@@ -285,6 +300,27 @@ const routes: RouteObject[] = [
                     {
                         path: PATHS.HOSPITAL.APPOINTMENTS.CALENDAR,
                         element: <HospitalAppointmentCalendar />,
+                    },
+                ],
+            },
+            {
+                path: PATHS.HOSPITAL.SCHEDULES.ROOT,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to={PATHS.HOSPITAL.SCHEDULES.DOCTORS} replace />,
+                    },
+                    {
+                        path: PATHS.HOSPITAL.SCHEDULES.DOCTORS,
+                        element: <DoctorScheduleManagement />,
+                    },
+                    {
+                        path: PATHS.HOSPITAL.SCHEDULES.SERVICES,
+                        element: <ServiceScheduleManagement />,
+                    },
+                    {
+                        path: PATHS.HOSPITAL.SCHEDULES.EXCEPTIONS,
+                        element: <ExceptionRequestsManagement />,
                     },
                 ],
             },

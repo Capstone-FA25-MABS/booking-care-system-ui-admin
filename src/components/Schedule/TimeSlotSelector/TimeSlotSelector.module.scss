@@ -1,0 +1,71 @@
+.timeSlotSelector {
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    }
+
+    .slotsGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .slotCard {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+
+        &:hover:not(.disabled) {
+            border-color: #5d87ff;
+            background-color: #f5f8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(93, 135, 255, 0.1);
+        }
+
+        &.selected {
+            border-color: #5d87ff;
+            background-color: #e8f0ff;
+
+            .slotLabel {
+                color: #5d87ff;
+                font-weight: 500;
+            }
+        }
+
+        &.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f5f5f5;
+        }
+
+        .slotCheckbox {
+            margin-right: 0.75rem;
+
+            input[type='checkbox'] {
+                cursor: pointer;
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        .slotLabel {
+            font-size: 0.9rem;
+            color: #333;
+            user-select: none;
+            flex: 1;
+        }
+    }
+}

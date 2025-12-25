@@ -140,22 +140,26 @@ interface FetchReviewInsightsOptions {
     doctors: any[];
     services: any[];
     includeRatingDistribution?: boolean;
+    hospitalId?: string;
 }
 
 export const fetchReviewInsights = async ({
     doctors,
     services,
     includeRatingDistribution = false,
+    hospitalId,
 }: FetchReviewInsightsOptions) => {
     const [doctorsStatsRes, servicesStatsRes] = await Promise.all([
         doctors.length > 0
             ? ReviewService.getBatchDoctorsStatistics({
                   doctorIds: doctors.map((doctor: any) => doctor.id),
+                  hospitalId,
               }).catch(() => ({ data: { doctorStatistics: {} } }))
             : Promise.resolve({ data: { doctorStatistics: {} } }),
         services.length > 0
             ? ReviewService.getBatchServicesStatistics({
                   serviceIds: services.map((service: any) => service.id),
+                  hospitalId,
               }).catch(() => ({ data: { serviceStatistics: {} } }))
             : Promise.resolve({ data: { serviceStatistics: {} } }),
     ]);

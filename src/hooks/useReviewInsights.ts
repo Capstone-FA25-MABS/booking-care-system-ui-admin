@@ -18,6 +18,7 @@ interface UseReviewInsightsOptions {
     includeRatingDistribution?: boolean;
     enabled?: boolean;
     onError?: (error: unknown) => void;
+    hospitalId?: string;
 }
 
 export const useReviewInsights = ({
@@ -25,6 +26,7 @@ export const useReviewInsights = ({
     includeRatingDistribution = false,
     enabled = true,
     onError,
+    hospitalId,
 }: UseReviewInsightsOptions) => {
     const [reviewStats, setReviewStats] = useState<ReviewStatsSummary | null>(null);
     const [isLoadingReviewStats, setIsLoadingReviewStats] = useState(false);
@@ -49,6 +51,7 @@ export const useReviewInsights = ({
                     doctors,
                     services,
                     includeRatingDistribution,
+                    hospitalId,
                 });
 
             setReviewStats({
@@ -69,7 +72,7 @@ export const useReviewInsights = ({
         } finally {
             setIsLoadingReviewStats(false);
         }
-    }, [enabled, fetchEntities, includeRatingDistribution, onError]);
+    }, [enabled, fetchEntities, includeRatingDistribution, onError, hospitalId]);
 
     useEffect(() => {
         loadReviewStatistics();
